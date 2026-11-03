@@ -1,3 +1,7 @@
+<!-- FINO99 NEW STANDALONE SITE. Rename to index.html when deploying.
+     BEFORE PUBLISHING: replace __FINO99_NEW_SUPABASE_URL__ and __FINO99_NEW_PUBLISHABLE_KEY__
+     with the NEW Supabase project's URL and PUBLIC publishable key.
+     The owner code belongs ONLY in the private SQL, never in this HTML. -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -997,8 +1001,6 @@
     min-height:40px;
   }
 }
-
-
 /* =========================================================
    FINO — BUYOUT CALCULATOR EXTENSION
 ========================================================= */
@@ -1998,7 +2000,7 @@
 }
 
 .obligation-impact.adjusted .impact-title{
-  color:#9a2828;
+color:#9a2828;
 }
 
 .obligation-impact .impact-grid{
@@ -2998,7 +3000,7 @@ button{
 .image-preview-actions button{
   min-height:44px;
   border-radius:11px;
-  font-size:9px;
+font-size:9px;
   font-weight:900;
   cursor:pointer;
 }
@@ -3998,7 +4000,7 @@ button{
 }
 .smart-result-actions{
   display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
+grid-template-columns:repeat(3,minmax(0,1fr));
   gap:8px;
 }
 .smart-result-actions button{
@@ -5617,14 +5619,27 @@ button{
 body.f99-theme-bronze{--blue:#805b36;--accent:#bf9360}body.f99-theme-silver{--blue:#5a6c79;--accent:#9aaab4}body.f99-theme-platinum{--blue:#36676a;--accent:#83b0ad}body.f99-theme-diamond{--blue:#413b87;--accent:#8f87cd}
 #f99ExperiencePanel textarea{resize:vertical}
 @media(max-width:680px){#f99ExperiencePanel{max-width:100%}.f99-owner-ticker{font-size:11px}}
+
+/* FINO99 v24 / launch screen: name, access code, Hijri+Gregorian/date/time.
+   Existing calculator pages and bank rates remain unchanged. */
+body:has(#page1.active)>.app>.ticker,
+body:has(#page1.active)>.app>.ambient { display:none !important; }
+#page1 .finium-platform-ar,
+#page1 .finium-platform-en,
+#page1 .finium-status-line,
+#page1 .finium-weather-label {display:none !important;}
+#page1 .finium-brand-code{color:#fff !important;text-shadow:0 2px 12px rgba(0,0,0,.25);}
+#page1 .finium-entry{padding-top:clamp(26px,5vh,60px);}
+#page1 .finium-date-strip{margin-top:20px;}
+.f99-new-central-notice[hidden]{display:none !important;}
 </style>
 </head>
 <body>
 <div class="app">
 <div class="ambient"><div class="glow a"></div><div class="glow b"></div><div class="fin f1">1.49%</div><div class="fin money f2">250,000 ريال</div><div class="fin f3">0.99%</div><div class="fin money f4">185,000 ريال</div><div class="fin f5">🧮 احتساب فوري</div><div class="fin f6">2.39%</div></div>
 <div class="ticker"><div class="ticker-track">
-<div class="ticker-item"><span class="live-dot"></span>LIVE</div><div class="ticker-item">SNB <b>0.99%</b></div><div class="ticker-item">الراجحي <b>1.49%</b></div><div class="ticker-item">SAB <b>1.79%</b></div><div class="ticker-item">ANB <b>1.99%</b></div><div class="ticker-item">💰 250,000 ريال</div><div class="ticker-item">🧮 احتساب فوري</div><div class="ticker-item">SNB <b>1.59%</b></div><div class="ticker-item">الراجحي <b>1.95%</b></div>
-<div class="ticker-item"><span class="live-dot"></span>LIVE</div><div class="ticker-item">SNB <b>0.99%</b></div><div class="ticker-item">الراجحي <b>1.49%</b></div><div class="ticker-item">SAB <b>1.79%</b></div><div class="ticker-item">ANB <b>1.99%</b></div><div class="ticker-item">💰 250,000 ريال</div><div class="ticker-item">🧮 احتساب فوري</div><div class="ticker-item">SNB <b>1.59%</b></div><div class="ticker-item">الراجحي <b>1.95%</b></div>
+<div class="ticker-item"><span class="live-dot"></span>LIVE</div><div class="ticker-item">SNB <b>0.99%</b></div><div class="ticker-item">الراجحي <b>1.49%</b></div><div class="ticker-item">SAB <b>2.09%</b></div><div class="ticker-item">الجزيرة <b>1.39%</b></div><div class="ticker-item">💰 250,000 ريال</div><div class="ticker-item">🧮 احتساب فوري</div><div class="ticker-item">SNB <b>1.59%</b></div><div class="ticker-item">الراجحي <b>1.95%</b></div>
+<div class="ticker-item"><span class="live-dot"></span>LIVE</div><div class="ticker-item">SNB <b>0.99%</b></div><div class="ticker-item">الراجحي <b>1.49%</b></div><div class="ticker-item">SAB <b>2.09%</b></div><div class="ticker-item">الجزيرة <b>1.39%</b></div><div class="ticker-item">💰 250,000 ريال</div><div class="ticker-item">🧮 احتساب فوري</div><div class="ticker-item">SNB <b>1.59%</b></div><div class="ticker-item">الراجحي <b>1.95%</b></div>
 </div></div>
 
 <div class="subscription-badge" id="subscriptionBadge">
@@ -5643,7 +5658,7 @@ body.f99-theme-bronze{--blue:#805b36;--accent:#bf9360}body.f99-theme-silver{--bl
     <div class="finium-logo-row"><div class="finium-logo-mark" id="finiumLogoMark">F</div><div class="finium-brand-code" data-platform-code>FINO99</div></div>
     <div class="finium-platform-ar" data-platform-ar>منصة الحسبة والترشيح المباشر</div>
     <div class="finium-platform-en" data-platform-en>THE SMART PLATFORM</div>
-    <div class="finium-status-line"><span class="finium-chip" id="finiumWeatherChip">● المنصة جاهزة</span><span class="finium-chip" id="finiumTimeGreeting">—</span></div>
+    <div class="finium-status-line"><span class="finium-chip" id="finiumWeatherChip">● FINO99</span><span class="finium-chip" id="finiumTimeGreeting">—</span></div>
     <label for="password">دخول المنصة</label>
     <input id="password" type="text" placeholder="أدخل الكود" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false">
     <button type="button" class="finium-entry-btn" onclick="login()">دخول المنصة</button>
@@ -5998,7 +6013,7 @@ body.f99-theme-bronze{--blue:#805b36;--accent:#bf9360}body.f99-theme-silver{--bl
 
     <div class="smart-section" style="display:none">
       <div class="free-amount-control" style="margin-bottom:10px">
-        <div class="free-amount-head">
+<div class="free-amount-head">
           <div class="free-amount-copy">
             <b>التحكم بمبلغ التمويل للعميل</b>
             <small>بعد أول حسبة يظهر الحد الأعلى تلقائيًا داخل الخانة. تقدر تخفّض المبلغ لأي رقم أقل من الحد الأعلى ثم تضغط «تطبيق وإعادة الحسبة».</small>
@@ -6274,20 +6289,20 @@ const RATES={SAB:[{min:50000,max:INF,rate:2.09},{min:30000,max:49999,rate:2.19},
 
 const BANK_TERMS={
   SNB:{
-    waiverMonths:2,
+    waiverMonths:0,
     deferMonths:0,
     commodityFee:0,
-    offerExpiry:'29/09/2026',
-    featureTitle:'إعفاء من أول قسطين',
-    featureCopy:'إعفاء وليس تأجيلًا؛ لذلك يتم احتساب إجمالي التمويل على 58 قسطًا فعليًا بدل 60. العرض لفترة محدودة حتى 29/09/2026 وتطبق الشروط والأحكام.'
+    offerExpiry:'',
+    featureTitle:'عرض إعفاء القسطين السابق انتهى',
+    featureCopy:'العرض المحدد حتى 29/09/2026 منتهٍ؛ لا تُحتسب أي إعفاءات تلقائيًا إلا عند إدخال عرض جديد مؤكد من المالك.'
   },
   RAJHI:{
     waiverMonths:0,
-    deferMonths:2,
+    deferMonths:0,
     commodityFee:0,
-    offerExpiry:'29/09/2026',
-    featureTitle:'إمكانية تأجيل قسطين (شهرين)',
-    featureCopy:'تأجيل وليس إعفاء؛ لذلك تبقى الحسبة على 60 قسطًا. العرض لفترة محدودة حتى 29/09/2026 وتطبق الشروط والأحكام.'
+    offerExpiry:'',
+    featureTitle:'عرض تأجيل القسطين السابق انتهى',
+    featureCopy:'العرض المحدد حتى 29/09/2026 منتهٍ؛ لا يُفترض استمرار التأجيل إلا عند إدخال عرض جديد مؤكد من المالك.'
   },
   ANB:{
     waiverMonths:0,
@@ -6395,7 +6410,7 @@ function buildFINOAdminDefaults(){
       featureCopy:term.featureCopy||''
     };
   });
-  if(banks.ANB){banks.ANB.historicalOffer={expiry:'31/10/2026',general:[{"min": 70000, "max": null, "rate": 1.69}, {"min": 40000, "max": 69999, "rate": 2.09}, {"min": 25000, "max": 39999, "rate": 2.39}, {"min": 15000, "max": 24999, "rate": 2.69}, {"min": 10000, "max": 14999, "rate": 2.89}, {"min": 5000, "max": 9999, "rate": 3.89}, {"min": 0, "max": 4999, "rate": 5.29}],private:[{"min": 70000, "max": null, "rate": 2.09}, {"min": 40000, "max": 69999, "rate": 2.69}, {"min": 25000, "max": 39999, "rate": 2.79}, {"min": 15000, "max": 24999, "rate": 2.99}, {"min": 10000, "max": 14999, "rate": 3.29}, {"min": 5000, "max": 9999, "rate": 4.29}, {"min": 0, "max": 4999, "rate": 5.79}],privateB:[{"min": 40000, "max": null, "rate": 3.59}, {"min": 25000, "max": 39999, "rate": 3.89}, {"min": 15000, "max": 24999, "rate": 4.29}]};}
+  if(banks.ANB){banks.ANB.buyoutEnabled=false;banks.ANB.featureEnabled=false;banks.ANB.historicalOffer={expiry:'31/10/2026',general:[{"min": 70000, "max": null, "rate": 1.69}, {"min": 40000, "max": 69999, "rate": 2.09}, {"min": 25000, "max": 39999, "rate": 2.39}, {"min": 15000, "max": 24999, "rate": 2.69}, {"min": 10000, "max": 14999, "rate": 2.89}, {"min": 5000, "max": 9999, "rate": 3.89}, {"min": 0, "max": 4999, "rate": 5.29}],private:[{"min": 70000, "max": null, "rate": 2.09}, {"min": 40000, "max": 69999, "rate": 2.69}, {"min": 25000, "max": 39999, "rate": 2.79}, {"min": 15000, "max": 24999, "rate": 2.99}, {"min": 10000, "max": 14999, "rate": 3.29}, {"min": 5000, "max": 9999, "rate": 4.29}, {"min": 0, "max": 4999, "rate": 5.79}],privateB:[{"min": 40000, "max": null, "rate": 3.59}, {"min": 25000, "max": 39999, "rate": 3.89}, {"min": 15000, "max": 24999, "rate": 4.29}]};}
   return {
     version:1,
     updatedAt:new Date().toISOString(),
@@ -6736,7 +6751,10 @@ function fino99EmployerEligible(candidate){
   fino99EmployerAnswers.set(answerKey,accepted);
   return accepted;
 }
-function fino99FilterEmployerCandidates(list){return (list||[]).filter(fino99EmployerEligible);}
+function fino99FilterEmployerCandidates(list){
+ const restricted=activeAccess?.record?.central&&!activeAccess.record.owner?fino99ActivePackage().enabledBanks:[];
+ return (list||[]).filter(c=>(!restricted.length||restricted.includes(c.key))&&fino99EmployerEligible(c));
+}
 
 function applyAdminCandidateOverrides(candidates,salary){
   const cfg=getFINOAdminConfig();
@@ -6995,8 +7013,7 @@ function renderFINOAdminBankEditorHtml(cfg){
       <label class="admin-check"><input id="adminRequireWorkEntity" type="checkbox" ${b.requireWorkEntity?'checked':''}>تقييد الترشيح بجهات عمل محددة</label>
       <div class="admin-field" style="margin-top:8px"><label>جهات العمل — كل جهة في سطر مستقل</label><textarea id="adminWorkEntityNames" placeholder="وزارة ...\nشركة ...">${escapeFINOAdminHtml((b.workEntityNames||[]).join('\n'))}</textarea></div>
     </div>
-
-    <div class="admin-card">
+<div class="admin-card">
       <div class="admin-card-title"><b>مدة العرض وميزة البنك</b><small>إذا لم يكن العرض محددًا بمدة اتركه «غير محدد»</small></div>
       <div class="admin-grid">
         <div class="admin-field"><label>هل العرض محدد بتاريخ؟</label>
@@ -7486,7 +7503,7 @@ function fino99DefaultPackage(){return {
  showDeduction:true,allowMortgage:true,allowPersonal:true,allowOther:true,
  allowSettleOthers:true,allowPrevious:true,allowRestart:true,allowChangeInstallment:true,
  allowChangeAmount:true,showNotice:false,notice:'',feeUntil:'',feeOffer:'',
- deductionWithMortgageLow:55,deductionWithMortgageHigh:65,deductionNoMortgage:45,
+ deductionWithMortgageLow:55,deductionWithMortgageHigh:67,deductionNoMortgage:45,
  personalLimit:33.33,consumerLimit:45,threshold:15000,
  installmentSize:28,questionEnabled:false,questionTitle:'هل لديك تمويل عقاري قائم؟',
  extraQuestions:[],enabledBanks:[],feeLabel:'أتعاب إنجاز المعاملة'
@@ -7499,7 +7516,7 @@ function fino99NormalizePackage(value){
  }
  r.threshold=Math.max(1,Number(r.threshold)||15000);
  r.installmentSize=Math.max(16,Math.min(54,Number(r.installmentSize)||28));
- r.extraQuestions=Array.isArray(r.extraQuestions)?r.extraQuestions.slice(0,6).map(x=>({question:String(x.question||'').slice(0,130),yesText:String(x.yesText||'').slice(0,220),noText:String(x.noText||'').slice(0,220)})):[];
+ r.extraQuestions=Array.isArray(r.extraQuestions)?r.extraQuestions.slice(0,6).map(x=>({question:String(x.question||'').slice(0,130),yesAmount:Math.max(0,Number(x.yesAmount)||0),noAmount:Math.max(0,Number(x.noAmount)||0)})).filter(x=>x.question):[];
  r.enabledBanks=Array.isArray(r.enabledBanks)?r.enabledBanks.map(String):[];
  r.feeCatalog=Array.isArray(r.feeCatalog)?r.feeCatalog.slice(0,40).map(x=>({name:String(x.name||'').slice(0,90),fee:Math.max(0,Number(x.fee)||0)})).filter(x=>x.name):d.feeCatalog;
  return r;
@@ -7507,7 +7524,9 @@ function fino99NormalizePackage(value){
 function fino99PackageFromCode(c){return fino99NormalizePackage(c?.packageConfig||c?.package_config||c?.config?.package_config||c?.centralData?.package_config||c?.centralData?.config?.package_config);}
 function fino99ActivePackage(){
  if(!activeAccess?.record?.central)return fino99DefaultPackage();
- const ownerScoped=finoPortal?.activeCodeConfig;return fino99PackageFromCode(ownerScoped?.packageConfig||ownerScoped?.config?.package_config?ownerScoped:activeAccess.record.centralData);
+ if(!activeAccess.record.owner)return fino99PackageFromCode(activeAccess.record.centralData);
+ const ownerScoped=finoPortal?.activeCodeConfig;
+ return fino99PackageFromCode((ownerScoped?.packageConfig||ownerScoped?.config?.package_config)?ownerScoped:activeAccess.record.centralData);
 }
 function fino99PackageInput(name){return document.getElementById('p99_'+name)}
 function fino99PackageStudio(c){
@@ -7527,6 +7546,7 @@ function fino99PackageStudio(c){
  ${number('deductionWithMortgageHigh','مع عقاري من الراتب المحدد فأعلى (%)')}
  <label class="f99-field">حد الراتب للفصل بين النسب<input id="p99_threshold" type="number" min="1" inputmode="numeric" value="${p.threshold}"></label>
  ${number('personalLimit','حد التمويل الشخصي (%)')}${number('consumerLimit','الحد الإجمالي للاستهلاكي (%)')}
+ <div class="f99-field" style="grid-column:1/-1"><label>البنوك المسموحة للترشيح بهذا الكود (اختيار البنوك غير المعلَّمة يمنع ترشيحها)</label><div class="f99-check-grid">${BANKS.filter(b=>b.id!=='OTHER').map(b=>`<label class="f99-check"><input type="checkbox" data-f99-bank="${portalEsc(b.id)}" ${(p.enabledBanks.length===0||p.enabledBanks.includes(b.id))?'checked':''}><span><b>${portalEsc(b.name)}</b></span></label>`).join('')}</div></div>
  <label class="f99-field">حجم خط القسط بالنتيجة (بكسل)<input id="p99_installmentSize" type="number" min="16" max="54" value="${p.installmentSize}"></label>
  </div><div class="f99-check-grid">
  ${check('showDeduction','إظهار نسبة الاستقطاع للعميل')}
@@ -7547,7 +7567,7 @@ function fino99PackageStudio(c){
  <label class="f99-field">جدول أتعاب الخدمات — خاص بالكود (كل سطر: الخدمة | المبلغ)<textarea id="p99_feeCatalog" rows="4">${esc((p.feeCatalog||[]).map(x=>x.name+' | '+x.fee).join('\n'))}</textarea></label>
  <div class="f99-grid"><label class="f99-field">آخر يوم لعرض الأتعاب<input id="p99_feeUntil" type="date" value="${esc(p.feeUntil)}"></label>
  <label class="f99-field">اسم عرض الأتعاب<input id="p99_feeOffer" value="${esc(p.feeOffer)}"></label></div>
- <label class="f99-field">أسئلة إضافية اختيارية — اكتب كل سؤال في سطر (لا تغير المعادلات بدون قاعدة حساب واضحة)<textarea id="p99_questions" rows="3">${esc(p.extraQuestions.map(x=>x.question).join('\n'))}</textarea></label>
+ <label class="f99-field">أسئلة إضافية مؤثرة في الالتزامات — لكل سطر: السؤال | القسط إذا نعم | القسط إذا لا<textarea id="p99_questions" rows="3" placeholder="هل عليك التزام تابي أو تمارا؟ | 300 | 0">${esc(p.extraQuestions.map(x=>x.question+' | '+x.yesAmount+' | '+x.noAmount).join('\n'))}</textarea></label>
  <div class="f99-footnote">كل نسب الاستقطاع سياسة تقديرية يحددها المالك لكل كود، وليست موافقة ائتمانية أو حدًا معتمدًا من بنك. تتطلب قيود الباقة تطبيقًا على الواجهة والتحقق المركزي.</div>
  </details>`;
 }
@@ -7559,8 +7579,13 @@ function fino99CapturePackage(){
   else if(el.type==='number')p[key]=Number(el.value);
   else p[key]=el.value;
  }
- p.extraQuestions=String(fino99PackageInput('questions')?.value||'').split('\n').map(x=>x.trim()).filter(Boolean).slice(0,6).map(question=>({question,yesText:'',noText:''}));
+ p.extraQuestions=String(fino99PackageInput('questions')?.value||'').split('\n').map(x=>x.trim()).filter(Boolean).slice(0,6).map(line=>{const [question,yes,no]=line.split('|').map(x=>x.trim());return {question,yesAmount:Math.max(0,Number(yes)||0),noAmount:Math.max(0,Number(no)||0)}}).filter(x=>x.question);
  p.feeCatalog=String(fino99PackageInput('feeCatalog')?.value||'').split('\n').map(line=>line.split('|')).filter(parts=>parts.length===2).map(parts=>({name:parts[0].trim(),fee:Math.max(0,Number(parts[1].trim())||0)})).filter(x=>x.name).slice(0,40);
+ const bankBoxes=Array.from(document.querySelectorAll('[data-f99-bank]'));
+ if(bankBoxes.length){
+  const checked=bankBoxes.filter(x=>x.checked).map(x=>x.getAttribute('data-f99-bank'));
+  p.enabledBanks=checked.length===bankBoxes.length?[]:(checked.length?checked:['__NONE__']);
+ }
  return fino99NormalizePackage(p);
 }
 function fino99ActiveCodeHasFeature(feature){
@@ -7581,10 +7606,10 @@ function fino99ApplyClientPackage(){
  hide('smartDeductionPercent',false);
  const typeGrid=document.getElementById('smartFinanceKind');if(typeGrid)typeGrid.style.display=p.calculator==='general'?'':'none';
  const ratio=document.querySelectorAll('.smart-result-ratio');ratio.forEach(el=>el.style.display=p.showDeduction?'':'none');
- document.querySelectorAll('.smart-control-panel').forEach(el=>{const t=el.textContent||'';if(t.includes('تحديد مبلغ التمويل')&&!p.allowChangeAmount)el.style.display='none';if(t.includes('تخفيض القسط')&&!p.allowChangeInstallment)el.style.display='none';});
+ document.querySelectorAll('.smart-control-panel').forEach(el=>{const t=el.textContent||'';if(t.includes('تحديد مبلغ التمويل'))el.style.display=p.allowChangeAmount?'':'none';if(t.includes('تخفيض القسط'))el.style.display=p.allowChangeInstallment?'':'none';});
  const card=document.getElementById('smartResults');if(card){card.querySelectorAll('.finance-detail.key b').forEach(b=>b.style.fontSize=p.installmentSize+'px');}
  const bot=document.getElementById('specialistBotPage');if(bot){
- bot.querySelectorAll('button').forEach(b=>{if(!p.allowRestart&&b.textContent?.includes('بدء من جديد')){b.disabled=true;b.style.display='none'};if(!p.allowPrevious&&b.textContent?.includes('السابق'))b.style.display='none'});
+ bot.querySelectorAll('button').forEach(b=>{if(b.textContent?.includes('بدء من جديد')){b.style.display=p.allowRestart?'':'none';if(!p.allowRestart)b.disabled=true};if(b.textContent?.includes('السابق'))b.style.display=p.allowPrevious?'':'none'});
  }
  if(p.resultLayout==='modern')document.getElementById('smartResultPage')?.classList.add('f99-modern-result');
  else document.getElementById('smartResultPage')?.classList.remove('f99-modern-result');
@@ -7597,10 +7622,30 @@ function fino99ClientIntro(){
   portalAssistant(`<div class="portal-note"><b>${portalEsc(p.questionTitle)}</b><div class="portal-options">
   <button type="button" class="portal-option" onclick="fino99AnswerMortgage(true)">نعم</button><button type="button" class="portal-option" onclick="fino99AnswerMortgage(false)">لا</button></div></div>`);
  }
- if(p.extraQuestions.length){for(const q of p.extraQuestions){
-  portalAssistant(`<div class="portal-note"><b>${portalEsc(q.question)}</b><small>سؤال توضيحي لا يغيّر الحساب ما لم يُحدد له أثر حسابي</small></div>`);
- }}
+ if(p.extraQuestions.length){p.extraQuestions.forEach((q,i)=>{
+  portalAssistant(`<div class="portal-note"><b>${portalEsc(q.question)}</b><div class="portal-options"><button type="button" class="portal-option" onclick="fino99AnswerExtraQuestion(${i},true)">نعم</button><button type="button" class="portal-option" onclick="fino99AnswerExtraQuestion(${i},false)">لا</button></div></div>`);
+ });}
 }
+const fino99QuestionResponses=new Map();
+let fino99QuestionsAppliedMonthly=0;
+function fino99AnswerExtraQuestion(index,yes){
+ if(!activeAccess?.record?.central||activeAccess.record.owner)return;
+ const questions=fino99ActivePackage().extraQuestions||[];
+ const q=questions[index];if(!q)return;
+ fino99QuestionResponses.set(index,!!yes);
+ const monthly=questions.reduce((sum,item,i)=>sum+(fino99QuestionResponses.has(i)?Number(fino99QuestionResponses.get(i)?item.yesAmount:item.noAmount)||0:0),0);
+ const delta=monthly-fino99QuestionsAppliedMonthly;
+ // Update the client's entered OTHER obligations; no financing rule or debt is erased.
+ for(const id of ['smartExternal','externalObligations']){
+  const el=document.getElementById(id);
+  if(el){el.value=String(Math.max(0,Number(el.value||0)+delta));}
+ }
+ if(finoPortal?.data)finoPortal.data.external=Math.max(0,Number(finoPortal.data.external||0)+delta);
+ fino99QuestionsAppliedMonthly=monthly;
+ if(typeof updateSmartEligibilityPreview==='function')updateSmartEligibilityPreview();
+ portalAssistant(`<div class="portal-note">${yes?'نعم':'لا'} — تم احتساب ${money(monthly)} شهريًا من إجابات الأسئلة ضمن الالتزامات التقديرية الأخرى. هذا لا يلغي أو يثبت أي دين.</div>`);
+}
+
 function fino99AnswerMortgage(v){
  if(!fino99ActiveCodeHasFeature('allowMortgage'))return;
  smartHasMortgage=!!v;smartDeductionManual=false;
@@ -7806,7 +7851,7 @@ async function saveFINODynamicCodeFromForm(id=''){
     enabled:!!document.getElementById('pcEnabled')?.checked,
     duration_minutes:duration,
     activate_on_first_use:true,
-    max_entries:Math.max(0,Number(document.getElementById('pcUses')?.value||0)),
+    max_entries:allowed==='contract'?Math.max(1,Number(document.getElementById('pcUses')?.value||1)):Math.max(0,Number(document.getElementById('pcUses')?.value||0)),
     max_restarts_per_entry:Math.max(0,Number(document.getElementById('pcRecalc')?.value||0)),
     allow_restart:!!document.getElementById('pcRestart')?.checked,
     allowed_services:allowed==='both'?['buyout','smart']:[allowed],
@@ -7967,7 +8012,7 @@ async function handleFINOContractImage(input){
   c.getContext('2d').drawImage(img,0,0,c.width,c.height);
   finoPortal.contractImageData=c.toDataURL('image/jpeg',.78);
   const p=document.getElementById('ctImagePreview');
-  if(p){p.src=finoPortal.contractImageData;p.style.display='block';}
+if(p){p.src=finoPortal.contractImageData;p.style.display='block';}
 }
 async function tryFINOContractOCR(){
   const data=finoPortal.contractImageData||document.getElementById('ctImagePreview')?.src||'';
@@ -8033,14 +8078,14 @@ async function extendFINOCentralCode(id,minutes){
   showFINOPortalCodeManager(id);
 }
 async function deleteFINODynamicCode(id){
-  if(!confirm('تأكيد حذف الكود نهائيًا؟'))return;
+  if(!confirm('تأكيد إلغاء الكود وإخفائه من القائمة؟ سيتم إيقاف الدخول به مع الاحتفاظ بالعقود والأرشيف.'))return;
   if(finoCentralAdminToken){
     const r=await finoCentralAdminCall('fino_admin_delete_code',{p_code_id:id});
     if(!r.ok||r.data?.ok===false){
       portalAssistant(`<div class="portal-central-error">تعذر حذف الكود مركزيًا.<br>${portalEsc(finoCentralDebugMessage(r))}</div>`);return;
     }
     await finoCentralAdminDashboard(true);
-    portalAssistant('<div class="portal-central-confirm">✅ تم حذف الكود نهائيًا من مركزية FINO99 الجديدة.</div>');
+    portalAssistant('<div class="portal-central-confirm">✅ تم إيقاف الكود وإخفاؤه من قائمة الأكواد؛ العقود والأرشيف محفوظان.</div>');
     showFINOPortalCodeManager();return;
   }
   const list=getFINODynamicCodes().filter(x=>x.id!==id);
@@ -8064,7 +8109,10 @@ function applyFINOActiveCodeSettings(){
 }
 
 
+// SETUP (PUBLIC values only): paste the NEW Supabase project URL below.
+// Do NOT use the old FINO project's URL. Do NOT paste service_role or admin password.
 const FINO_SUPABASE_URL='__FINO99_NEW_SUPABASE_URL__';
+// Use only the NEW project's public "sb_publishable_..." key (or legacy anon key).
 const FINO_SUPABASE_PUBLISHABLE_KEY='__FINO99_NEW_PUBLISHABLE_KEY__';
 const FINO_CENTRAL_DEVICE_KEY='FINO_CENTRAL_DEVICE_ID_V1';
 const FINO_CENTRAL_ADMIN_TOKEN_KEY='FINO_CENTRAL_ADMIN_TOKEN_V1';
@@ -8346,15 +8394,19 @@ function finoApplyStrictServiceScope(){
 }
 function finoHideDisallowedPortalActions(){
   const scope=finoPortal?.strictServiceScope||finoCentralServiceScope();
-  if(!scope||scope==='both')return;
   const page=document.getElementById('specialistBotPage');
   if(!page)return;
+  // Restore only controls hidden by a prior scope; never reveal those hidden for other reasons.
+  page.querySelectorAll('button[data-fino-scope-hidden="1"]').forEach(btn=>{
+    btn.style.display='';delete btn.dataset.finoScopeHidden;
+  });
+  if(!scope||scope==='both')return;
   page.querySelectorAll('button').forEach(btn=>{
     const txt=(btn.textContent||'').trim();
     const admin=txt.includes('المختص')||txt.includes('إعدادات');
-    if(admin){btn.style.display='none';return}
-    if(scope==='smart'&&txt.includes('تحويل المديونية'))btn.style.display='none';
-    if(scope==='buyout'&&txt.includes('الحاسبة الذكية'))btn.style.display='none';
+    if(admin||(scope==='smart'&&txt.includes('تحويل المديونية'))||(scope==='buyout'&&txt.includes('الحاسبة الذكية'))){
+      btn.style.display='none';btn.dataset.finoScopeHidden='1';
+    }
   });
 }
 function finoCentralApplyEntrySettings(data){
@@ -8396,7 +8448,27 @@ async function finoCentralRuntime(){
   });
   if(!r.ok)return r;
   if(r.data?.ok===false)return {ok:false,data:r.data};
-  Object.assign(finoCentralEntry,r.data||{});
+  // Refresh the customer-scoped package from the authenticated central session.
+  // Do not overwrite the owner's local preview or finance calculations.
+  if(r.data?.code && activeAccess?.record?.central && !activeAccess.record.owner){
+    const oldCode=activeAccess.record.centralData||{};
+    const refreshed={
+      ...oldCode,...r.data.code,
+      code_id:r.data.code.id||oldCode.code_id,
+      package_config:r.data.code.config?.package_config||oldCode.package_config
+    };
+    if(JSON.stringify(oldCode)!==JSON.stringify(refreshed)){
+      activeAccess.record.centralData=refreshed;
+      if(finoCentralEntry){
+        finoCentralEntry.allowed_services=refreshed.allowed_services;
+        finoCentralEntry.package_config=refreshed.package_config;
+      }
+      finoCentralApplyEntrySettings(refreshed);
+      fino99ApplyClientPackage();
+      finoApplyStrictServiceScope();
+    }
+  }
+  Object.assign(finoCentralEntry||{},r.data||{});
   return {ok:true,data:r.data};
 }
 
@@ -8418,7 +8490,7 @@ function finoCentralStartHeartbeat(){
       err.textContent=finoCentralReasonMessage(reason)||'انتهت صلاحية الجلسة.';
       err.style.display='block';
     }
-  },30000);
+  },12000);
 }
 
 
@@ -8942,8 +9014,7 @@ async function handleFINOPortalRestart(){
     portalAssistant(`<div class="portal-alert">${portalEsc(finoCentralReasonMessage(reason))}</div>`);
     return;
   }
-
-  const r=FINOPackageRecord(),s=FINOPackageState();
+const r=FINOPackageRecord(),s=FINOPackageState();
   if(!r||!s){
     resetFINOSmartPortal();
     return;
@@ -9456,7 +9527,7 @@ function submitFINOPortalInput(){
       portalAssistant(`<div class="portal-note">الشخصي ${money(personal)} • الالتزامات الأخرى ${money(ext)} • العقاري المحتسب بأعلى قسط ${money(used)} • المتاح المبدئي لقسط جديد ${money(available)}.</div>${extra}`);
     }
     finoPortal.step='smart_deduction_choice';setPortalInput(false);
-    portalAssistant(`نسبة الاستقطاع المبدئية <b>${fmt(auto)}%</b>. ${salary<15000?'الراتب حتى 14,999 ريال → 55%.':'الراتب 15,000 ريال فأكثر → 65%.'}${portalOptions([
+    portalAssistant(`نسبة الاستقطاع المبدئية <b>${fmt(auto)}%</b>. ${salary<fino99ActivePackage().threshold?`الراتب دون ${fmt(fino99ActivePackage().threshold)} ريال → ${fmt(auto)}%.`:`الراتب من ${fmt(fino99ActivePackage().threshold)} ريال فأكثر → ${fmt(auto)}%.`}${portalOptions([
       {label:`اعتمد ${fmt(auto)}%`,primary:true,onclick:`chooseFINOPortalDeduction(${auto})`},
       ...(activeAccess?.record?.central&&!activeAccess?.record?.owner?[]:[{label:'أدخل نسبة أخرى حتى 80%',onclick:"chooseFINOPortalDeduction('custom')"}])
     ])}`);
@@ -9943,7 +10014,7 @@ async function createFINOPortalDetailedPngBlob(){
   ctx.fillText(`${typeName()} • الراتب ${englishMoney(salary)} • الالتزامات الأخرى ${external>0?englishMoney(external):'لا يوجد'}`,990,368);
 
   // cash hero
-  canvasRoundRect(ctx,60,420,960,144,20,'#eef8fd','#b9dce9');
+canvasRoundRect(ctx,60,420,960,144,20,'#eef8fd','#b9dce9');
   ctx.fillStyle='#607a8a';ctx.font='900 18px Cairo,Arial,sans-serif';ctx.fillText('صافي الكاش المتوقع بعد سداد المديونية',990,459);
   ctx.fillStyle='#0b78b7';ctx.font='900 48px Cairo,Arial,sans-serif';ctx.fillText(englishMoney(best.cashAfterDebt),990,530);
 
@@ -10943,7 +11014,7 @@ function extractFINOLocalExternal(text){
   return m?Number(m[1]):0;
 }
 function extractFINOLocalSettlement(text){
-  const s=normalizeFINOLocalDigits(text).replace(/,/g,'');
+const s=normalizeFINOLocalDigits(text).replace(/,/g,'');
   const m=s.match(/(?:السداد المبكر|سداد مبكر|المديونيه|مديونيه)\s*(?:هي|=|:)?\s*(\d{3,7})/i);
   return m?Number(m[1]):null;
 }
@@ -11943,7 +12014,7 @@ function updateSmartDeductionUi(){
     ?`يوجد عقاري قائم • النسبة ${fmt(smartDeductionPercent)}% ${smartDeductionManual?'معدلة يدويًا':'محتسبة تلقائيًا حسب الراتب'}.`
     :`النسبة الحالية ${fmt(smartDeductionPercent)}% ${smartDeductionManual?'معدلة يدويًا':'مبدئية حسب نوع العميل'}.`;
   const note=document.getElementById('smart80RatioNote');
-  if(note)note.style.display=salary>=25000?'block':'none';
+if(note)note.style.display=salary>=25000?'block':'none';
   updateSmartEligibilityPreview();
 }
 
@@ -12702,7 +12773,7 @@ async function refreshFINIUMWeather(){
   }catch(e){applyFINIUMWeatherScene('sunny')}
 }
 function openOwnerHub(){if(!activeAccess?.record?.central||!activeAccess?.record?.owner){showPage('page1');return;}showPage('ownerHub');loadLocalFINIUMIdentity();}
-function ownerLogout(){activeAccess=null;clientName='';finoPortal.adminUnlocked=false;finoCentralAdminToken=null;showPage('page1')}
+function ownerLogout(){activeAccess=null;clientName='';finoPortal.adminUnlocked=false;finoAdminUnlocked=false;finoCentralAdminToken=null;finoSafeSessionRemove(FINO_CENTRAL_ADMIN_TOKEN_KEY);finoCentralClearEntry();showPage('page1')}
 function ownerOpenSmartPortal(){openFINOSmartPortal(false)}
 function ownerOpenBuyout(){openFINOSmartPortal(false);setTimeout(()=>startFINOPortalBuyout(),40)}
 function ownerOpenSmartCalculator(){renderSmartBanks();showPage('smartPage');setTimeout(()=>document.getElementById('smartSalary')?.focus(),100)}
@@ -12943,9 +13014,11 @@ async function login(){
       if(['CODE_EXPIRED','CODE_USES_FINISHED'].includes(reason)){
         document.getElementById('packageRenewBtn')?.classList.add('show');
       }
-      return;
+return;
     }
     if(centralAttempt.data.ok===true){
+      // Reset conditional obligations for each new centrally authenticated customer session.
+      fino99QuestionResponses.clear();fino99QuestionsAppliedMonthly=0;
       finoCentralStoreEntry(centralAttempt.data);
       const services=Array.isArray(centralAttempt.data.allowed_services)?centralAttempt.data.allowed_services:['buyout'];
       const record={
@@ -12973,7 +13046,26 @@ async function login(){
       input.value='';
       activeAccess={record,state};
       startSubscriptionBadge(record,state);
-      if(record.owner){clientName='';pendingAccessAfterLogin=null;openOwnerHub();return;}
+if(record.owner){
+        // Owner code is verified by the NEW Supabase project before permission elevation.
+        // Second secure, short-lived server session unlocks all owner administration.
+        const ownerSession=await finoRpc('fino_owner_admin_session',{
+          p_entry_token:centralAttempt.data.entry_token,
+          p_device_id:finoCentralDeviceId()
+        });
+        if(!ownerSession.ok||ownerSession.data?.ok!==true||!ownerSession.data.admin_token){
+          activeAccess=null;finoCentralClearEntry();hideSubscriptionBadge();
+          error.textContent='تعذر تفعيل صلاحيات المالك مركزيًا. تحقق من تشغيل كود تأسيس المركزية الجديدة بالكامل.';
+          error.style.display='block';return;
+        }
+        finoCentralAdminToken=ownerSession.data.admin_token;
+        finoSafeSessionSet(FINO_CENTRAL_ADMIN_TOKEN_KEY,finoCentralAdminToken);
+        finoPortal.adminUnlocked=true;
+        finoAdminUnlocked=true;
+        clientName='';pendingAccessAfterLogin=null;
+        await finoCentralAdminDashboard(true);
+        openOwnerHub();return;
+      }
       if(record.broadcast||services.includes('broadcast')){clientName='';pendingAccessAfterLogin=null;enterFINIUMBroadcastGateway();return;}
       openIdentityStep(record,state);
       return;
@@ -12985,7 +13077,7 @@ async function login(){
     ? 'المركزية الجديدة غير مربوطة بعد. يجب إكمال رابط ومفتاح المشروع الجديد.'
     : !centralAttempt.transport
       ? 'تعذر الاتصال بالمركزية الجديدة؛ لا يمكن الدخول دون تحقق مركزي.'
-      : 'هذا الكود غير موجود في مركزية FINO99 الجديدة.';
+      : '⚠️ هذا الكود غير صحيح. تكرار محاولات الدخول غير المصرح بها قد يعرّض صاحبه للمساءلة القانونية.';
   error.style.display='block';
   return;
 
@@ -13144,8 +13236,13 @@ function moneyExact(n){
   return value.toLocaleString('ar-SA',{minimumFractionDigits:2,maximumFractionDigits:2})+' ريال';
 }
 function monthlyInstallmentFor(salary,externalObligations=0){
-  const personalCap=salary*(customerType==='retired'?0.25:0.3333);
-  const totalObligationCap=salary*0.45;
+  // Preserve original rules for the owner/legacy calculator; customer code has its own strict caps.
+  const managed=!!(activeAccess?.record?.central&&!activeAccess.record.owner);
+  const pkg=managed?fino99ActivePackage():null;
+  const personalRate=customerType==='retired'?0.25:(pkg?pkg.personalLimit/100:0.3333);
+  const overallRate=pkg?pkg.consumerLimit/100:0.45;
+  const personalCap=salary*personalRate;
+  const totalObligationCap=salary*overallRate;
   const availableAfterOther=Math.max(0,totalObligationCap-Number(externalObligations||0));
   return Math.max(0,Math.min(personalCap,availableAfterOther));
 }
@@ -13936,8 +14033,7 @@ function expiredOfferSummaryHtml(activeResults){
       </div>
     `;
   }
-
-  html+=`<div class="expired-offer-list">`;
+html+=`<div class="expired-offer-list">`;
   expired.forEach(x=>{
     const rank=rankExpiredOfferAmongAll(x,activeResults);
     html+=`
@@ -14936,7 +15032,7 @@ async function createDetailedResultPngBlob(){
 
   let featureY=470;
   if(customerType==='military' || customerType==='private'){
-    canvasRoundRect(ctx,70,470,940,105,16,'#fffafa','#efcaca');
+canvasRoundRect(ctx,70,470,940,105,16,'#fffafa','#efcaca');
     ctx.fillStyle='#a12626';
     ctx.font='900 15px Cairo, Arial, sans-serif';
     drawWrappedArabic(
@@ -15936,7 +16032,7 @@ ${PHONE}`;
 
     showPreparedImage(
       blob,
-      'FINO99-result.png',
+'FINO99-result.png',
       clientPhone,
       caption,
       'الصورة المختصرة للحسبة'
@@ -16331,7 +16427,7 @@ function finiumBrand4(){
     const name=(typeof getFINIUMBrandName==='function'?getFINIUMBrandName():'') ||
                f99LocalStorage.getItem('finium_brand_name') || 'FINO99';
     return String(name||'FINO99').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6)||'FINO99';
-  }catch(e){return 'FINO'}
+  }catch(e){return 'FINO99'}
 }
 function finiumBroadcastGreeting(){
   const h=new Date().getHours();
@@ -16680,7 +16776,7 @@ function f99ApplyExperience(x){
   const el=document.getElementById(id);if(el){if(k==='enabled')el.checked=p.enabled;else el.value=p[k]||'';}
  }
  const tx=document.getElementById('f99TipsText');if(tx&&document.activeElement!==tx)tx.value=p.tips.join('\n');
- f99ApplyTheme(activeAccess?.record?.central?fino99ActivePackage().theme:p.theme);
+ f99ApplyTheme(activeAccess?.record?.central&&!activeAccess.record.owner?fino99ActivePackage().theme:p.theme);
 }
 async function f99SaveExperience(){
  const status=document.getElementById('f99ExperienceStatus');
@@ -16851,7 +16947,7 @@ document.addEventListener('DOMContentLoaded',()=>{
  const n=document.getElementById('f99NewCentralNotice');
  if(typeof fino99NewCentralConfigured==='function'){
    const connected=fino99NewCentralConfigured();
-   if(n)n.textContent=connected?'FINO99 المطورة • جاري التحقق من أكواد المركزية المستقلة.':'FINO99 المطورة • المركزية الجديدة غير مربوطة بعد. لن يعمل أي كود حتى اكتمال الربط.';
+   if(n){ n.hidden=connected; n.textContent=connected?'':'FINO99 المطورة • المركزية الجديدة غير مربوطة بعد. لن يعمل أي كود حتى اكتمال الربط.'; }
    const status=document.getElementById('finiumWeatherChip');
    if(status && !connected)status.textContent='● بانتظار ربط المركزية الجديدة';
  }
