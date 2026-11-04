@@ -2,8 +2,8 @@
      New instance only; no link to the old FINO central.
      IMPORTANT: This file alone does NOT create a Supabase backend.
      Rename to index.html when deploying.
-     BEFORE PUBLISHING: replace https://vtctapzbeflpxmtwbmal.supabase.co and sb_publishable_4oUXdGgEtQHNfRVG1MC9Ng_q-tSgxqH
-     with the NEW Supabase project's URL and PUBLIC publishable key.
+     Public FINO99 Supabase URL and publishable key are already configured.
+     Keep the private admin password, owner access code and service-role keys out of public GitHub.
      The owner code belongs ONLY in the private SQL, never in this HTML. -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -12,7 +12,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#ffffff">
 <title>FINO99 | تحويل مديونية التمويل الشخصي</title>
-<meta name="fino99-release" content="isolated-fix-2026-11-03">
+<meta name="fino99-release" content="2026-11-04-math-cap-and-bank-fees-audited">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -6198,7 +6198,7 @@ body:has(#page1.active)>.app>.ambient { display:none !important; }
 </div></section>
 <section class="page" id="page3"><div class="viewport">
 <header class="header"><div class="brand"><div class="brand-mark">F</div><div class="brand-name">FINO99<small>FINAL MATCH</small></div></div><a class="contact-mini" href="https://wa.me/966506214458" target="_blank"><span class="m">📱</span><span><small>لتأكيد الحسبة والإنجاز</small><b>0506214458</b></span></a></header>
-<div class="result-wrap"><div class="result-head"><div><div class="eyebrow">FINO99 BUYOUT MATCH</div><h1>أفضل ترشيح <span>لتحويل مديونيتك</span></h1><p>النتيجة حسب البيانات والعروض المسجلة.</p></div><button type="button" class="edit" onclick="showPage('page2')">↻ أعد الحسبة والترشيح</button></div>
+<div class="result-wrap"><div class="result-head"><div><div class="eyebrow">FINO99 BUYOUT MATCH</div><h1>أفضل ترشيح <span>لتحويل مديونيتك</span></h1><p>ترشيح إرشادي وفق النسب المسجلة. تأكد من سريان عرض البنك وشروطه ورسومه قبل التقديم.</p></div><button type="button" class="edit" onclick="showPage('page2')">↻ أعد الحسبة والترشيح</button></div>
 <div class="result-marketing-board">
   <div class="result-marketing-head"><b>هل تبحث عن سيولة أفضل أو نسبة أقل من بنكك الحالي؟</b><span>FINO99 LIVE</span></div>
   <div class="result-marquee"><div class="result-marquee-track">
@@ -6288,7 +6288,14 @@ const BANKS=[
 {id:'SNB',name:'البنك الأهلي السعودي',short:'SNB',logo:LOGOS.SNB},{id:'RAJHI',name:'مصرف الراجحي',short:'Al Rajhi Bank',logo:LOGOS.RAJHI},{id:'RIYAD',name:'بنك الرياض',short:'Riyad Bank',logo:LOGOS.RIYAD},{id:'SAB',name:'البنك السعودي الأول',short:'SAB',logo:LOGOS.SAB},{id:'ANB',name:'البنك العربي الوطني',short:'ANB',logo:LOGOS.ANB},{id:'ALINMA',name:'مصرف الإنماء',short:'Alinma Bank',logo:LOGOS.ALINMA},{id:'BSF',name:'البنك السعودي الفرنسي',short:'BSF',logo:LOGOS.BSF},{id:'SAIB',name:'البنك السعودي للاستثمار',short:'SAIB',logo:LOGOS.SAIB},{id:'JAZIRA',name:'بنك الجزيرة',short:'Bank AlJazira',logo:LOGOS.JAZIRA},{id:'BILAD',name:'بنك البلاد',short:'Bank Albilad',logo:LOGOS.BILAD},{id:'GIB',name:'بنك الخليج الدولي - السعودية',short:'GIB',logo:LOGOS.GIB},{id:'OTHER',name:'بنك آخر',short:'أخرى',logo:''}
 ];
 const TIPS=["قارن أكثر من عرض قبل نقل مديونيتك من بنك إلى بنك.", "لا تنظر إلى القسط وحده؛ قارن تكلفة التمويل كاملة.", "اطلب مبلغ السداد المبكر المحدث قبل بدء إجراءات التحويل.", "احسب صافي الكاش المتبقي بعد سداد المديونية والرسوم.", "فرق بسيط في النسبة قد يصنع فرقًا كبيرًا في إجمالي التكلفة.", "كلما طالت مدة التمويل قد ينخفض القسط وتزداد التكلفة الإجمالية.", "اترك جزءًا مريحًا من راتبك للمصاريف والطوارئ.", "لا تستخدم كامل قدرتك التمويلية لمجرد أن البنك يسمح بذلك.", "تأكد من اعتماد جهة عملك لدى البنك قبل بدء الإجراءات.", "للعسكري: تأكد من البدلات التي يعتمدها البنك في احتساب الراتب.", "راجع سجلك الائتماني قبل طلب تحويل المديونية.", "تأكد من تحديث جميع الالتزامات في السجل الائتماني.", "قارن مبلغ القسط الجديد بالقسط الحالي.", "قارن المدة المتبقية حاليًا بمدة التمويل الجديدة.", "اعرف الرسوم الإدارية قبل الموافقة على العرض.", "لا تعتبر الموافقة المبدئية موافقة نهائية.", "اسأل بوضوح عن إجمالي مبلغ التمويل الجديد.", "اعرف كم سيذهب لسداد التمويل القديم وكم سيبقى لك.", "إذا كان هدفك كاش إضافي فاحسب تكلفة هذا الكاش.", "فرّق بين إعفاء القسط وتأجيل القسط.", "الإعفاء يختلف ماليًا عن التأجيل.", "تحقق من تاريخ انتهاء أي عرض تمويلي مؤقت.", "العروض قد تختلف حسب الراتب وجهة العمل.", "القطاع الخاص قد تختلف أهليته حسب تصنيف الشركة لدى البنك.", "لا توقف سداد أقساط تمويلك الحالي أثناء إجراءات التحويل.", "احتفظ بنسخة من العرض الذي بنيت عليه قرارك.", "اقرأ العقد كاملًا قبل التوقيع.", "تأكد أن القسط في العقد يطابق القسط المتفق عليه.", "تأكد أن مدة العقد مطابقة للعرض.", "تأكد من مبلغ التمويل النهائي قبل التوقيع.", "راجع جدول السداد كاملًا.", "اطلب مبلغ السداد المبكر الرسمي وليس تقديرًا شفهيًا.", "قد تكون إعادة التمويل لدى بنكك الحالي خيارًا يستحق المقارنة.", "لا تغيّر البنك إذا كان الفرق المالي النهائي لا يستحق ذلك.", "إذا تساوت النسب فقارن المزايا والقسط والمدة.", "تأكد من شروط تحويل الراتب إلى البنك الجديد.", "تأكد من تحديث التمويل القديم بعد سداده.", "تابع إخلاء الطرف بعد سداد المديونية القديمة.", "احتفظ بمخالصة السداد القديمة.", "لا تبدأ التزامات جديدة أثناء إجراءات تحويل المديونية دون حاجة.", "التزامات البطاقات الائتمانية قد تؤثر على القدرة التمويلية.", "خدمات الشراء الآن والدفع لاحقًا قد تؤثر على التقييم الائتماني.", "أي تأخرات ائتمانية قد تؤثر على العرض النهائي.", "تأكد من صحة راتبك الصافي قبل إجراء الحسبة.", "لا تعتمد على نسبة قديمة؛ عروض البنوك تتغير.", "النسبة المنشورة ليست ضمانًا للموافقة.", "الموافقة النهائية تعتمد على دراسة البنك للعميل.", "إذا كنت قريبًا من التقاعد فاحسب أثر التقاعد على التمويل.", "للمتقاعد: قارن القسط بالدخل الفعلي بعد التقاعد.", "لا تشارك رموز التحقق البنكية مع أي شخص.", "لا تدفع مقابل وعد بموافقة مصرفية مضمونة.", "أفضل تمويل ليس دائمًا أكبر مبلغ.", "الحسبة الجيدة تبدأ من هدف واضح: سداد، فائض، أو خفض نسبة.", "لا تقارن النسبة فقط؛ قارن الصافي الذي يصل لحسابك.", "إذا كان الصافي قليلًا فقد يكون الانتظار أفضل.", "إذا كان الصافي جيدًا فقارن تكلفة الانتقال بين البنوك.", "إذا كان الصافي مرتفعًا فراجع إجمالي الأرباح قبل اتخاذ القرار.", "اسأل هل رسوم فرق السلعة موجودة على العرض أم لا.", "رسوم فرق السلعة قد تختلف حسب نوع السلعة.", "رسوم فرق السلعة قد تختلف من بنك لآخر.", "بعض البنوك قد لا يكون لديها فرق سلعة في بعض الحالات.", "تأكد من أن السداد المبكر يشمل التحديث الأخير للتمويل.", "اعرف متى يصدر خطاب المديونية ومدة صلاحيته.", "تأكد من عدم انتهاء خطاب المديونية قبل إكمال الإجراءات.", "احتفظ بصورة من خطاب المديونية.", "اسأل عن أي شروط مرتبطة بتحويل الراتب.", "تأكد من وجود حساب فعال في البنك الجديد.", "لا تقارن عروضًا بمدد مختلفة دون حساب إجمالي التكلفة.", "تأكد من أن الراتب المستخدم في الحسبة هو الصافي الفعلي.", "إذا لديك التزامات أخرى فأدخلها بدقة.", "أي التزام شهري قد يخفض القسط المتاح للتمويل الشخصي.", "مجموع الالتزامات مهم بقدر أهمية نسبة القسط الشخصي.", "تأكد من عدم وجود تمويل عقاري إذا كانت الحسبة لا تسمح به.", "اسأل عن أثر البطاقات الائتمانية على الاستقطاع.", "أغلق البطاقات غير المستخدمة إذا كانت تؤثر على أهليتك.", "لا تطلب تمويلًا إضافيًا قبل اكتمال تحويل المديونية.", "احسب الفرق بين صافي الكاش الحالي وصافي الكاش من العرض الجديد.", "احسب كم تدفع مقابل كل ريال فائض إضافي.", "إذا كان الفرق بسيطًا فقد لا يستحق نقل المديونية.", "إذا كان الفرق كبيرًا قد يكون التحويل مجديًا.", "راجع كل بند يتعلق بالتأجيل قبل الاعتماد عليه.", "التأجيل لا يعني إسقاط القسط.", "الإعفاء الحقيقي يغيّر عدد الأقساط الفعلية.", "اسأل عن المزايا المرتبطة بالراتب فقط.", "بعض العروض مرتبطة بفئات وظيفية محددة.", "قد يختلف العرض العسكري عن المدني.", "قد يختلف عرض القطاع الخاص حسب الشركة.", "قد تختلف النسبة للمتقاعد عن الموظف.", "اعرف الحد الأعلى للقسط قبل طلب أي تمويل.", "تأكد أن التمويل الجديد لا يضغط ميزانيتك الشهرية.", "ضع مصروف الطوارئ قبل التفكير في أقصى استقطاع.", "قارن العرض على 60 شهرًا بعرض أقصر إن كان القسط مناسبًا.", "المدة الأقصر غالبًا تقلل إجمالي الأرباح.", "المدة الأطول قد ترفع إجمالي الأرباح رغم انخفاض القسط.", "اسأل عن طريقة احتساب السداد المبكر في العقد الجديد.", "اعرف هل هناك رسوم إدارية كاملة أم مخفضة.", "راجع ضريبة الرسوم الإدارية ضمن الحسبة.", "تأكد أن الرسوم التي تظهر لك تخص التمويل نفسه.", "لا تعتمد على كلام شفهي دون عرض مكتوب.", "احتفظ بتاريخ ووقت كل عرض تتم مقارنته.", "العرض الجيد اليوم قد يتغير لاحقًا.", "إذا كانت النسبة ممتازة تأكد أنها تنطبق على حالتك.", "لا تفترض أن كل مزايا البنك تنطبق على كل العملاء.", "اسأل هل الميزة مرتبطة بجهة عمل معينة.", "اسأل هل الحد الأدنى للراتب يختلف حسب جهة العمل.", "إذا كان لديك التزام خارجي بسيط فقد لا يؤثر على القسط.", "إذا كان التزامك الخارجي مرتفعًا فقد يخفض القسط المتاح.", "احسب التمويل بعد الالتزامات وليس قبلها.", "الهدف من التحويل يجب أن يكون واضحًا قبل التوقيع.", "لا تجعل الفائض وحده سبب قرارك.", "وازن بين الفائض والقسط وإجمالي الأرباح.", "قارن البنك المرشح ببنكك الحالي قبل القرار.", "إذا كنت غير مستعجل راقب العروض الموسمية.", "بعض العروض المؤقتة قد تكون أفضل من العرض الدائم.", "التوقيت قد يؤثر على جدوى تحويل المديونية.", "استفسر عن مدة تنفيذ شراء المديونية.", "تأكد من المطلوب منك من مستندات قبل بدء الطلب.", "جهز تعريف الراتب والهوية وخطاب المديونية مبكرًا.", "أي نقص في المستندات قد يؤخر الإنجاز.", "التأكد من الأرقام قبل التنفيذ يوفر وقتًا كبيرًا.", "الحسبة المبدئية ليست بديلًا عن الموافقة النهائية.", "الاعتماد النهائي دائمًا حسب سياسة البنك وقت التقديم.", "FINO99 للترشيح والمقارنة والمتابعة، والقرار النهائي حسب البنك."];
-const RATES={SAB:[{min:50000,max:INF,rate:2.09},{min:30000,max:49999,rate:2.19},{min:15000,max:29999,rate:2.99},{min:0,max:14999,rate:3.09}],RAJHI:[{min:40000,max:INF,rate:1.49},{min:25000,max:39999,rate:1.59},{min:15000,max:24999,rate:1.95},{min:10000,max:14999,rate:2.49},{min:4000,max:9999,rate:3.69}],ANB:[{min:70000,max:INF,rate:1.49},{min:40000,max:69999,rate:1.79},{min:25000,max:39999,rate:1.99},{min:15000,max:24999,rate:2.39},{min:10000,max:14999,rate:2.49},{min:5000,max:9999,rate:3.49}],SNB_CIV:[{min:75000,max:INF,rate:0.99},{min:45000,max:74999,rate:1.45},{min:25000,max:44999,rate:1.55},{min:15000,max:24999,rate:1.89},{min:10000,max:14999,rate:2.75},{min:7000,max:9999,rate:2.99},{min:4000,max:6999,rate:3.75},{min:3000,max:3999,rate:4.49}],SNB_MIL:[{min:75000,max:INF,rate:1.25},{min:45000,max:74999,rate:1.59},{min:25000,max:44999,rate:1.69},{min:15000,max:24999,rate:2.25},{min:10000,max:14999,rate:2.99},{min:7000,max:9999,rate:3.25},{min:4000,max:6999,rate:3.99}],BILAD:[{min:25000,max:INF,rate:2.10},{min:20000,max:24999,rate:2.30},{min:15000,max:19999,rate:2.60},{min:10000,max:14999,rate:2.70},{min:5000,max:9999,rate:3.06},{min:0,max:4999,rate:5.21}]};
+/* FINO99 CREDIT RATE AUDIT / 2026-11-04
+ * Rate bands for SAB, RAJHI, SNB (civilian/military), and JAZIRA compared
+ * to customer-submitted bank screenshots dated 2026-11-02.
+ * ANB's 2026-10-31 offer rates retained for reference only; default buyoutEnabled=false.
+ * Rates are indicative; employer classification/eligibility and offer validity
+ * must be confirmed with each bank before presenting as a binding offer.
+ */
+const RATES={SAB:[{min:50000,max:INF,rate:2.09},{min:30000,max:49999,rate:2.19},{min:15000,max:29999,rate:2.99},{min:0,max:14999,rate:3.09}],RAJHI:[{min:40000,max:INF,rate:1.49},{min:25000,max:39999,rate:1.59},{min:15000,max:24999,rate:1.95},{min:10000,max:14999,rate:2.49},{min:4000,max:9999,rate:3.69}],ANB:[{min:70000,max:INF,rate:1.69},{min:40000,max:69999,rate:2.09},{min:25000,max:39999,rate:2.39},{min:15000,max:24999,rate:2.69},{min:10000,max:14999,rate:2.89},{min:5000,max:9999,rate:3.89}],SNB_CIV:[{min:75000,max:INF,rate:0.99},{min:45000,max:74999,rate:1.45},{min:25000,max:44999,rate:1.55},{min:15000,max:24999,rate:1.89},{min:10000,max:14999,rate:2.75},{min:7000,max:9999,rate:2.99},{min:4000,max:6999,rate:3.75},{min:3000,max:3999,rate:4.49}],SNB_MIL:[{min:75000,max:INF,rate:1.25},{min:45000,max:74999,rate:1.59},{min:25000,max:44999,rate:1.69},{min:15000,max:24999,rate:2.25},{min:10000,max:14999,rate:2.99},{min:7000,max:9999,rate:3.25},{min:4000,max:6999,rate:3.99}],BILAD:[{min:25000,max:INF,rate:2.10},{min:20000,max:24999,rate:2.30},{min:15000,max:19999,rate:2.60},{min:10000,max:14999,rate:2.70},{min:5000,max:9999,rate:3.06},{min:0,max:4999,rate:5.21}]};
 
 const BANK_TERMS={
   SNB:{
@@ -6309,10 +6316,10 @@ const BANK_TERMS={
   },
   ANB:{
     waiverMonths:0,
-    deferMonths:2,
+    deferMonths:0,
     commodityFee:0,
-    featureTitle:'إمكانية تأجيل قسط أو قسطين',
-    featureCopy:'حسب اختيار العميل وشروط العرض، والتأجيل لا يغيّر عدد الأقساط الفعلية في الحسبة.'
+    featureTitle:'عرض العربي السابق انتهى 31/10/2026',
+    featureCopy:'لا تدخل نسب هذا العرض أو أي تأجيل ضمن الترشيح ما لم يؤكد المالك عرضًا جديدًا ساريًا من البنك.'
   },
   SAB:{
     waiverMonths:0,
@@ -6398,6 +6405,7 @@ function buildFINOAdminDefaults(){
       entityType:'bank',
       buyoutEnabled:tables.general.length>0||tables.military.length>0,
       minSalary:defaultMinSalaryForBank(b.id),
+      commodityFeePercent:1, // تقدير مبدئي؛ ليس نسبة معتمدة من البنك
       eligibleTypes:defaultEligibilityForBank(b.id),
       tables:{...tables,private:[],retired:[],semiGovernment:[]},
       workEntityNames:[],
@@ -6450,6 +6458,7 @@ function normalizeFINOAdminConfig(raw){
       cfg.banks[id].buyoutEnabled=true;
       if(!(cfg.banks[id].eligibleTypes||[]).length)cfg.banks[id].eligibleTypes=cloneAdminValue(defaults.banks[id].eligibleTypes);
     }
+    cfg.banks[id].commodityFeePercent=(Number.isFinite(Number(cfg.banks[id].commodityFeePercent)) ? Math.min(10,Math.max(0,Number(cfg.banks[id].commodityFeePercent))) : 1);
     cfg.banks[id].adminNote=String(cfg.banks[id].adminNote||'');
     cfg.banks[id].workEntityNames=Array.isArray(cfg.banks[id].workEntityNames)?cfg.banks[id].workEntityNames:[];
     cfg.banks[id].requireWorkEntity=!!cfg.banks[id].requireWorkEntity;
@@ -6467,6 +6476,7 @@ function normalizeFINOAdminConfig(raw){
           entityType:x.entityType||'finance',
           buyoutEnabled:!!x.buyoutEnabled,
           minSalary:Number(x.minSalary||0),
+          commodityFeePercent:Number.isFinite(Number(x.commodityFeePercent)) ? Math.min(10,Math.max(0,Number(x.commodityFeePercent))) : 1,
           eligibleTypes:Array.isArray(x.eligibleTypes)?x.eligibleTypes:[],
           tables:{
             general:Array.isArray(x.tables?.general)?x.tables.general:[],
@@ -6617,6 +6627,7 @@ function applyFINOAdminConfig(){
       waiverMonths:Math.max(0,Number(entry.waiverMonths||0)),
       deferMonths:Math.max(0,Number(entry.deferMonths||0)),
       commodityFee:0,
+      commodityFeePercent:Number.isFinite(Number(entry.commodityFeePercent))?Math.min(10,Math.max(0,Number(entry.commodityFeePercent))):1,
       offerExpiry:entry.offerLimited?(entry.offerExpiry||''):'',
       featureEnabled:!!entry.featureEnabled,
       adminNote:String(entry.adminNote||''),
@@ -6949,6 +6960,7 @@ function renderFINOAdminBankEditorHtml(cfg){
           </select>
         </div>
         <div class="admin-field"><label>أقل راتب مؤهل</label><input id="adminBankMinSalary" type="number" min="0" value="${Number(b.minSalary||0)}"></div>
+        <div class="admin-field"><label>رسوم فرق السلعة لهذا البنك (%) — تقديرية حتى التأكيد</label><input id="adminCommodityFeePercent" type="number" min="0" max="10" step="0.01" value="${Number(b.commodityFeePercent??1)}"></div>
         <div class="admin-field"><label>تفعيل شراء المديونية</label>
           <select id="adminBankBuyoutEnabled"><option value="1" ${b.buyoutEnabled?'selected':''}>مفعّل</option><option value="0" ${!b.buyoutEnabled?'selected':''}>موقوف</option></select>
         </div>
@@ -7087,6 +7099,7 @@ function syncFINOAdminEditorIntoMemory(){
   b.short=document.getElementById('adminBankShort')?.value.trim()||'';
   b.entityType=document.getElementById('adminBankEntityType')?.value||'bank';
   b.minSalary=Math.max(0,Number(document.getElementById('adminBankMinSalary')?.value||0));
+  b.commodityFeePercent=Math.min(10,Math.max(0,Number(document.getElementById('adminCommodityFeePercent')?.value??b.commodityFeePercent??1)));
   b.buyoutEnabled=document.getElementById('adminBankBuyoutEnabled')?.value==='1';
   b.eligibleTypes=Array.from(document.querySelectorAll('[data-admin-eligible]:checked')).map(x=>x.dataset.adminEligible);
   b.useMilitaryTable=!!document.getElementById('adminUseMilitaryTable')?.checked;
@@ -7150,6 +7163,7 @@ function copyFINOAdminBankSettings(){
 
   target.buyoutEnabled=source.buyoutEnabled;
   target.minSalary=source.minSalary;
+  target.commodityFeePercent=source.commodityFeePercent??1;
   target.eligibleTypes=cloneAdminValue(source.eligibleTypes||[]);
   target.tables=cloneAdminValue(source.tables||{general:[],military:[]});
   target.useMilitaryTable=!!source.useMilitaryTable;
@@ -7223,7 +7237,7 @@ function startAddFINOAdminBank(){
   const id='CUSTOM_'+Date.now().toString(36).toUpperCase();
   cfg.banks[id]={
     id,name:'جهة تمويلية جديدة',short:'',logo:'',entityType:'finance',
-    buyoutEnabled:false,minSalary:0,
+    buyoutEnabled:false,minSalary:0,commodityFeePercent:1,
     eligibleTypes:['government','semiGovernment','military','private','retired'],
     tables:{general:[],military:[]},useMilitaryTable:false,
     offerLimited:false,offerExpiry:'',featureEnabled:false,adminNote:'',waiverMonths:0,deferMonths:0,
@@ -9162,7 +9176,7 @@ function showFINOFreeConversationSettings(mode){
           <option value="on" ${s.commodityMode==='on'?'selected':''}>تشغيل الرسوم</option>
           <option value="off" ${s.commodityMode==='off'?'selected':''}>إطفاء الرسوم</option>
         </select>
-        <small>${mode==='buyout'?'في تحويل المديونية يطبق اختيارك على البنوك المرشحة.':'في الحاسبة الذكية يحدد هل تحسب رسوم فرق السلعة 1%.'}</small>
+        <small>${mode==='buyout'?'في تحويل المديونية يطبق اختيارك على البنوك المرشحة.':'في الحاسبة الذكية يحدد هل تحسب رسوم فرق السلعة (تقديرية).'}</small>
       </div>
       <div class="portal-free-setting">
         <label>مبلغ الأتعاب</label>
@@ -10024,7 +10038,7 @@ canvasRoundRect(ctx,60,420,960,144,20,'#eef8fd','#b9dce9');
     ['صافي التمويل بعد الرسوم وقبل السداد',englishMoney(best.netBeforeDebt)],
     ['الرسوم الإدارية',englishMoneyExact(best.adminFee)],
     ['ضريبة الرسوم الإدارية',englishMoneyExact(best.adminVat)],
-    ...(best.commodityEnabled?[['رسوم فرق السلعة 1%',englishMoneyExact(best.commodityFee)]]:[])
+    ...(best.commodityEnabled?[[`رسوم فرق السلعة ${fmt(100*(best.commodityRate??0))}% (تقديري)`,englishMoneyExact(best.commodityFee)]]:[])
   ];
   items.forEach((it,i)=>{
     const col=i%2,row=Math.floor(i/2);
@@ -10160,7 +10174,7 @@ function chooseFINOPortalSmartTerm(v){
 function askFINOPortalCommodity(){
   finoPortal.step='smart_commodity';
   setPortalInput(false);
-  portalAssistant(`هل نحسب رسوم فرق السلعة 1%؟${portalOptions([
+  portalAssistant(`هل نحسب رسوم فرق السلعة حسب النسبة التقديرية المحددة للبنك؟${portalOptions([
     {label:'بدون رسوم سلعة',primary:true,onclick:"chooseFINOPortalCommodity(false)"},
     {label:'احسب رسوم السلعة',onclick:"chooseFINOPortalCommodity(true)"}
   ])}`);
@@ -10466,7 +10480,7 @@ async function createFINOPortalNewBank(){
   const id='CUSTOM_'+Date.now().toString(36).toUpperCase();
   cfg.banks[id]={
     id,name:finoPortal.data.newBankName,short:'',logo:'',entityType:'finance',
-    buyoutEnabled:false,minSalary:0,
+    buyoutEnabled:false,minSalary:0,commodityFeePercent:1,
     eligibleTypes:['government','semiGovernment','military','private','retired'],
     tables:{general:[],military:[]},useMilitaryTable:false,
     offerLimited:false,offerExpiry:'',featureEnabled:false,adminNote:'',
@@ -11036,7 +11050,7 @@ function computeFINOLocalSmartPreview(data){
   const principal=gross/factor;
   const adminFee=principal*0.005;
   const adminVat=adminFee*0.15;
-  const commodityFee=data.commodity?principal*0.01:0;
+  const commodityFee=data.commodity?principal*feeRatesForCommodity(true,data.bankKey||smartSelectedBank).commodityRate:0;
   const net=principal-adminFee-adminVat-commodityFee;
   const settlement=Number(data.settlement||0);
   const cash=net-settlement;
@@ -11524,7 +11538,7 @@ function updateSmartCommodityText(){
   const desc=document.getElementById('smartCommodityDesc');
   if(text)text.textContent=enabled?'مفعّلة':'مطفأة';
   if(desc)desc.textContent=enabled
-    ? 'مفعّلة — يتم احتساب رسوم فرق السلعة بنسبة 1% من صافي التمويل قبل الرسوم والسداد.'
+    ? `مفعّلة — نسبة تقديرية ${fmt(100*feeRatesForCommodity(true,smartSelectedBank).commodityRate)}% حسب إعداد البنك في المركزية؛ تؤكد لدى البنك.`
     : 'مطفأة — الحسبة بدون رسوم فرق السلعة.';
   const requested=Number(document.getElementById('smartRequestedAmount')?.value||0);
   if(requested>0 && document.getElementById('smartResultPage')?.classList.contains('active')){
@@ -12161,7 +12175,7 @@ function calculateSmartPersonal(fromResult=false){
   const factor=1+(years*rate/100);
   const maxPrincipal=maxGross/factor;
 
-  const feeRates=feeRatesForCommodity(commodityEnabled);
+  const feeRates=feeRatesForCommodity(commodityEnabled,smartSelectedBank);
   const maxAdminFee=maxPrincipal*feeRates.adminRate;
   const maxAdminVat=maxPrincipal*feeRates.adminVatRate;
   const maxCommodityFee=maxPrincipal*feeRates.commodityRate;
@@ -12199,12 +12213,22 @@ function calculateSmartPersonal(fromResult=false){
     return;
   }
 
-  if(requested>0 && requested>maxAllowed+0.01){
-    if(requestError){
-      requestError.textContent=`المبلغ المطلوب أعلى من الحد الأعلى الممنوح في هذه الحسبة: ${money(maxAllowed)}.`;
-      requestError.classList.add('show');
+  if(requested>0 && requested>maxAllowed+0.000001){
+    if(fromResult){
+      requested=Math.max(0,Math.floor(maxAllowed*100)/100);
+      if(requestedInput)requestedInput.value=String(requested);
+      smartRequestedAmount=requested;
+      if(requestError){
+        requestError.textContent='تم ضبط المبلغ على الحد الأعلى الجديد بعد تغير الرسوم أو المدة.';
+        requestError.classList.add('show');
+      }
+    }else{
+      if(requestError){
+        requestError.textContent=`المبلغ المطلوب أعلى من الحد الأعلى الممنوح في هذه الحسبة: ${money(maxAllowed)}.`;
+        requestError.classList.add('show');
+      }
+      return;
     }
-    return;
   }
 
   let principal=maxPrincipal;
@@ -12247,7 +12271,7 @@ function calculateSmartPersonal(fromResult=false){
     totalCap,personalCap,availableAfterOther,eligibleMaximumInstallment,
     months,years,maxGross,maxPrincipal,maxNetBeforeDebt,
     requested,requestedNetMode,principal,
-    adminFee,adminVat,commodityFee,netBeforeDebt,cashAfterDebt,
+    adminFee,adminVat,commodityFee,commodityRate:feeRates.commodityRate,netBeforeDebt,cashAfterDebt,
     gross,installment:finalInstallment,profit,
     obligationImpact,
     bank,customerType:smartCustomerType
@@ -12328,7 +12352,7 @@ function calculateSmartPersonal(fromResult=false){
 
     ${commodityEnabled?`
     <div class="commodity-note">
-      <b>رسوم فرق السلعة:</b> محسوبة في هذه الحسبة بنسبة 1%، وقد تختلف حسب البنك ونوع السلعة، وقد لا توجد في بعض البنوك أو بعض السلع.
+      <b>رسوم فرق السلعة:</b> محسوبة مبدئيًا بنسبة ${fmt(100*feeRates.commodityRate)}% حسب إعداد البنك في المركزية؛ يرجى تأكيد قيمة الرسوم قبل الاعتماد.
     </div>
     `:''}
 
@@ -12365,7 +12389,7 @@ function calculateSmartPersonal(fromResult=false){
         <div class="commodity-control-top">
           <div class="commodity-control-copy">
             <b>رسوم فرق السلعة</b>
-            <small>${commodityEnabled?'مفعّلة: الحسبة تخصم 1% من صافي التمويل.':'مطفأة: الحسبة بدون رسوم فرق السلعة.'}</small>
+            <small>${commodityEnabled?`مفعّلة: نسبة تقديرية ${fmt(100*feeRates.commodityRate)}% حسب البنك.`:'مطفأة: الحسبة بدون رسوم فرق السلعة.'}</small>
           </div>
           <label class="commodity-toggle">
             <input id="smartResultCommodityToggle" type="checkbox" ${commodityEnabled?'checked':''} onchange="setSmartCommodityFromResult(this.checked)">
@@ -13309,10 +13333,14 @@ function bankTerm(key){
   return BANK_TERMS[key]||{waiverMonths:0,deferMonths:0,commodityFee:0,offerExpiry:'',featureEnabled:false,adminNote:'',featureTitle:'',featureCopy:''};
 }
 
-function feeRatesForCommodity(commodityEnabled){
+function feeRatesForCommodity(commodityEnabled,bankKey=''){
   const adminRate=0.005;
   const adminVatRate=adminRate*0.15;
-  const commodityRate=commodityEnabled?0.01:0;
+  // Default 1% is only a customizable planning estimate, NOT a verified bank fee.
+  // Per-bank values are loaded from the authenticated owner's central configuration.
+  const configured=bankKey?bankTerm(bankKey).commodityFeePercent:1;
+  const pct=Number.isFinite(Number(configured))?Math.min(10,Math.max(0,Number(configured))):1;
+  const commodityRate=commodityEnabled?pct/100:0;
   return {
     adminRate,
     adminVatRate,
@@ -13323,22 +13351,24 @@ function feeRatesForCommodity(commodityEnabled){
 
 function financeFromRequestedAmount(maxFinance,requestedAmount,netMode,earlySettlement){
   const requested=Number(requestedAmount||0);
-  if(!(requested>0))return {...maxFinance,manualAmount:false};
+  if(!Number.isFinite(requested) || !(requested>0))return {...maxFinance,manualAmount:false};
 
-  const rates=feeRatesForCommodity(maxFinance.commodityEnabled);
-  let principalBeforeFees=0;
-
-  // Net mode ON:
-  // The entered amount is the financing net after all selected fees
-  // and before settling the existing debt.
-  if(netMode){
-    const multiplier=1-rates.totalRate;
-    principalBeforeFees=requested/multiplier;
-  }else{
-    // Net mode OFF:
-    // The entered amount is before fees.
-    principalBeforeFees=requested;
-  }
+  const rates=feeRatesForCommodity(maxFinance.commodityEnabled,maxFinance.key);
+  const multiplier=1-rates.totalRate;
+  if(!(multiplier>0))return {...maxFinance,manualAmount:false};
+  const attemptedPrincipal=netMode?requested/multiplier:requested;
+  const capPrincipal=Number(maxFinance.maximumPrincipalBeforeFees??maxFinance.principalBeforeFees);
+  const capInstallment=Number(maxFinance.maximumInstallment??maxFinance.installment);
+  const factor=Number(maxFinance.profitFactor);
+  const paymentCount=Number(maxFinance.actualPayments);
+  // This bound is enforced in the math layer, not only in an input validator.
+  // Re-check it whenever product fees, term, rate or the manual amount changes.
+  const capFromInstallment=(capInstallment>0 && factor>0 && paymentCount>0)
+    ? capInstallment*paymentCount/factor : 0;
+  const safePrincipal=Math.max(0,Math.min(capPrincipal,capFromInstallment));
+  const principalBeforeFees=Math.max(0,Math.min(attemptedPrincipal,safePrincipal));
+  const manualClamped=attemptedPrincipal>safePrincipal+0.000001;
+  const effectiveRequested=netMode?principalBeforeFees*multiplier:principalBeforeFees;
 
   const adminFee=principalBeforeFees*rates.adminRate;
   const adminVat=principalBeforeFees*rates.adminVatRate;
@@ -13362,7 +13392,9 @@ function financeFromRequestedAmount(maxFinance,requestedAmount,netMode,earlySett
     cashAfterDebt,
     totalProfit,
     manualAmount:true,
-    requestedAmount:requested,
+    requestedAmount:effectiveRequested,
+    manualClamped,
+    originalRequestedAmount:requested,
     requestedNetMode:!!netMode,
     maximumPrincipalBeforeFees:maxFinance.maximumPrincipalBeforeFees||maxFinance.principalBeforeFees,
     maximumNetBeforeDebt:maxFinance.maximumNetBeforeDebt||maxFinance.netBeforeDebt,
@@ -13422,7 +13454,8 @@ function buildFinance(bank,salary,earlySettlement,externalObligations){
   const adminFee=principalBeforeFees*0.005;
   const adminVat=adminFee*0.15;
   const commodityEnabled=commodityFeeEnabledForBank(bank.key);
-  const commodityFee=commodityEnabled ? principalBeforeFees*0.01 : 0;
+  const commodityRate=feeRatesForCommodity(commodityEnabled,bank.key).commodityRate;
+  const commodityFee=principalBeforeFees*commodityRate;
   const netBeforeDebt=principalBeforeFees-adminFee-adminVat-commodityFee;
   const cashAfterDebt=netBeforeDebt-earlySettlement;
   const totalProfit=grossWithProfit-principalBeforeFees;
@@ -13453,6 +13486,7 @@ function buildFinance(bank,salary,earlySettlement,externalObligations){
     adminVat,
     commodityFee,
     commodityEnabled,
+    commodityRate,
     netBeforeDebt,
     cashAfterDebt,
     totalProfit,
@@ -13876,6 +13910,15 @@ function toggleFreeCommodityFee(checked){
       requestedNetMode,
       earlySettlement
     );
+    if(latestResults[newIndex].manualClamped){
+      freeRequestedFinanceByBank[currentKey]=Math.floor(latestResults[newIndex].requestedAmount*100)/100;
+      latestResults[newIndex].policyWarning='تم تخفيض المبلغ اليدوي تلقائيًا ليتوافق مع الحد الأعلى للقسط بعد تغيير رسوم السلعة. يجب تأكيد العرض مع البنك.';
+    }
+    const verifiedManualPolicy=assessBankEligibility(latestResults[newIndex],earlySettlement);
+    latestResults[newIndex].policyEligible=verifiedManualPolicy.eligible;
+    latestResults[newIndex].policyReason=verifiedManualPolicy.reason;
+    latestResults[newIndex].policyWarning=[latestResults[newIndex].policyWarning,verifiedManualPolicy.warning,
+      !verifiedManualPolicy.eligible?'المبلغ اليدوي لا يحقق الحد الأدنى لصافي الفائض؛ ليس عرضًا مؤهلًا.':''].filter(Boolean).join(' ');
   }
   window.__FINO_LAST_REJECTIONS=evaluated.filter(bank=>!bank.policyEligible);
 
@@ -13913,7 +13956,7 @@ function applyFreeRequestedBuyoutAmount(){
     ? Number(best.maximumNetBeforeDebt||best.netBeforeDebt)
     : Number(best.maximumPrincipalBeforeFees||best.principalBeforeFees);
 
-  if(requested>0 && requested>maxAllowed+0.01){
+  if(requested>0 && requested>maxAllowed+0.000001){
     if(err){
       err.textContent=`المبلغ المطلوب أعلى من الحد الأعلى الممنوح في هذه الحسبة: ${money(maxAllowed)}. خفّض المبلغ إلى الحد الأعلى أو أقل.`;
       err.classList.add('show');
@@ -13960,13 +14003,18 @@ function recalculateSelectedBuyoutManualAmount(){
   let updated=maxFinance;
   if(requested>0){
     updated=financeFromRequestedAmount(maxFinance,requested,netMode,earlySettlement);
+    if(updated.manualClamped){
+      freeRequestedFinanceByBank[currentKey]=Math.floor(updated.requestedAmount*100)/100;
+      updated.policyWarning='تم تخفيض المبلغ اليدوي تلقائيًا لحد القسط المسموح بعد تعديل الرسوم أو المدة.';
+    }
   }
 
   // Keep the selected bank visible even if a deliberately reduced amount
   // produces a small/negative surplus; show the red amount warning instead.
-  updated.policyEligible=true;
-  updated.policyWarning=best.policyWarning||'';
-  updated.policyReason='';
+  const checkedPolicy=assessBankEligibility(updated,earlySettlement);
+  updated.policyEligible=checkedPolicy.eligible;
+  updated.policyWarning=[updated.policyWarning,checkedPolicy.warning,!checkedPolicy.eligible?'هذا المبلغ اليدوي لا يحقق شرط صافي الفائض للبنك، ولا يُعد ترشيحًا صالحًا.':''].filter(Boolean).join(' ');
+  updated.policyReason=checkedPolicy.reason;
 
   latestResults[selectedResultIndex]=updated;
 
@@ -14200,6 +14248,7 @@ function renderResults(salary,earlySettlement,externalObligations,out){
 
     ${best.offerExpiry?`<div class="offer-expiry-notice">⏳ هذا العرض محدد حتى تاريخ <b>${best.offerExpiry}</b> • تطبق الشروط والأحكام.</div>`:''}
 
+    ${best.policyEligible===false?`<div class="bank-policy-warning">⚠️ الحسبة اليدوية الحالية غير مؤهلة للترشيح حسب شرط صافي الفائض. عدّل المبلغ أو تحقق من البنك.</div>`:''}
     ${best.policyWarning?`<div class="bank-policy-warning">${best.policyWarning}</div>`:''}
 
     <div class="finance-details">
@@ -14222,7 +14271,7 @@ function renderResults(salary,earlySettlement,externalObligations,out){
 
     ${best.commodityEnabled?`
     <div class="commodity-note">
-      <b>رسوم فرق السلعة:</b> محسوبة في هذه الحسبة بنسبة 1%، وقد تختلف حسب البنك ونوع السلعة، وقد لا توجد في بعض البنوك أو بعض السلع.
+      <b>رسوم فرق السلعة:</b> محسوبة مبدئيًا بنسبة ${fmt(100*(best.commodityRate??0))}% حسب إعداد البنك في المركزية؛ يرجى تأكيد قيمة الرسوم قبل الاعتماد.
     </div>
     `:''}
 
@@ -14263,7 +14312,7 @@ function renderResults(salary,earlySettlement,externalObligations,out){
       <div class="commodity-control-top">
         <div class="commodity-control-copy">
           <b>رسوم فرق السلعة لهذا البنك</b>
-          <small>${best.commodityEnabled?'مفعّلة: الحسبة تخصم 1% من صافي التمويل.':'مطفأة: الحسبة بدون رسوم فرق السلعة.'}</small>
+          <small>${best.commodityEnabled?`مفعّلة: نسبة تقديرية ${fmt(100*(best.commodityRate??0))}% حسب البنك.`:'مطفأة: الحسبة بدون رسوم فرق السلعة.'}</small>
         </div>
         <label class="commodity-toggle">
           <input type="checkbox" ${best.commodityEnabled?'checked':''} onchange="toggleFreeCommodityFee(this.checked)">
@@ -15106,7 +15155,7 @@ canvasRoundRect(ctx,70,470,940,105,16,'#fffafa','#efcaca');
     ['إجمالي الأرباح',englishMoney(best.totalProfit),false],
     ['الرسوم الإدارية',englishMoneyExact(best.adminFee),false],
     ['ضريبة الرسوم الإدارية',englishMoneyExact(best.adminVat),false],
-    ...(best.commodityEnabled?[['رسوم فرق السلعة 1%',englishMoneyExact(best.commodityFee),true]]:[]),
+    ...(best.commodityEnabled?[[`رسوم فرق السلعة ${fmt(100*(best.commodityRate??0))}% (تقديري)`,englishMoneyExact(best.commodityFee),true]]:[]),
     ['مدة الحسبة',durationText,false]
   ];
 
@@ -15679,7 +15728,7 @@ async function createSmartDetailedPngBlob(){
     ['إجمالي الأرباح',englishMoney(r.profit),false],
     ['الرسوم الإدارية',englishMoneyExact(r.adminFee),false],
     ['ضريبة الرسوم الإدارية',englishMoneyExact(r.adminVat),false],
-    ...(r.commodityEnabled?[['رسوم فرق السلعة 1%',englishMoneyExact(r.commodityFee),true]]:[]),
+    ...(r.commodityEnabled?[[`رسوم فرق السلعة ${fmt(100*(r.commodityRate??0))}% (تقديري)`,englishMoneyExact(r.commodityFee),true]]:[]),
     ['مدة الحسبة',`${r.months} شهر`,false],
     ...(smartOwnerShowsDeduction()?[['نسبة الاستقطاع',`${englishNumber(r.deductionPercent,2)}%`,false]]:[]),
     ['قسط الشخصي القائم',englishMoney(r.personalInstallment||0),false]
@@ -16019,7 +16068,7 @@ async function createResultPngBlob(){
   ctx.beginPath(); ctx.moveTo(70,1205+footerShift); ctx.lineTo(1010,1205+footerShift); ctx.stroke();
 
   ctx.fillStyle='#073b67'; ctx.font='900 25px Cairo, Arial, sans-serif';
-  ctx.fillText(best.commodityEnabled?'احتساب دقيق • رسوم فرق السلعة محتسبة 1% • ترشيح البنك الأنسب':'احتساب دقيق • بدون رسوم فرق السلعة • ترشيح البنك الأنسب',1010,1255+footerShift);
+  ctx.fillText(best.commodityEnabled?'حسبة مبدئية • رسوم السلعة حسب إعداد البنك • ترشيح إرشادي':'احتساب دقيق • بدون رسوم فرق السلعة • ترشيح البنك الأنسب',1010,1255+footerShift);
 
   ctx.fillStyle='#5f7888'; ctx.font='700 21px Cairo, Arial, sans-serif';
   ctx.fillText('للتواصل وبدء الإجراءات:',1010,1305+footerShift);
@@ -16054,7 +16103,7 @@ async function shareResultImageDirect(clientPhone){
     const blob=await createResultPngBlob();
     const best=getSelectedResult();
 
-    const caption=`FINO | نتيجة حسبة شراء مديونية التمويل الشخصي
+    const caption=`FINO99 | نتيجة حسبة شراء مديونية التمويل الشخصي
 البنك المرشح: ${best.name}
 صافي الكاش المتوقع: ${englishMoney(best.cashAfterDebt)}
 للتأكيد على الحسبة والإجراءات والاستفسارات:
@@ -16879,3 +16928,109 @@ async function f99OwnerContractsArchive(){
   if(!r.ok||r.data?.ok===false){portalAssistant('<div class="portal-alert">تعذر جلب العقود. تأكد من تنفيذ ملف ترقية المركزية.</div>');return;}
   const items=r.data?.items||[];
   window.f99ContractsArchiveCache=items;
+  portalAssistant(`<div class="portal-contract-box"><h4>سجل العقود المركزي (${items.length})</h4><div class="portal-note">عرض بيانات العقود المخزنة، حتى عند إلغاء الكود. لا تحذف العقود المعتمدة إلا وفق سياسة الاحتفاظ والأنظمة.</div>
+  <div class="portal-contract-list">${items.map(x=>`<div class="portal-contract-row"><div><b>${f99Esc(x.contract_number||x.id)} — ${f99Esc(x.status==='accepted'?'موافق عليه':x.status==='rejected'?'مرفوض':'معلّق')}</b><small>${f99Esc(x.client_name||'عميل')} • ${f99Esc(x.created_at||'')}</small></div><button type="button" onclick="f99PrintContract('${f99Esc(x.id)}')">عرض/حفظ PDF</button></div>`).join('')||'لا توجد عقود مسجلة'}</div></div>`);
+ },100);
+}
+function f99PrintContract(id){
+ const x=(window.f99ContractsArchiveCache||[]).find(v=>v.id===id);if(!x)return;
+ const w=window.open('','_blank');if(!w){alert('السماح بالنوافذ المنبثقة مطلوب لعرض العقد المؤرشف.');return;}
+ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const body=[['رقم العقد',x.contract_number||x.id],['اسم العميل',x.client_name],['تاريخ العقد',x.created_at],['حالة العقد',x.status==='accepted'?'موافق عليه':x.status==='rejected'?'مرفوض':'معلق'],['رقم الهاتف',x.phone],['قيمة الأتعاب',x.fee_amount]].map(([k,v])=>`<p><b>${esc(k)}:</b> ${esc(v)}</p>`).join('');
+ w.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>عقد '+esc(x.contract_number||'')+'</title><style>body{font:16px system-ui;line-height:1.9;padding:36px;max-width:760px;margin:auto}article{white-space:pre-wrap;border:1px solid #bbb;padding:20px;border-radius:8px}button{padding:12px 22px}@media print{button{display:none}}</style></head><body><h2>'+esc(x.rendered_title||'عقد')+'</h2>'+body+'<article>'+esc(x.rendered_body||'')+'</article><p>هذه نسخة من السجل المخزن في مركزية FINO99 الجديدة، ولا تُعد توقيعًا رقميًا معتمدًا بذاتها.</p><button onclick="window.print()">طباعة / حفظ PDF</button></body></html>');w.document.close();
+}
+const f99PriorApplyClientPackage=fino99ApplyClientPackage;
+fino99ApplyClientPackage=function(){const result=f99PriorApplyClientPackage.apply(this,arguments);if(activeAccess?.record?.central)f99ApplyTheme(fino99ActivePackage().theme);return result;};
+
+
+function f99OpenFeesClient(){
+ showPage('f99FeesClientPage');
+ const p=fino99ActivePackage(),s=document.getElementById('f99FeesService');if(!s)return;
+ s.innerHTML='';(p.feeCatalog||[]).forEach((item,i)=>{const o=document.createElement('option');o.value=String(i);o.textContent=item.name;s.appendChild(o)});
+ if(!s.options.length){const o=document.createElement('option');o.textContent='لم يحدد المالك أتعاب الخدمات لهذا الكود';s.appendChild(o)}
+ f99ComputeFee();
+}
+function f99ComputeFee(){const p=fino99ActivePackage(),i=Math.max(0,Number(document.getElementById('f99FeesService')?.value||0)),item=p.feeCatalog?.[i];document.getElementById('f99FeesAmount').textContent=item?Number(item.fee||0).toLocaleString('en-US')+' ريال':'—';}
+function f99CopyFeeQuote(){const p=fino99ActivePackage(),i=Math.max(0,Number(document.getElementById('f99FeesService')?.value||0)),item=p.feeCatalog?.[i];if(!item)return;const txt=`FINO99\nالخدمة: ${item.name}\nأتعاب الوساطة والمتابعة: ${Number(item.fee||0).toLocaleString('en-US')} ريال\nتطبق الشروط الواردة في العقد أو الاتفاق، إن وجد.`;if(navigator.clipboard?.writeText)navigator.clipboard.writeText(txt).catch(()=>window.prompt('انسخ التفاصيل:',txt));else window.prompt('انسخ التفاصيل:',txt);}
+
+</script>
+
+<!-- FINO V21 — Broadcast Gateway -->
+<section id="broadcastGateway" class="broadcast-gateway">
+  <div class="broadcast-gateway-card">
+    <div class="broadcast-gateway-title" id="broadcastGatewayBrand">FINO99</div>
+    <div class="broadcast-gateway-sub">وضع البث المباشر</div>
+    <div class="broadcast-gateway-actions">
+      <button class="broadcast-gateway-btn primary" type="button" onclick="openFINIUMBroadcast()">
+        📡 البث
+        <small>واجهة واضحة ومخصصة للبث المباشر</small>
+      </button>
+      <button class="broadcast-gateway-btn" type="button" onclick="openFINIUMBroadcastControl()">
+        ⚙️ التحكم
+        <small>فتح لوحة المالك الكاملة</small>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- FINO V21 — Broadcast Shell -->
+<section id="broadcastShell" class="broadcast-shell broadcast-no-meta">
+  <div class="broadcast-top">
+    <div class="broadcast-greeting" id="broadcastGreeting">حياكم الله جميعًا</div>
+    <div class="broadcast-clock" id="broadcastClock"></div>
+  </div>
+
+  <main class="broadcast-main">
+    <div id="broadcastHome" class="broadcast-home-grid">
+      <button class="broadcast-home-card" type="button" onclick="openBroadcastBuyout()">
+        <div class="emoji">🏦</div>
+        <b>تحويل المديونية</b>
+        <span>ترشيح العروض ومقارنة النتائج</span>
+      </button>
+      <button class="broadcast-home-card" type="button" onclick="openBroadcastSmart()">
+        <div class="emoji">🧮</div>
+        <b>الحاسبة الذكية</b>
+        <span>حسبة مباشرة وواضحة للبث</span>
+      </button>
+    </div>
+
+    <section id="broadcastBuyoutPanel" class="broadcast-panel">
+      <div class="broadcast-panel-head">
+        <h2>تحويل المديونية</h2>
+        <button class="broadcast-back" type="button" onclick="backBroadcastHome()">رجوع</button>
+      </div>
+      <div id="broadcastBuyoutChat" class="broadcast-chat"></div>
+      <div id="broadcastBuyoutInputWrap" class="broadcast-input-wrap" style="display:none">
+        <input id="broadcastBuyoutInput" class="broadcast-input" autocomplete="off">
+        <button class="broadcast-send" type="button" onclick="submitBroadcastBuyoutInput()">إرسال</button>
+      </div>
+    </section>
+
+    <section id="broadcastSmartPanel" class="broadcast-panel">
+      <div class="broadcast-panel-head">
+        <h2>الحاسبة الذكية</h2>
+        <button class="broadcast-back" type="button" onclick="backBroadcastHome()">رجوع</button>
+      </div>
+      <div id="broadcastSmartChat" class="broadcast-chat"></div>
+      <div id="broadcastSmartInputWrap" class="broadcast-input-wrap" style="display:none">
+        <input id="broadcastSmartInput" class="broadcast-input" autocomplete="off">
+        <button class="broadcast-send" type="button" onclick="submitBroadcastSmartInput()">إرسال</button>
+      </div>
+    </section>
+  </main>
+</section>
+
+
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+ const n=document.getElementById('f99NewCentralNotice');
+ if(typeof fino99NewCentralConfigured==='function'){
+   const connected=fino99NewCentralConfigured();
+   if(n){ n.hidden=connected; n.textContent=connected?'':'FINO99 المطورة • المركزية الجديدة غير مربوطة بعد. لن يعمل أي كود حتى اكتمال الربط.'; }
+   const status=document.getElementById('finiumWeatherChip');
+   if(status && !connected)status.textContent='● بانتظار ربط المركزية الجديدة';
+ }
+});
+</script>
+</body>
+</html>
