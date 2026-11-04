@@ -1,5 +1,8 @@
-<!-- FINO99 NEW STANDALONE SITE. Rename to index.html when deploying.
-     BEFORE PUBLISHING: replace __FINO99_NEW_SUPABASE_URL__ and __FINO99_NEW_PUBLISHABLE_KEY__
+<!-- FINO99 FINAL RELEASE 2026-11-04 / SINGLE-FILE GITHUB PAGES HTML.
+     New instance only; no link to the old FINO central.
+     IMPORTANT: This file alone does NOT create a Supabase backend.
+     Rename to index.html when deploying.
+     BEFORE PUBLISHING: replace https://vtctapzbeflpxmtwbmal.supabase.co and sb_publishable_4oUXdGgEtQHNfRVG1MC9Ng_q-tSgxqH
      with the NEW Supabase project's URL and PUBLIC publishable key.
      The owner code belongs ONLY in the private SQL, never in this HTML. -->
 <!DOCTYPE html>
@@ -5767,7 +5770,7 @@ body:has(#page1.active)>.app>.ambient { display:none !important; }
         <div class="owner-field"><label>العنوان العربي</label><input id="ownerPlatformAr" value="منصة الحسبة والترشيح المباشر"></div>
         <div class="owner-field"><label>العنوان الإنجليزي</label><input id="ownerPlatformEn" value="THE SMART PLATFORM"></div>
         <div class="owner-field"><label>مؤثر الخلفية</label><select id="ownerPlatformWeather"><option value="auto">تلقائي — الوقت والطقس</option><option value="sunny">مشمس</option><option value="cloud">غائم</option><option value="rain">مطر</option><option value="night">ليل</option></select></div>
-        <div class="owner-field"><label>كلمة مرور المختص المركزي — عند المزامنة فقط</label><input id="ownerCentralPassword" type="password" autocomplete="current-password" placeholder="اختياري إذا كانت الجلسة المركزية مفتوحة"></div>
+        <div class="owner-field"><label>كلمة مرور المركزية الاحتياطية — للمختص فقط</label><input id="ownerCentralPassword" type="password" autocomplete="current-password" placeholder="لا تحتاجها عند الدخول بكود المالك الحر"></div>
       </div>
       <button type="button" class="owner-save" onclick="saveOwnerPlatformIdentity(true)">حفظ وتطبيق على جميع الأجهزة</button><button type="button" class="owner-save secondary" onclick="restoreFINIUMDefaultIdentity()">استعادة تصميم FINO99 الأساسي</button>
       <div id="ownerPlatformStatus" class="portal-note" style="margin-top:8px"></div>
@@ -6238,7 +6241,7 @@ body:has(#page1.active)>.app>.ambient { display:none !important; }
 </div>
 <script>
 /* FINO99 isolated browser state; never read or overwrite the earlier platform's storage. */
-const FINO99_NEW_STORAGE_NAMESPACE='FINO99_NEW_SEPARATE_V1:';
+const FINO99_NEW_STORAGE_NAMESPACE='FINO99_NEW_SEPARATE_V2:';
 const f99LocalStorage=Object.freeze({
   getItem(k){return window.localStorage.getItem(FINO99_NEW_STORAGE_NAMESPACE+String(k))},
   setItem(k,v){return window.localStorage.setItem(FINO99_NEW_STORAGE_NAMESPACE+String(k),String(v))},
@@ -6431,16 +6434,6 @@ function normalizeFINOAdminConfig(raw){
 
   Object.keys(defaults.banks).forEach(id=>{
     cfg.banks[id]={...defaults.banks[id],...(raw.banks&&raw.banks[id]?raw.banks[id]:{})};
-    if(id==='SNB'||id==='RAJHI'){
-      cfg.banks[id].offerLimited=true;
-      cfg.banks[id].offerExpiry='29/09/2026';
-      if(id==='SNB'){
-        cfg.banks[id].featureCopy=String(cfg.banks[id].featureCopy||'').replace(/27\/08\/2026/g,'29/09/2026');
-      }else if(id==='RAJHI'){
-        const clean=String(cfg.banks[id].featureCopy||'').replace(/\s*العرض لفترة محدودة حتى \d{2}\/\d{2}\/\d{4} وتطبق الشروط والأحكام\.?/g,'').trim();
-        cfg.banks[id].featureCopy=(clean?clean+' ':'')+'العرض لفترة محدودة حتى 29/09/2026 وتطبق الشروط والأحكام.';
-      }
-    }
     cfg.banks[id].tables={
       private:Array.isArray(cfg.banks[id].tables?.private)?cfg.banks[id].tables.private:[],
       retired:Array.isArray(cfg.banks[id].tables?.retired)?cfg.banks[id].tables.retired:[],
@@ -6452,14 +6445,6 @@ function normalizeFINOAdminConfig(raw){
       cfg.banks[id].featureEnabled=!!(cfg.banks[id].featureTitle||cfg.banks[id].featureCopy);
     }
 
-    // Apply new photo rates only to unmodified V23 default tables.
-    const previousDefaults=FINO99_PREVIOUS_DEFAULTS[id];
-    if(previousDefaults){
-      const oldRows=previousDefaults.general;
-      const currentRows=cfg.banks[id].tables?.general||[];
-      if(JSON.stringify(currentRows)===JSON.stringify(oldRows))cfg.banks[id].tables.general=cloneAdminValue(defaults.banks[id].tables.general);
-      if(id==='SNB'&&JSON.stringify(cfg.banks[id].tables?.military||[])===JSON.stringify(previousDefaults.military))cfg.banks[id].tables.military=cloneAdminValue(defaults.banks[id].tables.military);
-    }
     if(id==='JAZIRA'&&!(cfg.banks[id].tables?.general||[]).length){
       cfg.banks[id].tables.general=cloneAdminValue(defaults.banks[id].tables.general);
       cfg.banks[id].buyoutEnabled=true;
@@ -6535,7 +6520,7 @@ async function fino99ReadCentral(){
     const settings=r.data?.settings||{};
     const cfg=settings.fino99_finance_config;
     if(cfg&&cfg.banks&&typeof cfg==='object'){
-      const revision=String(cfg.updatedAt||'');
+      const revision=String(cfg.updatedAt||JSON.stringify(cfg));
       if(revision!==fino99CentralRevision){
         fino99CentralRevision=revision;
         finoAdminConfig=normalizeFINOAdminConfig(cfg);
@@ -6573,10 +6558,21 @@ async function fino99SaveCentralFinance(cfg){
   return {ok:true,payload};
 }
 
+function fino99RestoreConfirmedFinanceConfig(){
+  try{
+    const old=f99LocalStorage.getItem(FINO_ADMIN_STORAGE_KEY);
+    finoAdminConfig=normalizeFINOAdminConfig(old?JSON.parse(old):null);
+    applyFINOAdminConfig();
+    if(document.getElementById('adminPanel')?.classList.contains('show'))renderFINOAdmin();
+  }catch(e){console.warn('FINO99 restore saved finance settings',e)}
+}
 async function saveFINOAdminConfig(cfg){
   try{
     const central=await fino99SaveCentralFinance(cfg);
-    if(!central.ok){alert('لم يتم الاعتماد: '+central.error);return false;}
+    if(!central.ok){
+      fino99RestoreConfirmedFinanceConfig();
+      alert('لم يتم الاعتماد: '+central.error);return false;
+    }
     cfg=central.payload;
     const current=f99LocalStorage.getItem(FINO_ADMIN_STORAGE_KEY);
     if(current)f99LocalStorage.setItem(FINO_ADMIN_BACKUP_KEY,current);
@@ -7503,7 +7499,7 @@ function fino99DefaultPackage(){return {
  showDeduction:true,allowMortgage:true,allowPersonal:true,allowOther:true,
  allowSettleOthers:true,allowPrevious:true,allowRestart:true,allowChangeInstallment:true,
  allowChangeAmount:true,showNotice:false,notice:'',feeUntil:'',feeOffer:'',
- deductionWithMortgageLow:55,deductionWithMortgageHigh:67,deductionNoMortgage:45,
+ deductionWithMortgageLow:55,deductionWithMortgageHigh:65,deductionNoMortgage:45,
  personalLimit:33.33,consumerLimit:45,threshold:15000,
  installmentSize:28,questionEnabled:false,questionTitle:'هل لديك تمويل عقاري قائم؟',
  extraQuestions:[],enabledBanks:[],feeLabel:'أتعاب إنجاز المعاملة'
@@ -8111,15 +8107,15 @@ function applyFINOActiveCodeSettings(){
 
 // SETUP (PUBLIC values only): paste the NEW Supabase project URL below.
 // Do NOT use the old FINO project's URL. Do NOT paste service_role or admin password.
-const FINO_SUPABASE_URL='__FINO99_NEW_SUPABASE_URL__';
+const FINO_SUPABASE_URL='https://vtctapzbeflpxmtwbmal.supabase.co';
 // Use only the NEW project's public "sb_publishable_..." key (or legacy anon key).
-const FINO_SUPABASE_PUBLISHABLE_KEY='__FINO99_NEW_PUBLISHABLE_KEY__';
+const FINO_SUPABASE_PUBLISHABLE_KEY='sb_publishable_4oUXdGgEtQHNfRVG1MC9Ng_q-tSgxqH';
 const FINO_CENTRAL_DEVICE_KEY='FINO_CENTRAL_DEVICE_ID_V1';
 const FINO_CENTRAL_ADMIN_TOKEN_KEY='FINO_CENTRAL_ADMIN_TOKEN_V1';
 const FINO_CENTRAL_ENTRY_KEY='FINO_CENTRAL_ENTRY_V1';
 
 function fino99NewCentralConfigured(){
-  return /^https:\/\/[a-z0-9]{20}\.supabase\.co$/.test(FINO_SUPABASE_URL)
+  return /^https:\/\/[a-z0-9-]{15,40}\.supabase\.co$/.test(String(FINO_SUPABASE_URL||'').replace(/\/$/,''))
       && (FINO_SUPABASE_PUBLISHABLE_KEY.startsWith('sb_publishable_')
           || FINO_SUPABASE_PUBLISHABLE_KEY.startsWith('eyJ'));
 }
@@ -12773,7 +12769,16 @@ async function refreshFINIUMWeather(){
   }catch(e){applyFINIUMWeatherScene('sunny')}
 }
 function openOwnerHub(){if(!activeAccess?.record?.central||!activeAccess?.record?.owner){showPage('page1');return;}showPage('ownerHub');loadLocalFINIUMIdentity();}
-function ownerLogout(){activeAccess=null;clientName='';finoPortal.adminUnlocked=false;finoAdminUnlocked=false;finoCentralAdminToken=null;finoSafeSessionRemove(FINO_CENTRAL_ADMIN_TOKEN_KEY);finoCentralClearEntry();showPage('page1')}
+async function ownerLogout(){
+  const serverToken=finoCentralAdminToken;
+  activeAccess=null;clientName='';finoPortal.adminUnlocked=false;
+  finoAdminUnlocked=false;finoCentralAdminToken=null;
+  finoCentralDashboardCache=null;
+  finoSafeSessionRemove(FINO_CENTRAL_ADMIN_TOKEN_KEY);
+  finoCentralClearEntry();hideSubscriptionBadge();showPage('page1');
+  // Best-effort remote revocation; local access is removed immediately.
+  if(serverToken)await finoRpc('fino_admin_logout',{p_token:serverToken});
+}
 function ownerOpenSmartPortal(){openFINOSmartPortal(false)}
 function ownerOpenBuyout(){openFINOSmartPortal(false);setTimeout(()=>startFINOPortalBuyout(),40)}
 function ownerOpenSmartCalculator(){renderSmartBanks();showPage('smartPage');setTimeout(()=>document.getElementById('smartSalary')?.focus(),100)}
@@ -12796,18 +12801,18 @@ async function saveOwnerPlatformIdentity(sync=true){
   const code=String(document.getElementById('ownerPlatformCode')?.value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   if(code.length<4||code.length>6){if(status)status.textContent='اسم المنصة من 4 إلى 6 أحرف أو أرقام إنجليزية.';return}
   const next=normalizeFINIUMIdentity({code,ar:document.getElementById('ownerPlatformAr')?.value,en:document.getElementById('ownerPlatformEn')?.value,weather:document.getElementById('ownerPlatformWeather')?.value});
-  finiumIdentity=next;f99LocalStorage.setItem(FINIUM_IDENTITY_KEY,JSON.stringify(next));applyFINIUMIdentity();refreshFINIUMWeather();
-  if(!sync){if(status)status.textContent='تم الحفظ على هذا الجهاز.';return}
+  if(!sync){finiumIdentity=next;f99LocalStorage.setItem(FINIUM_IDENTITY_KEY,JSON.stringify(next));applyFINIUMIdentity();refreshFINIUMWeather();if(status)status.textContent='تم الحفظ على هذا الجهاز.';return}
   try{
     if(!finoCentralAdminToken){
       const pw=String(document.getElementById('ownerCentralPassword')?.value||'');
-      if(!pw){if(status)status.textContent='تم الحفظ محليًا. للتطبيق على جميع الأجهزة أدخل كلمة مرور المختص المركزي ثم اضغط الحفظ مرة أخرى.';return}
-      const login=await finoCentralAdminLogin(pw);if(!login.ok){if(status)status.textContent='تم الحفظ محليًا، لكن كلمة مرور المختص المركزي غير صحيحة.';return}
+      if(!pw){if(status)status.textContent='لم تُعتمد التغييرات. أدخل كلمة مرور المركزية أو سجّل دخول المالك من الكود الحر.';return}
+      const login=await finoCentralAdminLogin(pw);if(!login.ok){if(status)status.textContent='فشل التحقق المركزي، ولم تُعتمد التغييرات.';return}
     }
     const r=await finoCentralAdminCall('fino_admin_upsert_setting',{p_setting_key:'platform_identity',p_value:next});
     if(!r.ok||r.data?.ok===false)throw new Error(finoCentralDebugMessage(r));
-    if(status)status.textContent='✅ تم الحفظ مركزيًا. الاسم والتصميم سيظهران على الأجهزة عند فتح أو تحديث المنصة.';
-  }catch(e){if(status)status.textContent='تم الحفظ محليًا، وتعذرت المزامنة المركزية: '+String(e.message||e)}
+    finiumIdentity=next;f99LocalStorage.setItem(FINIUM_IDENTITY_KEY,JSON.stringify(next));applyFINIUMIdentity();refreshFINIUMWeather();
+    if(status)status.textContent='✅ حفظت المركزية هوية FINO99 الجديدة، وستظهر على الأجهزة المتصلة عند تحديثها.';
+  }catch(e){if(status)status.textContent='فشلت المزامنة المركزية ولم نغيّر الاسم محليًا: '+String(e.message||e)}
 }
 function restoreFINIUMDefaultIdentity(){finiumIdentity={...FINIUM_DEFAULT_IDENTITY};f99LocalStorage.setItem(FINIUM_IDENTITY_KEY,JSON.stringify(finiumIdentity));applyFINIUMIdentity();refreshFINIUMWeather();document.getElementById('ownerPlatformStatus').textContent='تمت استعادة هوية FINO99 الأساسية محليًا. اضغط حفظ وتطبيق على جميع الأجهزة لمزامنتها.'}
 function openFINOPrintStudio(){showPage('printStudio');renderFINOPrintPreview()}
@@ -12994,7 +12999,7 @@ async function login(){
   }
   const staticRecord=hash?(ACCESS_CODES.find(x=>x.hash===hash)||null):null;
 
-  // First: central validation. If code is present centrally, central rules are authoritative.
+  // All codes are verified by the NEW FINO99 central service, never old browser storage.
   let centralAttempt=await finoCentralOpenCode(value,'');
   if(centralAttempt.transport && centralAttempt.data && centralAttempt.data.reason!=='CODE_INVALID'){
     if(centralAttempt.data.ok===false){
@@ -13021,12 +13026,29 @@ return;
       fino99QuestionResponses.clear();fino99QuestionsAppliedMonthly=0;
       finoCentralStoreEntry(centralAttempt.data);
       const services=Array.isArray(centralAttempt.data.allowed_services)?centralAttempt.data.allowed_services:['buyout'];
+      // The Supabase fino_client_open_code() response intentionally does NOT contain
+      // an `owner` flag. Ask the central backend to elevate the verified entry.
+      // A customer entry always receives OWNER_ACCESS_DENIED; only the true owner
+      // gets an admin_token, checked again by fino_admin_dashboard().
+      const ownerSession=await finoRpc('fino_owner_admin_session',{
+        p_entry_token:centralAttempt.data.entry_token,
+        p_device_id:finoCentralDeviceId()
+      });
+      const ownerGranted=ownerSession.ok===true &&
+        ownerSession.data?.ok===true &&
+        typeof ownerSession.data.admin_token==='string' &&
+        ownerSession.data.admin_token.length>0;
+      if(!ownerGranted && /^المالك(?:\s|\b|\s*—)/.test(String(centralAttempt.data.code_name||''))){
+        activeAccess=null;finoCentralClearEntry();hideSubscriptionBadge();
+        error.textContent='تم التحقق من كود المالك لكن جلسة صلاحيات المالك لم تُعتمد من المركزية. تأكد من عمل وظيفة fino_owner_admin_session.';
+        error.style.display='block';return;
+      }
       const record={
         ...(staticRecord||{}),
         central:true,
         label:centralAttempt.data.code_name||staticRecord?.label||'كود مركزي',
-        free:centralAttempt.data.owner===true,
-        owner:centralAttempt.data.owner===true,
+        free:ownerGranted,
+        owner:ownerGranted,
         package3:false,
         dynamic:true,
         trialSmart:!staticRecord?.free && services.length===1 && services[0]==='buyout',
@@ -13047,27 +13069,35 @@ return;
       activeAccess={record,state};
       startSubscriptionBadge(record,state);
 if(record.owner){
-        // Owner code is verified by the NEW Supabase project before permission elevation.
-        // Second secure, short-lived server session unlocks all owner administration.
-        const ownerSession=await finoRpc('fino_owner_admin_session',{
-          p_entry_token:centralAttempt.data.entry_token,
-          p_device_id:finoCentralDeviceId()
-        });
-        if(!ownerSession.ok||ownerSession.data?.ok!==true||!ownerSession.data.admin_token){
-          activeAccess=null;finoCentralClearEntry();hideSubscriptionBadge();
-          error.textContent='تعذر تفعيل صلاحيات المالك مركزيًا. تحقق من تشغيل كود تأسيس المركزية الجديدة بالكامل.';
-          error.style.display='block';return;
-        }
+        // The server already issued an owner-only session after verifying the
+        // access-code entry AND device. Never elevate using a UI label or local flag.
         finoCentralAdminToken=ownerSession.data.admin_token;
         finoSafeSessionSet(FINO_CENTRAL_ADMIN_TOKEN_KEY,finoCentralAdminToken);
         finoPortal.adminUnlocked=true;
         finoAdminUnlocked=true;
         clientName='';pendingAccessAfterLogin=null;
-        await finoCentralAdminDashboard(true);
+        // Do not announce success unless the real central admin session works.
+        const dashboardCheck=await finoCentralAdminDashboard(true);
+        if(!dashboardCheck.ok||dashboardCheck.data?.ok===false){
+          activeAccess=null;finoPortal.adminUnlocked=false;finoAdminUnlocked=false;
+          finoCentralAdminToken=null;finoSafeSessionRemove(FINO_CENTRAL_ADMIN_TOKEN_KEY);
+          finoCentralClearEntry();hideSubscriptionBadge();
+          error.textContent='تم التعرف على كود المالك، لكن جلسة الإدارة المركزية لم تكتمل. تحقق من تثبيت ملف SQL وربط المشروع الجديد.';
+          error.style.display='block';return;
+        }
         openOwnerHub();return;
       }
       if(record.broadcast||services.includes('broadcast')){clientName='';pendingAccessAfterLogin=null;enterFINIUMBroadcastGateway();return;}
-      openIdentityStep(record,state);
+      // Mandatory first read: per-client banking, fee, calculation, contract and
+      // restriction settings must be fetched BEFORE entering any calculator.
+      const initialRuntime=await finoCentralRuntime();
+      if(!initialRuntime.ok || initialRuntime.data?.ok===false || !initialRuntime.data?.code){
+        activeAccess=null;finoCentralClearEntry();hideSubscriptionBadge();
+        error.textContent='تعذر تحميل صلاحيات الباقة من مركزية FINO99. أعد المحاولة بعد التأكد من الاتصال.';
+        error.style.display='block';return;
+      }
+      const confirmedRecord=activeAccess.record;
+      openIdentityStep(confirmedRecord,state);
       return;
     }
   }
@@ -16849,109 +16879,3 @@ async function f99OwnerContractsArchive(){
   if(!r.ok||r.data?.ok===false){portalAssistant('<div class="portal-alert">تعذر جلب العقود. تأكد من تنفيذ ملف ترقية المركزية.</div>');return;}
   const items=r.data?.items||[];
   window.f99ContractsArchiveCache=items;
-  portalAssistant(`<div class="portal-contract-box"><h4>سجل العقود المركزي (${items.length})</h4><div class="portal-note">عرض بيانات العقود المخزنة، حتى عند إلغاء الكود. لا تحذف العقود المعتمدة إلا وفق سياسة الاحتفاظ والأنظمة.</div>
-  <div class="portal-contract-list">${items.map(x=>`<div class="portal-contract-row"><div><b>${f99Esc(x.contract_number||x.id)} — ${f99Esc(x.status==='accepted'?'موافق عليه':x.status==='rejected'?'مرفوض':'معلّق')}</b><small>${f99Esc(x.client_name||'عميل')} • ${f99Esc(x.created_at||'')}</small></div><button type="button" onclick="f99PrintContract('${f99Esc(x.id)}')">عرض/حفظ PDF</button></div>`).join('')||'لا توجد عقود مسجلة'}</div></div>`);
- },100);
-}
-function f99PrintContract(id){
- const x=(window.f99ContractsArchiveCache||[]).find(v=>v.id===id);if(!x)return;
- const w=window.open('','_blank');if(!w){alert('السماح بالنوافذ المنبثقة مطلوب لعرض العقد المؤرشف.');return;}
- const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const body=[['رقم العقد',x.contract_number||x.id],['اسم العميل',x.client_name],['تاريخ العقد',x.created_at],['حالة العقد',x.status==='accepted'?'موافق عليه':x.status==='rejected'?'مرفوض':'معلق'],['رقم الهاتف',x.phone],['قيمة الأتعاب',x.fee_amount]].map(([k,v])=>`<p><b>${esc(k)}:</b> ${esc(v)}</p>`).join('');
- w.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>عقد '+esc(x.contract_number||'')+'</title><style>body{font:16px system-ui;line-height:1.9;padding:36px;max-width:760px;margin:auto}article{white-space:pre-wrap;border:1px solid #bbb;padding:20px;border-radius:8px}button{padding:12px 22px}@media print{button{display:none}}</style></head><body><h2>'+esc(x.rendered_title||'عقد')+'</h2>'+body+'<article>'+esc(x.rendered_body||'')+'</article><p>هذه نسخة من السجل المخزن في مركزية FINO99 الجديدة، ولا تُعد توقيعًا رقميًا معتمدًا بذاتها.</p><button onclick="window.print()">طباعة / حفظ PDF</button></body></html>');w.document.close();
-}
-const f99PriorApplyClientPackage=fino99ApplyClientPackage;
-fino99ApplyClientPackage=function(){const result=f99PriorApplyClientPackage.apply(this,arguments);if(activeAccess?.record?.central)f99ApplyTheme(fino99ActivePackage().theme);return result;};
-
-
-function f99OpenFeesClient(){
- showPage('f99FeesClientPage');
- const p=fino99ActivePackage(),s=document.getElementById('f99FeesService');if(!s)return;
- s.innerHTML='';(p.feeCatalog||[]).forEach((item,i)=>{const o=document.createElement('option');o.value=String(i);o.textContent=item.name;s.appendChild(o)});
- if(!s.options.length){const o=document.createElement('option');o.textContent='لم يحدد المالك أتعاب الخدمات لهذا الكود';s.appendChild(o)}
- f99ComputeFee();
-}
-function f99ComputeFee(){const p=fino99ActivePackage(),i=Math.max(0,Number(document.getElementById('f99FeesService')?.value||0)),item=p.feeCatalog?.[i];document.getElementById('f99FeesAmount').textContent=item?Number(item.fee||0).toLocaleString('en-US')+' ريال':'—';}
-function f99CopyFeeQuote(){const p=fino99ActivePackage(),i=Math.max(0,Number(document.getElementById('f99FeesService')?.value||0)),item=p.feeCatalog?.[i];if(!item)return;const txt=`FINO99\nالخدمة: ${item.name}\nأتعاب الوساطة والمتابعة: ${Number(item.fee||0).toLocaleString('en-US')} ريال\nتطبق الشروط الواردة في العقد أو الاتفاق، إن وجد.`;if(navigator.clipboard?.writeText)navigator.clipboard.writeText(txt).catch(()=>window.prompt('انسخ التفاصيل:',txt));else window.prompt('انسخ التفاصيل:',txt);}
-
-</script>
-
-<!-- FINO V21 — Broadcast Gateway -->
-<section id="broadcastGateway" class="broadcast-gateway">
-  <div class="broadcast-gateway-card">
-    <div class="broadcast-gateway-title" id="broadcastGatewayBrand">FINO99</div>
-    <div class="broadcast-gateway-sub">وضع البث المباشر</div>
-    <div class="broadcast-gateway-actions">
-      <button class="broadcast-gateway-btn primary" type="button" onclick="openFINIUMBroadcast()">
-        📡 البث
-        <small>واجهة واضحة ومخصصة للبث المباشر</small>
-      </button>
-      <button class="broadcast-gateway-btn" type="button" onclick="openFINIUMBroadcastControl()">
-        ⚙️ التحكم
-        <small>فتح لوحة المالك الكاملة</small>
-      </button>
-    </div>
-  </div>
-</section>
-
-<!-- FINO V21 — Broadcast Shell -->
-<section id="broadcastShell" class="broadcast-shell broadcast-no-meta">
-  <div class="broadcast-top">
-    <div class="broadcast-greeting" id="broadcastGreeting">حياكم الله جميعًا</div>
-    <div class="broadcast-clock" id="broadcastClock"></div>
-  </div>
-
-  <main class="broadcast-main">
-    <div id="broadcastHome" class="broadcast-home-grid">
-      <button class="broadcast-home-card" type="button" onclick="openBroadcastBuyout()">
-        <div class="emoji">🏦</div>
-        <b>تحويل المديونية</b>
-        <span>ترشيح العروض ومقارنة النتائج</span>
-      </button>
-      <button class="broadcast-home-card" type="button" onclick="openBroadcastSmart()">
-        <div class="emoji">🧮</div>
-        <b>الحاسبة الذكية</b>
-        <span>حسبة مباشرة وواضحة للبث</span>
-      </button>
-    </div>
-
-    <section id="broadcastBuyoutPanel" class="broadcast-panel">
-      <div class="broadcast-panel-head">
-        <h2>تحويل المديونية</h2>
-        <button class="broadcast-back" type="button" onclick="backBroadcastHome()">رجوع</button>
-      </div>
-      <div id="broadcastBuyoutChat" class="broadcast-chat"></div>
-      <div id="broadcastBuyoutInputWrap" class="broadcast-input-wrap" style="display:none">
-        <input id="broadcastBuyoutInput" class="broadcast-input" autocomplete="off">
-        <button class="broadcast-send" type="button" onclick="submitBroadcastBuyoutInput()">إرسال</button>
-      </div>
-    </section>
-
-    <section id="broadcastSmartPanel" class="broadcast-panel">
-      <div class="broadcast-panel-head">
-        <h2>الحاسبة الذكية</h2>
-        <button class="broadcast-back" type="button" onclick="backBroadcastHome()">رجوع</button>
-      </div>
-      <div id="broadcastSmartChat" class="broadcast-chat"></div>
-      <div id="broadcastSmartInputWrap" class="broadcast-input-wrap" style="display:none">
-        <input id="broadcastSmartInput" class="broadcast-input" autocomplete="off">
-        <button class="broadcast-send" type="button" onclick="submitBroadcastSmartInput()">إرسال</button>
-      </div>
-    </section>
-  </main>
-</section>
-
-
-<script>
-document.addEventListener('DOMContentLoaded',()=>{
- const n=document.getElementById('f99NewCentralNotice');
- if(typeof fino99NewCentralConfigured==='function'){
-   const connected=fino99NewCentralConfigured();
-   if(n){ n.hidden=connected; n.textContent=connected?'':'FINO99 المطورة • المركزية الجديدة غير مربوطة بعد. لن يعمل أي كود حتى اكتمال الربط.'; }
-   const status=document.getElementById('finiumWeatherChip');
-   if(status && !connected)status.textContent='● بانتظار ربط المركزية الجديدة';
- }
-});
-</script>
-</body>
-</html>
