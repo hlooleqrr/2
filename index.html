@@ -5747,17 +5747,17 @@ body:has(#page1.active)>.app>.ambient { display:none !important; }
 <section class="page" id="ownerHub"><div class="viewport">
   <div class="owner-shell">
     <div class="owner-top"><div class="owner-title"><b><span data-platform-code>FINO99</span> • التحكم في كامل المنصة</b><small>كود المالك • إدارة الخدمات والأكواد والعقود والمطبوعات والتصميم</small></div><button type="button" class="owner-exit" onclick="ownerLogout()">خروج</button></div>
-    <div class="owner-hero"><small>OWNER CONTROL CENTER</small><h1>كل أدوات المنصة من مكان واحد</h1><p>اختر القسم المطلوب. التعديلات المركزية تحفظ عبر مركزية FINO99 الجديدة وتظهر للعملاء بعد اعتمادها.</p></div>
+    <div class="owner-hero"><h1>حياك الله يا المالك</h1></div>
     <div class="owner-grid">
       <button class="owner-tile primary" onclick="ownerOpenSmartPortal()"><span class="owner-icon">✦</span><b>المنصة الذكية</b><small>فتح واجهة المحادثة الذكية والوصول لخدمات المنصة.</small></button>
       <button class="owner-tile" onclick="ownerOpenBuyout()"><span class="owner-icon">↔</span><b>تحويل المديونية</b><small>الدخول المباشر لحاسبة وترشيح شراء المديونية.</small></button>
       <button class="owner-tile" onclick="ownerOpenSmartCalculator()"><span class="owner-icon">∑</span><b>الحاسبة الذكية</b><small>حساب شخصي، استهلاكي، شركات وعقاري وفق إعدادات المالك.</small></button>
-      <button class="owner-tile" onclick="ownerOpenAdminSection('codes')"><span class="owner-icon">⌘</span><b>التحكم بالأكواد</b><small>إنشاء، تعديل، تفعيل، إيقاف، تمديد وحذف الأكواد وصلاحيات كل كود.</small></button>
+      <button class="owner-tile" onclick="f99fixOpenCodes()"><span class="owner-icon">⌘</span><b>التحكم بالأكواد</b><small>إنشاء، تعديل، تفعيل، إيقاف، تمديد وحذف الأكواد وصلاحيات كل كود.</small></button>
       <button class="owner-tile" onclick="ownerOpenAdminSection('contracts')"><span class="owner-icon">§</span><b>إدارة العقود والاتفاقات</b><small>قوالب العقود، ربطها بالأكواد، الأرشفة وحالة الاعتماد.</small></button>
       <button class="owner-tile" onclick="openFINOPrintStudio()"><span class="owner-icon">▤</span><b>المطبوعات</b><small>إنشاء بطاقة أو خطاب أو إشعار ومشاركته كنص أو صورة أو PDF عبر الطباعة.</small></button>
       <button class="owner-tile" onclick="f99OwnerContractsArchive()"><span class="owner-icon">▣</span><b>سجل العقود المعتمدة</b><small>حالة العقد، تاريخه، رقم العقد وطباعة النسخة المؤرشفة.</small></button>
       <button class="owner-tile" onclick="ownerOpenAdminSection('archive')"><span class="owner-icon">⌂</span><b>الأرشيف والعملاء</b><small>البحث في العمليات والعملاء والعقود والحسب السابقة.</small></button>
-      <button class="owner-tile warn" onclick="ownerOpenAdminSection('full')"><span class="owner-icon">⚙</span><b>التحكم الكامل</b><small>النسب، البنوك، العروض، الأتعاب، الملاحظات والإعدادات المتقدمة.</small></button>
+      <button class="owner-tile warn" onclick="f99fixOpenAdmin()"><span class="owner-icon">⚙</span><b>الإدارة</b><small>كل إعدادات المنصة والنسب والصلاحيات</small></button>
     </div>
 
 <div class="owner-section-title">تجربة العميل والتوجيهات — مزامنة مركزية</div>
@@ -6469,6 +6469,12 @@ function normalizeFINOAdminConfig(raw){
       cfg.banks[id].buyoutEnabled=true;
       if(!(cfg.banks[id].eligibleTypes||[]).length)cfg.banks[id].eligibleTypes=cloneAdminValue(defaults.banks[id].eligibleTypes);
     }
+    cfg.banks[id].commodityFeeEnabled=cfg.banks[id].commodityFeeEnabled===true;
+    cfg.banks[id].commodityFeePercent=Math.max(0,Math.min(5,Number(cfg.banks[id].commodityFeePercent??1)||0));
+    cfg.banks[id].additionalFeeEnabled=cfg.banks[id].additionalFeeEnabled===true;
+    cfg.banks[id].additionalFeeAmount=Math.max(0,Number(cfg.banks[id].additionalFeeAmount)||0);
+    cfg.banks[id].serviceFeeEnabled=cfg.banks[id].serviceFeeEnabled===true;
+    cfg.banks[id].serviceFeeAmount=Math.max(0,Number(cfg.banks[id].serviceFeeAmount)||0);
     cfg.banks[id].adminNote=String(cfg.banks[id].adminNote||'');
     cfg.banks[id].workEntityNames=Array.isArray(cfg.banks[id].workEntityNames)?cfg.banks[id].workEntityNames:[];
     cfg.banks[id].requireWorkEntity=!!cfg.banks[id].requireWorkEntity;
@@ -6504,7 +6510,13 @@ function normalizeFINOAdminConfig(raw){
           waiverMonths:Number(x.waiverMonths||0),
           deferMonths:Number(x.deferMonths||0),
           featureTitle:x.featureTitle||'',
-          featureCopy:x.featureCopy||''
+          featureCopy:x.featureCopy||'',
+          commodityFeeEnabled:x.commodityFeeEnabled===true,
+          commodityFeePercent:Math.max(0,Math.min(5,Number(x.commodityFeePercent??1)||0)),
+          additionalFeeEnabled:x.additionalFeeEnabled===true,
+          additionalFeeAmount:Math.max(0,Number(x.additionalFeeAmount)||0),
+          serviceFeeEnabled:x.serviceFeeEnabled===true,
+          serviceFeeAmount:Math.max(0,Number(x.serviceFeeAmount)||0)
         };
       }
     });
@@ -7066,6 +7078,18 @@ function renderFINOAdminBankEditorHtml(cfg){
       </div>
     </div>
 
+    <div class="admin-card" id="f99fix-bank-fee-card">
+      <div class="admin-card-title"><b>رسوم البنك والسلعة والأتعاب</b><small>مطفأة افتراضياً لكل بنك، ولا تُطبق إلا عند تشغيلها. تأكد من صحة الرسوم والإفصاح عنها.</small></div>
+      <div class="admin-grid">
+        <div class="admin-field"><label>رسوم السلعة</label><select id="adminCommodityFeeEnabled"><option value="0" ${!b.commodityFeeEnabled?'selected':''}>مطفأة</option><option value="1" ${b.commodityFeeEnabled?'selected':''}>مفعلة</option></select></div>
+        <div class="admin-field"><label>نسبة رسوم السلعة %</label><input id="adminCommodityFeePercent" type="number" min="0" max="5" step="0.01" value="${Number(b.commodityFeePercent??1)}"></div>
+        <div class="admin-field"><label>رسوم بنكية إضافية</label><select id="adminAdditionalFeeEnabled"><option value="0" ${!b.additionalFeeEnabled?'selected':''}>مطفأة</option><option value="1" ${b.additionalFeeEnabled?'selected':''}>مفعلة</option></select></div>
+        <div class="admin-field"><label>قيمة الرسوم الإضافية (ريال)</label><input id="adminAdditionalFeeAmount" type="number" min="0" step="0.01" value="${Number(b.additionalFeeAmount||0)}"></div>
+        <div class="admin-field"><label>أتعاب إنجاز لهذا البنك</label><select id="adminServiceFeeEnabled"><option value="0" ${!b.serviceFeeEnabled?'selected':''}>مطفأة</option><option value="1" ${b.serviceFeeEnabled?'selected':''}>مفعلة</option></select></div>
+        <div class="admin-field"><label>قيمة الأتعاب (ريال)</label><input id="adminServiceFeeAmount" type="number" min="0" step="0.01" value="${Number(b.serviceFeeAmount||0)}"></div>
+      </div>
+      <div class="admin-backup-note">الرسوم البنكية تدخل في حساب صافي التمويل؛ أتعاب الوساطة تظهر مستقلة ولا تُعتبر هامش ربح البنك.</div>
+    </div>
     <div class="admin-save-bar">
       <button type="button" class="admin-primary" onclick="saveCurrentFINOAdminBank()">حفظ وتطبيق فورًا</button>
     </div>
@@ -7125,6 +7149,12 @@ function syncFINOAdminEditorIntoMemory(){
   b.featureTitle=document.getElementById('adminFeatureTitle')?.value.trim()||'';
   b.featureCopy=document.getElementById('adminFeatureCopy')?.value.trim()||'';
   b.adminNote=document.getElementById('adminBankNote')?.value.trim()||'';
+  b.commodityFeeEnabled=document.getElementById('adminCommodityFeeEnabled')?.value==='1';
+  b.commodityFeePercent=Math.max(0,Math.min(5,Number(document.getElementById('adminCommodityFeePercent')?.value||0)));
+  b.additionalFeeEnabled=document.getElementById('adminAdditionalFeeEnabled')?.value==='1';
+  b.additionalFeeAmount=Math.max(0,Number(document.getElementById('adminAdditionalFeeAmount')?.value||0));
+  b.serviceFeeEnabled=document.getElementById('adminServiceFeeEnabled')?.value==='1';
+  b.serviceFeeAmount=Math.max(0,Number(document.getElementById('adminServiceFeeAmount')?.value||0));
   return b;
 }
 async function saveCurrentFINOAdminBank(){
@@ -7726,7 +7756,7 @@ async function finoAdminToggleCode(id,enabled){
 }
 async function finoAdminResetCodeUsage(id){
   if(!finoCentralAdminToken)return;
-  const r=await finoCentralAdminCall('fino_admin_reset_code_usage',{p_code_id:id,p_unlock_device:true});
+  const r=await finoCentralAdminCall('f99fix_admin_code_action',{p_code_id:id,p_action:'reset',p_minutes:0,p_enabled:true,p_unlock_device:true});
   if(!r.ok||r.data?.ok===false){
     portalAssistant(`<div class="portal-central-error">تعذر تصفير استخدامات الكود.<br>${portalEsc(finoCentralDebugMessage(r))}</div>`);return;
   }
@@ -8084,8 +8114,8 @@ async function saveFINOContract(id=''){
 }
 async function extendFINOCentralCode(id,minutes){
   if(!finoCentralAdminToken)return;
-  const r=await finoCentralAdminCall('fino_admin_extend_code',{
-    p_code_id:id,p_minutes:Number(minutes),p_reset_entries:false,p_unlock_device:false
+  const r=await finoCentralAdminCall('f99fix_admin_code_action',{
+    p_code_id:id,p_action:'renew',p_minutes:Number(minutes),p_enabled:true,p_unlock_device:false
   });
   if(!r.ok||r.data?.ok===false){
     portalAssistant('<div class="portal-alert">تعذر تمديد الكود.</div>');return;
@@ -8239,6 +8269,13 @@ async function finoCentralGetLocation(){
 
 async function finoCentralOpenCode(code,clientNameValue=''){
   const device=finoCentralDeviceId();
+  // Resume an existing session for the same code/device without consuming a new entry.
+  // Backend still enforces expiry, device binding and code status.
+  const reused=await finoRpc('f99fix_client_resume_code',{
+    p_code:String(code||'').trim(),p_device_id:device
+  },6000);
+  if(reused.ok && reused.data?.ok===true && reused.data?.entry_token)
+    return {transport:true,data:reused.data};
   let res=await finoRpc('fino_client_open_code',{
     p_code:String(code||'').trim(),
     p_device_id:device,
@@ -9658,6 +9695,8 @@ function showFINOPortalRank(index){
       <div class="portal-detail-line"><span>مدة التمويل</span><b>${r.actualPayments} شهر</b></div>
       <div class="portal-detail-line"><span>هامش الربح</span><b>${fmt(r.rate)}%</b></div>
       <div class="portal-detail-line"><span>إجمالي الأرباح</span><b>${money(r.totalProfit)}</b></div>
+      ${r.additionalFee>0?`<div class="portal-detail-line"><span>رسوم بنكية إضافية</span><b>${money(r.additionalFee)}</b></div>`:''}
+      ${r.serviceFee>0?`<div class="portal-detail-line"><span>أتعاب وساطة مستقلة</span><b>${money(r.serviceFee)}</b></div>`:''}
       <div class="portal-detail-line"><span>صافي التمويل قبل السداد</span><b>${money(r.netBeforeDebt)}</b></div>
       <div class="portal-detail-line"><span>إجمالي التمويل مع الأرباح</span><b>${money(r.grossWithProfit)}</b></div>
     </div>
@@ -10323,7 +10362,7 @@ function showFINOPortalAdminMenu(){
     <div class="portal-admin-section">
       <h4>أكواد العملاء والباقات</h4>
       <div class="portal-admin-actions">
-        <button type="button" class="portal-option primary" onclick="showFINOPortalCodeManager()">➕ إضافة / تعديل كود</button>
+        <button type="button" class="portal-option primary" onclick="f99fixOpenCodes()">➕ إضافة / تعديل كود</button>
         <button type="button" class="portal-option" onclick="refreshFINOCentralAdmin()">🔄 تحديث الأكواد من المركزية</button>
         <button type="button" class="portal-option" onclick="showFINOPortalArchive()">🗂️ أرشفة العملاء</button>
         <button type="button" class="portal-option" onclick="testFINOCentralConnection()">🟢 اختبار اتصال المركزية</button>
@@ -12650,8 +12689,10 @@ function expireCurrentSubscription(){
 }
 
 
+let f99LastAttemptedCode='';
 function openSubscriptionRenewal(){
-  const msg='السلام عليكم أريد تجديد الاشتراك';
+  const code=String(f99LastAttemptedCode||'').trim().toUpperCase();
+  const msg='السلام عليكم، أريد تجديد الاشتراك'+(code?' للكود: '+code:'')+'.';
   openWhatsappToClient('966506214458',msg);
 }
 
@@ -12669,7 +12710,7 @@ function updateRenewalButton(record,state){
   const twoDaysMs=2*24*60*60*1000;
 
   // Show from exactly 2 days remaining until expiry.
-  if(left>0 && left<=twoDaysMs){
+  if((left>0 && left<=twoDaysMs) || left<=0){
     btn.classList.add('show');
   }else{
     btn.classList.remove('show');
@@ -12820,7 +12861,7 @@ function ownerOpenAdminSection(section){
   },40)
 }
 function ownerRouteAdminSection(section){
-  if(section==='codes')return showFINOPortalCodeManager();
+  if(section==='codes')return f99fixOpenCodes();
   if(section==='contracts')return showFINOContractManager();
   if(section==='archive')return showFINOPortalArchive();
   if(section==='full')return openFINOPortalFullAdmin();
@@ -13012,6 +13053,7 @@ async function login(){
 
   document.getElementById('packageRenewBtn')?.classList.remove('show');
   const value=String(input.value||'').trim().toUpperCase();
+  f99LastAttemptedCode=value;
   if(!value){
     error.textContent='أدخل كود الاشتراك';
     error.style.display='block';
@@ -13319,6 +13361,8 @@ function defaultCommodityEnabledForBank(key){
   return !FREE_COMMODITY_DEFAULT_OFF.has(String(key||''));
 }
 function commodityFeeEnabledForBank(key){
+  const bankConfig=getFINOAdminConfig()?.banks?.[key];
+  if(bankConfig && typeof bankConfig.commodityFeeEnabled==='boolean')return bankConfig.commodityFeeEnabled;
   if(!isFreeAccess())return !!window.F99CFinanceSettings?.show_commodity_fees;
   if(Object.prototype.hasOwnProperty.call(freeCommodityOverrides,key)){
     return !!freeCommodityOverrides[key];
@@ -13341,10 +13385,10 @@ function bankTerm(key){
   return BANK_TERMS[key]||{waiverMonths:0,deferMonths:0,commodityFee:0,offerExpiry:'',featureEnabled:false,adminNote:'',featureTitle:'',featureCopy:''};
 }
 
-function feeRatesForCommodity(commodityEnabled){
+function feeRatesForCommodity(commodityEnabled,commodityPercent=1){
   const adminRate=0.005;
   const adminVatRate=adminRate*0.15;
-  const commodityRate=commodityEnabled?0.01:0;
+  const commodityRate=commodityEnabled?Math.max(0,Math.min(5,Number(commodityPercent)||0))/100:0;
   return {
     adminRate,
     adminVatRate,
@@ -13357,7 +13401,8 @@ function financeFromRequestedAmount(maxFinance,requestedAmount,netMode,earlySett
   const requested=Number(requestedAmount||0);
   if(!(requested>0))return {...maxFinance,manualAmount:false};
 
-  const rates=feeRatesForCommodity(maxFinance.commodityEnabled);
+  const rates=feeRatesForCommodity(maxFinance.commodityEnabled,maxFinance.commodityFeePercent??1);
+  const additionalFee=Number(maxFinance.additionalFee||0);
   let principalBeforeFees=0;
 
   // Net mode ON:
@@ -13365,7 +13410,7 @@ function financeFromRequestedAmount(maxFinance,requestedAmount,netMode,earlySett
   // and before settling the existing debt.
   if(netMode){
     const multiplier=1-rates.totalRate;
-    principalBeforeFees=requested/multiplier;
+    principalBeforeFees=(requested+additionalFee)/multiplier;
   }else{
     // Net mode OFF:
     // The entered amount is before fees.
@@ -13375,7 +13420,7 @@ function financeFromRequestedAmount(maxFinance,requestedAmount,netMode,earlySett
   const adminFee=principalBeforeFees*rates.adminRate;
   const adminVat=principalBeforeFees*rates.adminVatRate;
   const commodityFee=principalBeforeFees*rates.commodityRate;
-  const netBeforeDebt=principalBeforeFees-adminFee-adminVat-commodityFee;
+  const netBeforeDebt=principalBeforeFees-adminFee-adminVat-commodityFee-additionalFee;
   const cashAfterDebt=netBeforeDebt-Number(earlySettlement||0);
 
   const grossWithProfit=principalBeforeFees*maxFinance.profitFactor;
@@ -13453,9 +13498,13 @@ function buildFinance(bank,salary,earlySettlement,externalObligations){
   const principalBeforeFees=grossWithProfit/profitFactor;
   const adminFee=principalBeforeFees*0.005;
   const adminVat=adminFee*0.15;
+  const ownerBankPolicy=getFINOAdminConfig()?.banks?.[bank.key]||{};
   const commodityEnabled=commodityFeeEnabledForBank(bank.key);
-  const commodityFee=commodityEnabled ? principalBeforeFees*0.01 : 0;
-  const netBeforeDebt=principalBeforeFees-adminFee-adminVat-commodityFee;
+  const commodityFeePercent=Math.max(0,Number(ownerBankPolicy.commodityFeePercent??1));
+  const commodityFee=commodityEnabled ? principalBeforeFees*commodityFeePercent/100 : 0;
+  const additionalFee=ownerBankPolicy.additionalFeeEnabled?Math.max(0,Number(ownerBankPolicy.additionalFeeAmount)||0):0;
+  const serviceFee=ownerBankPolicy.serviceFeeEnabled?Math.max(0,Number(ownerBankPolicy.serviceFeeAmount)||0):0;
+  const netBeforeDebt=principalBeforeFees-adminFee-adminVat-commodityFee-additionalFee;
   const cashAfterDebt=netBeforeDebt-earlySettlement;
   const totalProfit=grossWithProfit-principalBeforeFees;
   const obligationImpact=obligationImpactInfo(
@@ -13485,6 +13534,9 @@ function buildFinance(bank,salary,earlySettlement,externalObligations){
     adminVat,
     commodityFee,
     commodityEnabled,
+    commodityFeePercent,
+    additionalFee,
+    serviceFee,
     netBeforeDebt,
     cashAfterDebt,
     totalProfit,
@@ -14246,6 +14298,8 @@ function renderResults(salary,earlySettlement,externalObligations,out){
       <div class="finance-detail"><small>الرسوم الإدارية 0.5%</small><b>${moneyExact(best.adminFee)}</b></div>
       <div class="finance-detail"><small>ضريبة الرسوم الإدارية 15%</small><b>${moneyExact(best.adminVat)}</b></div>
       ${best.commodityEnabled?`<div class="finance-detail commodity-fee"><small>رسوم فرق السلعة</small><b>${moneyExact(best.commodityFee)}</b></div>`:''}
+      ${best.additionalFee>0?`<div class="finance-detail"><small>رسوم بنكية إضافية</small><b>${moneyExact(best.additionalFee)}</b></div>`:''}
+      ${best.serviceFee>0?`<div class="finance-detail"><small>أتعاب وساطة مستقلة عن البنك</small><b>${moneyExact(best.serviceFee)}</b></div>`:''}
 
       <div class="finance-detail"><small>صافي التمويل بعد الرسوم وقبل السداد</small><b>${money(best.netBeforeDebt)}</b></div>
       <div class="finance-detail debt"><small>مبلغ السداد المبكر للمديونية</small><b>${money(earlySettlement)}</b></div>
@@ -17233,11 +17287,26 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 #f99s-modal button,#f99s-owner button{background:#165b89;color:white;border:0;border-radius:10px;font:800 13px Cairo,system-ui;padding:10px 14px;min-height:43px;cursor:pointer}
 #f99s-modal .f99s-small{color:#516e83;font-size:12px;line-height:1.8}#f99s-modal .f99s-terms{border:1px solid #d7e4ed;background:#f7fafc;padding:12px;border-radius:12px;white-space:pre-wrap;font-size:12px;max-height:250px;overflow:auto}
 #f99s-owner input,#f99s-owner textarea{width:100%;border:1px solid #a7c1d3;border-radius:10px;padding:12px;font-size:15px;background:white;color:#142d40}
-#f99s-owner label{display:block;font-size:13px;font-weight:800;margin:12px 0 3px}#f99s-owner{padding:14px;background:#fff;border:1px solid #dceaf2;border-radius:15px}
+#f99s-owner{padding:14px;background:#fff;border:1px solid #dceaf2;border-radius:15px}
+#f99s-owner .f99s-field{display:block;margin:13px 0;font-size:14px;font-weight:800;color:#24425b}
+#f99s-owner .f99s-field>span{display:block;margin-bottom:6px}
+#f99s-owner .f99s-field input,#f99s-owner .f99s-field textarea{display:block;width:100%;min-height:45px;box-sizing:border-box;font:600 15px Cairo,system-ui;border:1px solid #adbfcd;border-radius:10px;padding:11px;background:white;color:#18384e;direction:auto}
+#f99s-owner .f99s-product{border:1px solid #d2dfeb;padding:13px;margin:13px 0;border-radius:14px;background:#f9fbfd}
+#f99s-owner .f99s-product-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#f99s-owner .f99s-product .f99s-remove{background:#fff0f0;color:#a12727;border:1px solid #efc7c7;font-size:12px}
+#f99s-owner .f99s-sector-group{margin:12px 0}
+#f99s-owner .f99s-sectors{display:flex;flex-wrap:wrap;gap:9px;margin-top:10px}
+#f99s-owner .f99s-sector{display:inline-flex;gap:5px;align-items:center;font-weight:700;font-size:13px;min-height:33px;margin:0}
+#f99s-owner .f99s-sector input{width:18px;height:18px;flex:none;margin:0;accent-color:#166391}
+#f99s-owner .f99s-active{display:flex;margin:13px 0;padding:9px;border:1px solid #cce2d8;border-radius:10px;background:#f5faf7}
+#f99s-owner .f99s-actions{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
+#f99s-owner .f99s-actions>*,#f99s-owner select{flex:1 1 190px;min-height:44px}
+@media(max-width:520px){#f99s-owner .f99s-actions>*{flex:1 1 100%}#f99s-owner .f99s-product-head{flex-direction:column;align-items:stretch}}
+
 </style>
 <script id="f99s-js">
 (()=>{'use strict';
-const KEY='f99x_storefront', DEFAULT={enabled:false,title:'اشترِ كود FINO99',terms:'بشراء الكود أقر بأن الخدمة احتساب وترشيح إرشادي وليست موافقة تمويلية أو ضماناً للتمويل. أوافق على شروط استخدام الكود ومدته، وسياسة الخصوصية والاسترجاع المعلنة في متجر سلة.',products:[],version:0};
+const KEY='f99x_storefront', DEFAULT={enabled:false,store_home_url:'',title:'اشترِ كود FINO99',terms:'بشراء الكود أقر بأن الخدمة احتساب وترشيح إرشادي وليست موافقة تمويلية أو ضماناً للتمويل. أوافق على شروط استخدام الكود ومدته، وسياسة الخصوصية والاسترجاع المعلنة في متجر سلة.',products:[],version:0};
 let cfg={...DEFAULT},loaded=false;
 function by(id){return document.getElementById(id)}
 function create(t,cls,text){const e=document.createElement(t);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
@@ -17250,14 +17319,14 @@ function modal(){let m=by('f99s-modal');if(m)return m;m=create('div');m.id='f99s
 function openShop(){
  const m=modal();m.replaceChildren();const box=create('div','f99s-sheet');
  const head=create('div');head.append(create('h2','',cfg.title||DEFAULT.title));const close=create('button','','إغلاق');close.type='button';close.addEventListener('click',()=>m.hidden=true);head.append(close);box.append(head);
- if(!cfg.enabled||!Array.isArray(cfg.products)||!cfg.products.some(p=>safe(p.url))){box.append(create('p','f99s-small','الباقات غير متاحة للشراء حالياً.'));m.append(box);m.hidden=false;return}
+ if(!cfg.enabled||!Array.isArray(cfg.products)||!cfg.products.some(p=>p.enabled!==false&&safe(p.url))){box.append(create('p','f99s-small','الباقات غير متاحة للشراء حالياً.'));m.append(box);m.hidden=false;return}
  box.append(create('p','f99s-small','اختر قطاعك أولاً لعرض الباقات المناسبة والبنوك المشمولة فيها، ثم اقرأ الشروط قبل الانتقال إلى سلة. الترشيح إرشادي وليس موافقة تمويلية.'));
  const secWrap=create('label','f99s-small','القطاع الوظيفي');secWrap.style.display='block';secWrap.style.margin='12px 0';
  const sector=document.createElement('select');sector.id='f99s-sector';sector.style.cssText='display:block;width:100%;margin-top:7px;border:1px solid #adc6d5;border-radius:11px;padding:12px;color:#102b40;background:#fff;font:700 15px Cairo,system-ui';
  for(const [v,t] of [['','اختر قطاعك'],['government','حكومي'],['military','عسكري'],['semiGovernment','شبه حكومي'],['private','قطاع خاص'],['retired','متقاعد']])sector.append(new Option(t,v));secWrap.append(sector);box.append(secWrap);
  const terms=create('div','f99s-terms',cfg.terms||DEFAULT.terms);box.append(terms);
  const label=create('label','f99s-small'),ch=document.createElement('input');ch.type='checkbox';ch.style.margin='10px';label.append(ch,document.createTextNode('قرأت شروط الباقة وأوافق عليها وعلى كون الترشيح مبدئياً'));box.append(label);
- for(const p of cfg.products){if(!safe(p.url))continue;
+ for(const p of cfg.products){if(p.enabled===false||!safe(p.url))continue;
    const item=create('div','f99s-item');item.style.display='block';item.append(create('strong','',String(p.name||'باقة')));
    const banks=create('p','f99s-small');banks.style.margin='8px 0';item.append(banks);
    const b=create('button','',Number(p.price).toLocaleString('ar-SA',{minimumFractionDigits:2,maximumFractionDigits:2})+' ريال • شراء');b.type='button';b.disabled=true;
@@ -17275,41 +17344,94 @@ function openShop(){
    b.addEventListener('click',()=>{if(b.disabled)return;
      if(!ch.checked)return alert('اقرأ الشروط ووافق عليها أولاً.');
      if(!confirm('هل توافق على ترشيح البنوك التالية فقط لهذه الباقة؟\n'+bankNames.join('، ')+'\n\n'+(p.terms||'تسري الشروط المعروضة أعلاه')+'\n\nبعد الدفع ستحصل على كود مستقل، وتعود إلى FINO99 وتضغط «لديك كود؟ اضغط هنا».'))return;
-     location.assign(p.url);
+     /* انتقال إلى رابط المنتج الذي حفظه المالك من سلة بعد موافقة العميل */
+     window.location.assign(p.url);
    });box.append(item);
  }
  m.append(box);m.hidden=false;
 }
-function openOwner(){if(!isOwner())return alert('هذه الشاشة للمالك بعد توثيق جلسته في المركزية فقط');const target=by('f99x-content');if(!target)return;target.replaceChildren();const f=create('section');f.id='f99s-owner';f.append(create('h2','','متجر سلة والباقات المدفوعة'));
-const hint=create('p','f99s-small','اربط كل سطر برابط منتج رقمي حقيقي في متجرك في سلة. الأكواد تُنشأ مركزياً أولاً ثم تُضاف إلى مخزون الأكواد الرقمية في سلة. هذا الإصدار لا يصدر كوداً تلقائياً من إشعار الدفع.');f.append(hint);
-function field(label,id,value,large=false){f.append(create('label','',label));const x=document.createElement(large?'textarea':'input');x.id=id;x.value=value;x.rows=large?7:undefined;f.append(x);return x}
-field('عنوان نافذة الباقات','f99s-title',cfg.title);field('شروط وأحكام ما قبل الشراء','f99s-terms',cfg.terms,true);
-const lines=(cfg.products||[]).map(p=>[p.name,p.price,p.url,p.terms||'',(p.allowed_sectors||[]).join(','),(p.banks||[]).join(',')].join(' | ')).join('\n');field('كل سطر: اسم الباقة | السعر | رابط سلة | الشروط | القطاعات (government,military,semiGovernment,private,retired) | البنوك المشمولة (مفصولة بفاصلة)','f99s-lines',lines,true);
-const enabled=create('label');const ch=document.createElement('input');ch.id='f99s-enabled';ch.type='checkbox';ch.checked=!!cfg.enabled;enabled.append(ch,document.createTextNode(' إظهار زر شراء الباقات في الرئيسية'));f.append(enabled);
-const sel=create('select');sel.id='f99s-export-product';sel.style.cssText='display:block;width:100%;min-height:43px;padding:9px;margin:8px 0;border:1px solid #aec7d6;background:#fff;color:#1b3e54';sel.append(new Option('اختر منتج سلة لتصدير أكواده فقط',''));for(const p of cfg.products||[])sel.append(new Option(p.name,p.name));f.append(sel);const exportBtn=create('button','','نسخ الأكواد الموسومة باسم المنتج (للمراجعة اليدوية فقط)');exportBtn.type='button';exportBtn.addEventListener('click',exportCodes);f.append(exportBtn);const save=create('button','','حفظ في المركزية والتحقق');save.type='button';save.addEventListener('click',saveStore);f.append(save,create('p','f99s-small','تغيير الأسعار في الواجهة لا يغيّر أسعار منتجات سلة؛ يجب تطابقها في المتجر قبل النشر.'));
-const msg=create('p');msg.id='f99s-status';msg.setAttribute('role','status');f.append(msg);target.append(f)}
+function addProductRow(p={}){
+ const container=by('f99s-rows');if(!container)return;
+ if(container.children.length>=40){status('الحد الأقصى 40 باقة');return;}
+ const row=create('section','f99s-product');row.dataset.sallaProduct='1';
+ const title=create('div','f99s-product-head');title.append(create('strong','','إعداد باقة / منتج سلة'));
+ const del=create('button','','حذف هذه الباقة من القائمة');del.type='button';del.className='f99s-remove';
+ del.addEventListener('click',()=>{row.remove();status('حُذفت الباقة من القائمة المعروضة. اضغط حفظ لاعتماد التعديل في المركزية.')});title.append(del);row.append(title);
+ function addField(label,key,value,opts={}){
+  const w=create('label','f99s-field');w.append(create('span','',label));
+  const x=document.createElement(opts.multiline?'textarea':'input');x.dataset.sallaField=key;
+  if(opts.type)x.type=opts.type;
+  if(opts.placeholder)x.placeholder=opts.placeholder;
+  if(opts.type==='number'){x.min='0';x.max='100000';x.step='0.01';x.inputMode='decimal';}
+  x.value=value==null?'':String(value);if(opts.multiline)x.rows=2;
+  w.append(x);row.append(w);return x;
+ }
+ addField('اسم الباقة الظاهر للعميل','name',p.name||'',{placeholder:'مثلاً FINO99 – البرونزية'});
+ addField('سعر الباقة بالريال','price',p.price??'17.80',{type:'number',placeholder:'17.80'});
+ addField('رابط منتج هذه الباقة في سلة — الصق الرابط هنا','url',p.url||'',{type:'url',placeholder:'https://your-store.com/product/...'});
+ addField('شروط إضافية تخص هذه الباقة (اختياري)','terms',p.terms||'',{multiline:true,placeholder:'المدة وعدد مرات إعادة الحسبة'});
+ addField('البنوك التي يشملها الترشيح (افصل بينها بفاصلة)','banks',(p.banks||[]).join('، '),{multiline:true,placeholder:'مثلاً الأهلي، الراجحي، الإنماء'});
+ const sectorBox=create('div','f99s-sector-group');sectorBox.append(create('strong','','القطاعات المسموحة بهذه الباقة'));
+ const sectorChoices=create('div','f99s-sectors');const sectors=[['government','حكومي'],['military','عسكري'],['semiGovernment','شبه حكومي'],['private','قطاع خاص'],['retired','متقاعد']];
+ for(const [v,t] of sectors){const label=create('label','f99s-sector');const input=document.createElement('input');input.type='checkbox';input.dataset.sallaSector=v;input.checked=Array.isArray(p.allowed_sectors)&&p.allowed_sectors.includes(v);label.append(input,document.createTextNode(' '+t));sectorChoices.append(label)}
+ sectorBox.append(sectorChoices);row.append(sectorBox);
+ const activeLabel=create('label','f99s-sector f99s-active');const active=document.createElement('input');active.type='checkbox';active.dataset.sallaField='enabled';active.checked=p.enabled!==false&&!!p.url;activeLabel.append(active,document.createTextNode(' إظهار هذه الباقة للزوار عند تفعيل المتجر'));row.append(activeLabel);
+ container.append(row);
+}
+function openOwner(){
+ if(!isOwner())return alert('هذه الشاشة للمالك بعد توثيق جلسته في المركزية فقط');
+ const target=by('f99x-content');if(!target)return;target.replaceChildren();
+ const f=create('section');f.id='f99s-owner';f.append(create('h2','','ربط سلة وإدارة روابط الباقات'));
+ f.append(create('p','f99s-small','الصق رابط المتجر العام للحفظ، ثم رابط المنتج الخاص بكل باقة في خانتها. لن ينتقل العميل إلى متجر سلة إلا بعد اختيار قطاع مؤهل، وقراءة الشروط والموافقة عليها. لا يوجد إصدار آلي للأكواد بمجرد الدفع في هذه النسخة.'));
+ function field(label,id,value,large=false){const w=create('label','f99s-field');w.append(create('span','',label));const x=document.createElement(large?'textarea':'input');x.id=id;x.value=value??'';if(!large)x.type=id==='f99s-home-url'?'url':'text';else x.rows=4;if(id==='f99s-home-url')x.placeholder='https://your-store.salla.sa';w.append(x);f.append(w);return x}
+ field('رابط متجر سلة العام — اختياري (للمرجع فقط)','f99s-home-url',cfg.store_home_url||'');
+ field('عنوان نافذة الباقات','f99s-title',cfg.title||DEFAULT.title);
+ field('الشروط والأحكام التي يوافق عليها العميل قبل الشراء','f99s-terms',cfg.terms||DEFAULT.terms,true);
+ const enabled=create('label','f99s-sector f99s-active');const ch=document.createElement('input');ch.id='f99s-enabled';ch.type='checkbox';ch.checked=!!cfg.enabled;enabled.append(ch,document.createTextNode(' تشغيل صفحة شراء الباقات للزوار'));f.append(enabled);
+ f.append(create('h3','','الباقات وروابط منتجات سلة'));
+ f.append(create('p','f99s-small','كل باقة لها رابط منتج سلة مستقل. لا تضع رابط لوحة إدارة سلة؛ الصق رابط صفحة المنتج الذي يفتحه العميل.'));
+ const rows=create('div');rows.id='f99s-rows';f.append(rows);
+ const add=create('button','','+ إضافة باقة جديدة');add.type='button';add.addEventListener('click',()=>addProductRow({enabled:false}));f.append(add);
+ const actions=create('div','f99s-actions');
+ const save=create('button','','حفظ روابط الباقات في المركزية');save.type='button';save.addEventListener('click',saveStore);actions.append(save);
+ const selection=create('select');selection.id='f99s-export-product';selection.setAttribute('aria-label','اختيار الباقة لتجهيز الأكواد');selection.append(new Option('اختر باقة لنسخ أكوادها غير المستخدمة',''));for(const p of cfg.products||[])selection.append(new Option(p.name,p.name));actions.append(selection);
+ const exportBtn=create('button','','نسخ أكواد الباقة للتسليم اليدوي في سلة');exportBtn.type='button';exportBtn.addEventListener('click',exportCodes);actions.append(exportBtn);
+ f.append(actions,create('p','f99s-small','مهم: إعداد رابط المنتج هنا لا ينشئ منتج سلة، ولا يثبت الدفع، ولا يصدر كوداً جديداً تلقائياً. يتطلب التسليم الآلي تكاملاً خلفياً مؤكداً مع سلة.'));
+ const msg=create('p');msg.id='f99s-status';msg.setAttribute('role','status');f.append(msg);target.append(f);
+ for(const p of cfg.products||[])addProductRow(p);
+ if(!cfg.products?.length)addProductRow({name:'FINO99 – الباقة البرونزية',price:17.80,allowed_sectors:[],banks:[],enabled:false});
+}
 async function exportCodes(){if(!isOwner())return status('غير مصرح');try{const r=await finoCentralAdminDashboard(true);if(!r?.ok||r.data?.ok===false)throw Error('تعذر قراءة المركزية');const all=r.data?.codes||[];const selected=by('f99s-export-product')?.value||'';if(!selected)return status('اختر منتجاً واحداً من قائمة سلة أولاً');const codes=all.filter(c=>c.enabled&&!c.deleted_at&&!c.activated_at&&!c.locked_device_hash&&!c.use_count&&c.max_entries===1&&c.config?.f99x?.sellable===true&&c.config?.f99x?.store_package_id===selected&&(!c.expires_at||Date.parse(c.expires_at)>Date.now())).map(c=>c.code);if(!codes.length)return status('لا توجد أكواد جديدة مفعلة للتصدير؛ فعّل خيار السماح بالبيع في كود عميل صالح بدخلة واحدة.');await navigator.clipboard.writeText(codes.join('\n'));status('✅ تم نسخ '+codes.length+' كوداً يخص '+selected+' فقط. راجع الأكواد في سلة قبل طرح المنتج للبيع لتفادي إعادة رفعها أو بيعها مرتين.')}catch(e){status('تعذر نسخ الأكواد: '+String(e.message||e))}}
 async function saveStore(){
  if(!isOwner())return status('جلسة المالك غير معتمدة');
- const lines=by('f99s-lines').value.split(/\r?\n/).filter(x=>x.trim());if(lines.length>40)return status('الحد الأقصى 40 باقة');
- const products=[];
- for(const row of lines){
-   const p=row.split('|').map(x=>x.trim());const price=Number(p[1]);
-   if(p.length!==6||!p[0]||!Number.isFinite(price)||price<0||price>100000||!safe(p[2]))return status('خطأ بصيغة المنتج: '+row.slice(0,90));
-   const allowed_sectors=p[4].split(',').map(x=>x.trim()).filter(Boolean);
-   const banks=p[5].split(',').map(x=>x.trim()).filter(Boolean);
-   const allowed=['government','military','semiGovernment','private','retired'];
-   if(allowed_sectors.some(x=>!allowed.includes(x)))return status('قطاع غير معروف في الباقة: '+p[0]);
-   if(allowed_sectors.length===0||banks.length===0)return status('يجب تحديد القطاعات والبنوك المشمولة في الباقة: '+p[0]);
-   products.push({name:p[0].slice(0,80),price,url:p[2],terms:p[3].slice(0,1500),allowed_sectors:[...new Set(allowed_sectors)],banks:[...new Set(banks.map(x=>x.slice(0,50)))]});
+ const rows=[...document.querySelectorAll('#f99s-rows .f99s-product')];if(rows.length>40)return status('الحد الأقصى 40 باقة');
+ const val=(row,key)=>row.querySelector(`[data-salla-field="${key}"]`)?.value?.trim()||'';
+ const products=[];const existing=new Set();
+ for(const row of rows){
+  const name=val(row,'name'),price=Number(val(row,'price')),url=val(row,'url');
+  const terms=val(row,'terms'),banks=val(row,'banks').split(/[,،\n]/).map(x=>x.trim()).filter(Boolean);
+  const sectors=[...row.querySelectorAll('[data-salla-sector]:checked')].map(x=>x.dataset.sallaSector);
+  const enabled=!!row.querySelector('[data-salla-field="enabled"]')?.checked;
+  if(!name)return status('اكتب اسم كل باقة أو احذف صفها الفارغ');
+  if(existing.has(name))return status('اسم الباقة مكرر: '+name);existing.add(name);
+  if(!Number.isFinite(price)||price<0||price>100000)return status('السعر غير صحيح للباقة: '+name);
+  if(url&&!safe(url))return status('رابط المنتج يجب أن يبدأ بـ https:// ويكون رابطاً صالحاً: '+name);
+  if(enabled&&!url)return status('الصق رابط منتج سلة أو أوقف عرض الباقة: '+name);
+  if(enabled&&(!sectors.length||!banks.length))return status('حدد القطاعات والبنوك للباقة المفعّلة: '+name);
+  products.push({name:name.slice(0,80),price,url,terms:terms.slice(0,1500),allowed_sectors:[...new Set(sectors)],banks:[...new Set(banks.map(x=>x.slice(0,50)))],enabled});
  }
- const value={enabled:by('f99s-enabled').checked,title:by('f99s-title').value.trim().slice(0,90),terms:by('f99s-terms').value.trim().slice(0,6000),products,version:Date.now()};
+ const store_home_url=by('f99s-home-url')?.value.trim()||'';
+ if(store_home_url&&!safe(store_home_url))return status('رابط المتجر العام غير صالح؛ يجب أن يبدأ بـ https://');
+ const value={enabled:by('f99s-enabled').checked,store_home_url,title:by('f99s-title').value.trim().slice(0,90),terms:by('f99s-terms').value.trim().slice(0,6000),products,version:Date.now()};
  if(!value.terms)return status('ضع شروط الخدمة قبل تفعيل البيع');
- if(value.enabled&&!products.length)return status('أضف باقة صالحة قبل تفعيل البيع');
- status('جاري الحفظ والتأكد من المركزية...');
- try{const r=await finoCentralAdminCall('fino_admin_upsert_setting',{p_setting_key:KEY,p_value:value});if(!r?.ok||r.data?.ok===false)throw Error('رفض الحفظ');
-   const v=await finoRpc('fino_public_settings',{},14000);if(v.data?.settings?.[KEY]?.version!==value.version)throw Error('لم تتطابق البيانات بعد الحفظ');
-   cfg=value;renderButton();status('✅ تم حفظ الباقات والقطاعات والبنوك المشمولة مركزياً.');
+ if(value.enabled&&!products.some(p=>p.enabled&&safe(p.url)))return status('فعّل باقة واحدة على الأقل ولها رابط منتج صحيح قبل نشر الشراء');
+ status('جاري الحفظ في المركزية ثم التحقق من نجاحه...');
+ try{
+  const r=await finoCentralAdminCall('fino_admin_upsert_setting',{p_setting_key:KEY,p_value:value});if(!r?.ok||r.data?.ok===false)throw Error(r?.error||r?.data?.reason||'رفض الحفظ');
+  const v=await finoRpc('fino_public_settings',{},14000);
+  if(!v?.ok||v?.data?.settings?.[KEY]?.version!==value.version)throw Error('لم يتأكد حفظ روابط سلة من المركزية');
+  cfg={...DEFAULT,...v.data.settings[KEY]};loaded=true;renderButton();
+  status('✅ تم حفظ روابط الباقات وتأكيد قراءتها من المركزية. العميل ينتقل إلى رابط المنتج الخاص بباقته بعد الموافقة.');
  }catch(e){status('❌ تعذر الحفظ: '+String(e.message||e))}
 }
 function installOwner(){const t=document.querySelector('#f99x-layer .f99x-tabs');if(!t||by('f99s-owner-tab'))return;const b=create('button','','سلة والباقات');b.id='f99s-owner-tab';b.type='button';b.addEventListener('click',openOwner);t.append(b)}
@@ -18209,6 +18331,162 @@ function init(){installOwner()};if(document.readyState==='loading')document.addE
  root.hidden=false;void run();}
  window.FINO99OpenHealthCheck=start;
  if(flag){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();}
+})();
+</script>
+
+<style id="f99fix-owner-styles">
+body:has(#ownerHub.active) .ticker{display:none!important}
+#ownerHub .owner-hero{padding:7px 4px;text-align:right;background:transparent;border:none;box-shadow:none}
+#ownerHub .owner-hero h1{font-size:clamp(20px,5vw,27px);color:#183b55;margin:0}
+#ownerHub .owner-title small{display:none}
+#ownerHub .owner-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:stretch}
+#ownerHub .owner-tile{min-height:86px;padding:14px 12px;display:flex;flex-direction:column;align-items:flex-start;text-align:right;gap:4px;border:1px solid #d6e5ef;border-radius:16px;background:#fff;color:#17364d;box-shadow:0 5px 20px rgba(13,52,77,.05)}
+#ownerHub .owner-tile b{font:900 13px Cairo,sans-serif}
+#ownerHub .owner-tile small{font:600 9px/1.6 Cairo,sans-serif;color:#6b8090}
+#ownerHub .owner-tile.primary{background:#ebf7fc;color:#10486e}
+#ownerHub .owner-tile.warn,#ownerHub .owner-tile.f99fix-admin-tile{background:#154d74;color:#fff}
+#ownerHub .owner-tile.warn small,#ownerHub .owner-tile.f99fix-admin-tile small{color:#e0eef9}
+#f99fixAdminPage,#f99fixCodePage{inset:0;background:#f3f8fc;z-index:80;overflow-y:auto}
+.f99fix-wrap{max-width:900px;margin:auto;padding:24px 14px 65px;font-family:Cairo,sans-serif;direction:rtl;color:#16344a;box-sizing:border-box}
+.f99fix-head{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:18px}
+.f99fix-head h1{font-size:23px;margin:0}.f99fix-head button,.f99fix-btn{font:800 13px Cairo,sans-serif;border:0;background:#13618b;color:#fff;border-radius:11px;padding:11px 14px;min-height:42px;cursor:pointer}
+.f99fix-btn.secondary{background:#e6f0f6;color:#174f70}.f99fix-btn.danger{background:#ffeff0;color:#a32c3b}
+.f99fix-btn.success{background:#16754b}.f99fix-btn:disabled{opacity:.5;cursor:not-allowed}
+.f99fix-status{font:700 13px/1.8 Cairo,sans-serif;padding:12px;border:1px solid #d3e3ef;background:#fff;border-radius:12px;margin:12px 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.f99fix-card{padding:17px;margin:12px 0;background:white;border:1px solid #d7e6f0;border-radius:18px}
+.f99fix-card h2{font-size:17px;margin:0 0 11px}
+.f99fix-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.f99fix-grid label{font:800 12px Cairo,sans-serif;display:block}
+.f99fix-grid input,.f99fix-grid select{display:block;margin-top:5px;box-sizing:border-box;width:100%;height:44px;border:1px solid #c9dae5;border-radius:9px;padding:8px;background:#fff;font:750 14px Cairo,sans-serif;color:#183d55}
+.f99fix-checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+.f99fix-checks label{display:flex;align-items:center;gap:8px;border:1px solid #dbe9f2;border-radius:9px;padding:10px;font-size:12px;line-height:1.55}
+.f99fix-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
+.f99fix-code-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:12px;border:1px solid #dfebf2;border-radius:12px;margin-bottom:8px;background:#fcfeff}
+.f99fix-code-row b{font:900 13px Cairo,sans-serif}.f99fix-code-row small{display:block;color:#5d778a;font:700 11px Cairo,sans-serif}
+.f99fix-code-row code{font:800 12px monospace;direction:ltr}
+.f99fix-steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.f99fix-steps .f99fix-btn{min-height:72px;text-align:right}
+#f99fixAdminPage .owner-platform-card{font-size:14px}
+#f99fixAdminPage .owner-platform-card h3{font-size:17px}
+#f99fixAdminPage .owner-platform-card p{font-size:12px}
+#f99fixAdminPage .owner-field label{font-size:12px}
+#f99fixAdminPage .owner-field input,#f99fixAdminPage .owner-field select,#f99fixAdminPage .owner-field textarea{font-size:14px}
+@media(max-width:530px){.f99fix-grid,.f99fix-checks,.f99fix-steps{grid-template-columns:1fr}#ownerHub .owner-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#ownerHub .owner-tile{min-height:95px;padding:10px}}
+</style>
+<section class="page" id="f99fixCodePage"><div class="f99fix-wrap">
+ <div class="f99fix-head"><h1>الأكواد والباقات</h1><button onclick="openOwnerHub()">رجوع للرئيسية</button></div>
+ <div id="f99fix-code-status" class="f99fix-status" aria-live="polite">تحميل الأكواد من المركزية...</div>
+ <div class="f99fix-card"><div class="f99fix-actions"><button class="f99fix-btn" onclick="f99fixNewCode()">+ إنشاء كود</button><button class="f99fix-btn secondary" onclick="f99fixLoadCodes()">تحديث القائمة</button></div><div id="f99fix-codes-list"></div></div>
+ <div class="f99fix-card" id="f99fix-editor" hidden><h2 id="f99fix-editor-title">إنشاء كود</h2>
+  <div class="f99fix-grid">
+  <label>اسم الكود أو العميل<input id="f99fix-name" placeholder="كود برونزي"></label>
+  <label>رمز الدخول<input id="f99fix-code" dir="ltr" placeholder="BR-XXXX-XXXX"></label>
+  <label>المدة بالدقائق<input id="f99fix-minutes" type="number" min="0" step="1" value="1440"></label>
+  <label>أقصى عدد دخولات (0 = غير محدود)<input id="f99fix-entries" type="number" min="0" value="1"></label>
+  <label>إعادات الحسبة بعد الأولى<input id="f99fix-restarts" type="number" min="0" value="3"></label>
+  <label>الحالة<select id="f99fix-enabled"><option value="1">مفعل</option><option value="0">موقوف</option></select></label>
+  </div>
+  <div class="f99fix-checks">
+    <label><input type="checkbox" data-f99fix-service="buyout" checked> تحويل المديونية</label>
+    <label><input type="checkbox" data-f99fix-service="smart"> الحاسبة الذكية</label>
+    <label><input type="checkbox" data-f99fix-service="compare"> المقارنات</label>
+    <label><input type="checkbox" data-f99fix-service="mortgage_quote"> التمويل العقاري</label>
+    <label><input type="checkbox" data-f99fix-service="mortgage_compare"> مقارنة العقاري</label>
+    <label><input type="checkbox" data-f99fix-service="contract"> العقود</label>
+    <label><input type="checkbox" id="f99fix-device" checked> ربط بأول جهاز</label>
+    <label><input type="checkbox" id="f99fix-single" checked> منع تعدد الجلسات</label>
+    <label><input type="checkbox" id="f99fix-location"> الموقع باختيار المالك وموافقة العميل</label>
+  </div>
+  <div class="f99fix-actions"><button class="f99fix-btn success" id="f99fix-save" onclick="f99fixSaveCode()">حفظ مركزي</button><button class="f99fix-btn secondary" onclick="document.getElementById('f99fix-editor').hidden=true">إغلاق المحرر</button></div>
+  <div id="f99fix-existing" hidden>
+  <div class="f99fix-actions"><button class="f99fix-btn secondary" onclick="f99fixCodeAction('enable')">تفعيل</button><button class="f99fix-btn secondary" onclick="f99fixCodeAction('disable')">إيقاف</button><button class="f99fix-btn danger" onclick="f99fixCodeAction('delete')">حذف من القائمة مع حفظ الأرشيف</button></div>
+  <div class="f99fix-grid"><label>تجديد الكود بالدقائق<input type="number" min="1" value="1440" id="f99fix-renew-minutes"></label><label>الجهاز<select id="f99fix-renew-device"><option value="0">الاحتفاظ بنفس الجهاز</option><option value="1">فك ربط الجهاز السابق</option></select></label></div>
+  <div class="f99fix-actions"><button class="f99fix-btn success" onclick="f99fixCodeAction('renew')">تجديد نفس الكود</button><button class="f99fix-btn secondary" onclick="f99fixCodeAction('reset')">تصفير الدخولات وإغلاق الجلسة</button><button class="f99fix-btn secondary" onclick="f99fixCheckCode()">فحص سبب رفض الدخول</button></div>
+  </div>
+ </div>
+</div></section>
+<section class="page" id="f99fixAdminPage"><div class="f99fix-wrap">
+ <div class="f99fix-head"><h1>الإدارة</h1><button onclick="openOwnerHub()">رجوع للرئيسية</button></div>
+ <div class="f99fix-card"><h2>إدارة المنصة والبنوك والخدمات</h2>
+ <div class="f99fix-steps">
+ <button class="f99fix-btn" onclick="f99fixOpenCodes()">إدارة الأكواد والتجديد</button>
+ <button class="f99fix-btn" onclick="openFINOAdminPanel()">نسب البنوك ورسوم السلع والأتعاب</button>
+ <button class="f99fix-btn" onclick="ownerOpenAdminSection('contracts')">قوالب العقود</button>
+ <button class="f99fix-btn" onclick="ownerOpenAdminSection('archive')">الأرشفة والتقارير</button>
+ <button class="f99fix-btn" onclick="ownerOpenAdminSection('full')">الإعدادات المتقدمة</button>
+ <button class="f99fix-btn" onclick="f99fixOpenCodes()">صلاحيات الباقات والعملاء</button>
+ </div></div>
+ <div id="f99fix-owner-settings"></div>
+</div></section>
+<script id="f99fix-controller">
+(function(){'use strict';
+ const $=id=>document.getElementById(id);
+ let codes=[],currentId='',saving=false;
+ function owner(){return !!(typeof activeAccess!=='undefined' && activeAccess?.record?.central && activeAccess?.record?.owner && typeof finoCentralAdminToken!=='undefined' && finoCentralAdminToken);}
+ function status(msg){const x=$('f99fix-code-status');if(x)x.textContent=String(msg)}
+ function setForm(c){const fresh=!c;currentId=c?.id||'';$('f99fix-editor').hidden=false;$('f99fix-existing').hidden=fresh;$('f99fix-editor-title').textContent=fresh?'إنشاء كود جديد':'تعديل الكود: '+c.code;
+   $('f99fix-name').value=c?.name||'كود عميل';$('f99fix-code').value=c?.code||generateCode();$('f99fix-code').readOnly=!fresh;
+   $('f99fix-minutes').value=c?.duration_minutes??1440;$('f99fix-entries').value=c?.max_entries??1;$('f99fix-restarts').value=c?.max_restarts_per_entry??3;
+   $('f99fix-enabled').value=c?.enabled===false?'0':'1';$('f99fix-device').checked=c?.lock_to_first_device??true;
+   $('f99fix-location').checked=c?.require_location===true;$('f99fix-single').checked=c?.config?.f99x?.single_session??true;
+   const allow=Array.isArray(c?.allowed_services)?c.allowed_services:['buyout'];document.querySelectorAll('[data-f99fix-service]').forEach(el=>el.checked=allow.includes(el.dataset.f99fixService));
+   $('f99fix-renew-minutes').value=c?.duration_minutes>0?c.duration_minutes:1440;status(fresh?'اختر الخدمات ثم احفظ الكود.':'تم تحميل الكود من المركزية. جميع التعديلات تُرسل إليها مباشرة.');
+ }
+ function generateCode(){const b=new Uint8Array(10);crypto.getRandomValues(b);const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';const s=Array.from(b,x=>chars[x%chars.length]).join('');return 'F99-'+s.slice(0,5)+'-'+s.slice(5)}
+ function renderList(){const list=$('f99fix-codes-list');list.replaceChildren();if(!codes.length){list.textContent='لا توجد أكواد في المركزية.';return;}
+   for(const c of codes){const row=document.createElement('div');row.className='f99fix-code-row';const desc=document.createElement('div');const title=document.createElement('b');title.textContent=c.name||'كود';const txt=document.createElement('small');const expires=c.expires_at?new Date(c.expires_at).toLocaleString('ar-SA',{timeZone:'Asia/Riyadh'}):'بلا انتهاء';txt.textContent=(c.enabled?'مفعل':'موقوف')+' • '+expires+' • دخولات: '+(c.use_count||0)+'/'+(c.max_entries||'غير محدود');const ck=document.createElement('code');ck.textContent=c.code;desc.append(title,txt,ck);const btn=document.createElement('button');btn.className='f99fix-btn secondary';btn.textContent='عرض / تعديل';btn.onclick=()=>setForm(c);row.append(desc,btn);list.appendChild(row)}
+ }
+ async function refresh(){if(!owner()){status('لا توجد جلسة مالك موثقة في المركزية. ادخل بكود المالك من جديد.');return false;}status('جاري تحميل الأكواد...');const r=await window.finoCentralAdminDashboard(true);if(!r.ok||r.data?.ok===false){status('تعذر تحميل الأكواد: '+(r?.error?.message||r?.data?.reason||'راجع اتصال المركزية'));return false;}codes=Array.isArray(r.data?.codes)?r.data.codes:[];renderList();status('تم تحميل '+codes.length+' كوداً من المركزية.');return true}
+ async function api(fn,args){return await window.finoCentralAdminCall(fn,args)}
+ window.f99fixOpenCodes=async function(){if(!owner()){alert('يجب الدخول بكود المالك المعتمد أولاً.');return;}window.showPage('f99fixCodePage');await refresh()};
+ window.f99fixLoadCodes=refresh;
+ window.f99fixNewCode=function(){if(!owner())return;setForm(null)};
+ window.f99fixEditCode=function(id){const c=codes.find(x=>x.id===id);if(c)setForm(c)};
+ window.f99fixSaveCode=async function(){if(saving||!owner())return;const services=Array.from(document.querySelectorAll('[data-f99fix-service]:checked')).map(x=>x.dataset.f99fixService);
+   if(!services.length){status('اختر خدمة واحدة على الأقل.');return;}
+   const prev=codes.find(x=>x.id===currentId);
+   const shownServices=Array.from(document.querySelectorAll('[data-f99fix-service]')).map(x=>x.dataset.f99fixService);
+   for(const oldService of prev?.allowed_services||[])if(!shownServices.includes(oldService)&&!services.includes(oldService))services.push(oldService);
+   if(services.includes('contract')&&!prev?.contract_template_id){status('لأكواد العقود، اربط العقد أولاً عبر قسم إدارة العقود، ثم أضف الصلاحية.');return;}
+   if($('f99fix-single').checked&&!$('f99fix-device').checked){status('لمنع تعدد المتصفحات فعّل ربط الكود بأول جهاز، أو أوقف خيار منع تعدد الجلسات.');return;}
+   const duration=Number($('f99fix-minutes').value);const max=Number($('f99fix-entries').value);const restart=Number($('f99fix-restarts').value);
+   if(!Number.isSafeInteger(duration)||duration<0||duration>525600||!Number.isSafeInteger(max)||max<0||!Number.isSafeInteger(restart)||restart<0){status('المدة وعدد الدخولات والإعادات يجب أن تكون أرقاماً صحيحة غير سالبة.');return;}
+   const payload={id:currentId||'',name:$('f99fix-name').value.trim()||'كود عميل',code:$('f99fix-code').value.trim().toUpperCase(),enabled:$('f99fix-enabled').value==='1',duration_minutes:duration,max_entries:max,max_restarts_per_entry:restart,allow_restart:restart>0,activate_on_first_use:true,
+    lock_to_first_device:$('f99fix-device').checked,require_location:$('f99fix-location').checked,allowed_services:services,config:{...(prev?.config||{}),f99x:{...(prev?.config?.f99x||{}),single_session:$('f99fix-single').checked}}};
+   if(!/^[A-Z0-9-]{8,32}$/.test(payload.code)){status('رمز الكود يجب أن يكون 8 إلى 32 حرفاً أو رقماً أو شرطة.');return;}
+   saving=true;$('f99fix-save').disabled=true;status('جاري الحفظ والتحقق من المركزية...');try{
+    const r=await api('fino_admin_upsert_code',{p_payload:payload});if(!r.ok||r.data?.ok===false)throw new Error(r?.data?.reason||r?.error?.message||'فشل حفظ الكود');const id=r.data?.code?.id;
+    if(!await refresh())throw new Error('تم إرسال الحفظ لكن تعذر قراءة القائمة للتأكد');const saved=codes.find(x=>x.id===id||x.code===payload.code);
+    if(!saved||saved.name!==payload.name||Number(saved.duration_minutes)!==duration)throw new Error('لم تظهر التغييرات المحفوظة في المركزية');setForm(saved);status('✅ حُفظ الكود وتأكدت من قيمه في المركزية: '+saved.code);
+   }catch(e){status('❌ لم يُعتمد الحفظ: '+e.message)}finally{saving=false;$('f99fix-save').disabled=false}
+ };
+ window.f99fixCodeAction=async function(action){if(!owner()||!currentId)return;const minutes=action==='renew'?Number($('f99fix-renew-minutes').value):0;const unlock=$('f99fix-renew-device').value==='1';
+   if(action==='renew'&&(!Number.isSafeInteger(minutes)||minutes<1||minutes>525600)){status('أدخل مدة التجديد بالدقائق من 1 حتى 525600.');return;}
+   if(action==='delete'&&!confirm('سيُخفى الكود ويُوقف فوراً مع إبقاء الأرشيف والعقود. هل تؤكد؟'))return;
+   if(action==='renew'&&!confirm('تجديد نفس الكود وإغلاق جلساته السابقة وتصفير الدخولات المستهلكة؟'))return;
+   status('جاري تنفيذ '+action+' والتحقق من المركزية...');try{const r=await api('f99fix_admin_code_action',{p_code_id:currentId,p_action:action,p_minutes:minutes,p_enabled:true,p_unlock_device:unlock});
+     if(!r.ok||r.data?.ok===false)throw Error(r?.data?.reason||r?.error?.message||'فشل تنفيذ العملية');const id=currentId;if(!await refresh())throw Error('تعذر التحقق بعد العملية');const saved=codes.find(x=>x.id===id);if(action==='delete'){setForm(null);status('✅ تم إيقاف وإخفاء الكود مع حفظ الأرشيف.');return}
+     if(!saved)throw Error('الكود لم يظهر بعد العملية');setForm(saved);status('✅ تم تنفيذ '+action+' والتحقق من حالة الكود '+saved.code);
+   }catch(e){status('❌ تعذر التنفيذ: '+e.message+'؛ تأكد من تركيب SQL التصحيحي أولاً.');}
+ };
+ window.f99fixCheckCode=async function(){if(!owner()||!currentId)return;const r=await api('f99fix_admin_code_status',{p_code_id:currentId});status(r.ok&&r.data?.ok!==false?'حالة الكود: '+r.data.reason+' • استخدامات '+r.data.used_entries+' • جلسات نشطة '+r.data.active_sessions:'تعذر فحص الكود: '+(r?.error?.message||r?.data?.reason||'راجع SQL'))};
+ window.f99fixOpenAdmin=function(){if(!owner()){alert('يجب الدخول بكود المالك أولاً');return;}window.showPage('f99fixAdminPage')};
+ function moveSettings(){const dock=$('f99fix-owner-settings');const hub=document.querySelector('#ownerHub .owner-shell');if(!dock||!hub)return;
+  [...hub.children].filter(e=>e.classList.contains('owner-section-title')||e.classList.contains('owner-platform-card')).forEach(e=>dock.append(e));
+  const title=document.querySelector('#ownerHub .owner-title b');if(title)title.textContent='FINO99 • لوحة المالك';
+  const tiles=hub.querySelectorAll('.owner-grid .owner-tile');tiles.forEach(t=>{if(t.textContent.includes('الإدارة'))t.classList.add('f99fix-admin-tile')});
+  const ownerGrid=hub.querySelector('.owner-grid');const adminGrid=document.querySelector('#f99fixAdminPage .f99fix-steps');
+  if(ownerGrid&&adminGrid){
+    const relocate=()=>{for(const id of ['f99x-open','f99m-owner-settings','f99c-owner-tile']){
+      const tile=document.getElementById(id);
+      if(tile&&ownerGrid.contains(tile)){
+        tile.className='f99fix-btn secondary';adminGrid.append(tile);
+      }
+    }};
+    new MutationObserver(relocate).observe(ownerGrid,{childList:true});relocate();
+  }
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',moveSettings,{once:true});else moveSettings();
 })();
 </script>
 </body>
