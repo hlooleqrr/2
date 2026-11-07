@@ -8277,7 +8277,7 @@ async function finoCentralOpenCode(code,clientNameValue=''){
   },6000);
   if(reused.ok && reused.data?.ok===true && reused.data?.entry_token)
     return {transport:true,data:reused.data};
-  let res=await finoRpc('fino_client_open_code',{
+  let res=await finoRpc('f99v6_client_open_atomic',{
     p_code:String(code||'').trim(),
     p_device_id:device,
     p_client_name:clientNameValue||null,
@@ -8289,7 +8289,7 @@ async function finoCentralOpenCode(code,clientNameValue=''){
   if(data?.reason==='LOCATION_REQUIRED'){
     const loc=await finoCentralGetLocation();
     if(!loc)return {transport:true,data};
-    res=await finoRpc('fino_client_open_code',{
+    res=await finoRpc('f99v6_client_open_atomic',{
       p_code:String(code||'').trim(),
       p_device_id:device,
       p_client_name:clientNameValue||null,
@@ -12964,7 +12964,9 @@ function finishIdentityAndEnter(){
     const services=activeAccess.record.centralData?.allowed_services||[];
     const only=services.length===1?services[0]:'';
     const pkg=fino99PackageFromCode(activeAccess.record.centralData);
-    if(only==='compare' && typeof window.F99COpenClient==='function'){
+    if((services.length>1 || only==='mortgage_quote' || only==='mortgage_compare') && typeof window.F99V6OpenServices==='function'){
+      window.F99V6OpenServices(services);
+    }else if(only==='compare' && typeof window.F99COpenClient==='function'){
       window.F99COpenClient();
     }else if(pkg.entry==='calculator' && services.includes('smart')){
       renderSmartBanks();showPage('smartPage');
@@ -13119,7 +13121,7 @@ async function login(){
         }
         error.style.display='block';return;
       }
-      error.textContent=finoCentralReasonMessage(reason);
+      error.textContent=reason==='RUNTIME_UNAVAILABLE_NO_ENTRY_CONSUMED'?'تعذر تجهيز خدمات الباقة في المركزية، ولم تُستهلك محاولة دخول. تواصل مع المالك.':finoCentralReasonMessage(reason);
       error.style.display='block';return;
     }
     if(centralAttempt.data.ok===true){
@@ -17310,167 +17312,173 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 
-<!-- FINO99 Salla sales window: links to REAL Salla product checkouts; never unlocks access itself. -->
-<style id="f99s-css">
-#f99s-buy{margin-top:10px;width:100%;min-height:41px;border:1px solid #c99e53;background:#fff8eb;color:#805719;border-radius:12px;font:800 12px Cairo,system-ui;cursor:pointer}
-#f99s-modal[hidden]{display:none!important}#f99s-modal{position:fixed;inset:0;z-index:2147483100;overflow:auto;background:#0b1d2ecc;padding:env(safe-area-inset-top) 10px env(safe-area-inset-bottom);direction:rtl;font-family:Cairo,system-ui}
-#f99s-modal .f99s-sheet{background:#fff;border-radius:20px;margin:3vh auto;padding:20px;width:min(660px,100%);box-shadow:0 20px 50px #020b1933}
-#f99s-modal .f99s-sheet>div:first-child{display:flex;justify-content:space-between;align-items:center;gap:12px}#f99s-modal h2{font-size:20px}#f99s-modal .f99s-item{padding:13px;border-radius:12px;border:1px solid #dce6ef;margin:10px 0;display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px}
-#f99s-modal button,#f99s-owner button{background:#165b89;color:white;border:0;border-radius:10px;font:800 13px Cairo,system-ui;padding:10px 14px;min-height:43px;cursor:pointer}
-#f99s-modal .f99s-small{color:#516e83;font-size:12px;line-height:1.8}#f99s-modal .f99s-terms{border:1px solid #d7e4ed;background:#f7fafc;padding:12px;border-radius:12px;white-space:pre-wrap;font-size:12px;max-height:250px;overflow:auto}
-#f99s-owner input,#f99s-owner textarea{width:100%;border:1px solid #a7c1d3;border-radius:10px;padding:12px;font-size:15px;background:white;color:#142d40}
-#f99s-owner{padding:14px;background:#fff;border:1px solid #dceaf2;border-radius:15px}
-#f99s-owner .f99s-field{display:block;margin:13px 0;font-size:14px;font-weight:800;color:#24425b}
-#f99s-owner .f99s-field>span{display:block;margin-bottom:6px}
-#f99s-owner .f99s-field input,#f99s-owner .f99s-field textarea{display:block;width:100%;min-height:45px;box-sizing:border-box;font:600 15px Cairo,system-ui;border:1px solid #adbfcd;border-radius:10px;padding:11px;background:white;color:#18384e;direction:auto}
-#f99s-owner .f99s-product{border:1px solid #d2dfeb;padding:13px;margin:13px 0;border-radius:14px;background:#f9fbfd}
-#f99s-owner .f99s-product-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
-#f99s-owner .f99s-product .f99s-remove{background:#fff0f0;color:#a12727;border:1px solid #efc7c7;font-size:12px}
-#f99s-owner .f99s-sector-group{margin:12px 0}
-#f99s-owner .f99s-sectors{display:flex;flex-wrap:wrap;gap:9px;margin-top:10px}
-#f99s-owner .f99s-sector{display:inline-flex;gap:5px;align-items:center;font-weight:700;font-size:13px;min-height:33px;margin:0}
-#f99s-owner .f99s-sector input{width:18px;height:18px;flex:none;margin:0;accent-color:#166391}
-#f99s-owner .f99s-active{display:flex;margin:13px 0;padding:9px;border:1px solid #cce2d8;border-radius:10px;background:#f5faf7}
-#f99s-owner .f99s-actions{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
-#f99s-owner .f99s-actions>*,#f99s-owner select{flex:1 1 190px;min-height:44px}
-@media(max-width:520px){#f99s-owner .f99s-actions>*{flex:1 1 100%}#f99s-owner .f99s-product-head{flex-direction:column;align-items:stretch}}
-
-</style>
-<script id="f99s-js">
+<!-- FINO99 V6 Salla sales -->
+<style id="f99s-css">/* FINO99 V6 - responsive catalog */
+#f99s-modal[hidden]{display:none!important}#f99s-modal{position:fixed;inset:0;z-index:2147483100;overflow-y:auto;direction:rtl;background:#0c1e308c;padding:max(12px,env(safe-area-inset-top)) 10px max(22px,env(safe-area-inset-bottom));font-family:Cairo,system-ui}
+#f99s-modal .f99s-sheet{max-width:960px;margin:auto;padding:18px;border-radius:20px;background:#fff;color:#15334b;min-height:40vh;box-shadow:0 15px 55px #14263b3d}
+#f99s-modal .f99v6-h{display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid #e5edf2;padding:0 0 12px;margin-bottom:12px}#f99s-modal h2{font-size:23px;margin:0;font-weight:900}
+#f99s-modal button,#f99s-owner button{min-height:44px;border:0;border-radius:11px;padding:11px 15px;background:#164e74;color:#fff;font:800 14px Cairo,system-ui;cursor:pointer}#f99s-modal .f99s-small,#f99s-owner .f99s-small{font-size:12px;color:#4f6674;line-height:1.85}
+#f99s-modal .f99v6-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#f99s-modal .f99v6-tile{border:1px solid #e0e9ed;border-radius:18px;overflow:hidden;background:#fff;box-shadow:0 4px 18px #142b3d10}
+#f99s-modal .f99v6-tile img{width:100%;height:180px;object-fit:cover;display:block;background:#f8f5f2}
+#f99s-modal .f99v6-tile>div{padding:15px}#f99s-modal .f99v6-tile h3{font-size:18px;margin:5px 0;color:#203d50}
+#f99s-modal .f99v6-badge{background:#f9efdf;color:#9d671e;padding:3px 9px;border-radius:100px;font-weight:800}#f99s-modal .f99v6-price{font-size:22px;font-weight:900;margin:12px 0;color:#875929}
+#f99s-modal .f99v6-price s,#f99s-modal .f99v6-summary s{font-size:13px;color:#7d8d93;font-weight:600;margin-left:10px}
+#f99s-modal .f99v6-features{display:block;font-size:12px;color:#526d7b;margin-bottom:12px;line-height:1.8}
+#f99s-modal .f99v6-primary{display:block;text-align:center;border:0;min-height:47px;background:#98692d;color:#fff;border-radius:11px;font:800 14px Cairo,system-ui;padding:12px 15px;width:100%;text-decoration:none;cursor:pointer}
+#f99s-modal .f99v6-text{background:#f0f5f8;color:#2d5470;margin-bottom:15px}#f99s-modal .f99v6-checks>label{display:block;font-size:14px;font-weight:800;margin:14px 0}
+#f99s-modal .f99v6-checks select,#f99s-owner select{display:block;width:100%;padding:12px;border-radius:10px;border:1px solid #c5d5df;background:#fff;color:#14384d;font:700 15px Cairo,system-ui;min-height:45px;margin-top:6px}
+#f99s-modal .f99s-terms{margin:12px 0;border:1px solid #dce8ed;background:#f9fbfc;border-radius:12px;padding:12px;font-size:12px;white-space:pre-wrap;line-height:1.9;max-height:230px;overflow:auto}
+#f99s-modal .f99v6-consent{display:flex!important;gap:8px;align-items:center;font-size:13px;font-weight:700;line-height:1.8}
+#f99s-modal .f99v6-consent input{width:21px;height:21px;flex:none}#f99s-modal .f99v6-feedback,#f99s-owner .f99v6-feedback{margin:9px 0;white-space:pre-wrap;font-size:13px;color:#8b3b24;font-weight:800}
+#f99s-modal .f99v6-widget{margin:12px 0;padding:14px;border:1px dashed #bdcbd3;border-radius:12px;min-height:65px}#f99s-modal .f99v6-summary{background:#fff7ed;border:1px solid #e8d2ba;border-radius:14px;padding:12px;color:#784819;font-size:16px}
+#f99s-owner{direction:rtl;background:white;padding:15px;border-radius:14px}#f99s-owner .f99s-field{display:block;margin:14px 0;color:#28465e;font:800 13px Cairo,system-ui}#f99s-owner .f99s-field>span{display:block;margin:0 0 5px}
+#f99s-owner input:not([type=checkbox]):not([type=file]),#f99s-owner textarea{width:100%;min-height:44px;padding:11px;background:white;border:1px solid #bdcfda;border-radius:10px;font:600 15px Cairo,system-ui;color:#143a50}
+#f99s-owner .f99s-product{background:#f8fbfd;border:1px solid #dbe7ed;border-radius:15px;padding:14px;margin:18px 0}
+#f99s-owner .f99s-product-head{display:flex;align-items:center;justify-content:space-between;gap:9px}#f99s-owner .f99s-remove{background:#fee;color:#a23e3e}
+#f99s-owner .f99v6-upload,#f99s-owner .f99v6-batch,#f99s-owner .f99s-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0}
+#f99s-owner .f99v6-batch input{max-width:95px!important}#f99s-owner .f99v6-check-list{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0;padding:12px;border-radius:10px;background:white;border:1px solid #e1e9ee}#f99s-owner .f99v6-check-list>strong{flex:1 0 100%}
+#f99s-owner .f99v6-mini-check{display:flex;align-items:center;gap:6px;margin:8px 0;font-weight:700;font-size:13px}#f99s-owner input[type=checkbox]{min-width:20px;min-height:20px}
+@media(max-width:640px){#f99s-modal .f99v6-tiles{grid-template-columns:1fr}#f99s-modal .f99v6-tile img{height:170px}#f99s-modal .f99s-sheet{padding:13px}#f99s-modal h2{font-size:19px}#f99s-owner .f99s-product-head{flex-direction:column;align-items:stretch}}
+</style><script id="f99s-js">/* FINO99 V6 | Salla package storefront and inventory administration.
+   Payment is NEVER proof of access. A code must already exist in Supabase and be sold by Salla. */
 (()=>{'use strict';
-const KEY='f99x_storefront', DEFAULT={enabled:false,store_home_url:'',title:'اشترِ كود FINO99',terms:'بشراء الكود أقر بأن الخدمة احتساب وترشيح إرشادي وليست موافقة تمويلية أو ضماناً للتمويل. أوافق على شروط استخدام الكود ومدته، وسياسة الخصوصية والاسترجاع المعلنة في متجر سلة.',products:[],version:0};
-let cfg={...DEFAULT},loaded=false;
-function by(id){return document.getElementById(id)}
-function create(t,cls,text){const e=document.createElement(t);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
-function safe(u){try{const x=new URL(String(u));return x.protocol==='https:'&&!!x.hostname&&x.username===''&&x.password===''}catch{return false}}
-function isOwner(){try{return !!activeAccess?.record?.owner&&!!finoCentralAdminToken}catch{return false}}
-function status(t){const x=by('f99s-status');if(x)x.textContent=t}
-async function fetchStore(){if(typeof finoRpc!=='function')return;const r=await finoRpc('fino_public_settings',{},14000);if(r?.ok&&r.data?.ok!==false){const c=r.data?.settings?.[KEY];if(c&&typeof c==='object'){cfg={...DEFAULT,...c};loaded=true;renderButton()}}}
-function renderButton(){const login=document.querySelector('#page1 .login-card');if(!login)return;let b=by('f99s-buy');if(!b){b=create('button','', 'شراء كود / عرض الباقات');b.id='f99s-buy';b.type='button';b.addEventListener('click',openShop);login.append(b)}b.style.display=cfg.enabled&&Array.isArray(cfg.products)&&cfg.products.length?'':'none'}
-function modal(){let m=by('f99s-modal');if(m)return m;m=create('div');m.id='f99s-modal';m.hidden=true;m.setAttribute('role','dialog');m.setAttribute('aria-modal','true');m.setAttribute('aria-label','باقات المنصة');m.addEventListener('click',e=>{if(e.target===m)m.hidden=true});document.body.append(m);return m}
-function openShop(){
- const m=modal();m.replaceChildren();const box=create('div','f99s-sheet');
- const head=create('div');head.append(create('h2','',cfg.title||DEFAULT.title));const close=create('button','','إغلاق');close.type='button';close.addEventListener('click',()=>m.hidden=true);head.append(close);box.append(head);
- if(!cfg.enabled||!Array.isArray(cfg.products)||!cfg.products.some(p=>p.enabled!==false&&safe(p.url))){box.append(create('p','f99s-small','الباقات غير متاحة للشراء حالياً.'));m.append(box);m.hidden=false;return}
- box.append(create('p','f99s-small','اختر قطاعك أولاً لعرض الباقات المناسبة والبنوك المشمولة فيها، ثم اقرأ الشروط قبل الانتقال إلى سلة. الترشيح إرشادي وليس موافقة تمويلية.'));
- const secWrap=create('label','f99s-small','القطاع الوظيفي');secWrap.style.display='block';secWrap.style.margin='12px 0';
- const sector=document.createElement('select');sector.id='f99s-sector';sector.style.cssText='display:block;width:100%;margin-top:7px;border:1px solid #adc6d5;border-radius:11px;padding:12px;color:#102b40;background:#fff;font:700 15px Cairo,system-ui';
- for(const [v,t] of [['','اختر قطاعك'],['government','حكومي'],['military','عسكري'],['semiGovernment','شبه حكومي'],['private','قطاع خاص'],['retired','متقاعد']])sector.append(new Option(t,v));secWrap.append(sector);box.append(secWrap);
- const terms=create('div','f99s-terms',cfg.terms||DEFAULT.terms);box.append(terms);
- const label=create('label','f99s-small'),ch=document.createElement('input');ch.type='checkbox';ch.style.margin='10px';label.append(ch,document.createTextNode('قرأت شروط الباقة وأوافق عليها وعلى كون الترشيح مبدئياً'));box.append(label);
- for(const p of cfg.products){if(p.enabled===false||!safe(p.url))continue;
-   const item=create('div','f99s-item');item.style.display='block';item.append(create('strong','',String(p.name||'باقة')));
-   const banks=create('p','f99s-small');banks.style.margin='8px 0';item.append(banks);
-   const b=create('button','',Number(p.price).toLocaleString('ar-SA',{minimumFractionDigits:2,maximumFractionDigits:2})+' ريال • شراء');b.type='button';b.disabled=true;
-   const notice=create('p','f99s-small');notice.style.margin='4px 0';item.append(b,notice);
-   const sectors=Array.isArray(p.allowed_sectors)?p.allowed_sectors:[];
-   const bankNames=Array.isArray(p.banks)?p.banks:[];
-   function refresh(){const valid=!!sector.value&&sectors.includes(sector.value)&&bankNames.length>0;
-     banks.textContent='البنوك التي يحددها المالك لهذه الباقة: '+(bankNames.length?bankNames.join('، '):'لم تُحدد بعد');
-     if(!sector.value)notice.textContent='حدّد قطاعك أولاً.';
-     else if(!sectors.includes(sector.value))notice.textContent='هذه الباقة لا تشمل قطاعك؛ لا تشترها.';
-     else if(!bankNames.length)notice.textContent='بانتظار تحديد البنوك المشمولة من المالك.';
-     else notice.textContent='هذه البنوك ضمن نطاق الدراسة المبدئية، والأهلية النهائية تعتمد على الشروط والراتب والمديونية.';
-     b.disabled=!valid;b.style.opacity=valid?'1':'.45';}
-   sector.addEventListener('change',refresh);refresh();
-   b.addEventListener('click',()=>{if(b.disabled)return;
-     if(!ch.checked)return alert('اقرأ الشروط ووافق عليها أولاً.');
-     if(!confirm('هل توافق على ترشيح البنوك التالية فقط لهذه الباقة؟\n'+bankNames.join('، ')+'\n\n'+(p.terms||'تسري الشروط المعروضة أعلاه')+'\n\nبعد الدفع ستحصل على كود مستقل، وتعود إلى FINO99 وتضغط «لديك كود؟ اضغط هنا».'))return;
-     /* انتقال إلى رابط المنتج الذي حفظه المالك من سلة بعد موافقة العميل */
-     window.location.assign(p.url);
-   });box.append(item);
+ const KEY='f99x_storefront', SALLA_SCRIPT='https://cdn.assets.salla.network/prod/@salla.sa/fast-checkout-widget/v0.0.25/widget.esm.js';
+ const DEFAULT={enabled:false,store_id:'1525498116',store_home_url:'',title:'باقات FINO99',terms:'الخدمات إرشادية ولا تمثل موافقة تمويلية، ويخضع الترشيح للشروط والعروض المتاحة. تسري سياسة استخدام الأكواد والاسترجاع المبينة بمتجر سلة.',products:[],version:0};
+ const SERVICES=[['buyout','شراء مديونية التمويل الشخصي'],['smart','الحاسبة الذكية'],['compare','مقارنات عروض البنوك'],['mortgage_quote','التمويل العقاري'],['mortgage_compare','مقارنات العقاري'],['contract','العقود والاتفاقيات']];
+ const SECTORS=[['government','حكومي'],['military','عسكري'],['semiGovernment','شبه حكومي'],['private','قطاع خاص'],['retired','متقاعد']];
+ let cfg={...DEFAULT},scriptPromise=null,lastExport=[],loaded=false;
+ const $=id=>document.getElementById(id);
+ function el(t,cl,text){const e=document.createElement(t);if(cl)e.className=cl;if(text!=null)e.textContent=String(text);return e}
+ function owner(){try{return !!activeAccess?.record?.owner && !!activeAccess?.record?.central && !!finoCentralAdminToken}catch{return false}}
+ function urlOK(s){try{const u=new URL(s);return u.protocol==='https:'&&u.username===''&&u.password===''}catch{return false}}
+ function idOK(s){return /^\d{5,20}$/.test(String(s||''))}
+ function esc(s){return String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
+ function money(n){return Number(n||0).toLocaleString('ar-SA',{minimumFractionDigits:2,maximumFractionDigits:2})}
+ // Customer-facing copy is independent from internal owner-only package configuration.
+ function publicCopy(value){return String(value??'').replace(/البنوك\s+التي\s+يحددها\s+المالك/gu,'البنوك المشمولة في هذه الباقة').replace(/حسب\s+إعدادات\s+المالك/gu,'وفق شروط الباقة').replace(/التي\s+يحددها\s+المالك/gu,'المشمولة في الباقة')}
+
+ function listText(s){return String(s||'').split(/[\n،,]/).map(x=>x.trim()).filter(Boolean)}
+ function uniqueId(){return 'pkg-'+(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2))}
+ function normalizeProduct(p){return {...p,key:String(p?.key||uniqueId()),services:Array.isArray(p?.services)?p.services:['buyout'],allowed_sectors:Array.isArray(p?.allowed_sectors)?p.allowed_sectors:[],banks:Array.isArray(p?.banks)?p.banks:[],questions:Array.isArray(p?.questions)?p.questions:[]}}
+
+ function publicTagline(p){const raw=String(p?.tagline||'');if((p?.services||[]).includes('buyout') && /البنوك\s+التي\s+يحددها\s+المالك/u.test(raw))return 'خدمة شراء مديونية التمويل الشخصي وترشيح البنوك';return publicCopy(raw)}
+ function publicDuration(minutes){const n=Number(minutes||1440);if(n===1440)return 'يوم واحد';if(n>0&&n%1440===0)return (n/1440)+' أيام';if(n>0&&n%60===0)return (n/60)+' ساعات';return n+' دقيقة'}
+ function sheet(){let v=$('f99s-modal');if(!v){v=el('div');v.id='f99s-modal';v.hidden=true;v.setAttribute('role','dialog');v.setAttribute('aria-modal','true');v.addEventListener('click',ev=>{if(ev.target===v)close()});document.body.append(v)}return v}
+ function close(){const v=sheet();v.hidden=true;v.replaceChildren()}
+ function body(title){const v=sheet();v.replaceChildren();const box=el('main','f99s-sheet');const header=el('header','f99v6-h');header.append(el('h2','',title));const closeButton=el('button','','إغلاق');closeButton.type='button';closeButton.onclick=close;header.append(closeButton);box.append(header);v.append(box);v.hidden=false;return box}
+ function info(text){return el('p','f99s-small',text)}
+ function renderButton(){const b=$('f99s-buy')||document.querySelector('#page1 .login-card');if(!b)return;let btn=$('f99s-buy');if(!btn){btn=el('button','','عرض الباقات');btn.id='f99s-buy';btn.type='button';b.append(btn)}btn.onclick=openShop;btn.hidden=!cfg.enabled||!cfg.products?.some(p=>p.enabled!==false)}
+ async function fetchStore(){try{const r=await window.finoRpc('fino_public_settings',{},12000);const st=r?.data?.settings?.[KEY];if(r.ok&&st&&typeof st==='object'){cfg={...DEFAULT,...st,products:Array.isArray(st.products)?st.products.map(normalizeProduct):[]};loaded=true;renderButton()}}catch(e){console.warn('Storefront refresh failed',e)}}
+ function openShop(){const b=body(cfg.title||'باقات FINO99');if(!cfg.enabled){b.append(info('الباقات غير متاحة حالياً.'));return}
+  const list=el('div','f99v6-tiles');const products=cfg.products.filter(p=>p.enabled!==false&&(urlOK(p.url)||idOK(p.salla_product_id)));
+  if(!products.length){b.append(info('لم تُفعّل باقات متاحة للشراء بعد.'));return}
+  b.append(info('اختر الباقة المناسبة لك؛ تعرّف على الخدمة والشروط والبنوك المشمولة قبل الشراء.'));
+  for(const p of products){const tile=el('article','f99v6-tile');if(urlOK(p.image_url)){const img=el('img');img.src=p.image_url;img.alt='صورة '+p.name;img.loading='lazy';tile.append(img)}
+   const contents=el('div');if(p.badge)contents.append(el('small','f99v6-badge',p.badge));contents.append(el('h3','',p.name||'باقة'));if(p.tagline)contents.append(info(publicTagline(p)));
+   const price=el('div','f99v6-price',money(p.price)+' ريال');if(Number(p.old_price)>Number(p.price)){const old=el('s','',money(p.old_price)+' ريال');price.prepend(old)}contents.append(price);
+   const features=el('small','f99v6-features',(p.services||[]).map(k=>SERVICES.find(s=>s[0]===k)?.[1]||k).join(' • '));contents.append(features);
+   const choose=el('button','f99v6-primary','عرض الشروط والتفاصيل');choose.type='button';choose.onclick=()=>openDetail(p);contents.append(choose);tile.append(contents);list.append(tile)}b.append(list)
  }
- m.append(box);m.hidden=false;
-}
-function addProductRow(p={}){
- const container=by('f99s-rows');if(!container)return;
- if(container.children.length>=40){status('الحد الأقصى 40 باقة');return;}
- const row=create('section','f99s-product');row.dataset.sallaProduct='1';
- const title=create('div','f99s-product-head');title.append(create('strong','','إعداد باقة / منتج سلة'));
- const del=create('button','','حذف هذه الباقة من القائمة');del.type='button';del.className='f99s-remove';
- del.addEventListener('click',()=>{row.remove();status('حُذفت الباقة من القائمة المعروضة. اضغط حفظ لاعتماد التعديل في المركزية.')});title.append(del);row.append(title);
- function addField(label,key,value,opts={}){
-  const w=create('label','f99s-field');w.append(create('span','',label));
-  const x=document.createElement(opts.multiline?'textarea':'input');x.dataset.sallaField=key;
-  if(opts.type)x.type=opts.type;
-  if(opts.placeholder)x.placeholder=opts.placeholder;
-  if(opts.type==='number'){x.min='0';x.max='100000';x.step='0.01';x.inputMode='decimal';}
-  x.value=value==null?'':String(value);if(opts.multiline)x.rows=2;
-  w.append(x);row.append(w);return x;
+ function openDetail(p){const b=body(p.name||'تفاصيل الباقة');const back=el('button','f99v6-text','رجوع لجميع الباقات');back.onclick=openShop;b.append(back);if(p.tagline)b.append(info(publicTagline(p)));
+  const summary=el('div','f99v6-summary');summary.append(el('strong','',money(p.price)+' ريال'));if(Number(p.old_price)>Number(p.price))summary.append(el('s','',money(p.old_price)+' ريال'));summary.append(info('مدة الصلاحية: '+publicDuration(p.duration_minutes)+' من أول استخدام • الحسبة الأولى + '+(p.restarts??3)+' إعادات للحسبة'));b.append(summary);
+  const sectors=Array.isArray(p.allowed_sectors)?p.allowed_sectors:[];
+  const svc=Array.isArray(p.services)?p.services:[];
+  const needsBanks=svc.some(k=>['buyout','smart','compare','mortgage_quote','mortgage_compare'].includes(k));
+  const box=el('div','f99v6-checks');
+  const caption=el('label','','اختر قطاعك');const sector=document.createElement('select');sector.append(new Option('حدد القطاع',''));for(const [k,t] of SECTORS)sector.append(new Option(t,k));caption.append(sector);box.append(caption);
+  const banks=el('div','f99s-terms');banks.append(el('strong','','البنوك المشمولة'));banks.append(info(needsBanks?(p.banks||[]).join('، ')||'ستظهر تفاصيل البنوك بعد تفعيل الباقة':'هذه الباقة ليست لترشيح بنوك.'));box.append(banks);
+  const questions=Array.isArray(p.questions)?p.questions:[];const answers=[];
+  questions.forEach(q=>{if(!q?.text)return;const label=el('label','',q.text);const select=document.createElement('select');select.append(new Option('اختر الإجابة',''));for(const item of (Array.isArray(q.options)&&q.options.length?q.options:['نعم','لا']))select.append(new Option(String(item),String(item)));label.append(select);box.append(label);answers.push({q,select})});
+  const terms=el('div','f99s-terms');terms.textContent=publicCopy(cfg.terms)+'\n\n'+publicCopy(p.terms||'');box.append(terms);
+  const consent=el('label','f99v6-consent');const check=document.createElement('input');check.type='checkbox';consent.append(check,document.createTextNode('قرأت شروط هذه الباقة والبنوك المشمولة وأوافق عليها.'));box.append(consent);
+  const message=el('div','f99v6-feedback');message.setAttribute('role','status');box.append(message);
+  const next=el('button','f99v6-primary','موافق، متابعة الشراء');next.type='button';next.onclick=()=>{
+   if(!sector.value&&(needsBanks||sectors.length)){message.textContent='اختر قطاعك أولاً.';return}
+   if(sectors.length && !sectors.includes(sector.value)){message.textContent='هذه الباقة لا تشمل قطاعك؛ لا تكمل الشراء.';return}
+   if(needsBanks&&!(p.banks||[]).length){message.textContent='الشراء غير متاح لهذه الباقة حالياً. يرجى العودة لاحقاً.';return}
+   for(const a of answers){if(!a.select.value){message.textContent='جاوب عن الأسئلة أولاً.';return}if(a.q.reject&&a.select.value===a.q.reject){message.textContent='بناءً على إجاباتك، هذه الباقة غير مناسبة. اختر باقة أخرى.';return}}
+   if(!check.checked){message.textContent='اقرأ الشروط ووافق عليها أولاً.';return}
+   renderCheckout(b,p);
+  };box.append(next);b.append(box)
  }
- addField('اسم الباقة الظاهر للعميل','name',p.name||'',{placeholder:'مثلاً FINO99 – البرونزية'});
- addField('سعر الباقة بالريال','price',p.price??'17.80',{type:'number',placeholder:'17.80'});
- addField('رابط منتج هذه الباقة في سلة — الصق الرابط هنا','url',p.url||'',{type:'url',placeholder:'https://your-store.com/product/...'});
- addField('شروط إضافية تخص هذه الباقة (اختياري)','terms',p.terms||'',{multiline:true,placeholder:'المدة وعدد مرات إعادة الحسبة'});
- addField('البنوك التي يشملها الترشيح (افصل بينها بفاصلة)','banks',(p.banks||[]).join('، '),{multiline:true,placeholder:'مثلاً الأهلي، الراجحي، الإنماء'});
- const sectorBox=create('div','f99s-sector-group');sectorBox.append(create('strong','','القطاعات المسموحة بهذه الباقة'));
- const sectorChoices=create('div','f99s-sectors');const sectors=[['government','حكومي'],['military','عسكري'],['semiGovernment','شبه حكومي'],['private','قطاع خاص'],['retired','متقاعد']];
- for(const [v,t] of sectors){const label=create('label','f99s-sector');const input=document.createElement('input');input.type='checkbox';input.dataset.sallaSector=v;input.checked=Array.isArray(p.allowed_sectors)&&p.allowed_sectors.includes(v);label.append(input,document.createTextNode(' '+t));sectorChoices.append(label)}
- sectorBox.append(sectorChoices);row.append(sectorBox);
- const activeLabel=create('label','f99s-sector f99s-active');const active=document.createElement('input');active.type='checkbox';active.dataset.sallaField='enabled';active.checked=p.enabled!==false&&!!p.url;activeLabel.append(active,document.createTextNode(' إظهار هذه الباقة للزوار عند تفعيل المتجر'));row.append(activeLabel);
- container.append(row);
-}
-function openOwner(){
- if(!isOwner())return alert('هذه الشاشة للمالك بعد توثيق جلسته في المركزية فقط');
- const target=by('f99x-content');if(!target)return;target.replaceChildren();
- const f=create('section');f.id='f99s-owner';f.append(create('h2','','ربط سلة وإدارة روابط الباقات'));
- f.append(create('p','f99s-small','الصق رابط المتجر العام للحفظ، ثم رابط المنتج الخاص بكل باقة في خانتها. لن ينتقل العميل إلى متجر سلة إلا بعد اختيار قطاع مؤهل، وقراءة الشروط والموافقة عليها. لا يوجد إصدار آلي للأكواد بمجرد الدفع في هذه النسخة.'));
- function field(label,id,value,large=false){const w=create('label','f99s-field');w.append(create('span','',label));const x=document.createElement(large?'textarea':'input');x.id=id;x.value=value??'';if(!large)x.type=id==='f99s-home-url'?'url':'text';else x.rows=4;if(id==='f99s-home-url')x.placeholder='https://your-store.salla.sa';w.append(x);f.append(w);return x}
- field('رابط متجر سلة العام — اختياري (للمرجع فقط)','f99s-home-url',cfg.store_home_url||'');
- field('عنوان نافذة الباقات','f99s-title',cfg.title||DEFAULT.title);
- field('الشروط والأحكام التي يوافق عليها العميل قبل الشراء','f99s-terms',cfg.terms||DEFAULT.terms,true);
- const enabled=create('label','f99s-sector f99s-active');const ch=document.createElement('input');ch.id='f99s-enabled';ch.type='checkbox';ch.checked=!!cfg.enabled;enabled.append(ch,document.createTextNode(' تشغيل صفحة شراء الباقات للزوار'));f.append(enabled);
- f.append(create('h3','','الباقات وروابط منتجات سلة'));
- f.append(create('p','f99s-small','كل باقة لها رابط منتج سلة مستقل. لا تضع رابط لوحة إدارة سلة؛ الصق رابط صفحة المنتج الذي يفتحه العميل.'));
- const rows=create('div');rows.id='f99s-rows';f.append(rows);
- const add=create('button','','+ إضافة باقة جديدة');add.type='button';add.addEventListener('click',()=>addProductRow({enabled:false}));f.append(add);
- const actions=create('div','f99s-actions');
- const save=create('button','','حفظ روابط الباقات في المركزية');save.type='button';save.addEventListener('click',saveStore);actions.append(save);
- const selection=create('select');selection.id='f99s-export-product';selection.setAttribute('aria-label','اختيار الباقة لتجهيز الأكواد');selection.append(new Option('اختر باقة لنسخ أكوادها غير المستخدمة',''));for(const p of cfg.products||[])selection.append(new Option(p.name,p.name));actions.append(selection);
- const exportBtn=create('button','','نسخ أكواد الباقة للتسليم اليدوي في سلة');exportBtn.type='button';exportBtn.addEventListener('click',exportCodes);actions.append(exportBtn);
- f.append(actions,create('p','f99s-small','مهم: إعداد رابط المنتج هنا لا ينشئ منتج سلة، ولا يثبت الدفع، ولا يصدر كوداً جديداً تلقائياً. يتطلب التسليم الآلي تكاملاً خلفياً مؤكداً مع سلة.'));
- const msg=create('p');msg.id='f99s-status';msg.setAttribute('role','status');f.append(msg);target.append(f);
- for(const p of cfg.products||[])addProductRow(p);
- if(!cfg.products?.length)addProductRow({name:'FINO99 – الباقة البرونزية',price:17.80,allowed_sectors:[],banks:[],enabled:false});
-}
-async function exportCodes(){if(!isOwner())return status('غير مصرح');try{const r=await finoCentralAdminDashboard(true);if(!r?.ok||r.data?.ok===false)throw Error('تعذر قراءة المركزية');const all=r.data?.codes||[];const selected=by('f99s-export-product')?.value||'';if(!selected)return status('اختر منتجاً واحداً من قائمة سلة أولاً');const codes=all.filter(c=>c.enabled&&!c.deleted_at&&!c.activated_at&&!c.locked_device_hash&&!c.use_count&&c.max_entries===1&&c.config?.f99x?.sellable===true&&c.config?.f99x?.store_package_id===selected&&(!c.expires_at||Date.parse(c.expires_at)>Date.now())).map(c=>c.code);if(!codes.length)return status('لا توجد أكواد جديدة مفعلة للتصدير؛ فعّل خيار السماح بالبيع في كود عميل صالح بدخلة واحدة.');await navigator.clipboard.writeText(codes.join('\n'));status('✅ تم نسخ '+codes.length+' كوداً يخص '+selected+' فقط. راجع الأكواد في سلة قبل طرح المنتج للبيع لتفادي إعادة رفعها أو بيعها مرتين.')}catch(e){status('تعذر نسخ الأكواد: '+String(e.message||e))}}
-async function saveStore(){
- if(!isOwner())return status('جلسة المالك غير معتمدة');
- const rows=[...document.querySelectorAll('#f99s-rows .f99s-product')];if(rows.length>40)return status('الحد الأقصى 40 باقة');
- const val=(row,key)=>row.querySelector(`[data-salla-field="${key}"]`)?.value?.trim()||'';
- const products=[];const existing=new Set();
- for(const row of rows){
-  const name=val(row,'name'),price=Number(val(row,'price')),url=val(row,'url');
-  const terms=val(row,'terms'),banks=val(row,'banks').split(/[,،\n]/).map(x=>x.trim()).filter(Boolean);
-  const sectors=[...row.querySelectorAll('[data-salla-sector]:checked')].map(x=>x.dataset.sallaSector);
-  const enabled=!!row.querySelector('[data-salla-field="enabled"]')?.checked;
-  if(!name)return status('اكتب اسم كل باقة أو احذف صفها الفارغ');
-  if(existing.has(name))return status('اسم الباقة مكرر: '+name);existing.add(name);
-  if(!Number.isFinite(price)||price<0||price>100000)return status('السعر غير صحيح للباقة: '+name);
-  if(url&&!safe(url))return status('رابط المنتج يجب أن يبدأ بـ https:// ويكون رابطاً صالحاً: '+name);
-  if(enabled&&!url)return status('الصق رابط منتج سلة أو أوقف عرض الباقة: '+name);
-  if(enabled&&(!sectors.length||!banks.length))return status('حدد القطاعات والبنوك للباقة المفعّلة: '+name);
-  products.push({name:name.slice(0,80),price,url,terms:terms.slice(0,1500),allowed_sectors:[...new Set(sectors)],banks:[...new Set(banks.map(x=>x.slice(0,50)))],enabled});
+ function loadWidget(){if(scriptPromise)return scriptPromise;scriptPromise=new Promise((resolve,reject)=>{if(customElements.get('salla-mini-checkout-widget'))return resolve();const s=document.createElement('script');s.type='module';s.src=SALLA_SCRIPT;s.onload=()=>resolve();s.onerror=()=>{scriptPromise=null;reject(Error('تعذر تحميل أداة الدفع السريع من سلة'))};document.head.append(s)});return scriptPromise}
+ async function renderCheckout(b,p){b.replaceChildren();const bar=el('header','f99v6-h');bar.append(el('h2','','الدفع في سلة — '+p.name));const back=el('button','','رجوع');back.onclick=()=>openDetail(p);bar.append(back);b.append(bar);
+  b.append(info('أكمل الدفع داخل سلة. السعر الذي يُحصّل منك هو السعر المعروض في سلة؛ تأكد من مطابقته لسعر الباقة هنا. بعد تنفيذ طلب البطاقة الرقمية انسخ الكود، ثم ارجع إلى FINO99 واضغط «لديك كود؟».'));
+  const status=el('p','f99v6-feedback');b.append(status);
+  // One merchant product per package: the product ID cannot be shared across unrelated packages.
+  const pid=String(p.salla_product_id||'').trim(),store=String(cfg.store_id||'').trim();
+  if(idOK(pid)&&idOK(store)){
+    const host=el('div','f99v6-widget');host.append(info('جاري تجهيز نافذة سلة...'));b.append(host);
+    try{await loadWidget();if(!host.isConnected)return;host.replaceChildren();const w=document.createElement('salla-mini-checkout-widget');w.setAttribute('store-id',store);w.setAttribute('products',JSON.stringify([Number(pid)]));w.setAttribute('language','ar');w.setAttribute('url','https://salla.sa/_app/fast-checkout');host.append(w);status.textContent='إذا لم تظهر نافذة الدفع، استخدم رابط الشراء المباشر أدناه عند توفره.'}
+    catch(e){status.textContent='الدفع السريع غير متاح حالياً؛ استخدم رابط منتج سلة المباشر.'}
+  }
+  if(urlOK(p.url)){const link=el('a','f99v6-primary','فتح صفحة الشراء في سلة');link.href=p.url;link.rel='noopener noreferrer';link.target='_blank';b.append(link)}
+  const returnBtn=el('button','','اشتريت الكود — إدخال الكود');returnBtn.type='button';returnBtn.onclick=()=>{close();window.FINO99OpenCodeEntry?.()};b.append(returnBtn);
+  b.append(info('مهم: الضغط على هذا الزر لا يُفعّل شيئاً؛ تُراجع صلاحية الكود على المركزية، والدفع يتم في سلة فقط.'));
  }
- const store_home_url=by('f99s-home-url')?.value.trim()||'';
- if(store_home_url&&!safe(store_home_url))return status('رابط المتجر العام غير صالح؛ يجب أن يبدأ بـ https://');
- const value={enabled:by('f99s-enabled').checked,store_home_url,title:by('f99s-title').value.trim().slice(0,90),terms:by('f99s-terms').value.trim().slice(0,6000),products,version:Date.now()};
- if(!value.terms)return status('ضع شروط الخدمة قبل تفعيل البيع');
- if(value.enabled&&!products.some(p=>p.enabled&&safe(p.url)))return status('فعّل باقة واحدة على الأقل ولها رابط منتج صحيح قبل نشر الشراء');
- status('جاري الحفظ في المركزية ثم التحقق من نجاحه...');
- try{
-  const r=await finoCentralAdminCall('fino_admin_upsert_setting',{p_setting_key:KEY,p_value:value});if(!r?.ok||r.data?.ok===false)throw Error(r?.error||r?.data?.reason||'رفض الحفظ');
-  const v=await finoRpc('fino_public_settings',{},14000);
-  if(!v?.ok||v?.data?.settings?.[KEY]?.version!==value.version)throw Error('لم يتأكد حفظ روابط سلة من المركزية');
-  cfg={...DEFAULT,...v.data.settings[KEY]};loaded=true;renderButton();
-  status('✅ تم حفظ روابط الباقات وتأكيد قراءتها من المركزية. العميل ينتقل إلى رابط المنتج الخاص بباقته بعد الموافقة.');
- }catch(e){status('❌ تعذر الحفظ: '+String(e.message||e))}
-}
-function installOwner(){const t=document.querySelector('#f99x-layer .f99x-tabs');if(!t||by('f99s-owner-tab'))return;const b=create('button','','سلة والباقات');b.id='f99s-owner-tab';b.type='button';b.addEventListener('click',openOwner);t.append(b)}
-window.F99SOpenOwner=openOwner;window.FINO99OpenStorefront=openShop;
-window.FINO99ReadStorefront=()=>structuredClone(cfg);
-function init(){renderButton();installOwner();fetchStore();setInterval(()=>{installOwner();fetchStore()},20000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)fetchStore()})}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+ function field(row,label,key,value='',opts={}){const l=el('label','f99s-field');l.append(el('span','',label));const i=document.createElement(opts.textarea?'textarea':'input');i.dataset.field=key;i.value=value==null?'':String(value);if(opts.type)i.type=opts.type;if(opts.textarea)i.rows=3;if(opts.placeholder)i.placeholder=opts.placeholder;l.append(i);row.append(l);return i}
+ function serviceChecks(row,values){const wrap=el('div','f99v6-check-list');wrap.append(el('strong','','الخدمات المفعلة بالكود'));for(const [k,name] of SERVICES){const lab=el('label','f99v6-mini-check');const input=document.createElement('input');input.type='checkbox';input.dataset.service=k;input.checked=values.includes(k);lab.append(input,document.createTextNode(' '+name));wrap.append(lab)}row.append(wrap)}
+ function sectorChecks(row,values){const wrap=el('div','f99v6-check-list');wrap.append(el('strong','','القطاعات المشمولة'));for(const [k,name] of SECTORS){const lab=el('label','f99v6-mini-check');const input=document.createElement('input');input.type='checkbox';input.dataset.sector=k;input.checked=values.includes(k);lab.append(input,document.createTextNode(' '+name));wrap.append(lab)}row.append(wrap)}
+ function status(msg){const v=$('f99v6-admin-status');if(v)v.textContent=msg}
+ function productRow(p={}){const list=$('f99v6-admin-products');if(!list)return;if(list.children.length>=60){status('الحد الأقصى 60 باقة');return}const norm=normalizeProduct(p);const row=el('section','f99s-product');row.dataset.packageKey=norm.key;
+  const hd=el('div','f99s-product-head');hd.append(el('h3','',norm.name||'باقة جديدة'));const del=el('button','f99s-remove','حذف الباقة من العرض');del.onclick=()=>{row.remove();status('تم حذف الصف؛ اضغط حفظ لاعتماد التعديل بالمركزية')};hd.append(del);row.append(hd);
+  field(row,'اسم الباقة','name',norm.name||'');field(row,'عنوان تسويقي مختصر','tagline',norm.tagline||'');field(row,'شارة العرض (اختياري)','badge',norm.badge||'');field(row,'السعر الحالي (ريال)','price',norm.price??17.8,{type:'number'});field(row,'السعر السابق للعرض (اختياري)','old_price',norm.old_price||'',{type:'number'});
+  field(row,'رابط صورة الباقة HTTPS','image_url',norm.image_url||'',{type:'url'});
+  const upl=el('div','f99v6-upload');const file=document.createElement('input');file.type='file';file.accept='image/png,image/jpeg,image/webp,image/gif';upl.append(file);const up=el('button','','رفع صورة من الاستوديو');up.type='button';up.onclick=()=>uploadCover(file,row);upl.append(up);row.append(upl);
+  field(row,'معرّف منتج سلة (رقم فقط)','salla_product_id',norm.salla_product_id||'',{placeholder:'الصق رقم المنتج الخاص بهذه الباقة'});field(row,'رابط المنتج أو الشراء الفوري من سلة (اختياري مع المعرّف)','url',norm.url||'',{type:'url'});
+  field(row,'البنوك المسموحة لهذه الباقة (سطر لكل بنك)','banks',norm.banks.join('\n'),{textarea:true});
+  field(row,'أسئلة قبل الشراء — كل سطر: السؤال | نعم،لا | إجابة تمنع الشراء','questions',norm.questions.map(q=>q.text+' | '+(q.options||['نعم','لا']).join('،')+' | '+(q.reject||'')).join('\n'),{textarea:true});
+  field(row,'الشروط الخاصة بالباقة','terms',norm.terms||'',{textarea:true});field(row,'مدة الكود بالدقائق','duration_minutes',norm.duration_minutes??1440,{type:'number'});field(row,'إعادات الحسبة بعد الأولى','restarts',norm.restarts??3,{type:'number'});
+  serviceChecks(row,norm.services);sectorChecks(row,norm.allowed_sectors);
+  const active=el('label','f99v6-mini-check');const input=document.createElement('input');input.type='checkbox';input.dataset.active='1';input.checked=norm.enabled===true;active.append(input,document.createTextNode(' إظهار الباقة والسماح بالشراء'));row.append(active);
+  const batch=el('div','f99v6-batch');const n=document.createElement('input');n.type='number';n.min='1';n.max='200';n.value='50';n.dataset.batch='1';const generate=el('button','','إنشاء 50/100 كود فريد في المركزية');generate.onclick=()=>issueBatch(row,Number(n.value));batch.append(el('span','','مخزون أكواد هذه الباقة: '),n,generate);row.append(batch);list.append(row)
+ }
+ async function uploadCover(file,row){if(!owner())return status('هذه الميزة للمالك فقط');const f=file.files?.[0];if(!f)return status('اختر صورة أولاً');if(f.size>8*1024*1024)return status('أقصى حجم 8 ميجابايت');const data=new FormData();data.append('file',f);data.append('kind','background');data.append('admin_token',finoCentralAdminToken);status('جار رفع الصورة عبر خدمة الوسائط الآمنة...');try{const r=await fetch(FINO_SUPABASE_URL+'/functions/v1/f99x-owner-media',{method:'POST',headers:{apikey:FINO_SUPABASE_PUBLISHABLE_KEY},body:data});const x=await r.json();if(!r.ok||!x.ok||!urlOK(x.url))throw Error(x.error||'خدمة رفع الصورة غير مفعلة');row.querySelector('[data-field=image_url]').value=x.url;status('رُفعت الصورة. اضغط حفظ ونشر الباقات لاعتمادها على جميع الأجهزة.')}catch(e){status('تعذر رفع الصورة: '+e.message+'؛ يلزم نشر خدمة f99x-owner-media وربط التخزين.')}}
+ function readRow(row){const v=k=>row.querySelector(`[data-field="${k}"]`)?.value.trim()||'';const s=[...row.querySelectorAll('[data-service]:checked')].map(x=>x.dataset.service),secs=[...row.querySelectorAll('[data-sector]:checked')].map(x=>x.dataset.sector),q=[];
+  for(const line of v('questions').split('\n').map(x=>x.trim()).filter(Boolean)){const [text,choices,rej]=line.split('|').map(x=>x.trim());if(!text)continue;q.push({text:text.slice(0,200),options:choices?listText(choices).slice(0,10):['نعم','لا'],reject:(rej||'').slice(0,60)})}
+  return {key:row.dataset.packageKey,name:v('name').slice(0,100),tagline:v('tagline').slice(0,200),badge:v('badge').slice(0,60),price:Number(v('price')),old_price:v('old_price')?Number(v('old_price')):null,image_url:v('image_url'),salla_product_id:v('salla_product_id'),url:v('url'),banks:listText(v('banks')).slice(0,50),questions:q.slice(0,20),terms:v('terms').slice(0,8000),services:s,allowed_sectors:secs,duration_minutes:Number(v('duration_minutes')),restarts:Number(v('restarts')),enabled:!!row.querySelector('[data-active]')?.checked};
+ }
+ function validateProduct(p){if(!p.name)return 'أدخل اسم الباقة';if(!Number.isFinite(p.price)||p.price<0||p.price>100000)return 'سعر غير صحيح: '+p.name;
+  if(p.old_price!==null&&(!Number.isFinite(p.old_price)||p.old_price<=p.price))return 'السعر السابق يجب أن يكون أكبر من الحالي: '+p.name;
+  if(p.image_url&&!urlOK(p.image_url))return 'رابط الصورة غير آمن: '+p.name;
+  if(p.url&&!urlOK(p.url))return 'رابط سلة غير آمن: '+p.name;
+  if(p.salla_product_id&&!idOK(p.salla_product_id))return 'معرف منتج سلة يجب أن يكون رقماً: '+p.name;
+  if(p.enabled&&!p.url)return 'ألصق رابط الشراء الفوري من سلة كمسار مضمون للباقة: '+p.name;
+  if(!p.services.length)return 'اختر خدمة على الأقل للباقة: '+p.name;
+  const financing=p.services.some(k=>['buyout','smart','compare','mortgage_quote','mortgage_compare'].includes(k));if(p.enabled&&financing&&!p.allowed_sectors.length)return 'حدد القطاعات المشمولة في: '+p.name;if(p.enabled&&financing&&!p.banks.length)return 'حدد البنوك المشمولة في: '+p.name;
+  if(!Number.isInteger(p.duration_minutes)||p.duration_minutes<1||p.duration_minutes>525600||!Number.isInteger(p.restarts)||p.restarts<0||p.restarts>50)return 'المدة أو إعادة الحسبة خارج الحدود: '+p.name;
+  if(p.questions.some(q=>q.reject&&!q.options.includes(q.reject)))return 'إجابة الرفض يجب أن تكون إحدى إجابات السؤال: '+p.name;
+  return ''
+ }
+ async function saveStore(){if(!owner())return status('جلسة المالك غير معتمدة');const products=[...document.querySelectorAll('#f99v6-admin-products .f99s-product')].map(readRow);
+  if(new Set(products.map(x=>x.key)).size!==products.length)return status('معرف باقة مكرر');
+  for(const p of products){const error=validateProduct(p);if(error)return status(error)}const enabled=$('f99v6-enabled').checked;
+  if(enabled&&!products.some(p=>p.enabled))return status('فعّل باقة واحدة على الأقل');
+  const store_id=$('f99v6-store-id').value.trim();if(!idOK(store_id))return status('رقم متجر سلة غير صحيح');const store_home_url=$('f99v6-home-url').value.trim();if(store_home_url&&!urlOK(store_home_url))return status('رابط المتجر غير صالح');
+  const terms=$('f99v6-terms').value.trim();if(enabled&&!terms)return status('الشروط العامة مطلوبة قبل نشر البيع');
+  const value={enabled,store_id,store_home_url,title:$('f99v6-title').value.trim()||'باقات FINO99',terms,products,version:Date.now()};
+  status('جار الحفظ في المركزية والتحقق من قراءة النسخة نفسها...');try{const r=await window.finoCentralAdminCall('fino_admin_upsert_setting',{p_setting_key:KEY,p_value:value});if(!r.ok||r.data?.ok===false)throw Error(r.error?.message||r.data?.reason||'رفض الحفظ');const v=await window.finoRpc('fino_public_settings',{},12000);if(!v.ok||v.data?.settings?.[KEY]?.version!==value.version)throw Error('لم تتأكد المزامنة');cfg={...DEFAULT,...v.data.settings[KEY],products:v.data.settings[KEY].products.map(normalizeProduct)};renderButton();status('✅ تم تأكيد حفظ '+products.length+' باقة في المركزية.')}catch(e){status('❌ تعذر الاعتماد: '+e.message)}
+ }
+ function openOwner(){if(!owner())return alert('ادخل بكود المالك واتصل بالمركزية أولاً');if(!loaded){alert('لم تُقرأ إعدادات الباقات من المركزية بعد. لا يمكن تعديلها قبل نجاح الاتصال.');return;}const target=$('f99x-content');if(!target)return alert('افتح قسم الإدارة أولاً');target.replaceChildren();const root=el('section');root.id='f99s-owner';root.append(el('h2','','إدارة باقات FINO99 وسلة'));
+  root.append(info('كل باقة لها صورة وتسعير وتسويق وخدمات وشروط وأسئلة ومعرّف ثابت. أكواد كل باقة تُنشأ في المركزية ثم تُرفع لسلة قبل فتح البيع.'));
+  function simple(label,id,value){const w=el('label','f99s-field');w.append(el('span','',label));const x=document.createElement(id==='f99v6-terms'?'textarea':'input');x.id=id;x.value=value??'';if(id==='f99v6-terms')x.rows=4;w.append(x);root.append(w)}
+  simple('معرّف المتجر في سلة','f99v6-store-id',cfg.store_id||DEFAULT.store_id);
+  simple('رابط المتجر العام (اختياري)','f99v6-home-url',cfg.store_home_url||'');simple('عنوان صفحة الباقات','f99v6-title',cfg.title||DEFAULT.title);simple('الشروط العامة','f99v6-terms',cfg.terms||DEFAULT.terms);
+  const active=el('label','f99v6-mini-check');const ch=document.createElement('input');ch.id='f99v6-enabled';ch.type='checkbox';ch.checked=cfg.enabled===true;active.append(ch,document.createTextNode(' نشر الباقات للزوار'));root.append(active);
+  const rows=el('div');rows.id='f99v6-admin-products';root.append(rows);
+  const buttons=el('div','f99s-actions');const add=el('button','','+ إنشاء باقة جديدة');add.type='button';add.onclick=()=>productRow({enabled:false});buttons.append(add);const save=el('button','','حفظ ونشر الباقات');save.type='button';save.onclick=saveStore;buttons.append(save);root.append(buttons);
+  const msg=el('p','f99v6-feedback');msg.id='f99v6-admin-status';msg.setAttribute('role','status');root.append(msg);target.append(root);
+  for(const p of cfg.products)productRow(p);if(!cfg.products.length)productRow({name:'الباقة البرونزية',tagline:'خدمة شراء مديونية التمويل الشخصي وترشيح البنوك',price:17.80,services:['buyout'],allowed_sectors:[],banks:[],restarts:3,duration_minutes:1440,enabled:false});
+ }
+ async function issueBatch(row,count){if(!owner())return status('غير مصرح');const p=readRow(row);const er=validateProduct({...p,enabled:false});if(er)return status(er);if(!Number.isSafeInteger(count)||count<1||count>200)return status('عدد الأكواد من 1 إلى 200');if(p.services.includes('contract'))return status('أكواد العقود تحتاج قالب عقد خاص؛ لا تجهزها كمخزون بيع عام');
+  if(!confirm(`إنشاء ${count} كود جديد مستقل للباقة «${p.name}»؟ يجب رفع الأكواد نفسها في منتج سلة قبل البيع.`))return;
+  status('جار إنشاء الأكواد مركزياً...');try{const r=await window.finoCentralAdminCall('f99v6_admin_issue_batch',{p_package_key:p.key,p_count:count,p_template:{name:p.name,allowed_services:p.services,duration_minutes:p.duration_minutes,max_restarts_per_entry:p.restarts,package_name:p.name}});if(!r.ok||r.data?.ok!==true||!Array.isArray(r.data.codes)||r.data.codes.length!==count)throw Error(r.error?.message||r.data?.reason||'فشل إصدار الأكواد');lastExport=r.data.codes.map(x=>x.code||x);const out=el('textarea');out.readOnly=true;out.rows=8;out.value=lastExport.join('\n');out.style.width='100%';row.append(out);const cp=el('button','','نسخ الأكواد لسلة');cp.onclick=async()=>{try{await navigator.clipboard.writeText(out.value);status('نُسخت '+lastExport.length+' كوداً. تأكد من استلام الأكواد في سلة قبل فتح البيع.')}catch{out.select();status('حدد النص ثم انسخه يدوياً')}};row.append(cp);status('✅ أنشأت المركزية '+count+' كوداً فريداً للباقة. لا ترفعها مرتين لسلة.')}catch(e){status('❌ تعذر إنشاء المخزون: '+e.message+' — يلزم تثبيت إضافة المركزية V6 أولاً.')}
+ }
+ function installOwner(){const tabs=document.querySelector('#f99x-layer .f99x-tabs');if(!tabs)return;let b=$('f99s-owner-tab');if(!b){b=el('button','','سلة والباقات');b.id='f99s-owner-tab';tabs.append(b)}b.onclick=openOwner}
+ window.FINO99OpenStorefront=openShop;window.F99SOpenOwner=openOwner;window.FINO99ReadStorefront=()=>JSON.parse(JSON.stringify(cfg));
+ function init(){renderButton();installOwner();fetchStore();setInterval(()=>{installOwner();fetchStore()},25000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)fetchStore()})}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
 
@@ -18701,6 +18709,45 @@ function attach(){
   });
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',attach,{once:true});else attach();
+})();
+</script>
+<style id="f99v6-services-css">#f99v6-services[hidden],#f99v6-service-quick[hidden]{display:none!important}
+#f99v6-services{position:fixed;inset:0;z-index:2147483050;overflow-y:auto;direction:rtl;background:#f1f6f9;color:#153b50;padding:max(20px,env(safe-area-inset-top)) 12px max(22px,env(safe-area-inset-bottom));font-family:Cairo,system-ui}
+#f99v6-services>section{max-width:720px;margin:auto;background:#fff;border-radius:22px;padding:18px;min-height:40vh;box-shadow:0 14px 40px #24405712}
+#f99v6-services header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#f99v6-services h2{font-size:23px;margin:0}
+#f99v6-services p{font-size:13px;line-height:1.9;color:#607685;margin:12px 0 18px}
+#f99v6-services button{font:800 14px Cairo,system-ui;border-radius:12px;border:1px solid #dce7ed;padding:13px 14px;background:#fff;color:#17384e;min-height:44px}
+#f99v6-services .f99v6-service-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#f99v6-services .f99v6-service-grid button{text-align:right;min-height:110px;background:#f8fbfd;box-shadow:0 3px 12px #1939570d}
+#f99v6-services .f99v6-service-grid b{display:block;font-size:17px}
+#f99v6-services .f99v6-service-grid small{display:block;font-size:12px;font-weight:600;color:#687f8d;line-height:1.7;margin-top:6px}
+#f99v6-service-quick{position:fixed;z-index:1300;bottom:max(12px,env(safe-area-inset-bottom));left:13px;font:800 12px Cairo,system-ui;border:1px solid #adc3d2;border-radius:999px;background:#fff;color:#1d5b7d;padding:10px 14px;box-shadow:0 4px 18px #23425723}
+@media(max-width:520px){#f99v6-services .f99v6-service-grid{grid-template-columns:1fr}#f99v6-services h2{font-size:20px}}
+</style>
+<script id="f99v6-services-js">/* FINO99 V6: one paid code may authorize several existing calculators/services. */
+(()=>{'use strict';
+ const NAMES={buyout:['تحويل المديونية','حساب شراء المديونية والترشيح','calculator'],smart:['الحاسبة الذكية','الاحتساب والترشيح الذكي','brain-circuit'],compare:['مقارنات العروض','مقارنة عرضين إلى أربعة','chart-no-axes-column'],mortgage_quote:['التمويل العقاري','الحاسبة العقارية','house'],mortgage_compare:['مقارنات العقاري','مقارنة التمويل العقاري','chart-column'],contract:['العقود','الاطلاع والموافقة على العقد','file-text']};
+ const getAllowed=()=>{try{return Array.isArray(activeAccess?.record?.centralData?.allowed_services)?activeAccess.record.centralData.allowed_services:[]}catch{return []}};
+ const allowed=(k)=>!!activeAccess?.record?.central&&!activeAccess?.record?.owner&&getAllowed().includes(k);
+ function close(){const p=document.getElementById('f99v6-services');if(p)p.hidden=true}
+ function open(requested){const all=getAllowed().filter(k=>NAMES[k]);if(!activeAccess?.record?.central||activeAccess?.record?.owner||!all.length)return;
+  let root=document.getElementById('f99v6-services');if(!root){root=document.createElement('div');root.id='f99v6-services';root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');document.body.append(root)}root.replaceChildren();root.hidden=false;
+  const box=document.createElement('section');const head=document.createElement('header');const title=document.createElement('h2');title.textContent='خدمات باقتك';head.append(title);const hide=document.createElement('button');hide.textContent='إغلاق';hide.onclick=close;head.append(hide);box.append(head);
+  const note=document.createElement('p');note.textContent='اختر إحدى الخدمات المسموحة لك بهذا الكود. تظهر هنا الخدمات التي فعّلها المالك فقط.';box.append(note);
+  const grid=document.createElement('div');grid.className='f99v6-service-grid';for(const k of all){const b=document.createElement('button');b.type='button';const t=document.createElement('b');t.textContent=NAMES[k][0];const hint=document.createElement('small');hint.textContent=NAMES[k][1];b.append(t,hint);b.onclick=()=>run(k);grid.append(b)}box.append(grid);root.append(box);
+  const quick=document.getElementById('f99v6-service-quick');if(quick)quick.hidden=all.length<2;
+ }
+ function run(k){if(!allowed(k))return;close();try{
+  if(k==='compare'){if(typeof window.F99COpenClient==='function')window.F99COpenClient();else throw Error('شاشة المقارنة غير محملة');}
+  else if(k==='mortgage_quote'||k==='mortgage_compare'){if(typeof window.F99MOpenClient==='function')window.F99MOpenClient(k==='mortgage_compare');else throw Error('شاشة العقاري غير محملة');}
+  else if(k==='smart'){if(typeof window.renderSmartBanks==='function')window.renderSmartBanks();if(typeof window.showPage==='function')window.showPage('smartPage');else throw Error('الحاسبة الذكية غير متاحة');}
+  else if(k==='buyout'){if(typeof window.showPage==='function')window.showPage('page2');else throw Error('حاسبة المديونية غير متاحة');}
+  else if(k==='contract'){if(typeof window.openFINOContractClient==='function')window.openFINOContractClient();else throw Error('قالب العقد غير متاح');}
+ }catch(e){alert('تعذر فتح الخدمة: '+(e.message||e));open()}}
+ function setup(){let q=document.getElementById('f99v6-service-quick');if(!q){q=document.createElement('button');q.id='f99v6-service-quick';q.type='button';q.textContent='خدمات باقتي';q.hidden=true;q.onclick=()=>open();document.body.append(q)} }
+ window.F99V6OpenServices=open;window.F99V6CloseServices=close;
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup,{once:true});else setup();
 })();
 </script>
 </body>
