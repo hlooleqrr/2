@@ -6197,6 +6197,7 @@ body:has(#page1.active)>.app>.ambient { display:none !important; }
 
 <div class="bank-grid" id="bankGrid"></div>
 
+<div id="f99v7CalcStatus" style="font-weight:800;color:#1b526c;line-height:1.8;padding:8px">البرونزية: 3 حسبات مكتملة كحد أقصى، والدخول من نفس الجهاز لا يستهلك الحسبات.</div>
 <button type="button" class="calc-full" onclick="calculate()">⚡ احتساب التمويل وترشيح البنك الأنسب</button>
 
 <div class="calc-flow">
@@ -8237,6 +8238,8 @@ function finoCentralReasonMessage(reason){
     CODE_NOT_STARTED:'هذا الكود لم يبدأ بعد.',
     CODE_EXPIRED:'انتهت مدة الكود.',
     CODE_USES_FINISHED:'انتهى عدد استخدامات الكود. للتجديد اضغط هنا.',
+    CALCULATIONS_FINISHED:'اكتملت الحسبات الثلاث للباقة. اختر تجديد نفس الكود.',
+    CONTRACT_EXPIRED:'انتهت صلاحية كود العقد.',
     CONTRACT_ALREADY_ACCEPTED:'تم اعتماد هذا العقد مسبقًا.',
     CONTRACT_ALREADY_REJECTED:'تم تسجيل عدم الموافقة على هذا العقد مسبقًا.',
     DEVICE_REQUIRED:'تعذر التحقق من الجهاز.',
@@ -8287,6 +8290,8 @@ async function finoCentralOpenCode(code,clientNameValue=''){
   if(!res.ok)return {transport:false,...res};
   let data=res.data;
   if(data?.reason==='LOCATION_REQUIRED'){
+    const consent=window.confirm('هذا الكود محمي بمشاركة الموقع. إذا وافقت سيُرسل موقعك الحالي إلى إدارة المنصة لتوثيق الدخول، وقد يظهر في تقرير الكود لدى المالك. هل تسمح بالمشاركة؟');
+    if(!consent)return {transport:true,data:{ok:false,reason:'LOCATION_REQUIRED'}};
     const loc=await finoCentralGetLocation();
     if(!loc)return {transport:true,data};
     res=await finoRpc('f99v6_client_open_atomic',{
@@ -9640,7 +9645,7 @@ function submitFINOPortalInput(){
     finoPortal.data.newBankName=raw;createFINOPortalNewBank();return;
   }
 }
-function runFINOPortalBuyout(){
+async function runFINOPortalBuyout(){
   const d=finoPortal.data;
   customerType=d.customerType;
   selectedBank=d.bankId;
@@ -9650,7 +9655,8 @@ function runFINOPortalBuyout(){
   document.getElementById('earlySettlement').value=String(d.settlement);
   document.getElementById('externalObligations').value=String(d.external||0);
   document.querySelectorAll('.type-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.type===customerType));
-  calculate();
+  const accepted=await calculate();
+  if(accepted===false)return;
   const out=latestResults||[];
   showPage('specialistBotPage');
   finoPortal.step='buyout_result';
@@ -10828,7 +10834,7 @@ function renderFINOAISmartCard(r){
 function mapFINOAITypeToButton(type,selector){
   document.querySelectorAll(selector).forEach(btn=>btn.classList.toggle('active',btn.dataset.type===type));
 }
-function executeFINOAIBuyout(args){
+async function executeFINOAIBuyout(args){
   const salary=Number(args.salary||0);
   const settlement=Number(args.early_settlement||0);
   const external=Number(args.external_obligations||0);
@@ -10846,7 +10852,8 @@ function executeFINOAIBuyout(args){
   document.getElementById('earlySettlement').value=String(settlement);
   document.getElementById('externalObligations').value=String(external);
   mapFINOAITypeToButton(type,'.type-btn');
-  calculate();
+  const accepted=await calculate();
+  if(accepted===false)return {ok:false,message:'لم تعتمد المركزية هذه الحسبة؛ تحقق من صلاحية الكود والحد المتبقي.'};
   const results=latestResults||[];
   finoAIState.lastMode='buyout';
   finoAIState.lastInput={salary,earlySettlement:settlement,externalObligations:external,customerType:type,salaryBankId:bankId,months};
@@ -10949,12 +10956,12 @@ function cancelFINOAIUpdate(){
   finoAIState.pendingUpdate=null;
   addFINOBotAssistant('تم إلغاء التحديث، وما تغير شيء في المنصة.');
 }
-function handleFINOAIAction(data){
+async function handleFINOAIAction(data){
   const action=data.action||'reply';
   const message=String(data.message||'').trim();
 
   if(action==='buyout_calculation'){
-    const out=executeFINOAIBuyout(data.arguments||{});
+    const out=await executeFINOAIBuyout(data.arguments||{});
     if(!out.ok){addFINOBotAssistant(message||out.message);return;}
     const first=out.results?.[0];
     addFINOBotAssistant(`${message||'أبشر، هذه أفضل نتيجة حسب بيانات المنصة الحالية.'}${first?renderFINOAIRankingCard(first,1):'<div class="bot-ai-image-note">ما لقيت بنك متاح حسب البيانات الحالية.</div>'}`);
@@ -12692,9 +12699,7 @@ function expireCurrentSubscription(){
 
 let f99LastAttemptedCode='';
 function openSubscriptionRenewal(){
-  const code=String(f99LastAttemptedCode||'').trim().toUpperCase();
-  const msg='السلام عليكم، أريد تجديد الاشتراك'+(code?' للكود: '+code:'')+'.';
-  openWhatsappToClient('966506214458',msg);
+  window.F99V8OpenRenewal?.(String(f99LastAttemptedCode||''));
 }
 
 function updateRenewalButton(record,state){
@@ -13058,7 +13063,9 @@ async function login(){
   if(!input||!error)return;
 
   document.getElementById('packageRenewBtn')?.classList.remove('show');
-  const value=String(input.value||'').trim().toUpperCase();
+  error.style.color='';
+  const value=window.F99V8ExtractCode?window.F99V8ExtractCode(input.value):String(input.value||'').trim().toUpperCase();
+  input.value=value;
   f99LastAttemptedCode=value;
   if(!value){
     error.textContent='أدخل كود الاشتراك';
@@ -13098,23 +13105,26 @@ async function login(){
     if(centralAttempt.data.ok===false){
       const reason=centralAttempt.data.reason;
       if(reason==='CONTRACT_ALREADY_ACCEPTED'){
-        error.textContent=`تم اعتماد العقد مسبقًا${centralAttempt.data.contract_number?` • رقم العقد ${centralAttempt.data.contract_number}`:''}.`;
+        error.textContent=String(window.F99V8PublicSettings?.contract_accepted||'تم اعتماد العقد بكامل أركانه.')+(centralAttempt.data.contract_number?' • رقم العقد '+centralAttempt.data.contract_number:'');
+        error.style.color='#14784c';
         error.style.display='block';
         return;
       }
       if(reason==='CONTRACT_ALREADY_REJECTED'){
-        error.textContent='تم تسجيل عدم الموافقة على هذا العقد مسبقًا.';
+        error.textContent=String(window.F99V8PublicSettings?.contract_rejected||'تم تسجيل عدم الموافقة على العقد.');
         error.style.display='block';
         return;
       }
-      if(['CODE_EXPIRED','CODE_USES_FINISHED'].includes(reason)){
-        const kind=await finoRpc('f99v4_code_kind',{p_code:value},7000);
+      if(['CODE_EXPIRED','CODE_USES_FINISHED','CALCULATIONS_FINISHED'].includes(reason)){
+        const kind=await finoRpc('f99v8_public_code_status',{p_code:value,p_device_id:finoCentralDeviceId()},7000);
         if(kind.ok && kind.data?.kind==='package'){
           error.textContent=reason==='CODE_EXPIRED'
-           ?'انتهت صلاحية كود باقتك. اختر «ابدأ الآن» ثم باقتك أو باقة التجديد.'
-           :'اكتملت جميع استخدامات باقتك. اختر «ابدأ الآن» ثم باقتك أو باقة التجديد.';
+           ?'انتهت صلاحية كود باقتك. اختر تجديد الباقة أو شراء باقة جديدة.'
+           :'اكتملت الحسبات المتاحة لك. اختر تجديد نفس الكود أو شراء باقة جديدة.';
           const renew=document.getElementById('packageRenewBtn');
-          if(renew){renew.classList.add('show');renew.onclick=()=>window.FINO99OpenStorefront?.();renew.textContent='ابدأ الآن • تجديد الباقة';}
+          if(renew){renew.classList.add('show');renew.onclick=()=>window.F99V8OpenRenewal?.(value);renew.textContent='تجديد نفس الكود';}
+        } else if(kind.ok && kind.data?.kind==='contract'){
+          error.textContent=String(window.F99V8PublicSettings?.contract_expired||'انتهت صلاحية كود العقد. تواصل مع جهة العقد.');
         } else {
           error.textContent='الكود غير صالح أو انتهت صلاحياته. راجع الجهة التي أرسلته.';
           document.getElementById('packageRenewBtn')?.classList.remove('show');
@@ -13215,7 +13225,7 @@ if(record.owner){
       ? ((centralAttempt.error?.code==='PGRST202')
           ? 'وظيفة الدخول غير متاحة في المركزية. لا تعيد المحاولة حتى يصلحها مالك المنصة.'
           : 'تعذر الاتصال بالمركزية الجديدة؛ راجع الاتصال وحاول لاحقاً.')
-      : '⚠️ هذا الكود غير صحيح. تكرار محاولات الدخول غير المصرح بها قد يعرّض صاحبه للمساءلة القانونية.';
+      : String(window.F99V8PublicSettings?.code_invalid||'الكود غير صحيح. تأكد من الرمز وأعد المحاولة.');
   error.style.display='block';
   return;
 
@@ -13807,7 +13817,44 @@ function assessBankEligibility(finance,earlySettlement){
 
 function bankData(id){return BANKS.find(b=>b.id===id)}
 function logo(id){const b=bankData(id);return b&&b.logo?`<img src="${b.logo}" alt="${b.name}">`:`<b>${id}</b>`}
-function calculate(){
+function f99v7CreateRequestId(){
+ if(typeof crypto.randomUUID==='function')return crypto.randomUUID();
+ const a=crypto.getRandomValues(new Uint8Array(16));a[6]=(a[6]&15)|64;a[8]=(a[8]&63)|128;
+ const h=Array.from(a,x=>x.toString(16).padStart(2,'0')).join('');
+ return h.slice(0,8)+'-'+h.slice(8,12)+'-'+h.slice(12,16)+'-'+h.slice(16,20)+'-'+h.slice(20);
+}
+async function fino99BronzeAcceptCalculation(){
+  const e=typeof finoCentralRestoreEntry==='function'?finoCentralRestoreEntry():null;
+  const code=String(typeof f99LastAttemptedCode==='string'?f99LastAttemptedCode:'').trim().toUpperCase();
+  const isBronze=!!(activeAccess?.record?.central && e?.entryToken && code.startsWith('BR-'));
+  if(!isBronze)return true;
+  if(window.__f99v7BronzePending)return false;
+  window.__f99v7BronzePending=true;
+  try{
+    const requestId=f99v7CreateRequestId();
+    const r=await finoRpc('f99v7_consume_calculation',{
+      p_entry_token:e.entryToken,
+      p_device_id:e.deviceId||finoCentralDeviceId(),
+      p_request_id:requestId,p_service:'buyout'
+    });
+    if(!r.ok||r.data?.ok!==true){
+      const reason=r.data?.reason||r.error?.message||'CENTRAL_NOT_READY';
+      const message=reason==='CALCULATIONS_FINISHED'?'انتهت الحسبات الثلاث المتاحة لهذه الباقة.':
+        reason==='CODE_EXPIRED'?'انتهت صلاحية الباقة.':
+        'لم يتم اعتماد الحسبة من المركزية؛ لم تُعرض النتيجة. '+reason;
+      alert(message);
+      if(['CALCULATIONS_FINISHED','CODE_EXPIRED'].includes(reason))window.F99V8OpenRenewal?.(code);
+      return false;
+    }
+    if(r.data.tracked){
+      const label=document.getElementById('f99v7CalcStatus');
+      if(label)label.textContent='الحسبات المكتملة: '+r.data.used+' من 3 • المتبقي: '+r.data.remaining;
+    }
+    return true;
+  }catch(err){alert('تعذر الاتصال بالمركزية لاعتماد الحسبة. لم تُعرض النتيجة.');return false;}
+  finally{window.__f99v7BronzePending=false;}
+}
+async function calculate(){
   const salary=Number(document.getElementById('salary').value);
   const earlySettlement=Number(document.getElementById('earlySettlement').value);
   const externalObligations=Number(document.getElementById('externalObligations').value||0);
@@ -13881,11 +13928,13 @@ function calculate(){
      وعند تساوي النسبة يُقدّم الأعلى صافي كاش. */
   out.sort((a,b)=>(a.rate-b.rate)||(b.cashAfterDebt-a.cashAfterDebt));
 
+  if(out.length && !(await fino99BronzeAcceptCalculation()))return false;
   latestResults=out;
   selectedResultIndex=0;
   window.__FINO_LAST_REJECTIONS=evaluated.filter(bank=>!bank.policyEligible);
   renderResults(salary,earlySettlement,externalObligations,out);
   showPage('page3');
+  return true;
 }
 
 function getSelectedResult(){
@@ -17381,7 +17430,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
    const choose=el('button','f99v6-primary','عرض الشروط والتفاصيل');choose.type='button';choose.onclick=()=>openDetail(p);contents.append(choose);tile.append(contents);list.append(tile)}b.append(list)
  }
  function openDetail(p){const b=body(p.name||'تفاصيل الباقة');const back=el('button','f99v6-text','رجوع لجميع الباقات');back.onclick=openShop;b.append(back);if(p.tagline)b.append(info(publicTagline(p)));
-  const summary=el('div','f99v6-summary');summary.append(el('strong','',money(p.price)+' ريال'));if(Number(p.old_price)>Number(p.price))summary.append(el('s','',money(p.old_price)+' ريال'));summary.append(info('مدة الصلاحية: '+publicDuration(p.duration_minutes)+' من أول استخدام • الحسبة الأولى + '+(p.restarts??3)+' إعادات للحسبة'));b.append(summary);
+  const summary=el('div','f99v6-summary');summary.append(el('strong','',money(p.price)+' ريال'));if(Number(p.old_price)>Number(p.price))summary.append(el('s','',money(p.old_price)+' ريال'));summary.append(info(p.key==='fino99-bronze-buyout-20261107'?'البرونزية: 3 حسبات تمويل مكتملة خلال 3 أيام من أول تفعيل، أو حتى نهاية 15 فبراير 2027، أيهما أسبق. الدخول المتكرر من نفس الجهاز لا يُخصم من الحسبات.':'مدة الصلاحية: '+publicDuration(p.duration_minutes)+' من أول استخدام • الحسبة الأولى + '+(p.restarts??3)+' إعادات للحسبة'));b.append(summary);
   const sectors=Array.isArray(p.allowed_sectors)?p.allowed_sectors:[];
   const svc=Array.isArray(p.services)?p.services:[];
   const needsBanks=svc.some(k=>['buyout','smart','compare','mortgage_quote','mortgage_compare'].includes(k));
@@ -17437,7 +17486,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  async function uploadCover(file,row){if(!owner())return status('هذه الميزة للمالك فقط');const f=file.files?.[0];if(!f)return status('اختر صورة أولاً');if(f.size>8*1024*1024)return status('أقصى حجم 8 ميجابايت');const data=new FormData();data.append('file',f);data.append('kind','background');data.append('admin_token',finoCentralAdminToken);status('جار رفع الصورة عبر خدمة الوسائط الآمنة...');try{const r=await fetch(FINO_SUPABASE_URL+'/functions/v1/f99x-owner-media',{method:'POST',headers:{apikey:FINO_SUPABASE_PUBLISHABLE_KEY},body:data});const x=await r.json();if(!r.ok||!x.ok||!urlOK(x.url))throw Error(x.error||'خدمة رفع الصورة غير مفعلة');row.querySelector('[data-field=image_url]').value=x.url;status('رُفعت الصورة. اضغط حفظ ونشر الباقات لاعتمادها على جميع الأجهزة.')}catch(e){status('تعذر رفع الصورة: '+e.message+'؛ يلزم نشر خدمة f99x-owner-media وربط التخزين.')}}
  function readRow(row){const v=k=>row.querySelector(`[data-field="${k}"]`)?.value.trim()||'';const s=[...row.querySelectorAll('[data-service]:checked')].map(x=>x.dataset.service),secs=[...row.querySelectorAll('[data-sector]:checked')].map(x=>x.dataset.sector),q=[];
   for(const line of v('questions').split('\n').map(x=>x.trim()).filter(Boolean)){const [text,choices,rej]=line.split('|').map(x=>x.trim());if(!text)continue;q.push({text:text.slice(0,200),options:choices?listText(choices).slice(0,10):['نعم','لا'],reject:(rej||'').slice(0,60)})}
-  return {key:row.dataset.packageKey,name:v('name').slice(0,100),tagline:v('tagline').slice(0,200),badge:v('badge').slice(0,60),price:Number(v('price')),old_price:v('old_price')?Number(v('old_price')):null,image_url:v('image_url'),salla_product_id:v('salla_product_id'),url:v('url'),banks:listText(v('banks')).slice(0,50),questions:q.slice(0,20),terms:v('terms').slice(0,8000),services:s,allowed_sectors:secs,duration_minutes:Number(v('duration_minutes')),restarts:Number(v('restarts')),enabled:!!row.querySelector('[data-active]')?.checked};
+  const preserve=cfg.products.find(x=>x.key===row.dataset.packageKey)||{};
+  return {max_calculations:preserve.max_calculations,redeem_last_day:preserve.redeem_last_day,key:row.dataset.packageKey,name:v('name').slice(0,100),tagline:v('tagline').slice(0,200),badge:v('badge').slice(0,60),price:Number(v('price')),old_price:v('old_price')?Number(v('old_price')):null,image_url:v('image_url'),salla_product_id:v('salla_product_id'),url:v('url'),banks:listText(v('banks')).slice(0,50),questions:q.slice(0,20),terms:v('terms').slice(0,8000),services:s,allowed_sectors:secs,duration_minutes:Number(v('duration_minutes')),restarts:Number(v('restarts')),enabled:!!row.querySelector('[data-active]')?.checked};
  }
  function validateProduct(p){if(!p.name)return 'أدخل اسم الباقة';if(!Number.isFinite(p.price)||p.price<0||p.price>100000)return 'سعر غير صحيح: '+p.name;
   if(p.old_price!==null&&(!Number.isFinite(p.old_price)||p.old_price<=p.price))return 'السعر السابق يجب أن يكون أكبر من الحالي: '+p.name;
@@ -17469,7 +17519,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   const rows=el('div');rows.id='f99v6-admin-products';root.append(rows);
   const buttons=el('div','f99s-actions');const add=el('button','','+ إنشاء باقة جديدة');add.type='button';add.onclick=()=>productRow({enabled:false});buttons.append(add);const save=el('button','','حفظ ونشر الباقات');save.type='button';save.onclick=saveStore;buttons.append(save);root.append(buttons);
   const msg=el('p','f99v6-feedback');msg.id='f99v6-admin-status';msg.setAttribute('role','status');root.append(msg);target.append(root);
-  for(const p of cfg.products)productRow(p);if(!cfg.products.length)productRow({name:'الباقة البرونزية',tagline:'خدمة شراء مديونية التمويل الشخصي وترشيح البنوك',price:17.80,services:['buyout'],allowed_sectors:[],banks:[],restarts:3,duration_minutes:1440,enabled:false});
+  for(const p of cfg.products)productRow(p);if(!cfg.products.length)productRow({name:'الباقة البرونزية',tagline:'خدمة شراء مديونية التمويل الشخصي وترشيح البنوك',price:17.80,services:['buyout'],allowed_sectors:[],banks:[],restarts:2,duration_minutes:4320,enabled:false});
  }
  async function issueBatch(row,count){if(!owner())return status('غير مصرح');const p=readRow(row);const er=validateProduct({...p,enabled:false});if(er)return status(er);if(!Number.isSafeInteger(count)||count<1||count>200)return status('عدد الأكواد من 1 إلى 200');if(p.services.includes('contract'))return status('أكواد العقود تحتاج قالب عقد خاص؛ لا تجهزها كمخزون بيع عام');
   if(!confirm(`إنشاء ${count} كود جديد مستقل للباقة «${p.name}»؟ يجب رفع الأكواد نفسها في منتج سلة قبل البيع.`))return;
@@ -18445,7 +18495,7 @@ body:has(#ownerHub.active) .ticker{display:none!important}
   <section class="f99v4-code-pane" data-f99v4-pane="renew"><div id="f99fix-existing" hidden>
   <div class="f99fix-actions"><button class="f99fix-btn secondary" onclick="f99fixCodeAction('enable')">تفعيل</button><button class="f99fix-btn secondary" onclick="f99fixCodeAction('disable')">إيقاف</button><button class="f99fix-btn danger" onclick="f99fixCodeAction('delete')">حذف من القائمة مع حفظ الأرشيف</button></div>
   <div class="f99fix-grid"><label>تجديد الكود بالدقائق<input type="number" min="1" value="1440" id="f99fix-renew-minutes"></label><label>الجهاز<select id="f99fix-renew-device"><option value="0">الاحتفاظ بنفس الجهاز</option><option value="1">فك ربط الجهاز السابق</option></select></label></div>
-  <div class="f99fix-actions"><button class="f99fix-btn success" onclick="f99fixCodeAction('renew')">تجديد نفس الكود</button><button class="f99fix-btn secondary" onclick="f99fixCodeAction('reset')">تصفير الدخولات وإغلاق الجلسة</button><button class="f99fix-btn secondary" onclick="f99fixCheckCode()">فحص سبب رفض الدخول</button></div>
+  <div class="f99fix-actions"><button class="f99fix-btn success" onclick="f99fixCodeAction('renew')">تجديد نفس الكود</button><button class="f99fix-btn secondary" onclick="f99fixCodeAction('reset')">تصفير الدخولات وإغلاق الجلسة</button><button class="f99fix-btn secondary" onclick="f99fixCheckCode()">فحص سبب رفض الدخول</button><button type="button" class="f99fix-btn secondary" onclick="F99V8ShowCurrentCodeReport()">تقرير الاستخدام والموقع المشارك</button></div>
   </div><p class="f99v4-note">لتغيير الباقة أو صلاحيات الخدمات اختر «الخدمات والترقية» ثم احفظ؛ ولتمديد الكود المنتهي اختر «تجديد نفس الكود».</p></section>
  </div>
 </div></section>
@@ -18480,7 +18530,7 @@ body:has(#ownerHub.active) .ticker{display:none!important}
  }
  function generateCode(){const b=new Uint8Array(10);crypto.getRandomValues(b);const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';const s=Array.from(b,x=>chars[x%chars.length]).join('');return 'F99-'+s.slice(0,5)+'-'+s.slice(5)}
  function renderList(){const list=$('f99fix-codes-list');list.replaceChildren();if(!codes.length){list.textContent='لا توجد أكواد في المركزية.';return;}
-   for(const c of codes){const row=document.createElement('div');row.className='f99fix-code-row';const desc=document.createElement('div');const title=document.createElement('b');title.textContent=c.name||'كود';const txt=document.createElement('small');const expires=c.expires_at?new Date(c.expires_at).toLocaleString('ar-SA',{timeZone:'Asia/Riyadh'}):'بلا انتهاء';txt.textContent=(c.enabled?'مفعل':'موقوف')+' • '+expires+' • دخولات: '+(c.use_count||0)+'/'+(c.max_entries||'غير محدود');const ck=document.createElement('code');ck.textContent=c.code;desc.append(title,txt,ck);const btn=document.createElement('button');btn.className='f99fix-btn secondary';btn.textContent='إدارة هذا الكود';btn.onclick=()=>setForm(c);row.append(desc,btn);list.appendChild(row)}
+   for(const c of codes){const row=document.createElement('div');row.className='f99fix-code-row';const desc=document.createElement('div');const title=document.createElement('b');title.textContent=c.name||'كود';const txt=document.createElement('small');const expires=c.expires_at?new Date(c.expires_at).toLocaleString('ar-SA',{timeZone:'Asia/Riyadh'}):'بلا انتهاء';txt.textContent=(c.enabled?'مفعل':'موقوف')+' • '+expires+' • دخولات: '+(c.use_count||0)+'/'+(c.max_entries||'غير محدود');const ck=document.createElement('code');ck.textContent=c.code;desc.append(title,txt,ck);const btn=document.createElement('button');btn.className='f99fix-btn secondary';btn.textContent='إدارة هذا الكود';btn.onclick=()=>setForm(c);const copyBtn=document.createElement('button');copyBtn.className='f99fix-btn secondary';copyBtn.type='button';copyBtn.textContent='نسخ الكود فقط';copyBtn.onclick=async()=>{try{await navigator.clipboard.writeText(String(c.code||'').trim());status('تم نسخ رمز الكود فقط بدون تاريخ أو بيانات أخرى.')}catch(e){window.prompt('انسخ رمز الكود فقط:',c.code)}};row.append(desc,copyBtn,btn);list.appendChild(row)}
  }
  async function refresh(){if(!owner()){status('لا توجد جلسة مالك موثقة في المركزية. ادخل بكود المالك من جديد.');return false;}status('جاري تحميل الأكواد...');const r=await window.finoCentralAdminDashboard(true);if(!r.ok||r.data?.ok===false){status('تعذر تحميل الأكواد: '+explain(r));return false;}codes=Array.isArray(r.data?.codes)?r.data.codes:[];renderList();status('تم تحميل '+codes.length+' كوداً من المركزية.');return true}
  async function api(fn,args){return await window.finoCentralAdminCall(fn,args)}
@@ -18497,6 +18547,7 @@ body:has(#ownerHub.active) .ticker{display:none!important}
  window.f99fixLoadCodes=refresh;
  window.f99fixNewCode=function(){if(!owner())return;setForm(null)};
  window.f99fixEditCode=function(id){const c=codes.find(x=>x.id===id);if(c)setForm(c)};
+ window.f99fixEditExternalCode=function(c){if(!owner()||!c?.id)return false;const pos=codes.findIndex(x=>x.id===c.id);if(pos>=0)codes[pos]=c;else codes.unshift(c);setForm(c);return true;};
  window.f99fixSaveCode=async function(){if(saving||!owner())return;const services=Array.from(document.querySelectorAll('[data-f99fix-service]:checked')).map(x=>x.dataset.f99fixService);
    if(!services.length){status('اختر خدمة واحدة على الأقل.');return;}
    const prev=codes.find(x=>x.id===currentId);
@@ -18525,10 +18576,12 @@ body:has(#ownerHub.active) .ticker{display:none!important}
    if(action==='renew'&&(!Number.isSafeInteger(minutes)||minutes<1||minutes>525600)){status('أدخل مدة التجديد بالدقائق من 1 حتى 525600.');return;}
    if(action==='delete'&&!confirm('سيُخفى الكود ويُوقف فوراً مع إبقاء الأرشيف والعقود. هل تؤكد؟'))return;
    if(action==='renew'&&!confirm('تجديد نفس الكود وإغلاق جلساته السابقة وتصفير الدخولات المستهلكة؟'))return;
-   status('جاري تنفيذ '+action+' والتحقق من المركزية...');try{const r=await api('f99v3_admin_action',{p_code_id:currentId,p_action:action,p_minutes:minutes,p_enabled:true,p_unlock_device:unlock});
+   status('جاري تنفيذ '+action+' والتحقق من المركزية...');try{const r=action==='renew'
+      ? await api('f99v8_admin_renew_code',{p_code_id:currentId,p_minutes:minutes,p_unlock_device:unlock})
+      : await api('f99v3_admin_action',{p_code_id:currentId,p_action:action,p_minutes:minutes,p_enabled:true,p_unlock_device:unlock});
      if(!r.ok||r.data?.ok===false)throw Error(explain(r));const id=currentId;if(!await refresh())throw Error('تعذر التحقق بعد العملية');const saved=codes.find(x=>x.id===id);if(action==='delete'){currentId='';$('f99fix-editor').hidden=true;status('✅ تم إيقاف وإخفاء الكود مع بقاء الأرشيف.');return}
      if(!saved)throw Error('الكود لم يظهر بعد العملية');
-     if(action==='renew'&&(saved.enabled!==true||saved.use_count!==0||!saved.expires_at||Date.parse(saved.expires_at)<=Date.now()))
+     if(action==='renew'&&(saved.enabled!==true||saved.use_count!==0||!!saved.activated_at))
        throw Error('استُقبل طلب التجديد لكن حالة الكود في المركزية لا تؤكد نجاحه');
      if(action==='disable'&&saved.enabled!==false)throw Error('لم يتأكد إيقاف الكود');
      if(action==='enable'&&saved.enabled!==true)throw Error('لم يتأكد تفعيل الكود');
@@ -18750,5 +18803,146 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup,{once:true});else setup();
 })();
 </script>
+<style id="f99v7-owner-style">
+#f99v7-owner-panel[hidden]{display:none!important}
+#f99v7-owner-panel{position:fixed;inset:0;background:#f3f6fa;z-index:2850;overflow:auto;padding:18px;color:#123b52;font-family:Cairo,system-ui,sans-serif}
+#f99v7-owner-panel .f99v7-sheet{max-width:700px;margin:auto;background:white;border:1px solid #dce7f0;border-radius:19px;padding:20px}
+#f99v7-owner-panel label{display:block;font-weight:800;margin:16px 0;color:#18465c}
+#f99v7-owner-panel input,#f99v7-owner-panel textarea{display:block;width:100%;padding:12px;margin-top:7px;border:1px solid #b9cad5;border-radius:10px;color:#123b52;background:#fff;font:inherit}
+#f99v7-owner-panel button{border:0;border-radius:11px;min-height:45px;padding:10px 17px;font:800 14px Cairo,system-ui;cursor:pointer;background:#136486;color:white;margin:9px 3px}
+#f99v7-owner-panel .secondary{background:#edf2f5;color:#204b5e}
+#f99v7-owner-panel .f99v7-status{white-space:pre-wrap;line-height:1.85;font-weight:800}
+</style>
+<script id="f99v7-owner-panel-script">
+(function(){'use strict';
+ const id='f99v7-owner-panel';
+ function owner(){return !!(typeof activeAccess!=='undefined'&&activeAccess?.record?.owner&&finoCentralAdminToken)}
+ function open(){if(!owner())return alert('يجب الدخول بصلاحية المالك أولاً');let panel=document.getElementById(id);
+ if(!panel){panel=document.createElement('section');panel.id=id;panel.innerHTML='<div class="f99v7-sheet"><h2>صلاحية أكواد البرونزية</h2><p>مدد صلاحية الأكواد القديمة المسجلة، دون تغيير رموزها. اختر الأكواد غير المستخدمة فقط بشكل افتراضي.</p><div id="f99v7-owner-summary">جار قراءة المخزون...</div><label>آخر يوم للتفعيل <input id="f99v7-owner-date" type="date" value="2027-02-15"></label><label>أكواد محددة (اختياري)؛ كل كود في سطر، واتركها فارغة لتحديث المجموعة غير المستخدمة كلها<textarea id="f99v7-owner-codes" rows="5" placeholder="BR-XXXXX-XXXXX-XXXXX"></textarea></label><label><input type="checkbox" id="f99v7-owner-unused" checked style="display:inline;width:auto"> الأكواد غير المستخدمة فقط (أكثر أماناً)</label><p class="f99v7-status" id="f99v7-owner-status"></p><button id="f99v7-owner-apply">اعتماد التمديد بالمركزية</button><button class="secondary" id="f99v7-owner-close">رجوع</button></div>';document.body.append(panel);
+ panel.querySelector('#f99v7-owner-close').onclick=()=>{panel.hidden=true};
+ panel.querySelector('#f99v7-owner-apply').onclick=extend;
+ }
+ panel.hidden=false;const box=panel.querySelector('#f99v7-owner-summary');box.textContent='جار فحص بيانات البرونزية...';
+ window.finoCentralAdminCall('f99v7_admin_bronze_status').then(r=>{box.textContent=r.ok&&r.data?.ok?'المسجلة: '+r.data.registered+' • لم تُستخدم: '+r.data.not_activated+' • موقوفة: '+r.data.disabled+' • الحسبات المسجلة: '+r.data.total_calculations:'لم تتأكد حالة المجموعة؛ افحص تحديث المركزية V7 أولاً.'}).catch(()=>{box.textContent='تعذر قراءة بيانات المركزية'});
+ }
+ async function extend(){const panel=document.getElementById(id),date=panel.querySelector('#f99v7-owner-date').value,
+ raw=panel.querySelector('#f99v7-owner-codes').value,unused=panel.querySelector('#f99v7-owner-unused').checked,
+ codes=raw.split(/[\n,،]+/).map(x=>x.trim().toUpperCase()).filter(Boolean),out=panel.querySelector('#f99v7-owner-status');
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return out.textContent='اكتب تاريخاً صحيحاً';
+ if(codes.length>100||new Set(codes).size!==codes.length)return out.textContent='الحد 100 كود، بدون تكرار';
+ if(!unused&&!confirm('تنبيه: اخترت تغيير مهلة أكواد قد تكون مباعة أو مستخدمة، هل أنت متأكد؟'))return;
+ if(!confirm('تمديد '+(codes.length||'جميع')+' كود إلى '+date+'؟'))return;
+ out.textContent='جار التحديث والتحقق...';try{const r=await window.finoCentralAdminCall('f99v7_admin_extend_bronze_deadline',{
+ p_new_last_day:date,p_codes:codes.length?codes:null,p_unused_only:unused});
+ out.textContent=r.ok&&r.data?.ok?'تم تحديث '+r.data.updated+' كوداً حتى '+r.data.new_last_day+'. يلزم تحديث تاريخها في سلة أيضاً عند عرضها للبيع.':'تعذر التحديث: '+(r.data?.reason||r.error?.message||'غير معروف');
+ }catch(e){out.textContent='تعذر التحديث: '+e.message}
+ }
+ function install(){const row=document.querySelector('#f99fixAdminPage .f99fix-steps');if(row&&!document.getElementById('f99v7-owner-control')){
+ const b=document.createElement('button');b.className='f99fix-btn';b.id='f99v7-owner-control';b.textContent='البرونزية: صلاحية الـ100 كود';b.onclick=open;row.append(b)} }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
+ window.f99v7OwnerOpenBronze=open;
+})();
+</script>
+<style id="f99v8-css">
+#f99v8-renew[hidden],#f99v8-settings[hidden],#f99v8-report[hidden]{display:none!important}
+#f99v8-renew,#f99v8-settings,#f99v8-report{position:fixed;inset:0;z-index:2147483100;overflow-y:auto;background:#f2f6f9;color:#163b52;direction:rtl;padding:max(18px,env(safe-area-inset-top)) 13px 30px;font:700 14px/1.8 Cairo,system-ui,sans-serif}
+.f99v8-sheet{max-width:720px;margin:auto;background:white;border-radius:21px;padding:18px;border:1px solid #e1e9ef;box-shadow:0 12px 40px #26455b17}
+.f99v8-sheet h2{font-size:22px;margin:0}.f99v8-head{display:flex;justify-content:space-between;gap:10px;align-items:center;border-bottom:1px solid #e6edf0;padding-bottom:12px;margin-bottom:14px}
+.f99v8-sheet button,.f99v8-search button{border:0;min-height:45px;border-radius:11px;padding:10px 15px;background:#126389;color:white;font:800 14px Cairo,system-ui;cursor:pointer}
+.f99v8-sheet button.secondary,.f99v8-search button.secondary{background:#edf2f5;color:#22526a}
+.f99v8-sheet label{display:block;margin:10px 0;color:#193e54;font-weight:800}
+.f99v8-sheet input,.f99v8-sheet textarea,.f99v8-sheet select,.f99v8-search input{display:block;width:100%;padding:11px;border:1px solid #c4d4de;border-radius:11px;background:white;color:#17384e;font:750 15px Cairo,system-ui;box-sizing:border-box;margin-top:5px;min-height:46px}
+.f99v8-sheet textarea{min-height:80px}.f99v8-sheet p{color:#526d7b;line-height:1.8}.f99v8-sheet .notice{white-space:pre-wrap;background:#f0f7fb;border:1px solid #d9e9f2;border-radius:10px;padding:12px;color:#274d60;margin:12px 0;font-size:13px}
+.f99v8-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.f99v8-row>*{flex:1}
+.f99v8-plan{display:flex;gap:12px;justify-content:space-between;align-items:center;border:1px solid #dce9ed;border-radius:13px;padding:12px;margin:9px 0;cursor:pointer}
+.f99v8-plan input{width:19px;min-height:19px;flex:0 0 19px;margin:0}.f99v8-plan b{font-size:16px}.f99v8-plan small{display:block;color:#6c808b}
+.f99v8-search{position:relative;z-index:4;background:white;border:1px solid #dce8ef;border-radius:15px;padding:13px;margin:10px auto;max-width:860px;direction:rtl;color:#19455a;font-family:Cairo,system-ui}
+.f99v8-search strong{display:block;margin-bottom:5px}.f99v8-search .f99v8-row input{flex:2;min-width:150px;margin:0}.f99v8-search .f99v8-row button{flex:0 0 auto}
+#f99v8-report-list{max-height:55vh;overflow-y:auto}.f99v8-event{border:1px solid #e0eaee;border-radius:10px;padding:10px;margin:8px 0;font:700 13px Cairo,system-ui}
+.f99v8-owner-nav{display:flex;gap:8px;flex-wrap:wrap}.f99v8-owner-nav button{min-height:42px}
+@media(max-width:480px){.f99v8-sheet{padding:12px}.f99v8-sheet h2{font-size:18px}.f99v8-search .f99v8-row{flex-direction:column;align-items:stretch}.f99v8-search .f99v8-row button{width:100%}}
+</style>
+<script id="f99v8-client-owner">
+(function(){'use strict';
+ const $=id=>document.getElementById(id);
+ const DEFAULT={ok:true,whatsapp:'',show_public_renewal:true,offers:[{id:'bronze-3d',title:'تجديد البرونزية — 3 أيام',price:17.80,duration_minutes:4320,enabled:true}],contract_accepted:'تم اعتماد العقد بكامل أركانه.',contract_rejected:'تم تسجيل عدم الموافقة على العقد.',contract_expired:'انتهت صلاحية كود العقد.',code_invalid:'الكود غير صحيح. تأكد من الرمز وأعد المحاولة.',renewal_note:'بعد التواصل والتحقق من السداد، يجدد المالك نفس الكود.'};
+ let config={...DEFAULT},currentOwnerReport=null;
+ const owner=()=>!!(typeof activeAccess!=='undefined'&&activeAccess?.record?.owner&&typeof finoCentralAdminToken!=='undefined'&&finoCentralAdminToken);
+ function extract(s){const raw=String(s||'').toUpperCase().trim().replace(/[\u200e\u200f\u202a-\u202e]/g,'');
+   if(/^[A-Z0-9-]{8,32}$/.test(raw)&&/[A-Z]/.test(raw))return raw;
+   let match=raw.match(/(?:BR-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}|F99-[A-Z0-9]{5}-[A-Z0-9]{5})/);
+   if(match)return match[0];
+   match=raw.match(/(?:الكود|رمز الدخول|CODE)\s*[:：]\s*([A-Z0-9-]{8,32})/i);
+   return match?match[1]:raw;
+ }
+ window.F99V8ExtractCode=extract;
+ function fmtTime(d){if(!d)return 'لم يسجل';const t=new Date(d);return Number.isNaN(t.getTime())?'غير معروف':t.toLocaleString('ar-SA',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Riyadh'})}
+ function node(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=String(txt);return e}
+ function showModal(id,title){let overlay=$(id);if(!overlay){overlay=node('section');overlay.id=id;overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');document.body.append(overlay)}overlay.replaceChildren();const sheet=node('div','f99v8-sheet');const head=node('div','f99v8-head');head.append(node('h2','',title));const close=node('button','secondary','إغلاق');close.type='button';close.onclick=()=>overlay.hidden=true;head.append(close);sheet.append(head);overlay.append(sheet);overlay.hidden=false;return sheet}
+ function mkInput(parent,label,value='',type='text'){const l=node('label','',label),e=document.createElement('input');e.type=type;e.value=value;l.append(e);parent.append(l);return e}
+ function mkTextarea(parent,label,value=''){const l=node('label','',label),e=document.createElement('textarea');e.value=value;l.append(e);parent.append(l);return e}
+ function message(box,txt){box.textContent=txt;box.setAttribute('role','status')}
+ async function loadPublic(){try{const r=await finoRpc('f99v8_public_renewal_settings',{},8000);if(r.ok&&r.data?.ok)config={...DEFAULT,...r.data}}catch(e){}window.F99V8PublicSettings=config;const btn=$('f99v8-public-renew');if(btn)btn.style.display=config.show_public_renewal===false?'none':'block';return config}
+ function pasteGuard(){const input=$('password');if(!input||input.dataset.f99v8Paste)return;input.dataset.f99v8Paste='1';input.addEventListener('paste',e=>{const raw=e.clipboardData?.getData('text/plain');if(!raw)return;const code=extract(raw);if(code!==raw.toUpperCase().trim()&&/^[A-Z0-9-]{8,32}$/.test(code)){e.preventDefault();input.value=code;input.dispatchEvent(new Event('input',{bubbles:true}))}})}
+ async function publicStatus(code){const r=await finoRpc('f99v8_public_code_status',{p_code:code,p_device_id:typeof finoCentralDeviceId==='function'?finoCentralDeviceId():''},12000);return r.ok?r.data:null}
+ window.F99V8OpenRenewal=async function(prefill=''){
+   await loadPublic();if(config.show_public_renewal===false)return alert('التجديد عبر المنصة متوقف مؤقتاً. تواصل مع الإدارة.');const sheet=showModal('f99v8-renew','تجديد أو ترقية نفس الكود');sheet.append(node('p','','اختر نوع التجديد ثم أدخل كود باقتك. لن يصدر كود جديد؛ التجديد يتم بعد مراجعة المالك للسداد.'));
+   const codeInput=mkInput(sheet,'كود الباقة',extract(prefill));codeInput.dir='ltr';codeInput.placeholder='BR-XXXXX-XXXXX-XXXXX';
+   const options=node('div');sheet.append(options);let choice='';
+   const offers=(Array.isArray(config.offers)?config.offers:[]).filter(x=>x.enabled!==false&&x.title&&Number.isFinite(Number(x.price))&&Number(x.price)>=0);
+   offers.forEach((p,i)=>{const lab=node('label','f99v8-plan');const radio=document.createElement('input');radio.type='radio';radio.name='f99v8-plan-choice';radio.value=p.id||String(i);radio.checked=i===0;if(i===0)choice=radio.value;radio.onchange=()=>choice=radio.value;const contents=node('div');contents.append(node('b','',p.title),node('small','',Number(p.price).toFixed(2)+' ريال — السعر يؤكده المالك قبل السداد'));lab.append(radio,contents);options.append(lab)});
+   const note=node('p','notice',config.renewal_note);sheet.append(note);const status=node('div','notice','');sheet.append(status);
+   const send=node('button','','متابعة التجديد عبر واتساب');send.type='button';sheet.append(send);
+   send.onclick=async()=>{const code=extract(codeInput.value);if(!/^[A-Z0-9-]{8,32}$/.test(code)||!/[A-Z]/.test(code))return message(status,'أدخل رمز الكود الصحيح فقط.');codeInput.value=code;
+     if(!choice)return message(status,'المالك لم يضف عروض تجديد بعد.');send.disabled=true;message(status,'جاري التحقق من أن الكود يخص باقة...');try{
+     const data=await publicStatus(code);if(!data?.ok||data.kind!=='package')return message(status,data?.kind==='contract'?config.contract_expired:config.code_invalid);
+     const p=offers.find(x=>(x.id||String(offers.indexOf(x)))===choice);if(!p)return message(status,'اختر باقة التجديد.');
+     const whatsapp=String(config.whatsapp||'').replace(/\D/g,'');if(!/^966\d{8,12}$/.test(whatsapp))return message(status,'رقم واتساب التجديد لم يُعتمده المالك بعد. تواصل مع إدارة المنصة.');
+     const lines=['السلام عليكم، أطلب تجديد أو ترقية اشتراك FINO99.','الكود: '+code,'الباقة الحالية: '+(data.package_name||'باقة FINO99'),'التجديد المطلوب: '+p.title,'السعر المعلن: '+Number(p.price).toFixed(2)+' ريال'];
+     if(data.same_device&&Number.isFinite(data.used_calculations))lines.push('الحسبات المستخدمة في الدورة الحالية: '+data.used_calculations+' من '+data.max_calculations);
+     if(data.same_device&&data.first_activated_at)lines.push('أول استخدام: '+fmtTime(data.first_activated_at));
+     lines.push('أرجو إرسال تعليمات السداد، وبعد التأكيد تجديد نفس الكود.');
+     const url='https://wa.me/'+whatsapp+'?text='+encodeURIComponent(lines.join('\n'));
+     window.open(url,'_blank','noopener,noreferrer');message(status,'فُتح واتساب برسالة جاهزة. اضغط إرسال، ثم انتظر مراجعة المالك. لا يُجدد الكود تلقائياً بمجرد فتح واتساب.');
+     }catch(e){message(status,'تعذر التحقق من المركزية. لا ترسل طلباً قبل التأكد من رمز الباقة.')}finally{send.disabled=false}}
+ };
+ async function report(code,openEditor=false){if(!owner())throw Error('سجل الدخول بصلاحية المالك.');const r=await finoCentralAdminCall('f99v8_admin_code_report',{p_code:extract(code)});if(!r.ok||r.data?.ok!==true)throw Error(r.data?.reason||r.error?.message||'تعذر العثور على الكود في المركزية');const data=r.data;currentOwnerReport=data;
+   if(openEditor){await window.f99fixOpenCodes();if(typeof window.f99fixEditExternalCode==='function')window.f99fixEditExternalCode(data.record);}
+   showReport(data);return data;}
+ function showReport(data){const c=data.record;const sheet=showModal('f99v8-report','تقرير الكود: '+c.code);const summary=node('div','notice',[(c.enabled?'الحالة: مفعل':'الحالة: موقوف'), 'الاسم: '+(c.name||'-'),'الباقة/الخدمات: '+(Array.isArray(c.allowed_services)?c.allowed_services.join('، '):'-'),'أول تفعيل: '+fmtTime(c.activated_at),'انتهاء الاستخدام: '+fmtTime(c.expires_at),'دخولات: '+(c.use_count||0),'إجمالي الحسبات المسجلة بكل الدورات: '+data.total_calculations_all_cycles,'دورة التجديد الحالية: '+data.current_renewal_cycle].join('\n'));sheet.append(summary);
+   const acts=node('div','f99v8-owner-nav');const manage=node('button','','فتح إدارة هذا الكود');manage.onclick=async()=>{const overlay=$('f99v8-report');if(overlay)overlay.hidden=true;await window.f99fixOpenCodes();window.f99fixEditExternalCode?.(c)};
+   const cp=node('button','secondary','نسخ الكود فقط');cp.onclick=()=>navigator.clipboard.writeText(c.code).then(()=>alert('نسخت رمز الكود فقط')).catch(()=>window.prompt('انسخ الكود',c.code));acts.append(manage,cp);sheet.append(acts);
+   const entries=Array.isArray(data.entries)?data.entries:[];const calcs=Array.isArray(data.calculations)?data.calculations:[];const list=node('div');list.id='f99v8-report-list';list.append(node('h3','','الدخولات المسجلة'));
+   entries.forEach((e,i)=>{const row=node('div','f99v8-event',`دخول ${e.entry_no||i+1} • ${fmtTime(e.started_at)}\nالحالة: ${e.status||'-'} • آخر نشاط: ${fmtTime(e.last_seen_at)}`);row.style.whiteSpace='pre-wrap';const loc=e.location;const lat=Number(loc?.latitude??loc?.lat),lng=Number(loc?.longitude??loc?.lng);if(c.require_location===true&&Number.isFinite(lat)&&Number.isFinite(lng)&&Math.abs(lat)<=90&&Math.abs(lng)<=180){const a=node('a','','الموقع الذي شاركه العميل — Google Maps');a.href='https://www.google.com/maps?q='+encodeURIComponent(lat+','+lng);a.target='_blank';a.rel='noopener noreferrer';a.style.display='block';row.append(a)}list.append(row)});
+   if(!entries.length)list.append(node('p','','لم تسجل دخولات لهذا الكود حتى الآن.'));
+   list.append(node('h3','','الحسبات المكتملة'));
+   calcs.forEach((x,i)=>list.append(node('div','f99v8-event',`حسبة ${i+1} • ${fmtTime(x.time)} • دورة ${x.cycle??0} • ${x.service||'تمويل شخصي'}`)));
+   if(!calcs.length)list.append(node('p','','لم يسجل احتساب مكتمل بعد.'));
+   list.append(node('p','','بيانات الموقع لا تتوفر إلا عند موافقة العميل وحفظها فعلياً في المركزية. لا توجد خدمة لتتبع الجهاز لحظياً.'));sheet.append(list);
+ }
+ window.F99V8ShowCurrentCodeReport=async function(){if(!owner())return;const code=$('f99fix-code')?.value;if(!code)return alert('افتح الكود المطلوب أولاً');try{await report(code,false)}catch(e){alert(e.message)}};
+ async function searchFrom(input,status){const code=extract(input.value);input.value=code;if(code.length<8){message(status,'ألصق كود العميل كاملاً.');return}message(status,'جاري البحث في جميع الباقات...');try{await report(code,true);message(status,'تم العثور على الكود وفتح إدارة التفاصيل.')}catch(e){message(status,'لم يتم العثور على الكود أو تعذر الاتصال: '+e.message)}}
+ function addSearch(container,id){if(!container||$(id))return;const wrap=node('section','f99v8-search');wrap.id=id;wrap.append(node('strong','','بحث سريع عن أي كود — جميع الباقات'));const row=node('div','f99v8-row');const inp=document.createElement('input');inp.placeholder='ألصق كود العميل هنا';inp.dir='ltr';inp.autocomplete='off';inp.addEventListener('keydown',e=>{if(e.key==='Enter')searchFrom(inp,out)});inp.addEventListener('paste',e=>{const raw=e.clipboardData?.getData('text/plain');if(!raw)return;const code=extract(raw);if(/^[A-Z0-9-]{8,32}$/.test(code)&&/[A-Z]/.test(code)){e.preventDefault();inp.value=code;searchFrom(inp,out)}});const btn=node('button','','بحث وفتح الكود');btn.type='button';btn.onclick=()=>searchFrom(inp,out);row.append(inp,btn);wrap.append(row);const out=node('div','');out.setAttribute('role','status');wrap.append(out);container.prepend(wrap)}
+ window.F99V8OwnerSettings=async function(){if(!owner())return alert('هذه الشاشة للمالك فقط');await loadPublic();const sheet=showModal('f99v8-settings','التجديد والرسائل — إعدادات المالك');
+   sheet.append(node('p','','العميل يختار باقة التجديد، ويفتح واتساب برسالة جاهزة. المالك يصدر فاتورة ويعتمد السداد ثم يجدد نفس الكود من البحث.'));
+   const wa=mkInput(sheet,'واتساب استقبال طلبات التجديد (9665xxxxxxxx)',config.whatsapp);
+   const visibleLabel=node('label','', 'إظهار أيقونة التجديد للعملاء');const visible=document.createElement('input');visible.type='checkbox';visible.checked=config.show_public_renewal!==false;visible.style.width='22px';visible.style.minHeight='22px';visibleLabel.append(visible);sheet.append(visibleLabel);
+   const o1=(config.offers||[])[0]||DEFAULT.offers[0],o2=(config.offers||[])[1]||{};
+   const n1=mkInput(sheet,'عنوان تجديد البرونزية',o1.title||'تجديد البرونزية — 3 أيام');const p1=mkInput(sheet,'سعر تجديد البرونزية بالريال',String(o1.price??17.8),'number');const d1=mkInput(sheet,'مدة التجديد بالساعات',String(Math.round((o1.duration_minutes||4320)/60)),'number');
+   const n2=mkInput(sheet,'اسم باقة ترقية اختيارية (فارغ لإخفائها)',o2.title||'');const p2=mkInput(sheet,'سعر الترقية بالريال',String(o2.price??0),'number');const d2=mkInput(sheet,'مدة الترقية بالساعات',String(Math.round((o2.duration_minutes||4320)/60)),'number');
+   const ac=mkTextarea(sheet,'رسالة اعتماد العقد',config.contract_accepted);const re=mkTextarea(sheet,'رسالة رفض العقد',config.contract_rejected);const ex=mkTextarea(sheet,'رسالة انتهاء كود العقد',config.contract_expired);const bad=mkTextarea(sheet,'رسالة الكود غير الصحيح',config.code_invalid);const note=mkTextarea(sheet,'تعليمات التجديد',config.renewal_note);
+   const out=node('div','notice','');sheet.append(out);const save=node('button','','حفظ الإعدادات في المركزية');save.type='button';sheet.append(save);
+   save.onclick=async()=>{if(!owner())return;const prices=[Number(p1.value),Number(p2.value)],hours=[Number(d1.value),Number(d2.value)];if(prices.some(x=>!Number.isFinite(x)||x<0)||hours.some(x=>!Number.isSafeInteger(x)||x<1||x>8760))return message(out,'تحقق من السعر والمدة؛ المدة بالساعات.');
+     const offers=[{id:'bronze-3d',title:n1.value.trim(),price:prices[0],duration_minutes:hours[0]*60,enabled:true}];if(n2.value.trim())offers.push({id:'upgrade',title:n2.value.trim(),price:prices[1],duration_minutes:hours[1]*60,enabled:true});
+     const next={whatsapp:wa.value.trim(),show_public_renewal:visible.checked,offers,contract_accepted:ac.value,contract_rejected:re.value,contract_expired:ex.value,code_invalid:bad.value,renewal_note:note.value};save.disabled=true;message(out,'جاري الحفظ...');try{const r=await finoCentralAdminCall('f99v8_admin_save_renewal_settings',{p_config:next});if(!r.ok||r.data?.ok!==true)throw Error(r.data?.reason||r.error?.message||'لم تحفظ المركزية البيانات');await loadPublic();message(out,'تم حفظ إعدادات التجديد والرسائل في المركزية. تحقق من ظهورها في شاشة العميل.') }catch(e){message(out,'تعذر الحفظ: '+e.message)}finally{save.disabled=false}}
+ };
+ function install(){pasteGuard();const ownerhub=$('ownerHub');if(ownerhub){const shell=ownerhub.querySelector('.owner-shell')||ownerhub;addSearch(shell,'f99v8-owner-search')}const codepage=$('f99fixCodePage');if(codepage){const wrap=codepage.querySelector('.f99fix-wrap')||codepage;addSearch(wrap,'f99v8-code-search')}
+   const steps=$('f99fixAdminPage')?.querySelector('.f99fix-steps');if(steps&&!$('f99v8-admin-settings')){const btn=node('button','f99fix-btn','تجديد الاشتراكات ورسائل الأكواد');btn.id='f99v8-admin-settings';btn.onclick=window.F99V8OwnerSettings;steps.append(btn)}
+   if(!$('f99v8-public-renew')){const btn=node('button','subscription-renew','تجديد أو ترقية كود');btn.id='f99v8-public-renew';btn.type='button';btn.onclick=()=>window.F99V8OpenRenewal?.('');const loginForm=$('password')?.closest('.login-box')||$('password')?.parentElement?.parentElement; if(loginForm)loginForm.append(btn);btn.style.display='block';btn.style.margin='10px auto';btn.style.maxWidth='100%'}
+   loadPublic();}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
+})();
+</script>
+
 </body>
 </html>
