@@ -17638,7 +17638,14 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   field(row,'الشروط الخاصة بالباقة','terms',norm.terms||'',{textarea:true});field(row,'مدة الكود بالدقائق','duration_minutes',norm.duration_minutes??1440,{type:'number'});field(row,'إعادات الحسبة بعد الأولى','restarts',norm.restarts??3,{type:'number'});
   serviceChecks(row,norm.services);sectorChecks(row,norm.allowed_sectors);
   const active=el('label','f99v6-mini-check');const input=document.createElement('input');input.type='checkbox';input.dataset.active='1';input.checked=norm.enabled===true;active.append(input,document.createTextNode(' إظهار الباقة والسماح بالشراء'));row.append(active);
-  const batch=el('div','f99v6-batch');const stock=el('button','','تخصيص أكواد من المخزون بعد حفظ الباقة');stock.type='button';stock.onclick=()=>{if(!window.F99V9OpenInventory)return status('ركّب تحديث المخزون في المركزية أولاً');window.F99V9OpenInventory(norm.key)};batch.append(stock);row.append(batch);list.append(row)
+  const batch=el('div','f99v16-package-stock');const stockLabel=el('strong','', 'v16-stock-count');stockLabel.textContent='جاري فحص الأكواد المخصصة لهذه الباقة...';batch.append(stockLabel);
+  const stock=el('button','','+ تخصيص أكواد جديدة لهذه الباقة');stock.type='button';stock.onclick=()=>{if(!window.F99V9OpenInventory)return status('ركّب تحديث المركزية V16 أولاً');window.F99V9OpenInventory(norm.key)};batch.append(stock);
+  row.append(batch);list.append(row);
+  const refreshStock=async()=>{if(!norm.key||!owner())return;try{const r=await window.finoCentralAdminCall('f99v16_admin_package_overview',{p_package_key:norm.key});if(!r?.ok||r.data?.ok!==true)throw Error(r?.data?.reason||r?.error?.message||'تعذر قراءة العدد');const d=r.data;
+    stockLabel.textContent=Number(d.new_allocated||0)===0?'لا توجد أكواد معتمدة من المخزون لهذه الباقة.':('أكواد هذه الباقة المعتمدة: '+Number(d.published||0)+' • المستخدمة: '+Number(d.used||0)+' • المحجوزة: '+Number(d.reserved||0));
+    // Legacy codes are deliberately excluded from the new package card. View them only in independent archive.
+  }catch{stockLabel.textContent='تعذر فحص الأكواد؛ تأكد من تحديث المركزية V16.'}};
+  row._f99v16RefreshStock=refreshStock;refreshStock();
  }
  async function uploadCover(file,row){if(!owner())return status('هذه الميزة للمالك فقط');const f=file.files?.[0];if(!f)return status('اختر صورة أولاً');if(f.size>8*1024*1024)return status('أقصى حجم 8 ميجابايت');const data=new FormData();data.append('file',f);data.append('kind','background');data.append('admin_token',finoCentralAdminToken);status('جار رفع الصورة عبر خدمة الوسائط الآمنة...');try{const r=await fetch(FINO_SUPABASE_URL+'/functions/v1/f99x-owner-media',{method:'POST',headers:{apikey:FINO_SUPABASE_PUBLISHABLE_KEY},body:data});const x=await r.json();if(!r.ok||!x.ok||!urlOK(x.url))throw Error(x.error||'خدمة رفع الصورة غير مفعلة');row.querySelector('[data-field=image_url]').value=x.url;status('رُفعت الصورة. اضغط حفظ ونشر الباقات لاعتمادها على جميع الأجهزة.')}catch(e){status('تعذر رفع الصورة: '+e.message+'؛ يلزم نشر خدمة f99x-owner-media وربط التخزين.')}}
  function readRow(row){const v=k=>row.querySelector(`[data-field="${k}"]`)?.value.trim()||'';const s=[...row.querySelectorAll('[data-service]:checked')].map(x=>x.dataset.service),secs=[...row.querySelectorAll('[data-sector]:checked')].map(x=>x.dataset.sector),q=[];
@@ -19136,6 +19143,19 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
 })();
 </script>
+<style id="f99v16-owner-package-css">
+#f99v6-admin-products .f99v16-package-stock{display:flex!important;flex-direction:column;gap:12px;margin:14px 0;padding:18px;border:1px solid #c7dfeb;border-radius:17px;background:#f3f9fd}
+#f99v6-admin-products .f99v16-package-stock strong{font-size:15px;color:#143c57;line-height:1.9;display:block}
+#f99v6-admin-products .f99v16-package-stock button{min-height:50px;border-radius:11px;background:#19678a;color:#fff;font-size:15px;font-weight:800;border:0}
+#f99v9-overlay .v16-package-card{border:1px solid #b8d6e3;background:#f2f9fc;padding:17px;border-radius:18px;margin:16px 0}
+#f99v9-overlay .v16-package-card strong{display:block;color:#163f5c;font-size:18px;margin:0 0 8px}
+#f99v9-overlay .v16-package-card .v16-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:10px 0}
+#f99v9-overlay .v16-package-card .v16-stat{background:white;border:1px solid #d5e5eb;border-radius:12px;padding:11px}
+#f99v9-overlay .v16-stat b{display:block;color:#155c7a;font-size:22px}
+#f99v9-overlay .v16-package-card button{width:auto}
+#f99v9-overlay #v16-report-message{font-size:13px;line-height:1.8}
+@media(max-width:500px){#f99v9-overlay .v16-package-card .v16-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
 <style id="f99v9-stock-css">
 /* V9 inventory is accessible only from owner controls. Hide legacy code generator
    to avoid accidentally selling auto-enabled codes without batch tracking. */
@@ -19174,8 +19194,49 @@ function e(t,text,cls){const a=document.createElement(t);if(cls)a.className=cls;
 function button(text,action,secondary=false){const b=e('button',text);b.type='button';if(secondary)b.className='alt';b.addEventListener('click',action);return b}
 function field(target,title,type,value){const l=e('label',title),inp=document.createElement('input');inp.type=type;inp.value=value??'';l.append(inp);target.append(l);return inp}
 function flash(message){const p=$('v9-feedback');if(p){p.textContent=message;p.setAttribute('role','status')}}
-async function api(name,args={}){if(!owner())throw Error('انتهت جلسة المالك، ادخل بكود المالك من جديد.');const r=await window.finoCentralAdminCall(name,args);if(!r?.ok||!r?.data?.ok){const msg=String(r?.data?.reason||r?.error?.message||r?.error||'تعذر التحقق من المركزية');if(/PGRST202|could not find the function|schema cache/i.test(msg))throw Error('دالة تخصيص الأكواد غير موجودة أو لم تُحدّث لدى Supabase. نفّذ ملف المركزية FINO99 V15 أولاً، وتحقق من نتيجة RPC_READY، ثم أعد فتح الصفحة. لم يُخصَّص أي كود بسبب هذا الخطأ.');throw Error(msg)}return r.data}
-function csv(codes,lastDay){const rows=['كود التفعيل,تاريخ الانتهاء',...codes.map(c=>String(c)+','+String(lastDay||''))];return '\ufeff'+rows.join('\r\n')+'\r\n'}
+async function api(name,args={}){if(!owner())throw Error('انتهت جلسة المالك، ادخل بكود المالك من جديد.');const r=await window.finoCentralAdminCall(name,args);if(!r?.ok||!r?.data?.ok){const msg=String(r?.data?.reason||r?.error?.message||r?.error||'تعذر التحقق من المركزية');if(/PGRST202|could not find the function|schema cache/i.test(msg))throw Error('دالة تخصيص الأكواد غير موجودة أو لم تُحدّث لدى Supabase. نفّذ ملف المركزية FINO99 V16 أولاً، وتحقق من نتيجة RPC_READY، ثم أعد فتح الصفحة. لم يُخصَّص أي كود بسبب هذا الخطأ.');throw Error(msg)}return r.data}
+function sallaXlsx(codes,lastDay){
+  // Salla's official codes-sample.xlsx uses these four column names and order.
+  const headers=['الاكواد','الرقم التسلسلي','كلمة المرور','تاريخ الانتهاء'];
+  const escXml=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+  const strCell=(col,row,val)=>`<c r="${col}${row}" t="inlineStr"><is><t>${escXml(val)}</t></is></c>`;
+  const rowXml=['<row r="1">'+headers.map((x,i)=>strCell('ABCD'[i],1,x)).join('')+'</row>'];
+  for(let i=0;i<codes.length;i++){
+    const row=i+2;
+    const code=String(codes[i]);
+    if(!/^[A-Z0-9-]{8,32}$/.test(code))throw Error('كود غير صالح في ملف سلة، صف '+row);
+    rowXml.push(`<row r="${row}">${strCell('A',row,code)}${lastDay?strCell('D',row,lastDay):''}</row>`);
+  }
+  const sheet=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><dimension ref="A1:D${codes.length+1}"/><sheetViews><sheetView workbookViewId="0" rightToLeft="1"/></sheetViews><sheetFormatPr defaultRowHeight="16"/><cols><col min="1" max="1" width="26" customWidth="1"/><col min="2" max="3" width="20" customWidth="1"/><col min="4" max="4" width="19" customWidth="1"/></cols><sheetData>${rowXml.join('')}</sheetData></worksheet>`;
+  const files=[
+    ['[Content_Types].xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'],
+    ['_rels/.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+    ['xl/workbook.xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView/></bookViews><sheets><sheet name="الاكواد" sheetId="1" r:id="rId1"/></sheets></workbook>'],
+    ['xl/_rels/workbook.xml.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
+    ['xl/styles.xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="1"><font><sz val="11"/><name val="Arial"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'],
+    ['xl/worksheets/sheet1.xml',sheet]
+  ];
+  const enc=new TextEncoder(),pieces=[],central=[];
+  const table=new Uint32Array(256);
+  for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?0xEDB88320^(c>>>1):(c>>>1);table[n]=c>>>0}
+  const crc32=bytes=>{let c=0xFFFFFFFF;for(const b of bytes)c=table[(c^b)&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0};
+  const u16=(v,pos,x)=>v.setUint16(pos,x,true),u32=(v,pos,x)=>v.setUint32(pos,x>>>0,true);
+  let offset=0;
+  for(const [path,xml] of files){
+    const name=enc.encode(path),data=enc.encode(xml),crc=crc32(data),local=new Uint8Array(30+name.length),lv=new DataView(local.buffer);
+    u32(lv,0,0x04034b50);u16(lv,4,20);u16(lv,6,0x0800);u16(lv,8,0);u32(lv,14,crc);u32(lv,18,data.length);u32(lv,22,data.length);u16(lv,26,name.length);local.set(name,30);
+    pieces.push(local,data);
+    const dir=new Uint8Array(46+name.length),dv=new DataView(dir.buffer);
+    u32(dv,0,0x02014b50);u16(dv,4,20);u16(dv,6,20);u16(dv,8,0x0800);u16(dv,10,0);u32(dv,16,crc);u32(dv,20,data.length);u32(dv,24,data.length);u16(dv,28,name.length);u32(dv,42,offset);dir.set(name,46);
+    central.push(dir);offset+=local.length+data.length;
+  }
+  const dirSize=central.reduce((s,p)=>s+p.length,0),end=new Uint8Array(22),ev=new DataView(end.buffer);
+  u32(ev,0,0x06054b50);u16(ev,8,files.length);u16(ev,10,files.length);u32(ev,12,dirSize);u32(ev,16,offset);
+  const all=new Uint8Array(offset+dirSize+end.length);let at=0;
+  for(const part of [...pieces,...central,end]){all.set(part,at);at+=part.length}
+  return all;
+}
+
 function download(name,text,type){const blob=new Blob([text],{type});const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000)}
 function exportBatch(batch){
  const codes=batch?.codes,expected=Number(batch?.count);
@@ -19183,19 +19244,47 @@ function exportBatch(batch){
  if(!Number.isInteger(expected)||expected<1||expected>500||!Array.isArray(codes)||codes.length!==expected||codes.some(c=>!/^[A-Z0-9-]{8,32}$/.test(c))||new Set(codes).size!==codes.length)throw Error('ملف الأكواد غير مكتمل أو عددها غير مطابق؛ أُلغي التنزيل.');
  if(!/^[a-fA-F0-9-]{36}$/.test(String(batch.allocation_id)))throw Error('معرف الدفعة غير صالح؛ أُلغي التنزيل.');
  if(batch?.last_day!=null&&!/^\d{4}-\d{2}-\d{2}$/.test(String(batch.last_day)))throw Error('تاريخ صلاحية الدفعة غير صحيح؛ أُلغي التنزيل.');
- const id=String(batch.allocation_id).slice(0,8);const packageName=String(batch.package_key||'PACKAGE').replace(/[^A-Za-z0-9_-]/g,'').slice(0,36)||'PACKAGE';const exportDate=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Riyadh',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()).replace(/-/g,'');const deadline=String(batch.last_day||'NO_END').replace(/-/g,'');download('FINO99_'+packageName+'_'+exportDate+'_END-'+deadline+'_'+id+'_'+codes.length+'.csv',csv(codes,batch?.last_day),'text/csv;charset=utf-8');
- flash('تم إنشاء ملف '+codes.length+' كود من الدفعة المعتمدة. تأكد أن الملف نزل في جهازك، وارفعه مرة واحدة فقط لمنتج سلة المطابق للباقة.');
+ const id=String(batch.allocation_id).slice(0,8);const packageName=String(batch.package_key||'PACKAGE').replace(/[^A-Za-z0-9_-]/g,'').slice(0,36)||'PACKAGE';const exportDate=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Riyadh',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()).replace(/-/g,'');const deadline=String(batch.last_day||'NO_END').replace(/-/g,'');download('FINO99_'+packageName+'_'+exportDate+'_END-'+deadline+'_'+id+'_'+codes.length+'.xlsx',sallaXlsx(codes,batch?.last_day),'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+ flash('تم إنشاء ملف Excel وفق نموذج سلة يحتوي على '+codes.length+' كود؛ كود واحد في كل صف. تأكد من العدد قبل رفعه إلى منتج سلة المطابق للباقة.');
 }
+let v16OverviewSerial=0;
+async function loadPackageOverview(){const key=$('v9-package')?.value||'',card=$('v16-package-overview');if(!card)return;
+ const serial=++v16OverviewSerial;
+ if(!key){card.querySelector('strong').textContent='اختر الباقة أولاً';return;}
+ card.querySelector('strong').textContent='جار فحص أكواد الباقة من المركزية...';
+ try{const d=await api('f99v16_admin_package_overview',{p_package_key:key});if(serial!==v16OverviewSerial)return;
+  const put=(id,val)=>{const n=$(id);if(n)n.textContent=String(Number(val||0))};
+  put('v16-assigned',d.published);put('v16-used',d.used);put('v16-unused',d.not_used);put('v16-reserved',d.reserved);put('v16-disabled',d.disabled);
+  card.querySelector('strong').textContent=Number(d.new_allocated||0)===0?'لا توجد أكواد مخصصة من المخزون لهذه الباقة.':'أكواد هذه الباقة الجديدة المعتمدة: '+Number(d.published||0);
+  const old=$('v16-old-note');if(old)old.textContent=Number(d.legacy_separate||0)>0?'يوجد '+d.legacy_separate+' كود من النظام القديم محفوظة في سجل مستقل لحماية العملاء، ولا تدخل ضمن التخصيص الجديد.':'لا توجد أكواد قديمة مرتبطة بهذا الاسم.';
+ }catch(ex){if(serial===v16OverviewSerial)card.querySelector('strong').textContent='تعذر فحص الباقة: '+ex.message;}}
+async function exportUsageReport(){const key=$('v9-package')?.value;if(!key)return flash('اختر الباقة أولاً');const report=$('v16-report-message');const b=$('v16-report-btn');if(b)b.disabled=true;
+ if(report)report.textContent='جار جلب تقرير الاستخدام من المركزية...';
+ try{let offset=0,total=null,rows=[];
+   do{const d=await api('f99v16_admin_package_codes',{p_package_key:key,p_offset:offset,p_limit:200});const page=Array.isArray(d.rows)?d.rows:[];
+     total=Number(d.total||0);if(total>20000)throw Error('التقرير أكبر من الحد المسموح؛ اطلب تقسيمه');
+     if(page.length===0&&offset<total)throw Error('نتيجة التقرير غير مكتملة');rows.push(...page);offset+=page.length;
+   }while(offset<total);
+   const columns=['الكود','الحالة','مفعل','عدد الدخول','الحد المسموح','أول استخدام','آخر دخول','انتهاء الصلاحية','تاريخ تخصيصه','معرف الدفعة'];
+   const cell=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+   const values=rows.map(x=>[x.code,x.usage_status==='used'?'تم استخدامه':'لم يستخدم',x.enabled?'نعم':'لا',x.use_count,x.max_entries,x.first_activated_at,x.last_entry_at,x.expires_at,x.assigned_at,x.batch_id]);
+   const csv='\ufeff'+[columns,...values].map(r=>r.map(cell).join(',')).join('\r\n');
+   download('FINO99_USAGE_'+key.replace(/[^A-Za-z0-9_-]/g,'').slice(0,40)+'_'+new Date().toISOString().slice(0,10)+'.csv',csv,'text/csv;charset=utf-8');
+   if(report)report.textContent='تم تصدير '+rows.length+' كود من سجل المركزية. كلمة «تم استخدامه» تعني دخول العميل فعليًا، ولا تعني بالضرورة أن سلة سجلت عملية بيع؛ راجع تقرير المبيعات في سلة للمطابقة.';
+ }catch(ex){if(report)report.textContent='تعذر إنشاء التقرير: '+ex.message}finally{if(b)b.disabled=false;}}
+function refreshOwnerCards(){document.querySelectorAll('#f99v6-admin-products .f99s-product').forEach(r=>{if(typeof r._f99v16RefreshStock==='function')r._f99v16RefreshStock()});}
 async function refresh(){summary=await api('f99v9_admin_stock_summary');for(const [key,id] of [['total','v9-total'],['available','v9-available'],['reserved','v9-reserved'],['published','v9-published'],['legacy','v9-old']]){const el=$(id);if(el)el.textContent=Number(summary[key]||0).toLocaleString('en-US')}
 const list=$('v9-batches');if(list){list.replaceChildren();for(const a of (summary.allocations||[])){const row=e('div',undefined,'v9-batch');row.append(e('strong',a.package_name+' — '+a.item_count+' كود'),e('p','الحالة: '+(a.state==='published'?'مفعّلة في المركزية — جاهزة للتصدير إلى سلة':'محجوزة من إصدار سابق — يلزم اعتمادها')+' • '+new Date(a.created_at).toLocaleString('ar-SA',{timeZone:'Asia/Riyadh'})));const actions=e('div',undefined,'v9-actions');if(a.state==='published')actions.append(button('تنزيل ملف سلة مجدداً',async()=>{try{const d=await api('f99v9_admin_allocation',{p_allocation_id:a.id});latest=d;exportBatch(d)}catch(ex){flash('تعذر إعادة تنزيل الملف: '+ex.message)}},true));
- else actions.append(button('اعتماد الدفعة المحجوزة سابقاً',async()=>{if(!confirm('هل راجعت هذه الدفعة القديمة وتأكدت أنها ليست مباعة برموز غير مطابقة؟ الاعتماد يفعّل جميع أكوادها.'))return;try{flash('جاري اعتماد أكواد الدفعة القديمة...');await api('f99v9_admin_publish',{p_allocation_id:a.id});await refresh();flash('تم تفعيل الدفعة القديمة. افتحها ونزّل ملف سلة واختبر الدخول قبل البيع.')}catch(ex){flash('تعذر اعتماد الدفعة القديمة: '+ex.message)}}));row.append(actions);list.append(row)}}}
+ else actions.append(button('اعتماد الدفعة المحجوزة سابقاً',async()=>{if(!confirm('هل راجعت هذه الدفعة القديمة وتأكدت أنها ليست مباعة برموز غير مطابقة؟ الاعتماد يفعّل جميع أكوادها.'))return;try{flash('جاري اعتماد أكواد الدفعة القديمة...');await api('f99v9_admin_publish',{p_allocation_id:a.id});await refresh();flash('تم تفعيل الدفعة القديمة. افتحها ونزّل ملف سلة واختبر الدخول قبل البيع.')}catch(ex){flash('تعذر اعتماد الدفعة القديمة: '+ex.message)}}));row.append(actions);list.append(row)}}
+await refreshV16();}
+async function refreshV16(){await loadPackageOverview();refreshOwnerCards()}
 function packageOptions(){const c=window.FINO99ReadStorefront?.()||{};return Array.isArray(c.products)?c.products:[]}
 function choosePackage(){const sel=$('v9-package'),list=packageOptions();sel.replaceChildren();sel.append(new Option('اختر الباقة المحفوظة في المركزية',''));
-for(const p of list){if(!p?.key)continue;sel.append(new Option(String(p.name||p.key),p.key))}sel.onchange=()=>{const p=list.find(x=>x.key===sel.value);const wrap=$('v9-services');wrap.replaceChildren();for(const service of p?.services||[]){const l=e('label');const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.checked=true;checkbox.value=service;l.append(checkbox,e('span',SERVICES[service]||service));wrap.append(l)}$('v9-duration').value=Number(p?.duration_minutes||4320);$('v9-count').value='100';$('v9-expiry').value=String(p?.key||'').includes('bronze')?(p?.redeem_last_day||'2027-02-15'):'';$('v9-cap').value=String(p?.max_calculations||3);};if(list.length){sel.value=list[0].key;sel.dispatchEvent(new Event('change'))}}
+for(const p of list){if(!p?.key)continue;sel.append(new Option(String(p.name||p.key),p.key))}sel.onchange=()=>{const p=list.find(x=>x.key===sel.value);const wrap=$('v9-services');wrap.replaceChildren();for(const service of p?.services||[]){const l=e('label');const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.checked=true;checkbox.value=service;l.append(checkbox,e('span',SERVICES[service]||service));wrap.append(l)}$('v9-duration').value=Number(p?.duration_minutes||4320);$('v9-count').value='100';$('v9-expiry').value=String(p?.key||'').includes('bronze')?(p?.redeem_last_day||'2027-02-15'):'';$('v9-cap').value=String(p?.max_calculations||3);loadPackageOverview();};if(list.length){sel.value=list[0].key;sel.dispatchEvent(new Event('change'))}}
 async function allocate(){if(locked)return;const key=$('v9-package').value,count=Number($('v9-count').value),mins=Number($('v9-duration').value),cap=Number($('v9-cap').value),last=$('v9-expiry').value||null,services=Array.from(document.querySelectorAll('#v9-services input:checked')).map(x=>x.value);
 if(!key||!Number.isInteger(count)||count<1||count>500||!services.length||!Number.isInteger(mins)||mins<1||!Number.isInteger(cap)||cap<1)return flash('اختر الباقة والخدمات والعدد من 1 إلى 500 والمدة والحد الصحيح.');if(!confirm('تخصيص '+count+' كود من المخزون وتفعيلها لهذه الباقة في المركزية فوراً؟ يجب رفع نفس الملف لمنتج سلة قبل الإعلان عن البيع.'))return;
 locked=true;$('v9-allocate').disabled=true;flash('جاري التحقق من تطابق إصدار الموقع والمركزية...');
- try{const readiness=await api('f99v15_owner_preflight');if(readiness.version!=='v15'||readiness.ready!==true)throw Error('المركزية لا تعرض الدوال المطلوبة للإصدار V15');if(Number(readiness.available)<count)throw Error('المخزون غير المخصص لا يكفي. المتاح: '+Number(readiness.available||0));}
+ try{const readiness=await api('f99v16_owner_preflight');if(readiness.version!=='v16'||readiness.ready!==true||readiness.package_report_ready!==true)throw Error('المركزية لا تعرض الدوال المطلوبة للإصدار V16');if(Number(readiness.available)<count)throw Error('المخزون غير المخصص لا يكفي. المتاح: '+Number(readiness.available||0));}
  catch(ex){locked=false;$('v9-allocate').disabled=false;return flash('لم يبدأ التخصيص: '+ex.message)}
  flash('المركزية متصلة. جاري تخصيص الأكواد واعتمادها...');
  let result=null;try{result=await api('f99v12_admin_allocate_ready',{p_package_key:key,p_count:count,p_duration_minutes:mins,p_services:services,p_max_calculations:cap,p_last_day:last})}
@@ -19205,9 +19294,15 @@ locked=true;$('v9-allocate').disabled=true;flash('جاري التحقق من ت�
  try{await refresh()}catch(ex){flash('تمت معالجة الدفعة في المركزية لكن تعذر تحديث القائمة: '+ex.message+' — أعد فتح المخزون لمراجعة الدفعة. لا تُكرر التخصيص.')}}
  locked=false;$('v9-allocate').disabled=false;}
 async function addMore(){const n=Number($('v9-more').value);if(!Number.isInteger(n)||n<1||n>500)return flash('أدخل بين 1 و500؛ للتزويد بأكثر من 500 كرر العملية.');if(!confirm('إضافة '+n+' رمزاً جديداً غير مخصص إلى مخزون المركزية؟'))return;try{await api('f99v9_admin_add_stock',{p_count:n});await refresh();flash('تمت إضافة '+n+' رموز إلى المخزون غير المخصص.')}catch(ex){flash(ex.message)}}
-function open(preselect=''){if(!owner())return alert('هذه الشاشة للمالك المسجل فقط.');let overlay=$('f99v9-overlay');if(!overlay){overlay=e('div');overlay.id='f99v9-overlay';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');document.body.append(overlay)}overlay.replaceChildren();const wrap=e('main',undefined,'v9-wrap');overlay.append(wrap);const hd=e('div',undefined,'v9-head');hd.append(e('h2','مخزون الأكواد — FINO99'));hd.append(button('إغلاق',()=>{overlay.hidden=true},true));wrap.append(hd);wrap.append(e('p','اختر باقة محفوظة وعدداً حتى 500. المركزية تسحب نفس العدد من المخزون وتربطه بالباقة وتفعله في عملية واحدة، ثم تحمل ملف الأكواد لسلة. لا ترفع ملف المخزون الكامل ولا تكرر تحميل نفس الدفعة إلى سلة.'));
+function open(preselect=''){if(!owner())return alert('هذه الشاشة للمالك المسجل فقط.');let overlay=$('f99v9-overlay');if(!overlay){overlay=e('div');overlay.id='f99v9-overlay';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');document.body.append(overlay)}overlay.replaceChildren();const wrap=e('main',undefined,'v9-wrap');overlay.append(wrap);const hd=e('div',undefined,'v9-head');hd.append(e('h2','مخزون الأكواد — FINO99'));hd.append(button('إغلاق',()=>{overlay.hidden=true},true));wrap.append(hd);wrap.append(e('p','اختر باقة محفوظة وعدداً حتى 500. المركزية تسحب العدد المحدد من المخزون غير المخصص وتربطه بالباقة وتفعله عند ضغط الاعتماد، ثم تنزّل ملف Excel بنفس الرموز لسلة. لا يعتبر التخصيص عملية بيع؛ البيع وإرسال الكود يتمان من سلة. لا ترفع ملف المخزون الكامل ولا تكرر تحميل نفس الدفعة إلى سلة.'));
 const metrics=e('div',undefined,'v9-metrics');for(const [id,label] of [['v9-total','المخزون الإجمالي'],['v9-available','جديدة غير مخصصة'],['v9-reserved','محجوزة'],['v9-published','مطروحة'],['v9-old','100 برونزية أصلية']]){const card=e('div',undefined,'v9-stat');const n=e('strong','—');n.id=id;card.append(n,e('small',label));metrics.append(card)}wrap.append(metrics);
-wrap.append(e('h3','سحب أكواد لباقة من المخزون'));const l=e('label','اختر الباقة');const s=document.createElement('select');s.id='v9-package';l.append(s);wrap.append(l);wrap.append(e('label','الخدمات المفعلة لهذه الدفعة'));const services=e('div',undefined,'v9-svcs');services.id='v9-services';wrap.append(services);const qty=field(wrap,'عدد الأكواد (1 إلى 500 لكل ملف)', 'number','100');qty.id='v9-count';qty.min=1;qty.max=500;const minutes=field(wrap,'مدة الاستخدام بعد أول تفعيل (دقائق)', 'number','4320');minutes.id='v9-duration';minutes.min=1;const cap=field(wrap,'حد الحسبات (معمول به حالياً في البرونزية الشخصية)', 'number','3');cap.id='v9-cap';cap.min=1;const date=field(wrap,'آخر يوم لاستخدام الكود (اختياري للباقات الأخرى؛ مطلوب للبرونزية)', 'date','');date.id='v9-expiry';const actions=e('div',undefined,'v9-actions');const create=button('تخصيص الأكواد للباقة وتنزيل ملف سلة',allocate);create.id='v9-allocate';actions.append(create);wrap.append(actions);
+wrap.append(e('h3','سحب أكواد لباقة من المخزون'));const l=e('label','اختر الباقة');const s=document.createElement('select');s.id='v9-package';l.append(s);wrap.append(l);
+const pkgCard=e('section',undefined,'v16-package-card');pkgCard.id='v16-package-overview';pkgCard.append(e('strong','اختر الباقة لفحص مخزونها'));
+const grid=e('div',undefined,'v16-grid');for(const [id,label] of [['v16-assigned','كود معتمد'],['v16-used','تم استخدامه'],['v16-unused','لم يستخدم'],['v16-reserved','محجوز'],['v16-disabled','موقوف']]){const block=e('div',undefined,'v16-stat');block.append(e('b','0'),e('small',label));block.querySelector('b').id=id;grid.append(block)}pkgCard.append(grid);
+const archive=e('details',undefined,'v16-archive');archive.append(e('summary','السجل القديم منفصل عن الباقة الجديدة'));const legacyNote=e('p','',undefined);legacyNote.id='v16-old-note';archive.append(legacyNote);pkgCard.append(archive);
+const reportBtn=button('تنزيل تقرير استخدام أكواد الباقة',exportUsageReport,true);reportBtn.id='v16-report-btn';pkgCard.append(reportBtn);
+const reportMsg=e('p','',undefined);reportMsg.id='v16-report-message';pkgCard.append(reportMsg);wrap.append(pkgCard);
+wrap.append(e('label','الخدمات المفعلة لهذه الدفعة'));const services=e('div',undefined,'v9-svcs');services.id='v9-services';wrap.append(services);const qty=field(wrap,'عدد الأكواد (1 إلى 500 لكل ملف)', 'number','100');qty.id='v9-count';qty.min=1;qty.max=500;const minutes=field(wrap,'مدة الاستخدام بعد أول تفعيل (دقائق)', 'number','4320');minutes.id='v9-duration';minutes.min=1;const cap=field(wrap,'حد الحسبات (معمول به حالياً في البرونزية الشخصية)', 'number','3');cap.id='v9-cap';cap.min=1;const date=field(wrap,'آخر يوم لاستخدام الكود (اختياري للباقات الأخرى؛ مطلوب للبرونزية)', 'date','');date.id='v9-expiry';const actions=e('div',undefined,'v9-actions');const create=button('اعتماد الأكواد لهذه الباقة وتنزيل ملف سلة',allocate);create.id='v9-allocate';actions.append(create);wrap.append(actions);
 const repairBox=e('details',undefined,'v9-batch');repairBox.append(e('summary','تصحيح ربط كود مباع بعد التأكد من طلب سلة'));repairBox.append(e('p','هذه عملية استثنائية. تحقق يدويًا من أن الطلب مدفوع وأن الرمز سُلّم للعميل قبل اعتماد التصحيح. لا تصفّر استخدام الكود ولا تستبدله.'));const repairCode=field(repairBox,'الكود المباع كما ظهر في سلة','text','');repairCode.id='v13-repair-code';const repairBtn=button('فحص وربط هذا الكود بباقة الاختيار',async()=>{const code=String(repairCode.value||'').trim().toUpperCase(),key=$('v9-package').value;if(!/^[A-Z0-9-]{8,32}$/.test(code)||!key)return flash('أدخل كودًا صحيحًا وحدد الباقة.');if(!confirm('هل تحققت بنفسك من عملية البيع في سلة، وأن الكود يخص الباقة المحددة؟'))return;try{const r=await api('f99v13_admin_reconcile_sold_code',{p_code:code,p_package_key:key,p_confirm:true});flash('نتيجة المركزية: '+(r.reason||'READY')+' — '+(r.code||code));await refresh()}catch(ex){flash('لا يمكن التصحيح: '+ex.message)}});repairBox.append(repairBtn);wrap.append(repairBox);
 wrap.append(e('p','المخزون المركزي غير المخصص لا يُرفع إلى سلة. يحتفظ النظام بالأكواد المباعة مسبقًا حتى لا يتعطل العملاء.'));wrap.append(e('h3','الدفعات السابقة'));const batches=e('div');batches.id='v9-batches';wrap.append(batches);const feedback=e('div','', 'v9-alert');feedback.id='v9-feedback';feedback.setAttribute('role','status');wrap.append(feedback);choosePackage();if(preselect&&Array.from($('v9-package').options).some(x=>x.value===preselect)){$('v9-package').value=preselect;$('v9-package').dispatchEvent(new Event('change'))}overlay.hidden=false;refresh().catch(ex=>flash('تعذر قراءة المخزون: '+ex.message));}
 window.F99V9OpenInventory=open;
