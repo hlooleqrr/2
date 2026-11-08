@@ -1,3 +1,8 @@
+<!DOCTYPE html>
+<!DOCTYPE html>
+
+<!DOCTYPE html>
+
 <!-- FINO99 FINAL RELEASE 2026-11-04 / SINGLE-FILE GITHUB PAGES HTML.
      New instance only; no link to the old FINO central.
      IMPORTANT: This file alone does NOT create a Supabase backend.
@@ -6,17 +11,18 @@
      with the NEW Supabase project's URL and PUBLIC publishable key.
      The owner code belongs ONLY in the private SQL, never in this HTML. -->
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+
+<html dir="rtl" lang="ar">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#ffffff">
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" name="viewport"/>
+<meta content="#ffffff" name="theme-color"/>
 <title>FINO99</title>
-<meta name="fino99-code-fix-release" content="2026-11-06-v3"><meta name="description" content="FINO99"><meta property="og:type" content="website"><meta property="og:title" content="FINO99"><meta property="og:description" content="FINO99">
-<meta name="fino99-release" content="image-rates-audit-2026-11-03">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<meta content="2026-11-06-v3" name="fino99-code-fix-release"/><meta content="FINO99" name="description"/><meta content="website" property="og:type"/><meta content="FINO99" property="og:title"/><meta content="FINO99" property="og:description"/>
+<meta content="image-rates-audit-2026-11-03" name="fino99-release"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
 <style>
 :root{--white:#fff;--paper:#fbfdff;--soft:#f3f8fc;--navy:#073b67;--blue:#1881c2;--sky:#5aaee0;--ink:#173244;--text:#466374;--muted:#78909e;--line:#dceaf3;--shadow:0 18px 48px rgba(7,59,103,.10)}
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Cairo',sans-serif}html,body{width:100%;height:100%;overflow:hidden;background:#fff;color:var(--ink)}button,input{font:inherit}button{-webkit-tap-highlight-color:transparent}
@@ -5649,7 +5655,35 @@ body:has(#page1.active)>.app>.ambient { display:none !important; }
 .f99m-dock{position:fixed;bottom:70px;left:12px;z-index:2100000000;border-radius:24px;box-shadow:0 5px 20px #19466666}
 
 .f99m-result-logo{max-width:94px;max-height:42px;vertical-align:middle;object-fit:contain;background:white;border:1px solid #e0e8f0;border-radius:8px;padding:3px;margin-inline-end:10px}
-</style></head>
+</style><meta content="2026-11-08-unified-inventory-owner-questions-offers-paste" name="fino99-v11-release"/><style>
+/* FINO99 V11: modular package questions, price offers, and owner mobile UI */
+#f99s-owner .f99v11-question-editor,#f99s-owner .f99v11-offer-editor{margin:14px 0;padding:14px;background:#f8fafc;border:1px solid #d5e5ef;border-radius:16px}
+#f99s-owner .f99v11-question-header{margin:0 0 12px}
+#f99s-owner .f99v11-qcard{border:1px solid #ccdfe9;border-radius:14px;background:white;margin-bottom:10px;overflow:hidden}
+#f99s-owner .f99v11-qtitle{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;padding:14px;font-size:15px}
+#f99s-owner .f99v11-qtitle small{background:#ecf7ef;color:#28563b;padding:4px 8px;border-radius:9px;font-weight:700}
+#f99s-owner .f99v11-qcontent{padding:14px;display:grid;gap:10px;border-top:1px solid #ecf0f4}
+#f99s-owner .f99v11-qoptions{display:grid;gap:12px}
+#f99s-owner .f99v11-option{border:1px solid #dce7ef;background:#f9fcff;border-radius:12px;padding:10px;display:grid;gap:8px}
+#f99s-owner .f99v11-option label,#f99s-owner .f99v11-qcontent label{max-width:100%}
+#f99s-owner .f99v11-qactions{display:flex;flex-wrap:wrap;gap:8px}
+#f99s-owner button.f99v11-secondary{background:#ecf4fa;color:#17405d;border:1px solid #cedfec}
+#f99s-owner button.f99v11-remove{background:#fcf2f2;color:#912c3a;border:1px solid #ecd2d6}
+#f99s-owner .f99v11-offer-editor>summary{font-weight:900;cursor:pointer;padding:7px 0}
+#f99s-owner .f99v11-offer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+#f99s-owner .f99v11-toggle{display:inline-flex;gap:10px;align-items:center;margin:8px 0;color:#314d60}
+#f99s-owner .f99v11-toggle input{width:18px;height:18px}
+#f99s-owner .f99v11-sector{display:flex;flex-wrap:wrap;gap:12px}
+#f99s-modal .f99v11-promo{padding:13px;margin:9px 0;background:#f6f9fb;border-radius:12px;border:1px solid #d8e4eb}
+#f99s-modal .f99v11-offer-name{display:block;font-weight:900;color:#194964}
+#f99s-modal .f99v11-coupon{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 0}
+#f99s-modal .f99v11-coupon b{user-select:all;padding:7px 11px;border:1px dashed #8ab4cc;border-radius:9px;direction:ltr}
+#f99s-modal .f99v11-coupon button{min-height:34px;padding:6px 10px}
+@media(max-width:640px){#f99s-owner .f99v11-offer-grid{grid-template-columns:1fr}#f99s-owner .f99v11-option{grid-template-columns:1fr}}
+</style><meta content="2026-11-08-central-atomic-batch-paste-question-offers" name="fino99-v12-release"/><style>
+.f99v13-rejection{padding:20px;margin:16px 0;background:#fff8f8;border:1px solid #e7c6c6;border-radius:20px;text-align:center;color:#334a61}.f99v13-rejection h3{color:#9d3131;margin-bottom:12px}.f99v13-rejection button{margin:18px auto 0;display:block}
+#f99v13-bot{position:fixed;inset:0;z-index:2147483000;background:rgba(9,28,44,.68);display:grid;place-items:center;padding:12px;direction:rtl}#f99v13-bot[hidden]{display:none}#f99v13-bot .f99v13-bot-panel{width:min(600px,100%);max-height:90dvh;overflow:auto;background:white;border-radius:20px;padding:18px;box-shadow:0 25px 60px #0003;font-family:Cairo,Arial,sans-serif;color:#19354a}#f99v13-bot header{display:flex;align-items:center;justify-content:space-between;gap:12px}#f99v13-bot button{padding:9px 14px;margin:3px;border:1px solid #a8c0d2;border-radius:11px;background:#e6f1f7;color:#183c55;font-weight:700}#f99v13-bot .f99v13-bot-chat{margin:12px 0;min-height:200px;max-height:48dvh;overflow:auto;background:#f6f9fc;border-radius:12px;padding:12px}#f99v13-bot .f99v13-bubble{padding:11px;margin:7px;max-width:90%;width:fit-content;border-radius:15px;background:#fff;border:1px solid #dce7f1}#f99v13-bot .f99v13-bubble.user{background:#d5f1e3;margin-right:auto}.f99v13-answers{display:flex;flex-wrap:wrap;gap:4px}
+</style><meta content="2026-11-08 V14 safe verified owner stock export paste offers" name="fino99-v14-release"/></head>
 <body>
 <div class="app">
 <div class="ambient"><div class="glow a"></div><div class="glow b"></div><div class="fin f1">1.49%</div><div class="fin money f2">250,000 ريال</div><div class="fin f3">0.99%</div><div class="fin money f4">185,000 ريال</div><div class="fin f5">🧮 احتساب فوري</div><div class="fin f6">2.39%</div></div>
@@ -5657,438 +5691,403 @@ body:has(#page1.active)>.app>.ambient { display:none !important; }
 <div class="ticker-item"><span class="live-dot"></span>LIVE</div><div class="ticker-item">SNB <b>0.99%</b></div><div class="ticker-item">الراجحي <b>1.49%</b></div><div class="ticker-item">SAB <b>2.09%</b></div><div class="ticker-item">الجزيرة <b>1.39%</b></div><div class="ticker-item">💰 250,000 ريال</div><div class="ticker-item">🧮 احتساب فوري</div><div class="ticker-item">SNB <b>1.59%</b></div><div class="ticker-item">الراجحي <b>1.95%</b></div>
 <div class="ticker-item"><span class="live-dot"></span>LIVE</div><div class="ticker-item">SNB <b>0.99%</b></div><div class="ticker-item">الراجحي <b>1.49%</b></div><div class="ticker-item">SAB <b>2.09%</b></div><div class="ticker-item">الجزيرة <b>1.39%</b></div><div class="ticker-item">💰 250,000 ريال</div><div class="ticker-item">🧮 احتساب فوري</div><div class="ticker-item">SNB <b>1.59%</b></div><div class="ticker-item">الراجحي <b>1.95%</b></div>
 </div></div>
-
 <div class="subscription-badge" id="subscriptionBadge">
-  <div class="sub-title">⏳ حالة الاشتراك</div>
-  <div class="sub-remaining" id="subscriptionRemaining">—</div>
-  <div class="sub-code-type" id="subscriptionType">—</div>
-  <button type="button" class="subscription-renew" id="subscriptionRenewBtn" onclick="openSubscriptionRenewal()">💬 لتجديد الاشتراك اضغط هنا</button>
+<div class="sub-title">⏳ حالة الاشتراك</div>
+<div class="sub-remaining" id="subscriptionRemaining">—</div>
+<div class="sub-code-type" id="subscriptionType">—</div>
+<button class="subscription-renew" id="subscriptionRenewBtn" onclick="openSubscriptionRenewal()" type="button">💬 لتجديد الاشتراك اضغط هنا</button>
 </div>
-
 <section class="page active" id="page1"><div class="viewport">
-  <div class="finium-sky" id="finiumSky">
-    <div class="finium-stars"></div><div class="finium-orb"></div>
-    <div class="finium-cloud c1"></div><div class="finium-cloud c2"></div><div class="finium-rain"></div>
-  </div>
-  <div class="finium-entry">
-    <div class="finium-logo-row"><div class="finium-logo-mark" id="finiumLogoMark">F</div><div class="finium-brand-code" data-platform-code>FINO99</div></div>
-    <div class="finium-platform-ar" data-platform-ar>منصة الحسبة والترشيح المباشر</div>
-    <div class="finium-platform-en" data-platform-en>THE SMART PLATFORM</div>
-    <div class="finium-status-line"><span class="finium-chip" id="finiumWeatherChip">● FINO99</span><span class="finium-chip" id="finiumTimeGreeting">—</span></div>
-    <label for="password">دخول المنصة</label>
-    <input id="password" type="text" placeholder="أدخل الكود" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false">
-    <button type="button" class="finium-entry-btn" onclick="login()">دخول المنصة</button>
-    <div class="error" id="loginError">أدخل الكود</div>
-    <div id="f99NewCentralNotice" class="f99-new-central-notice" role="status">FINO99 المطورة — قاعدة بيانات مستقلة. يتطلب الدخول ربط المركزية الجديدة أولًا.</div>
-    <button type="button" class="subscription-renew" id="packageRenewBtn" onclick="openSubscriptionRenewal()" style="margin-top:8px">للتجديد اضغط هنا</button>
-    <div class="finium-date-strip">
-      <div class="finium-date-box"><small>اليوم</small><b id="today">—</b></div>
-      <div class="finium-date-box"><small>الميلادي</small><b id="greg">—</b></div>
-      <div class="finium-date-box"><small>الهجري</small><b id="hijri">—</b></div>
-      <div class="finium-date-box"><small>الوقت</small><b id="clock">—</b></div>
-    </div>
-    <div class="finium-weather-label" id="finiumWeatherLabel">تتغير الخلفية تلقائيًا حسب الوقت وحالة الطقس المتاحة.</div>
-    <div class="identity-card" id="identityCard">
-      <h3>حياك الله 👋</h3><p id="identityHelp">اكتب اسمك الأول للمتابعة.</p>
-      <input id="clientNameOnboarding" type="text" maxlength="40" autocomplete="name" placeholder="اكتب اسمك الأول">
-      <div class="identity-error" id="identityError">اكتب اسمك للمتابعة.</div>
-      <div class="identity-actions"><button type="button" class="identity-continue" onclick="continueAfterIdentity()">متابعة</button><button type="button" class="identity-skip" id="identitySkip" onclick="skipIdentity()">تخطي</button></div>
-    </div>
-  </div>
+<div class="finium-sky" id="finiumSky">
+<div class="finium-stars"></div><div class="finium-orb"></div>
+<div class="finium-cloud c1"></div><div class="finium-cloud c2"></div><div class="finium-rain"></div>
+</div>
+<div class="finium-entry">
+<div class="finium-logo-row"><div class="finium-logo-mark" id="finiumLogoMark">F</div><div class="finium-brand-code" data-platform-code="">FINO99</div></div>
+<div class="finium-platform-ar" data-platform-ar="">منصة الحسبة والترشيح المباشر</div>
+<div class="finium-platform-en" data-platform-en="">THE SMART PLATFORM</div>
+<div class="finium-status-line"><span class="finium-chip" id="finiumWeatherChip">● FINO99</span><span class="finium-chip" id="finiumTimeGreeting">—</span></div>
+<label for="password">دخول المنصة</label>
+<input autocapitalize="characters" autocomplete="one-time-code" id="password" placeholder="أدخل الكود" spellcheck="false" type="text"/>
+<button class="finium-entry-btn" onclick="login()" type="button">دخول المنصة</button>
+<div class="error" id="loginError">أدخل الكود</div>
+<div class="f99-new-central-notice" id="f99NewCentralNotice" role="status">FINO99 المطورة — قاعدة بيانات مستقلة. يتطلب الدخول ربط المركزية الجديدة أولًا.</div>
+<button class="subscription-renew" id="packageRenewBtn" onclick="openSubscriptionRenewal()" style="margin-top:8px" type="button">للتجديد اضغط هنا</button>
+<div class="finium-date-strip">
+<div class="finium-date-box"><small>اليوم</small><b id="today">—</b></div>
+<div class="finium-date-box"><small>الميلادي</small><b id="greg">—</b></div>
+<div class="finium-date-box"><small>الهجري</small><b id="hijri">—</b></div>
+<div class="finium-date-box"><small>الوقت</small><b id="clock">—</b></div>
+</div>
+<div class="finium-weather-label" id="finiumWeatherLabel">تتغير الخلفية تلقائيًا حسب الوقت وحالة الطقس المتاحة.</div>
+<div class="identity-card" id="identityCard">
+<h3>حياك الله 👋</h3><p id="identityHelp">اكتب اسمك الأول للمتابعة.</p>
+<input autocomplete="name" id="clientNameOnboarding" maxlength="40" placeholder="اكتب اسمك الأول" type="text"/>
+<div class="identity-error" id="identityError">اكتب اسمك للمتابعة.</div>
+<div class="identity-actions"><button class="identity-continue" onclick="continueAfterIdentity()" type="button">متابعة</button><button class="identity-skip" id="identitySkip" onclick="skipIdentity()" type="button">تخطي</button></div>
+</div>
+</div>
 </div></section>
-
 <section class="page" id="freeHub"><div class="viewport">
 <header class="header"><div class="brand"><div class="brand-mark">F</div><div class="brand-name">FINO99<small>OWNER TOOLS</small></div></div>
 <a class="contact-mini" href="https://wa.me/966506214458" target="_blank"><span class="m">📱</span><span><small>للاحتساب والتأكيد والإنجاز</small><b>0506214458</b></span></a></header>
 <div class="free-hub-wrap">
-  <div class="free-hub-title">
-    <div class="eyebrow">أدوات FINO99 الذكية</div>
-    <h1>اختر الحاسبة التي تحتاجها</h1>
-    <p>كود المالك يتيح لك حاسبة تحويل المديونية والحاسبة الذكية.</p>
-  </div>
-  <div class="free-tool-grid">
-    <button type="button" class="free-tool" onclick="openBuyoutFromFree()">
-      <div class="tool-icon">🏦</div>
-      <b>ترشيح شراء مديونية التمويل الشخصي</b>
-      <p>الحاسبة الحالية بكامل خصائصها لترشيح البنك الأنسب واحتساب صافي الكاش بعد سداد المديونية.</p>
-      <span class="tool-action">فتح الحاسبة ←</span>
-    </button>
-    <button type="button" class="free-tool" onclick="openSmartPersonalCalculator()">
-      <div class="tool-icon">🧮</div>
-      <b>الحاسبة الذكية</b>
-      <p>حاسبة تمويل شخصي مستقلة؛ تختار البنك وتدخل هامش الربح يدويًا وتحسب التمويل والصافي مباشرة بدون ترشيح.</p>
-      <span class="tool-action">فتح الحاسبة الذكية ←</span>
-    </button>
-    <button type="button" class="free-tool bot-tool" onclick="openFINOSmartPortal(false)">
-      <div class="tool-icon">✦</div>
-      <b>المنصة الذكية</b>
-      <p>مسار محادثة سريع لتحويل المديونية، التمويل الشخصي، وأدوات تعديل المختص.</p>
-      <span class="tool-action">فتح المنصة الذكية ←</span>
-    </button>
-  </div>
+<div class="free-hub-title">
+<div class="eyebrow">أدوات FINO99 الذكية</div>
+<h1>اختر الحاسبة التي تحتاجها</h1>
+<p>كود المالك يتيح لك حاسبة تحويل المديونية والحاسبة الذكية.</p>
+</div>
+<div class="free-tool-grid">
+<button class="free-tool" onclick="openBuyoutFromFree()" type="button">
+<div class="tool-icon">🏦</div>
+<b>ترشيح شراء مديونية التمويل الشخصي</b>
+<p>الحاسبة الحالية بكامل خصائصها لترشيح البنك الأنسب واحتساب صافي الكاش بعد سداد المديونية.</p>
+<span class="tool-action">فتح الحاسبة ←</span>
+</button>
+<button class="free-tool" onclick="openSmartPersonalCalculator()" type="button">
+<div class="tool-icon">🧮</div>
+<b>الحاسبة الذكية</b>
+<p>حاسبة تمويل شخصي مستقلة؛ تختار البنك وتدخل هامش الربح يدويًا وتحسب التمويل والصافي مباشرة بدون ترشيح.</p>
+<span class="tool-action">فتح الحاسبة الذكية ←</span>
+</button>
+<button class="free-tool bot-tool" onclick="openFINOSmartPortal(false)" type="button">
+<div class="tool-icon">✦</div>
+<b>المنصة الذكية</b>
+<p>مسار محادثة سريع لتحويل المديونية، التمويل الشخصي، وأدوات تعديل المختص.</p>
+<span class="tool-action">فتح المنصة الذكية ←</span>
+</button>
+</div>
 </div>
 <div class="live-footer">
-  <span class="footer-brand">FINO99 • أدوات التمويل الذكية</span>
-  <span class="footer-date"><button type="button" class="admin-secret-trigger" onclick="openFINOAdminLogin()" aria-label=""></button><b id="f4Day">—</b><b id="f4Greg">—</b><b id="f4Hijri">—</b><span class="footer-time" id="f4Time">—</span></span>
+<span class="footer-brand">FINO99 • أدوات التمويل الذكية</span>
+<span class="footer-date"><button aria-label="" class="admin-secret-trigger" onclick="openFINOAdminLogin()" type="button"></button><b id="f4Day">—</b><b id="f4Greg">—</b><b id="f4Hijri">—</b><span class="footer-time" id="f4Time">—</span></span>
 </div>
 </div></section>
-
-
-
 <section class="page" id="f99FeesClientPage"><div class="viewport" style="max-width:720px;margin:auto;padding:20px 14px;min-height:100vh">
-  <div class="owner-top"><div class="owner-title"><b data-platform-code>FINO99</b><small>بطاقة أتعاب الخدمات — المسموح لك في كودك</small></div></div>
-  <div class="owner-platform-card" style="margin-top:20px">
-    <h2>احتساب أتعاب المعاملة</h2><p>هذه قائمة أتعاب الوساطة والمتابعة التي حددها المالك لهذا الكود، وليست رسوم البنك أو موافقة تمويلية.</p>
-    <div class="owner-field"><label>اختر الخدمة</label><select id="f99FeesService" onchange="f99ComputeFee()" style="width:100%;padding:12px"></select></div>
-    <div class="owner-field" style="margin-top:14px"><label>قيمة الأتعاب (ريال)</label><div id="f99FeesAmount" style="font-size:28px;font-weight:900;padding:14px">—</div></div>
-    <div class="portal-note" id="f99FeesNotice">تطبق الشروط الواردة في العقد أو الاتفاق، إن وجد.</div>
-    <button type="button" class="owner-save" onclick="f99CopyFeeQuote()">نسخ تفاصيل الخدمة والأتعاب</button>
-  </div>
+<div class="owner-top"><div class="owner-title"><b data-platform-code="">FINO99</b><small>بطاقة أتعاب الخدمات — المسموح لك في كودك</small></div></div>
+<div class="owner-platform-card" style="margin-top:20px">
+<h2>احتساب أتعاب المعاملة</h2><p>هذه قائمة أتعاب الوساطة والمتابعة التي حددها المالك لهذا الكود، وليست رسوم البنك أو موافقة تمويلية.</p>
+<div class="owner-field"><label>اختر الخدمة</label><select id="f99FeesService" onchange="f99ComputeFee()" style="width:100%;padding:12px"></select></div>
+<div class="owner-field" style="margin-top:14px"><label>قيمة الأتعاب (ريال)</label><div id="f99FeesAmount" style="font-size:28px;font-weight:900;padding:14px">—</div></div>
+<div class="portal-note" id="f99FeesNotice">تطبق الشروط الواردة في العقد أو الاتفاق، إن وجد.</div>
+<button class="owner-save" onclick="f99CopyFeeQuote()" type="button">نسخ تفاصيل الخدمة والأتعاب</button>
+</div>
 </div></section>
 <section class="page" id="ownerHub"><div class="viewport">
-  <div class="owner-shell">
-    <div class="owner-top"><div class="owner-title"><b><span data-platform-code>FINO99</span> • التحكم في كامل المنصة</b><small>كود المالك • إدارة الخدمات والأكواد والعقود والمطبوعات والتصميم</small></div><button type="button" class="owner-exit" onclick="ownerLogout()">خروج</button></div>
-    <div class="owner-hero"><h1>حياك الله يا المالك</h1></div>
-    <div class="owner-grid">
-      <button class="owner-tile primary" onclick="ownerOpenSmartPortal()"><span class="owner-icon">✦</span><b>المنصة الذكية</b><small>فتح واجهة المحادثة الذكية والوصول لخدمات المنصة.</small></button>
-      <button class="owner-tile" onclick="ownerOpenBuyout()"><span class="owner-icon">↔</span><b>تحويل المديونية</b><small>الدخول المباشر لحاسبة وترشيح شراء المديونية.</small></button>
-      <button class="owner-tile" onclick="ownerOpenSmartCalculator()"><span class="owner-icon">∑</span><b>الحاسبة الذكية</b><small>حساب شخصي، استهلاكي، شركات وعقاري وفق إعدادات المالك.</small></button>
-      <button class="owner-tile" onclick="f99fixOpenCodes()"><span class="owner-icon">⌘</span><b>التحكم بالأكواد</b><small>إنشاء، تعديل، تفعيل، إيقاف، تمديد وحذف الأكواد وصلاحيات كل كود.</small></button>
-      <button class="owner-tile" onclick="ownerOpenAdminSection('contracts')"><span class="owner-icon">§</span><b>إدارة العقود والاتفاقات</b><small>قوالب العقود، ربطها بالأكواد، الأرشفة وحالة الاعتماد.</small></button>
-      <button class="owner-tile" onclick="openFINOPrintStudio()"><span class="owner-icon">▤</span><b>المطبوعات</b><small>إنشاء بطاقة أو خطاب أو إشعار ومشاركته كنص أو صورة أو PDF عبر الطباعة.</small></button>
-      <button class="owner-tile" onclick="f99OwnerContractsArchive()"><span class="owner-icon">▣</span><b>سجل العقود المعتمدة</b><small>حالة العقد، تاريخه، رقم العقد وطباعة النسخة المؤرشفة.</small></button>
-      <button class="owner-tile" onclick="ownerOpenAdminSection('archive')"><span class="owner-icon">⌂</span><b>الأرشيف والعملاء</b><small>البحث في العمليات والعملاء والعقود والحسب السابقة.</small></button>
-      <button class="owner-tile warn" onclick="f99fixOpenAdmin()"><span class="owner-icon">⚙</span><b>الإدارة</b><small>كل إعدادات المنصة والنسب والصلاحيات</small></button>
-    </div>
-
+<div class="owner-shell">
+<div class="owner-top"><div class="owner-title"><b><span data-platform-code="">FINO99</span> • التحكم في كامل المنصة</b><small>كود المالك • إدارة الخدمات والأكواد والعقود والمطبوعات والتصميم</small></div><button class="owner-exit" onclick="ownerLogout()" type="button">خروج</button></div>
+<div class="owner-hero"><h1>حياك الله يا المالك</h1></div>
+<div class="owner-grid">
+<button class="owner-tile primary" onclick="ownerOpenSmartPortal()"><span class="owner-icon">✦</span><b>المنصة الذكية</b><small>فتح واجهة المحادثة الذكية والوصول لخدمات المنصة.</small></button>
+<button class="owner-tile" onclick="ownerOpenBuyout()"><span class="owner-icon">↔</span><b>تحويل المديونية</b><small>الدخول المباشر لحاسبة وترشيح شراء المديونية.</small></button>
+<button class="owner-tile" onclick="ownerOpenSmartCalculator()"><span class="owner-icon">∑</span><b>الحاسبة الذكية</b><small>حساب شخصي، استهلاكي، شركات وعقاري وفق إعدادات المالك.</small></button>
+<button class="owner-tile" onclick="f99fixOpenCodes()"><span class="owner-icon">⌘</span><b>التحكم بالأكواد</b><small>إنشاء، تعديل، تفعيل، إيقاف، تمديد وحذف الأكواد وصلاحيات كل كود.</small></button>
+<button class="owner-tile" onclick="ownerOpenAdminSection('contracts')"><span class="owner-icon">§</span><b>إدارة العقود والاتفاقات</b><small>قوالب العقود، ربطها بالأكواد، الأرشفة وحالة الاعتماد.</small></button>
+<button class="owner-tile" onclick="openFINOPrintStudio()"><span class="owner-icon">▤</span><b>المطبوعات</b><small>إنشاء بطاقة أو خطاب أو إشعار ومشاركته كنص أو صورة أو PDF عبر الطباعة.</small></button>
+<button class="owner-tile" onclick="f99OwnerContractsArchive()"><span class="owner-icon">▣</span><b>سجل العقود المعتمدة</b><small>حالة العقد، تاريخه، رقم العقد وطباعة النسخة المؤرشفة.</small></button>
+<button class="owner-tile" onclick="ownerOpenAdminSection('archive')"><span class="owner-icon">⌂</span><b>الأرشيف والعملاء</b><small>البحث في العمليات والعملاء والعقود والحسب السابقة.</small></button>
+<button class="owner-tile warn" onclick="f99fixOpenAdmin()"><span class="owner-icon">⚙</span><b>الإدارة</b><small>كل إعدادات المنصة والنسب والصلاحيات</small></button>
+</div>
 <div class="owner-section-title">تجربة العميل والتوجيهات — مزامنة مركزية</div>
 <div class="owner-platform-card" id="f99ExperiencePanel">
-  <h3>شريط الإرشادات والباقات المرئية</h3>
-  <p>تعديل المحتوى لا يغيّر نسب البنوك ولا معادلات التمويل. إعدادات هذا القسم للعرض فقط.</p>
-  <div class="owner-settings-grid">
-    <div class="owner-field"><label><input id="f99TipsEnabled" type="checkbox"> تشغيل الشريط الإرشادي بالصفحة الأولى</label></div>
-    <div class="owner-field"><label>الفوتر — عبارة إضافية اختيارية</label><input id="f99FooterText" maxlength="120" placeholder="عبارة تظهر أسفل الصفحة"></div>
-    <div class="owner-field"><label>نص التنويه أعلى الصفحة الأولى</label><input id="f99IntroText" maxlength="160" placeholder="تنويه للعملاء"></div>
-    <div class="owner-field"><label>مظهر الباقة الافتراضي</label><select id="f99PublicTheme"><option value="default">التصميم الأساسي</option><option value="bronze">برونزية</option><option value="silver">فضية</option><option value="platinum">بلاتينية</option><option value="diamond">ماسية</option></select></div>
-  </div>
-  <label class="owner-field">100 إرشاد قابلة للتعديل — كل سطر إرشاد مستقل<textarea id="f99TipsText" rows="8" style="width:100%;font-size:13px;line-height:1.8"></textarea></label>
-  <button type="button" class="owner-save" onclick="f99SaveExperience()">حفظ التوجيهات والتصميم مركزيًا</button>
-  <div class="portal-note" id="f99ExperienceStatus"></div>
+<h3>شريط الإرشادات والباقات المرئية</h3>
+<p>تعديل المحتوى لا يغيّر نسب البنوك ولا معادلات التمويل. إعدادات هذا القسم للعرض فقط.</p>
+<div class="owner-settings-grid">
+<div class="owner-field"><label><input id="f99TipsEnabled" type="checkbox"/> تشغيل الشريط الإرشادي بالصفحة الأولى</label></div>
+<div class="owner-field"><label>الفوتر — عبارة إضافية اختيارية</label><input id="f99FooterText" maxlength="120" placeholder="عبارة تظهر أسفل الصفحة"/></div>
+<div class="owner-field"><label>نص التنويه أعلى الصفحة الأولى</label><input id="f99IntroText" maxlength="160" placeholder="تنويه للعملاء"/></div>
+<div class="owner-field"><label>مظهر الباقة الافتراضي</label><select id="f99PublicTheme"><option value="default">التصميم الأساسي</option><option value="bronze">برونزية</option><option value="silver">فضية</option><option value="platinum">بلاتينية</option><option value="diamond">ماسية</option></select></div>
 </div>
-    <div class="owner-section-title">هوية المنصة وتصميمها</div>
-    <div class="owner-platform-card">
-      <h3>اسم المنصة الخارجي</h3><p>المسمى المختصر من <b>4 إلى 6 أحرف أو أرقام إنجليزية</b>. التعديل المحلي فوري، ولتطبيقه على جميع الأجهزة أدخل كلمة مرور المختص المركزي عند الحفظ.</p>
-      <div class="owner-settings-grid">
-        <div class="owner-field"><label>اسم المنصة — من 4 إلى 6 أحرف</label><input id="ownerPlatformCode" maxlength="6" minlength="4" value="FINO99"></div>
-        <div class="owner-field"><label>العنوان العربي</label><input id="ownerPlatformAr" value="منصة الحسبة والترشيح المباشر"></div>
-        <div class="owner-field"><label>العنوان الإنجليزي</label><input id="ownerPlatformEn" value="THE SMART PLATFORM"></div>
-        <div class="owner-field"><label>مؤثر الخلفية</label><select id="ownerPlatformWeather"><option value="auto">تلقائي — الوقت والطقس</option><option value="sunny">مشمس</option><option value="cloud">غائم</option><option value="rain">مطر</option><option value="night">ليل</option></select></div>
-        <div class="owner-field"><label>كلمة مرور المركزية الاحتياطية — للمختص فقط</label><input id="ownerCentralPassword" type="password" autocomplete="current-password" placeholder="لا تحتاجها عند الدخول بكود المالك الحر"></div>
-      </div>
-      <button type="button" class="owner-save" onclick="saveOwnerPlatformIdentity(true)">حفظ وتطبيق على جميع الأجهزة</button><button type="button" class="owner-save secondary" onclick="restoreFINIUMDefaultIdentity()">استعادة تصميم FINO99 الأساسي</button>
-      <div id="ownerPlatformStatus" class="portal-note" style="margin-top:8px"></div>
-    </div>
-  </div>
+<label class="owner-field">100 إرشاد قابلة للتعديل — كل سطر إرشاد مستقل<textarea id="f99TipsText" rows="8" style="width:100%;font-size:13px;line-height:1.8"></textarea></label>
+<button class="owner-save" onclick="f99SaveExperience()" type="button">حفظ التوجيهات والتصميم مركزيًا</button>
+<div class="portal-note" id="f99ExperienceStatus"></div>
+</div>
+<div class="owner-section-title">هوية المنصة وتصميمها</div>
+<div class="owner-platform-card">
+<h3>اسم المنصة الخارجي</h3><p>المسمى المختصر من <b>4 إلى 6 أحرف أو أرقام إنجليزية</b>. التعديل المحلي فوري، ولتطبيقه على جميع الأجهزة أدخل كلمة مرور المختص المركزي عند الحفظ.</p>
+<div class="owner-settings-grid">
+<div class="owner-field"><label>اسم المنصة — من 4 إلى 6 أحرف</label><input id="ownerPlatformCode" maxlength="6" minlength="4" value="FINO99"/></div>
+<div class="owner-field"><label>العنوان العربي</label><input id="ownerPlatformAr" value="منصة الحسبة والترشيح المباشر"/></div>
+<div class="owner-field"><label>العنوان الإنجليزي</label><input id="ownerPlatformEn" value="THE SMART PLATFORM"/></div>
+<div class="owner-field"><label>مؤثر الخلفية</label><select id="ownerPlatformWeather"><option value="auto">تلقائي — الوقت والطقس</option><option value="sunny">مشمس</option><option value="cloud">غائم</option><option value="rain">مطر</option><option value="night">ليل</option></select></div>
+<div class="owner-field"><label>كلمة مرور المركزية الاحتياطية — للمختص فقط</label><input autocomplete="current-password" id="ownerCentralPassword" placeholder="لا تحتاجها عند الدخول بكود المالك الحر" type="password"/></div>
+</div>
+<button class="owner-save" onclick="saveOwnerPlatformIdentity(true)" type="button">حفظ وتطبيق على جميع الأجهزة</button><button class="owner-save secondary" onclick="restoreFINIUMDefaultIdentity()" type="button">استعادة تصميم FINO99 الأساسي</button>
+<div class="portal-note" id="ownerPlatformStatus" style="margin-top:8px"></div>
+</div>
+</div>
 </div></section>
-
 <section class="page" id="printStudio"><div class="viewport">
-  <div style="width:100%"><div class="owner-top"><div class="owner-title"><b>المطبوعات</b><small>أنشئ نصًا أو بطاقة أو مستندًا قابلًا للحفظ PDF من شاشة الطباعة</small></div><button class="owner-exit" onclick="showPage('ownerHub')">رجوع</button></div>
-  <div class="print-layout">
-    <div class="print-controls"><h2>إعداد المطبوعة</h2>
-      <div class="print-field"><label>العنوان</label><input id="printTitle" value="إشعار للعميل" oninput="renderFINOPrintPreview()"></div>
-      <label class="print-check"><input id="printShowCompany" type="checkbox" checked onchange="renderFINOPrintPreview()"> إظهار اسم المنصة</label>
-      <div class="print-field"><label>اسم الجهة — اختياري</label><input id="printCompany" value="" placeholder="يترك فارغًا لاستخدام اسم المنصة" oninput="renderFINOPrintPreview()"></div>
-      <div class="print-field"><label>النص</label><textarea id="printBody" oninput="renderFINOPrintPreview()">اكتب هنا النص الذي تريد مشاركته مع العميل.</textarea></div>
-      <div class="print-field"><label>ملاحظة مميزة — اختياري</label><textarea id="printNote" oninput="renderFINOPrintPreview()"></textarea></div>
-      <div class="print-field"><label>رابط — اختياري</label><input id="printLink" type="url" placeholder="https://" oninput="renderFINOPrintPreview()"></div>
-      <label class="print-check"><input id="printShowDate" type="checkbox" checked onchange="renderFINOPrintPreview()"> إظهار التاريخ والوقت</label>
-      <div class="print-actions"><button type="button" onclick="copyFINOPrintText()">نسخ كنص</button><button type="button" class="alt" onclick="shareFINOPrintText()">مشاركة</button><button type="button" onclick="downloadFINOPrintImage()">حفظ كصورة</button><button type="button" class="alt" onclick="window.print()">طباعة / حفظ PDF</button></div>
-    </div>
-    <div class="print-preview-wrap"><h2>المعاينة</h2><div class="print-paper" id="finiumPrintPaper"><div class="date" id="printPreviewDate"></div><div class="company" id="printPreviewCompany"></div><h1 id="printPreviewTitle"></h1><div class="body" id="printPreviewBody"></div><div class="note" id="printPreviewNote" style="display:none"></div><div class="link" id="printPreviewLink" style="display:none"></div></div></div>
-  </div></div>
+<div style="width:100%"><div class="owner-top"><div class="owner-title"><b>المطبوعات</b><small>أنشئ نصًا أو بطاقة أو مستندًا قابلًا للحفظ PDF من شاشة الطباعة</small></div><button class="owner-exit" onclick="showPage('ownerHub')">رجوع</button></div>
+<div class="print-layout">
+<div class="print-controls"><h2>إعداد المطبوعة</h2>
+<div class="print-field"><label>العنوان</label><input id="printTitle" oninput="renderFINOPrintPreview()" value="إشعار للعميل"/></div>
+<label class="print-check"><input checked="" id="printShowCompany" onchange="renderFINOPrintPreview()" type="checkbox"/> إظهار اسم المنصة</label>
+<div class="print-field"><label>اسم الجهة — اختياري</label><input id="printCompany" oninput="renderFINOPrintPreview()" placeholder="يترك فارغًا لاستخدام اسم المنصة" value=""/></div>
+<div class="print-field"><label>النص</label><textarea id="printBody" oninput="renderFINOPrintPreview()">اكتب هنا النص الذي تريد مشاركته مع العميل.</textarea></div>
+<div class="print-field"><label>ملاحظة مميزة — اختياري</label><textarea id="printNote" oninput="renderFINOPrintPreview()"></textarea></div>
+<div class="print-field"><label>رابط — اختياري</label><input id="printLink" oninput="renderFINOPrintPreview()" placeholder="https://" type="url"/></div>
+<label class="print-check"><input checked="" id="printShowDate" onchange="renderFINOPrintPreview()" type="checkbox"/> إظهار التاريخ والوقت</label>
+<div class="print-actions"><button onclick="copyFINOPrintText()" type="button">نسخ كنص</button><button class="alt" onclick="shareFINOPrintText()" type="button">مشاركة</button><button onclick="downloadFINOPrintImage()" type="button">حفظ كصورة</button><button class="alt" onclick="window.print()" type="button">طباعة / حفظ PDF</button></div>
+</div>
+<div class="print-preview-wrap"><h2>المعاينة</h2><div class="print-paper" id="finiumPrintPaper"><div class="date" id="printPreviewDate"></div><div class="company" id="printPreviewCompany"></div><h1 id="printPreviewTitle"></h1><div class="body" id="printPreviewBody"></div><div class="note" id="printPreviewNote" style="display:none"></div><div class="link" id="printPreviewLink" style="display:none"></div></div></div>
+</div></div>
 </div></section>
-
 <section class="page" id="specialistBotPage"><div class="viewport">
 <header class="header">
-  <div class="brand"><div class="brand-mark">F</div><div class="brand-name">FINO99<small>SMART PORTAL</small></div></div>
-  <a class="contact-mini" href="https://wa.me/966506214458" target="_blank"><span class="m">📱</span><span><small>الدعم والاستفسار</small><b>0506214458</b></span></a>
+<div class="brand"><div class="brand-mark">F</div><div class="brand-name">FINO99<small>SMART PORTAL</small></div></div>
+<a class="contact-mini" href="https://wa.me/966506214458" target="_blank"><span class="m">📱</span><span><small>الدعم والاستفسار</small><b>0506214458</b></span></a>
 </header>
-
 <div class="portal-wrap">
-  <button type="button" class="smart-back" id="portalBackBtn" onclick="FINOPortalBack()">→ رجوع</button>
-
-  <div class="portal-hero">
-    <div class="portal-brand">
-      <div class="portal-mark">✦</div>
-      <div class="portal-copy">
-        <small>FINO99 SMART PORTAL</small>
-        <h1 id="portalMainTitle">المنصة الذكية</h1>
-        <p id="portalMainSub">حسبة واضحة بخطوات قصيرة ونتيجة مباشرة.</p>
-      </div>
-    </div>
-    <div class="portal-state" id="portalStateBadge">جاهزة</div>
-  </div>
-
-  <div class="portal-shell">
-    <div class="portal-topbar">
-      <div><b id="portalTopTitle">المنصة الذكية</b><small id="portalTopSub">اختر الخدمة ونكمل معك خطوة بخطوة</small></div>
-      <div class="portal-top-actions">
-        <button class="portal-mini" type="button" onclick="handleFINOPortalRestart()">بدء من جديد</button>
-      </div>
-    </div>
-
-    <div class="portal-chat" id="finoBotChat"></div>
-
-    <div class="portal-composer" id="portalComposer">
-      <div class="portal-input-row">
-        <input class="portal-input" id="finoBotInput" type="text" inputmode="text" autocomplete="off" placeholder="اكتب الإجابة هنا">
-        <button class="portal-send" id="finoBotSendBtn" type="button" onclick="submitFINOPortalInput()">إرسال</button>
-      </div>
-      <div class="portal-helper" id="portalInputHelper">تقدر تستخدم الأرقام الإنجليزية أو العربية.</div>
-    </div>
-  </div>
+<button class="smart-back" id="portalBackBtn" onclick="FINOPortalBack()" type="button">→ رجوع</button>
+<div class="portal-hero">
+<div class="portal-brand">
+<div class="portal-mark">✦</div>
+<div class="portal-copy">
+<small>FINO99 SMART PORTAL</small>
+<h1 id="portalMainTitle">المنصة الذكية</h1>
+<p id="portalMainSub">حسبة واضحة بخطوات قصيرة ونتيجة مباشرة.</p>
 </div>
-
+</div>
+<div class="portal-state" id="portalStateBadge">جاهزة</div>
+</div>
+<div class="portal-shell">
+<div class="portal-topbar">
+<div><b id="portalTopTitle">المنصة الذكية</b><small id="portalTopSub">اختر الخدمة ونكمل معك خطوة بخطوة</small></div>
+<div class="portal-top-actions">
+<button class="portal-mini" onclick="handleFINOPortalRestart()" type="button">بدء من جديد</button>
+</div>
+</div>
+<div class="portal-chat" id="finoBotChat"></div>
+<div class="portal-composer" id="portalComposer">
+<div class="portal-input-row">
+<input autocomplete="off" class="portal-input" id="finoBotInput" inputmode="text" placeholder="اكتب الإجابة هنا" type="text"/>
+<button class="portal-send" id="finoBotSendBtn" onclick="submitFINOPortalInput()" type="button">إرسال</button>
+</div>
+<div class="portal-helper" id="portalInputHelper">تقدر تستخدم الأرقام الإنجليزية أو العربية.</div>
+</div>
+</div>
+</div>
 <div class="live-footer">
-  <span class="footer-brand">FINO99 • المنصة الذكية</span>
-  <span class="footer-date"><b id="f7Day">—</b><b id="f7Greg">—</b><b id="f7Hijri">—</b><span class="footer-time" id="f7Time">—</span></span>
+<span class="footer-brand">FINO99 • المنصة الذكية</span>
+<span class="footer-date"><b id="f7Day">—</b><b id="f7Greg">—</b><b id="f7Hijri">—</b><span class="footer-time" id="f7Time">—</span></span>
 </div>
 </div></section>
-
 <section class="page" id="contractClientPage">
-  <div class="contract-client-page">
-    <div class="contract-client-shell">
-      <div class="contract-client-head">
-        <div class="contract-client-mark">F</div>
-        <div><b>FINO99 • اعتماد العقد</b><small id="contractClientWelcome">تحميل بيانات العقد...</small></div>
-      </div>
-      <div class="contract-client-card" id="contractClientCard">
-        <div class="contract-client-title">جاري تحميل العقد...</div>
-      </div>
-    </div>
-  </div>
+<div class="contract-client-page">
+<div class="contract-client-shell">
+<div class="contract-client-head">
+<div class="contract-client-mark">F</div>
+<div><b>FINO99 • اعتماد العقد</b><small id="contractClientWelcome">تحميل بيانات العقد...</small></div>
+</div>
+<div class="contract-client-card" id="contractClientCard">
+<div class="contract-client-title">جاري تحميل العقد...</div>
+</div>
+</div>
+</div>
 </section>
 <section class="page" id="smartPage"><div class="viewport">
 <header class="header"><div class="brand"><div class="brand-mark">F</div><div class="brand-name">FINO99<small>SMART CALCULATOR</small></div></div>
 <a class="contact-mini" href="https://wa.me/966506214458" target="_blank"><span class="m">📱</span><span><small>إنجاز التمويل الشخصي</small><b>0506214458</b></span></a></header>
 <div class="smart-wrap">
-  <button type="button" class="smart-back" onclick="showPage('freeHub')">→ رجوع لاختيار الحاسبة</button>
-  <div class="smart-title">
-    <div class="eyebrow">FINO99 SMART CALCULATOR</div>
-    <h1>الحاسبة الذكية</h1>
-    <p>أدخل بيانات العميل وحدد نسبة الاستقطاع والمدة وهامش الربح للحصول على الحسبة مباشرة.</p>
-  </div>
-  <div class="smart-card">
-
-    <div class="smart-section">
-      <div class="smart-section-head"><div class="num">01</div><div><b>إعداد الحسبة</b><small>حدد المسمى والحالة ونسبة الاستقطاع والمدة</small></div></div>
-
-      <div class="smart-input-card" style="margin-bottom:7px">
-        <label>نوع الحسبة</label>
-        <small>في التمويل الاستهلاكي أو تمويل الشركات: إجمالي الشخصي والالتزامات الأخرى غير العقاري لا يتجاوز 45% من صافي الراتب، ومع وجود عقاري نلتزم كذلك بالسقف الإجمالي المحدد.</small>
-        <div class="smart-finance-kind" id="smartFinanceKind">
-          <button type="button" class="active" data-kind="general" onclick="setSmartFinanceKind('general',this)">حسبة عامة</button>
-          <button type="button" data-kind="consumer" onclick="setSmartFinanceKind('consumer',this)">تمويل استهلاكي</button>
-          <button type="button" data-kind="company" onclick="setSmartFinanceKind('company',this)">تمويل شركات</button>
-        </div>
-      </div>
-
-      <div class="smart-input-card" style="margin-bottom:7px">
-        <label>مسمى الحسبة في النتيجة والصور</label>
-        <small>اختر مسمى جاهز أو اكتب أي عنوان، ويمكن تركه بدون عنوان.</small>
-        <div class="smart-title-options" id="smartTitleOptions">
-          <button type="button" class="smart-title-option active" data-mode="personal" onclick="setSmartTitleMode('personal',this)">حسبة شخصية</button>
-          <button type="button" class="smart-title-option" data-mode="mortgage" onclick="setSmartTitleMode('mortgage',this)">حسبة عقارية</button>
-          <button type="button" class="smart-title-option" data-mode="none" onclick="setSmartTitleMode('none',this)">بدون عنوان</button>
-          <button type="button" class="smart-title-option" data-mode="custom" onclick="setSmartTitleMode('custom',this)">عنوان مخصص</button>
-        </div>
-        <div class="smart-custom-title-wrap" id="smartCustomTitleWrap">
-          <input id="smartCustomTitle" type="text" placeholder="اكتب عنوان الحسبة" oninput="setSmartCustomTitle(this.value)">
-        </div>
-      </div>
-
-      <label class="smart-mortgage-toggle">
-        <input id="smartHasMortgage" type="checkbox" onchange="setSmartHasMortgage(this.checked)">
-        <span><b>يوجد تمويل عقاري قائم على العميل</b><small>إذا كان عليه عقاري: النسبة المبدئية 55% لمن راتبه أقل من 15,000 ريال، و65% من 15,000 ريال فأكثر. ويمكن تعديل النسبة يدويًا.</small></span>
-      </label>
-
-      <div class="smart-input-grid" style="margin-top:7px">
-        <div class="smart-control-highlight">
-          <label>نسبة الاستقطاع المستخدمة في الحسبة (%)</label>
-          <input id="smartDeductionPercent" type="number" inputmode="decimal" step="0.01" min="0" max="80" value="45" oninput="setSmartDeductionPercent(this.value,true)">
-          <small id="smartDeductionDesc">النسبة المبدئية الحالية 45% ويمكنك تعديلها حتى 80%.</small>
-        </div>
-        <div class="smart-control-highlight">
-          <label>مدة الحسبة بالأشهر</label>
-          <input id="smartTermInputMain" type="number" inputmode="numeric" min="1" max="360" value="60" oninput="setSmartMainTerm(this.value)">
-          <small>الافتراضي 60 شهر. الحد الأعلى 360 شهر (30 سنة)، وتقدر تزيد أو تنقص.</small>
-        </div>
-      </div>
-      <div class="smart-ratio-note" id="smart80RatioNote" style="display:none">راتب العميل 25,000 ريال فأكثر: بعض الجهات قد تسمح بنسبة استقطاع تصل إلى 80% حسب المنتج وسياسة الجهة الممولة. الحسبة لا تطبق 80% تلقائيًا؛ عدّل النسبة يدويًا إذا كان العرض يسمح بذلك.</div>
-      <div class="smart-input-grid" style="margin-top:7px">
-        <label class="smart-mortgage-toggle">
-          <input id="smartOwnerShowDeduction" type="checkbox" checked>
-          <span><b>إظهار نسبة الاستقطاع للعميل</b><small>إطفاؤه يخفيها من النتيجة والنص والصور فقط، ولا يغيّر الحسبة.</small></span>
-        </label>
-        <label class="smart-mortgage-toggle">
-          <input id="smartOwnerShowRate" type="checkbox" checked>
-          <span><b>إظهار هامش الربح للعميل</b><small>إطفاؤه يخفيه من النتيجة والنص والصور فقط، ولا يغيّر الحسبة.</small></span>
-        </label>
-      </div>
-    </div>
-
-    <div class="smart-section">
-      <div class="smart-section-head"><div class="num">02</div><div><b>صافي الراتب الشهري</b><small>الراتب الصافي المودع والمعتمد للحسبة</small></div></div>
-      <div class="smart-input-grid">
-        <div class="smart-input-card">
-          <label>صافي الراتب</label>
-          <small>أدخل صافي الراتب المودع في الحساب.</small>
-          <input id="smartSalary" type="number" inputmode="numeric" placeholder="أدخل صافي الراتب" oninput="refreshSmartAutoDeduction();updateSmartEligibilityPreview()">
-        </div>
-        <div class="smart-input-card">
-          <label>هامش الربح (%)</label>
-          <small>أدخل هامش الربح يدويًا، مثال: 3.21</small>
-          <input id="smartRate" type="number" inputmode="decimal" step="0.01" min="0" placeholder="أدخل نسبة هامش الربح">
-        </div>
-      </div>
-    </div>
-
-    <div class="smart-section">
-      <div class="smart-section-head"><div class="num">03</div><div><b>جهة العمل</b><small>تحدد سقف القسط الشخصي</small></div></div>
-      <div class="smart-type-grid" id="smartTypeGrid">
-        <button type="button" class="smart-type-btn active" data-type="government" onclick="selectSmartType(this)">حكومي</button>
-        <button type="button" class="smart-type-btn" data-type="semiGovernment" onclick="selectSmartType(this)">شبه حكومي</button>
-        <button type="button" class="smart-type-btn" data-type="military" onclick="selectSmartType(this)">عسكري</button>
-        <button type="button" class="smart-type-btn" data-type="private" onclick="selectSmartType(this)">قطاع خاص</button>
-        <button type="button" class="smart-type-btn" data-type="retired" onclick="selectSmartType(this)">متقاعد</button>
-      </div>
-    </div>
-
-    <div class="smart-section">
-      <div class="smart-section-head"><div class="num">04</div><div><b>اختر البنك</b><small>اختيار البنك للتعريف بالحسبة فقط، بدون ترشيح</small></div></div>
-      <div class="smart-bank-grid" id="smartBankGrid"></div>
-    </div>
-
-    <div class="smart-section">
-      <div class="smart-section-head"><div class="num">05</div><div><b>المديونية السابقة والالتزامات</b><small>إذا لا توجد مديونية أو التزامات اكتب 0</small></div></div>
-      <div class="smart-input-grid">
-        <div class="smart-input-card">
-          <label>قسط التمويل الشخصي القائم</label>
-          <small>قسط التمويل الشخصي الحالي فقط. اكتب 0 إذا لا يوجد.</small>
-          <input id="smartPersonalInstallment" type="number" inputmode="numeric" min="0" value="0" placeholder="0" oninput="updateSmartEligibilityPreview()">
-        </div>
-        <div class="smart-input-card">
-          <label>السداد المبكر للمديونية السابقة</label>
-          <small>يخصم من صافي التمويل بعد الرسوم. اكتب 0 إذا لا توجد مديونية سابقة.</small>
-          <input id="smartEarlySettlement" type="number" inputmode="numeric" min="0" value="0" placeholder="0">
-        </div>
-        <div class="smart-input-card">
-          <label>الالتزامات الشهرية الأخرى غير الشخصي وغير العقاري</label>
-          <small>مثل تمويل إضافي أو بطاقات أو التزامات شهرية أخرى. لا تكرر قسط الشخصي أو العقاري.</small>
-          <input id="smartExternal" type="number" inputmode="numeric" min="0" value="0" placeholder="0" oninput="smartExternalDirectEdited()">
-          <div id="smartObligationItems" style="margin-top:9px"></div>
-          <details class="f99-payoff" id="f99PayoffPanel"><summary>هل تستطيع سداد بعض الالتزامات؟ احسب الأثر</summary>
-            <div class="f99-grid"><label class="f99-field">جهة الالتزام / نوعه<input id="f99PayoffName" placeholder="تابي، تمارا، بطاقة، تمويل آخر..."></label>
-            <label class="f99-field">القسط الشهري الذي سيتوقف بعد السداد<input id="f99PayoffMonthly" type="number" min="0" inputmode="decimal" placeholder="مثال: 300"></label>
-            <label class="f99-field">مبلغ السداد المطلوب (للعلم فقط)<input id="f99PayoffCash" type="number" min="0" inputmode="decimal" placeholder="قيمة السداد الفعلية"></label></div>
-            <button type="button" onclick="fino99ApplyPayoffScenario()">تطبيق سيناريو السداد على الالتزامات</button>
-            <small>سيناريو تقديري مشروط بإغلاق الالتزام فعليًا. مبلغ السداد لا يُخصم من صافي التمويل تلقائيًا.</small>
-          </details><div id="f99PayoffNotice" class="f99-footnote" role="status"></div>
-          <button type="button" onclick="smartAddObligation()" style="margin-top:8px">+ إضافة التزام شهري آخر</button>
-          <small>أضف كل التزام مستقلًا، ويمكن تعديله أو حذفه من الحسبة فقط. المجموع يُحدث خانة الالتزامات تلقائيًا.</small>
-        </div>
-      </div>
-      <div class="smart-mortgage-fields" id="smartMortgageFields">
-        <div class="smart-input-grid">
-          <div class="smart-input-card">
-            <label>القسط العقاري الحالي</label>
-            <small>القسط العقاري الذي يُخصم حاليًا.</small>
-            <input id="smartMortgageCurrent" type="number" inputmode="numeric" min="0" value="0" placeholder="0" oninput="updateSmartEligibilityPreview()">
-          </div>
-          <div class="smart-input-card">
-            <label>أعلى قسط عقاري متوقع</label>
-            <small>إذا كان القسط يرتفع مستقبلًا، اكتب أعلى قسط يصل له حسب الجدول.</small>
-            <input id="smartMortgageMax" type="number" inputmode="numeric" min="0" value="0" placeholder="0" oninput="updateSmartEligibilityPreview()">
-          </div>
-        </div>
+<button class="smart-back" onclick="showPage('freeHub')" type="button">→ رجوع لاختيار الحاسبة</button>
+<div class="smart-title">
+<div class="eyebrow">FINO99 SMART CALCULATOR</div>
+<h1>الحاسبة الذكية</h1>
+<p>أدخل بيانات العميل وحدد نسبة الاستقطاع والمدة وهامش الربح للحصول على الحسبة مباشرة.</p>
 </div>
-      <div class="smart-eligibility-box" id="smartEligibilityPreview">أدخل البيانات وسيظهر لك المتاح من الاستقطاع.</div>
-    </div>
-
-    <div class="smart-section">
-      <div class="smart-commodity-control">
-        <div><b>رسوم فرق السلعة</b><small id="smartCommodityDesc">مطفأة — الحسبة بدون رسوم فرق السلعة.</small></div>
-        <label class="commodity-toggle">
-          <input id="smartCommodityToggle" type="checkbox" onchange="updateSmartCommodityText()">
-          <span class="commodity-switch"></span>
-          <span class="commodity-toggle-text" id="smartCommodityText">مطفأة</span>
-        </label>
-      </div>
-    </div>
-
-
-    <div class="smart-section" style="display:none">
-      <div class="free-amount-control" style="margin-bottom:10px">
+<div class="smart-card">
+<div class="smart-section">
+<div class="smart-section-head"><div class="num">01</div><div><b>إعداد الحسبة</b><small>حدد المسمى والحالة ونسبة الاستقطاع والمدة</small></div></div>
+<div class="smart-input-card" style="margin-bottom:7px">
+<label>نوع الحسبة</label>
+<small>في التمويل الاستهلاكي أو تمويل الشركات: إجمالي الشخصي والالتزامات الأخرى غير العقاري لا يتجاوز 45% من صافي الراتب، ومع وجود عقاري نلتزم كذلك بالسقف الإجمالي المحدد.</small>
+<div class="smart-finance-kind" id="smartFinanceKind">
+<button class="active" data-kind="general" onclick="setSmartFinanceKind('general',this)" type="button">حسبة عامة</button>
+<button data-kind="consumer" onclick="setSmartFinanceKind('consumer',this)" type="button">تمويل استهلاكي</button>
+<button data-kind="company" onclick="setSmartFinanceKind('company',this)" type="button">تمويل شركات</button>
+</div>
+</div>
+<div class="smart-input-card" style="margin-bottom:7px">
+<label>مسمى الحسبة في النتيجة والصور</label>
+<small>اختر مسمى جاهز أو اكتب أي عنوان، ويمكن تركه بدون عنوان.</small>
+<div class="smart-title-options" id="smartTitleOptions">
+<button class="smart-title-option active" data-mode="personal" onclick="setSmartTitleMode('personal',this)" type="button">حسبة شخصية</button>
+<button class="smart-title-option" data-mode="mortgage" onclick="setSmartTitleMode('mortgage',this)" type="button">حسبة عقارية</button>
+<button class="smart-title-option" data-mode="none" onclick="setSmartTitleMode('none',this)" type="button">بدون عنوان</button>
+<button class="smart-title-option" data-mode="custom" onclick="setSmartTitleMode('custom',this)" type="button">عنوان مخصص</button>
+</div>
+<div class="smart-custom-title-wrap" id="smartCustomTitleWrap">
+<input id="smartCustomTitle" oninput="setSmartCustomTitle(this.value)" placeholder="اكتب عنوان الحسبة" type="text"/>
+</div>
+</div>
+<label class="smart-mortgage-toggle">
+<input id="smartHasMortgage" onchange="setSmartHasMortgage(this.checked)" type="checkbox"/>
+<span><b>يوجد تمويل عقاري قائم على العميل</b><small>إذا كان عليه عقاري: النسبة المبدئية 55% لمن راتبه أقل من 15,000 ريال، و65% من 15,000 ريال فأكثر. ويمكن تعديل النسبة يدويًا.</small></span>
+</label>
+<div class="smart-input-grid" style="margin-top:7px">
+<div class="smart-control-highlight">
+<label>نسبة الاستقطاع المستخدمة في الحسبة (%)</label>
+<input id="smartDeductionPercent" inputmode="decimal" max="80" min="0" oninput="setSmartDeductionPercent(this.value,true)" step="0.01" type="number" value="45"/>
+<small id="smartDeductionDesc">النسبة المبدئية الحالية 45% ويمكنك تعديلها حتى 80%.</small>
+</div>
+<div class="smart-control-highlight">
+<label>مدة الحسبة بالأشهر</label>
+<input id="smartTermInputMain" inputmode="numeric" max="360" min="1" oninput="setSmartMainTerm(this.value)" type="number" value="60"/>
+<small>الافتراضي 60 شهر. الحد الأعلى 360 شهر (30 سنة)، وتقدر تزيد أو تنقص.</small>
+</div>
+</div>
+<div class="smart-ratio-note" id="smart80RatioNote" style="display:none">راتب العميل 25,000 ريال فأكثر: بعض الجهات قد تسمح بنسبة استقطاع تصل إلى 80% حسب المنتج وسياسة الجهة الممولة. الحسبة لا تطبق 80% تلقائيًا؛ عدّل النسبة يدويًا إذا كان العرض يسمح بذلك.</div>
+<div class="smart-input-grid" style="margin-top:7px">
+<label class="smart-mortgage-toggle">
+<input checked="" id="smartOwnerShowDeduction" type="checkbox"/>
+<span><b>إظهار نسبة الاستقطاع للعميل</b><small>إطفاؤه يخفيها من النتيجة والنص والصور فقط، ولا يغيّر الحسبة.</small></span>
+</label>
+<label class="smart-mortgage-toggle">
+<input checked="" id="smartOwnerShowRate" type="checkbox"/>
+<span><b>إظهار هامش الربح للعميل</b><small>إطفاؤه يخفيه من النتيجة والنص والصور فقط، ولا يغيّر الحسبة.</small></span>
+</label>
+</div>
+</div>
+<div class="smart-section">
+<div class="smart-section-head"><div class="num">02</div><div><b>صافي الراتب الشهري</b><small>الراتب الصافي المودع والمعتمد للحسبة</small></div></div>
+<div class="smart-input-grid">
+<div class="smart-input-card">
+<label>صافي الراتب</label>
+<small>أدخل صافي الراتب المودع في الحساب.</small>
+<input id="smartSalary" inputmode="numeric" oninput="refreshSmartAutoDeduction();updateSmartEligibilityPreview()" placeholder="أدخل صافي الراتب" type="number"/>
+</div>
+<div class="smart-input-card">
+<label>هامش الربح (%)</label>
+<small>أدخل هامش الربح يدويًا، مثال: 3.21</small>
+<input id="smartRate" inputmode="decimal" min="0" placeholder="أدخل نسبة هامش الربح" step="0.01" type="number"/>
+</div>
+</div>
+</div>
+<div class="smart-section">
+<div class="smart-section-head"><div class="num">03</div><div><b>جهة العمل</b><small>تحدد سقف القسط الشخصي</small></div></div>
+<div class="smart-type-grid" id="smartTypeGrid">
+<button class="smart-type-btn active" data-type="government" onclick="selectSmartType(this)" type="button">حكومي</button>
+<button class="smart-type-btn" data-type="semiGovernment" onclick="selectSmartType(this)" type="button">شبه حكومي</button>
+<button class="smart-type-btn" data-type="military" onclick="selectSmartType(this)" type="button">عسكري</button>
+<button class="smart-type-btn" data-type="private" onclick="selectSmartType(this)" type="button">قطاع خاص</button>
+<button class="smart-type-btn" data-type="retired" onclick="selectSmartType(this)" type="button">متقاعد</button>
+</div>
+</div>
+<div class="smart-section">
+<div class="smart-section-head"><div class="num">04</div><div><b>اختر البنك</b><small>اختيار البنك للتعريف بالحسبة فقط، بدون ترشيح</small></div></div>
+<div class="smart-bank-grid" id="smartBankGrid"></div>
+</div>
+<div class="smart-section">
+<div class="smart-section-head"><div class="num">05</div><div><b>المديونية السابقة والالتزامات</b><small>إذا لا توجد مديونية أو التزامات اكتب 0</small></div></div>
+<div class="smart-input-grid">
+<div class="smart-input-card">
+<label>قسط التمويل الشخصي القائم</label>
+<small>قسط التمويل الشخصي الحالي فقط. اكتب 0 إذا لا يوجد.</small>
+<input id="smartPersonalInstallment" inputmode="numeric" min="0" oninput="updateSmartEligibilityPreview()" placeholder="0" type="number" value="0"/>
+</div>
+<div class="smart-input-card">
+<label>السداد المبكر للمديونية السابقة</label>
+<small>يخصم من صافي التمويل بعد الرسوم. اكتب 0 إذا لا توجد مديونية سابقة.</small>
+<input id="smartEarlySettlement" inputmode="numeric" min="0" placeholder="0" type="number" value="0"/>
+</div>
+<div class="smart-input-card">
+<label>الالتزامات الشهرية الأخرى غير الشخصي وغير العقاري</label>
+<small>مثل تمويل إضافي أو بطاقات أو التزامات شهرية أخرى. لا تكرر قسط الشخصي أو العقاري.</small>
+<input id="smartExternal" inputmode="numeric" min="0" oninput="smartExternalDirectEdited()" placeholder="0" type="number" value="0"/>
+<div id="smartObligationItems" style="margin-top:9px"></div>
+<details class="f99-payoff" id="f99PayoffPanel"><summary>هل تستطيع سداد بعض الالتزامات؟ احسب الأثر</summary>
+<div class="f99-grid"><label class="f99-field">جهة الالتزام / نوعه<input id="f99PayoffName" placeholder="تابي، تمارا، بطاقة، تمويل آخر..."/></label>
+<label class="f99-field">القسط الشهري الذي سيتوقف بعد السداد<input id="f99PayoffMonthly" inputmode="decimal" min="0" placeholder="مثال: 300" type="number"/></label>
+<label class="f99-field">مبلغ السداد المطلوب (للعلم فقط)<input id="f99PayoffCash" inputmode="decimal" min="0" placeholder="قيمة السداد الفعلية" type="number"/></label></div>
+<button onclick="fino99ApplyPayoffScenario()" type="button">تطبيق سيناريو السداد على الالتزامات</button>
+<small>سيناريو تقديري مشروط بإغلاق الالتزام فعليًا. مبلغ السداد لا يُخصم من صافي التمويل تلقائيًا.</small>
+</details><div class="f99-footnote" id="f99PayoffNotice" role="status"></div>
+<button onclick="smartAddObligation()" style="margin-top:8px" type="button">+ إضافة التزام شهري آخر</button>
+<small>أضف كل التزام مستقلًا، ويمكن تعديله أو حذفه من الحسبة فقط. المجموع يُحدث خانة الالتزامات تلقائيًا.</small>
+</div>
+</div>
+<div class="smart-mortgage-fields" id="smartMortgageFields">
+<div class="smart-input-grid">
+<div class="smart-input-card">
+<label>القسط العقاري الحالي</label>
+<small>القسط العقاري الذي يُخصم حاليًا.</small>
+<input id="smartMortgageCurrent" inputmode="numeric" min="0" oninput="updateSmartEligibilityPreview()" placeholder="0" type="number" value="0"/>
+</div>
+<div class="smart-input-card">
+<label>أعلى قسط عقاري متوقع</label>
+<small>إذا كان القسط يرتفع مستقبلًا، اكتب أعلى قسط يصل له حسب الجدول.</small>
+<input id="smartMortgageMax" inputmode="numeric" min="0" oninput="updateSmartEligibilityPreview()" placeholder="0" type="number" value="0"/>
+</div>
+</div>
+</div>
+<div class="smart-eligibility-box" id="smartEligibilityPreview">أدخل البيانات وسيظهر لك المتاح من الاستقطاع.</div>
+</div>
+<div class="smart-section">
+<div class="smart-commodity-control">
+<div><b>رسوم فرق السلعة</b><small id="smartCommodityDesc">مطفأة — الحسبة بدون رسوم فرق السلعة.</small></div>
+<label class="commodity-toggle">
+<input id="smartCommodityToggle" onchange="updateSmartCommodityText()" type="checkbox"/>
+<span class="commodity-switch"></span>
+<span class="commodity-toggle-text" id="smartCommodityText">مطفأة</span>
+</label>
+</div>
+</div>
+<div class="smart-section" style="display:none">
+<div class="free-amount-control" style="margin-bottom:10px">
 <div class="free-amount-head">
-          <div class="free-amount-copy">
-            <b>التحكم بمبلغ التمويل للعميل</b>
-            <small>بعد أول حسبة يظهر الحد الأعلى تلقائيًا داخل الخانة. تقدر تخفّض المبلغ لأي رقم أقل من الحد الأعلى ثم تضغط «تطبيق وإعادة الحسبة».</small>
-          </div>
-        </div>
-
-        <div class="free-amount-row">
-          <input id="smartRequestedAmount" type="number" inputmode="decimal" min="0"
-                 placeholder="يظهر الحد الأعلى هنا بعد أول حسبة">
-          <button type="button" class="free-amount-apply" onclick="calculateSmartPersonal()">تطبيق وإعادة الحسبة</button>
-        </div>
-
-        <div class="net-mode-control">
-          <div class="net-mode-copy">
-            <b>المبلغ المكتوب صافي بعد جميع الرسوم</b>
-            <small>مفعّل افتراضيًا. إذا أطفأته، يكون المبلغ المكتوب قبل خصم الرسوم الإدارية وضريبتها ورسوم فرق السلعة إن كانت مفعلة.</small>
-          </div>
-          <label class="commodity-toggle">
-            <input id="smartRequestedNetMode" type="checkbox" checked onchange="smartRequestedNetMode=this.checked">
-            <span class="commodity-switch"></span>
-            <span class="commodity-toggle-text">صافي بعد الرسوم</span>
-          </label>
-        </div>
-        <div class="free-amount-error" id="smartRequestedAmountError"></div>
-      </div>
-    </div>
-
-    <button type="button" class="smart-calc-btn" onclick="calculateSmartPersonal()">🧮 احتساب الحاسبة الذكية</button>
-  </div>
+<div class="free-amount-copy">
+<b>التحكم بمبلغ التمويل للعميل</b>
+<small>بعد أول حسبة يظهر الحد الأعلى تلقائيًا داخل الخانة. تقدر تخفّض المبلغ لأي رقم أقل من الحد الأعلى ثم تضغط «تطبيق وإعادة الحسبة».</small>
+</div>
+</div>
+<div class="free-amount-row">
+<input id="smartRequestedAmount" inputmode="decimal" min="0" placeholder="يظهر الحد الأعلى هنا بعد أول حسبة" type="number"/>
+<button class="free-amount-apply" onclick="calculateSmartPersonal()" type="button">تطبيق وإعادة الحسبة</button>
+</div>
+<div class="net-mode-control">
+<div class="net-mode-copy">
+<b>المبلغ المكتوب صافي بعد جميع الرسوم</b>
+<small>مفعّل افتراضيًا. إذا أطفأته، يكون المبلغ المكتوب قبل خصم الرسوم الإدارية وضريبتها ورسوم فرق السلعة إن كانت مفعلة.</small>
+</div>
+<label class="commodity-toggle">
+<input checked="" id="smartRequestedNetMode" onchange="smartRequestedNetMode=this.checked" type="checkbox"/>
+<span class="commodity-switch"></span>
+<span class="commodity-toggle-text">صافي بعد الرسوم</span>
+</label>
+</div>
+<div class="free-amount-error" id="smartRequestedAmountError"></div>
+</div>
+</div>
+<button class="smart-calc-btn" onclick="calculateSmartPersonal()" type="button">🧮 احتساب الحاسبة الذكية</button>
+</div>
 </div>
 <div class="live-footer">
-  <span class="footer-brand">FINO99 • الحاسبة الذكية</span>
-  <span class="footer-date"><b id="f5Day">—</b><b id="f5Greg">—</b><b id="f5Hijri">—</b><span class="footer-time" id="f5Time">—</span></span>
+<span class="footer-brand">FINO99 • الحاسبة الذكية</span>
+<span class="footer-date"><b id="f5Day">—</b><b id="f5Greg">—</b><b id="f5Hijri">—</b><span class="footer-time" id="f5Time">—</span></span>
 </div>
 </div></section>
-
 <section class="page" id="smartResultPage"><div class="viewport">
 <header class="header"><div class="brand"><div class="brand-mark">F</div><div class="brand-name">FINO99<small>SMART RESULT</small></div></div>
 <a class="contact-mini" href="https://wa.me/966506214458" target="_blank"><span class="m">📱</span><span><small>إنجاز التمويل الشخصي</small><b>0506214458</b></span></a></header>
 <div class="smart-result-wrap">
-  <button type="button" class="smart-back" onclick="showPage('smartPage')">→ تعديل الحسبة</button>
-  <div class="smart-title">
-    <div class="eyebrow">نتيجة الحاسبة الذكية</div>
-    <h1 id="smartResultPageTitle">الحاسبة الذكية</h1>
-    <p id="smartResultPageSub">نتيجة الحاسبة الذكية</p>
-  </div>
-  <div id="smartResults"></div>
+<button class="smart-back" onclick="showPage('smartPage')" type="button">→ تعديل الحسبة</button>
+<div class="smart-title">
+<div class="eyebrow">نتيجة الحاسبة الذكية</div>
+<h1 id="smartResultPageTitle">الحاسبة الذكية</h1>
+<p id="smartResultPageSub">نتيجة الحاسبة الذكية</p>
+</div>
+<div id="smartResults"></div>
 </div>
 <div class="live-footer">
-  <span class="footer-brand">FINO99 • لإنجاز التمويل</span>
-  <span class="footer-date"><b id="f6Day">—</b><b id="f6Greg">—</b><b id="f6Hijri">—</b><span class="footer-time" id="f6Time">—</span></span>
+<span class="footer-brand">FINO99 • لإنجاز التمويل</span>
+<span class="footer-date"><b id="f6Day">—</b><b id="f6Greg">—</b><b id="f6Hijri">—</b><span class="footer-time" id="f6Time">—</span></span>
 </div>
 </div></section>
-
 <section class="page" id="page2"><div class="viewport">
 <header class="header"><div class="brand"><div class="brand-mark">F</div><div class="brand-name">FINO99<small>LIVE MATCH</small></div></div>
 <div class="live-date"><div class="date-day" id="formDay">—</div><div><small>الميلادي</small><b id="formGreg">—</b></div><div><small>الهجري</small><b id="formHijri">—</b></div><div class="live-time" id="formTime">—</div></div>
 <a class="contact-mini" href="https://wa.me/966506214458" target="_blank"><span class="m">📱</span><span><small>لا تتردد • واتساب أو اتصال</small><b>0506214458</b></span></a></header>
-
 <div class="form-wrap"><div class="page-title"><div class="eyebrow">تحويل مديونية التمويل الشخصي</div><h1>نعرض فورًا <span>أفضل عرض لشراء مديونيتك</span></h1><p>قرارك يبدأ بحسبة واضحة • نرشّح لك الأنسب وننجزك مع الأفضل</p></div>
 <div class="marketing-questions"><div class="marketing-track">
 <span class="marketing-q">💰 <strong>هل تريد سيولة وفائضًا أعلى بعد سداد مديونيتك؟</strong></span>
@@ -6109,149 +6108,132 @@ body:has(#page1.active)>.app>.ambient { display:none !important; }
 <div class="eligibility-strip"><span class="elig-icon">⚠️</span><span><b>شرط هذه الحسبة:</b> لا يوجد تمويل عقاري قائم، ولا يوجد ما يمنع إصدار خطاب تحويل المديونية.</span></div>
 <div class="tip-bar" id="tip2"></div>
 <div class="form-card">
-
 <div class="section-label">
-  <div class="num">01</div>
-  <div>
-    <b>صافي الراتب الشهري</b>
-    <small>أدخل الراتب الصافي الذي سيتم بناء الحسبة عليه</small>
-  </div>
+<div class="num">01</div>
+<div>
+<b>صافي الراتب الشهري</b>
+<small>أدخل الراتب الصافي الذي سيتم بناء الحسبة عليه</small>
 </div>
-
+</div>
 <div class="salary-single">
-  <div class="primary-input-card">
-    <div class="input-head">
-      <span class="input-icon">💵</span>
-      <div>
-        <b>أدخل صافي الراتب</b>
-        <small>أدخل صافي الراتب المودع في الحساب حسب رسالة إيداع الراتب</small>
-      </div>
-    </div>
-    <div class="primary-input-wrap">
-      <div class="salary-label-row"><span class="military-salary-note" id="militarySalaryNote">(للعسكري: اذكر الأقل بين الراتب المودع في الحساب والراتب الموضح في التعريف)</span></div><input class="primary-input" id="salary" type="number" inputmode="numeric" placeholder="أدخل صافي الراتب">
-      <span class="primary-currency">ريال</span>
-    </div>
-  </div>
+<div class="primary-input-card">
+<div class="input-head">
+<span class="input-icon">💵</span>
+<div>
+<b>أدخل صافي الراتب</b>
+<small>أدخل صافي الراتب المودع في الحساب حسب رسالة إيداع الراتب</small>
 </div>
-
+</div>
+<div class="primary-input-wrap">
+<div class="salary-label-row"><span class="military-salary-note" id="militarySalaryNote">(للعسكري: اذكر الأقل بين الراتب المودع في الحساب والراتب الموضح في التعريف)</span></div><input class="primary-input" id="salary" inputmode="numeric" placeholder="أدخل صافي الراتب" type="number"/>
+<span class="primary-currency">ريال</span>
+</div>
+</div>
+</div>
 <div class="section-label">
-  <div class="num">02</div>
-  <div>
-    <b>جهة العمل</b>
-    <small>اختر فئة جهة العمل</small>
-  </div>
+<div class="num">02</div>
+<div>
+<b>جهة العمل</b>
+<small>اختر فئة جهة العمل</small>
 </div>
-
+</div>
 <div class="type-grid">
-  <button class="type-btn active" data-type="government" onclick="selectType(this)">حكومي</button>
-  <button class="type-btn" data-type="semiGovernment" onclick="selectType(this)">شبه حكومي</button>
-  <button class="type-btn" data-type="military" onclick="selectType(this)">عسكري</button>
-  <button class="type-btn private-type-btn" data-type="private" onclick="selectType(this)"><span>قطاع خاص</span><small>يشترط أن تكون جهة العمل معتمدة لدى جميع البنوك • Class A • منخفضة المخاطر</small></button>
-  <button class="type-btn" data-type="retired" onclick="selectType(this)">متقاعد</button>
+<button class="type-btn active" data-type="government" onclick="selectType(this)">حكومي</button>
+<button class="type-btn" data-type="semiGovernment" onclick="selectType(this)">شبه حكومي</button>
+<button class="type-btn" data-type="military" onclick="selectType(this)">عسكري</button>
+<button class="type-btn private-type-btn" data-type="private" onclick="selectType(this)"><span>قطاع خاص</span><small>يشترط أن تكون جهة العمل معتمدة لدى جميع البنوك • Class A • منخفضة المخاطر</small></button>
+<button class="type-btn" data-type="retired" onclick="selectType(this)">متقاعد</button>
 </div>
-
 <div class="section-label">
-  <div class="num">03</div>
-  <div>
-    <b>السداد المبكر والالتزامات الشهرية الأخرى</b>
-    <small>أدخل القيم المطلوبة للحسبة</small>
-  </div>
+<div class="num">03</div>
+<div>
+<b>السداد المبكر والالتزامات الشهرية الأخرى</b>
+<small>أدخل القيم المطلوبة للحسبة</small>
 </div>
-
+</div>
 <div class="two-finance-inputs">
-
-  <div class="primary-input-card">
-    <div class="input-head">
-      <span class="input-icon">🏦</span>
-      <div>
-        <b>مبلغ السداد المبكر للمديونية الحالية</b>
-        <small>مبلغ سداد التمويل الشخصي الحالي</small>
-      </div>
-    </div>
-    <div class="primary-input-wrap">
-      <input class="primary-input" id="earlySettlement" type="number" inputmode="numeric" placeholder="مثال: 50000">
-      <span class="primary-currency">ريال</span>
-    </div>
-  </div>
-
-  <div class="primary-input-card">
-    <div class="input-head">
-      <span class="input-icon">📌</span>
-      <div>
-        <b>الالتزامات الشهرية الأخرى</b>
-        <small>غير التمويل الشخصي المراد شراؤه • اكتب 0 إذا لا يوجد</small>
-      </div>
-    </div>
-    <div class="primary-input-wrap">
-      <input class="primary-input" id="externalObligations" type="number" inputmode="numeric" value="0" min="0" placeholder="0">
-      <span class="primary-currency">ريال</span>
-    </div>
-  </div>
-
+<div class="primary-input-card">
+<div class="input-head">
+<span class="input-icon">🏦</span>
+<div>
+<b>مبلغ السداد المبكر للمديونية الحالية</b>
+<small>مبلغ سداد التمويل الشخصي الحالي</small>
 </div>
-
+</div>
+<div class="primary-input-wrap">
+<input class="primary-input" id="earlySettlement" inputmode="numeric" placeholder="مثال: 50000" type="number"/>
+<span class="primary-currency">ريال</span>
+</div>
+</div>
+<div class="primary-input-card">
+<div class="input-head">
+<span class="input-icon">📌</span>
+<div>
+<b>الالتزامات الشهرية الأخرى</b>
+<small>غير التمويل الشخصي المراد شراؤه • اكتب 0 إذا لا يوجد</small>
+</div>
+</div>
+<div class="primary-input-wrap">
+<input class="primary-input" id="externalObligations" inputmode="numeric" min="0" placeholder="0" type="number" value="0"/>
+<span class="primary-currency">ريال</span>
+</div>
+</div>
+</div>
 <div class="section-label bank-question">
-  <div class="num">04</div>
-  <div><b>اختر البنك الذي ينزل عليه راتبك</b></div>
+<div class="num">04</div>
+<div><b>اختر البنك الذي ينزل عليه راتبك</b></div>
 </div>
-
 <div class="bank-grid" id="bankGrid"></div>
-
 <div id="f99v7CalcStatus" style="font-weight:800;color:#1b526c;line-height:1.8;padding:8px">البرونزية: 3 حسبات مكتملة كحد أقصى، والدخول من نفس الجهاز لا يستهلك الحسبات.</div>
-<button type="button" class="calc-full" onclick="calculate()">⚡ احتساب التمويل وترشيح البنك الأنسب</button>
-
+<button class="calc-full" onclick="calculate()" type="button">⚡ احتساب التمويل وترشيح البنك الأنسب</button>
 <div class="calc-flow">
-  <span>القسط المتاح</span><i>←</i>
-  <span>التمويل</span><i>←</i>
-  <span>الرسوم</span><i>←</i>
-  <span>سداد المديونية</span><i>←</i>
-  <span>صافي الكاش</span>
+<span>القسط المتاح</span><i>←</i>
+<span>التمويل</span><i>←</i>
+<span>الرسوم</span><i>←</i>
+<span>سداد المديونية</span><i>←</i>
+<span>صافي الكاش</span>
 </div>
-
 </div><footer class="form-footer"><span><b>FINO99</b> • تحويل مديونية التمويل الشخصي • لا تتردد بالتواصل واتساب أو اتصال</span><strong>0506214458</strong></footer><span class="contact-hint">احتساب دقيق • تأكيد المعلومات • إنجاز التمويل بأسرع وقت وبدون تعقيدات</span></div>
 </div></section>
 <section class="page" id="page3"><div class="viewport">
 <header class="header"><div class="brand"><div class="brand-mark">F</div><div class="brand-name">FINO99<small>FINAL MATCH</small></div></div><a class="contact-mini" href="https://wa.me/966506214458" target="_blank"><span class="m">📱</span><span><small>لتأكيد الحسبة والإنجاز</small><b>0506214458</b></span></a></header>
-<div class="result-wrap"><div class="result-head"><div><div class="eyebrow">FINO99 BUYOUT MATCH</div><h1>أفضل ترشيح <span>لتحويل مديونيتك</span></h1><p>النتيجة حسب البيانات والعروض المسجلة.</p></div><button type="button" class="edit" onclick="showPage('page2')">↻ أعد الحسبة والترشيح</button></div>
+<div class="result-wrap"><div class="result-head"><div><div class="eyebrow">FINO99 BUYOUT MATCH</div><h1>أفضل ترشيح <span>لتحويل مديونيتك</span></h1><p>النتيجة حسب البيانات والعروض المسجلة.</p></div><button class="edit" onclick="showPage('page2')" type="button">↻ أعد الحسبة والترشيح</button></div>
 <div class="result-marketing-board">
-  <div class="result-marketing-head"><b>هل تبحث عن سيولة أفضل أو نسبة أقل من بنكك الحالي؟</b><span>FINO99 LIVE</span></div>
-  <div class="result-marquee"><div class="result-marquee-track">
-    <span class="result-message">💰 تريد فائضًا أعلى بعد سداد مديونيتك؟</span>
-    <span class="result-message">📈 نسبة إعادة التمويل عندك مرتفعة وتبحث عن عرض أفضل؟</span>
-    <span class="result-message">🏦 تبحث عن تمويل بنسبة أقل من عرض بنكك الحالي؟</span>
-    <span class="result-message">⚡ تريد إنجازًا بأسرع وقت وبدون تعقيدات؟</span>
-    <span class="result-message">🧮 تريد تأكيد الحسبة قبل البدء بالإجراءات؟</span>
-    <span class="result-message">💰 تريد فائضًا أعلى بعد سداد مديونيتك؟</span>
-    <span class="result-message">📈 نسبة إعادة التمويل عندك مرتفعة وتبحث عن عرض أفضل؟</span>
-    <span class="result-message">🏦 تبحث عن تمويل بنسبة أقل من عرض بنكك الحالي؟</span>
-    <span class="result-message">⚡ تريد إنجازًا بأسرع وقت وبدون تعقيدات؟</span>
-    <span class="result-message">🧮 تريد تأكيد الحسبة قبل البدء بالإجراءات؟</span>
-  </div></div>
+<div class="result-marketing-head"><b>هل تبحث عن سيولة أفضل أو نسبة أقل من بنكك الحالي؟</b><span>FINO99 LIVE</span></div>
+<div class="result-marquee"><div class="result-marquee-track">
+<span class="result-message">💰 تريد فائضًا أعلى بعد سداد مديونيتك؟</span>
+<span class="result-message">📈 نسبة إعادة التمويل عندك مرتفعة وتبحث عن عرض أفضل؟</span>
+<span class="result-message">🏦 تبحث عن تمويل بنسبة أقل من عرض بنكك الحالي؟</span>
+<span class="result-message">⚡ تريد إنجازًا بأسرع وقت وبدون تعقيدات؟</span>
+<span class="result-message">🧮 تريد تأكيد الحسبة قبل البدء بالإجراءات؟</span>
+<span class="result-message">💰 تريد فائضًا أعلى بعد سداد مديونيتك؟</span>
+<span class="result-message">📈 نسبة إعادة التمويل عندك مرتفعة وتبحث عن عرض أفضل؟</span>
+<span class="result-message">🏦 تبحث عن تمويل بنسبة أقل من عرض بنكك الحالي؟</span>
+<span class="result-message">⚡ تريد إنجازًا بأسرع وقت وبدون تعقيدات؟</span>
+<span class="result-message">🧮 تريد تأكيد الحسبة قبل البدء بالإجراءات؟</span>
+</div></div>
 </div>
 <div class="sales-banner"><div><b>نتيجتك أمامك الآن... خلنا نؤكد الحسبة وننجز تمويلك</b><small>تواصل معنا لمراجعة الحسبة وبدء الإجراءات.</small><div class="service-chips"><span class="service-chip calc">احتساب دقيق</span><span class="service-chip verify">تأكيد المعلومات</span><span class="service-chip finish">إنجاز التمويل</span></div></div><strong>0506214458</strong></div>
 <div class="eligibility-strip"><span class="elig-icon">⚠️</span><span><b>مهم:</b> هذه الحسبة لعميل لا يوجد لديه تمويل عقاري قائم، ولا يوجد ما يمنع إصدار خطاب تحويل المديونية.</span></div>
 <div class="tip-bar" id="tip3"></div><div class="profile" id="profile"></div><div id="results"></div><div class="final-notice"><b>تنويه مهم:</b> هذه حسبة مبدئية حسب البيانات المدخلة والعرض المتاح، وقد تختلف الحسبة النهائية حسب جهة العمل وسياسة البنك ونتيجة دراسة الطلب.</div>
 <div class="actions">
-  <button class="action wa" type="button" onclick="shareWhats()">📲 إرسال نص عبر واتساب</button>
-  <button class="action share-image" type="button" onclick="shareResultImage()">🖼️ صورة مختصرة</button>
-  <button class="action detail-image" type="button" onclick="shareDetailedResultImage()">🧾 بطاقة تفاصيل التمويل</button>
+<button class="action wa" onclick="shareWhats()" type="button">📲 إرسال نص عبر واتساب</button>
+<button class="action share-image" onclick="shareResultImage()" type="button">🖼️ صورة مختصرة</button>
+<button class="action detail-image" onclick="shareDetailedResultImage()" type="button">🧾 بطاقة تفاصيل التمويل</button>
 </div>
-
 <div class="capture-cta">
-  <div class="capture-icon">📸</div>
-  <div>
-    <b>خذ لقطة لهذه الشاشة وتواصل معنا</b>
-    <small>نراجع الحسبة، نؤكد المعلومات، ونكمل إجراءات التمويل بأسرع وقت وبدون تعقيدات.</small>
-  </div>
-  <strong>0506214458</strong>
+<div class="capture-icon">📸</div>
+<div>
+<b>خذ لقطة لهذه الشاشة وتواصل معنا</b>
+<small>نراجع الحسبة، نؤكد المعلومات، ونكمل إجراءات التمويل بأسرع وقت وبدون تعقيدات.</small>
 </div>
-
-
+<strong>0506214458</strong>
+</div>
 <div class="live-footer">
-  <span class="footer-brand">FINO99 • لتأكيد الحسبة وإنجاز التمويل</span>
-  <span class="footer-date"><b id="f3Day">—</b><b id="f3Greg">—</b><b id="f3Hijri">—</b><span class="footer-time" id="f3Time">—</span></span>
+<span class="footer-brand">FINO99 • لتأكيد الحسبة وإنجاز التمويل</span>
+<span class="footer-date"><b id="f3Day">—</b><b id="f3Greg">—</b><b id="f3Hijri">—</b><span class="footer-time" id="f3Time">—</span></span>
 </div>
-</section>
+</div></div></section>
 </div>
 <script>
 /* FINO99 isolated browser state; never read or overwrite the earlier platform's storage. */
@@ -8432,7 +8414,7 @@ function finoCentralServiceScope(){
   const s1=activeAccess?.record?.centralData?.allowed_services;
   const s2=finoCentralRestoreEntry()?.allowed_services;
   const services=Array.isArray(s1)?s1:(Array.isArray(s2)?s2:[]);
-  if(services.length===1)return services[0];
+  if(services.length===1)return services[0].startsWith('bot_')?services[0].slice(4):services[0];
   if(services.includes('buyout')&&services.includes('smart'))return 'both';
   if(services.includes('contract'))return 'contract';
   return services[0]||'';
@@ -12969,7 +12951,7 @@ function finishIdentityAndEnter(){
     const services=activeAccess.record.centralData?.allowed_services||[];
     const only=services.length===1?services[0]:'';
     const pkg=fino99PackageFromCode(activeAccess.record.centralData);
-    if((services.length>1 || only==='mortgage_quote' || only==='mortgage_compare') && typeof window.F99V6OpenServices==='function'){
+    if((services.length>1 || only==='mortgage_quote' || only==='mortgage_compare' || only.startsWith('bot_')) && typeof window.F99V6OpenServices==='function'){
       window.F99V6OpenServices(services);
     }else if(only==='compare' && typeof window.F99COpenClient==='function'){
       window.F99COpenClient();
@@ -12994,10 +12976,7 @@ function finishIdentityAndEnter(){
       finoApplyStrictServiceScope();
       setTimeout(()=>startFINOPortalSmart(),60);
     }else if(only==='buyout'){
-      openFINOSmartPortal(true);
-      finoPortal.strictServiceScope='buyout';
-      finoApplyStrictServiceScope();
-      setTimeout(()=>startFINOPortalBuyout(),60);
+      showPage('page2');refreshPersonalizedCopy();
     }else if(activeAccess.record.free){
       showPage('freeHub');
     }else{
@@ -16301,134 +16280,118 @@ document.getElementById('password')?.addEventListener('keydown',e=>{
 });
 
 </script>
-
-
 <div class="share-card-preview" id="shareCardPreview">
-  <div class="sc-head"><div class="sc-brand">FINO99</div><div id="scDate"></div></div>
-  <div class="sc-title">ترشيح شراء مديونية التمويل الشخصي</div>
-  <div class="sc-bank"><div class="sc-logo" id="scLogo"></div><div><div class="sc-bank-name" id="scBankName"></div><div id="scRate"></div></div></div>
-  <div class="sc-cash"><small>صافي الكاش المتوقع بعد سداد المديونية</small><b id="scCash"></b></div>
-  <div class="sc-row"><div class="sc-box"><small>القسط الشهري</small><b id="scInstallment"></b></div><div class="sc-box"><small>السداد المبكر</small><b id="scDebt"></b></div><div class="sc-box"><small>التزامات شهرية أخرى</small><b id="scExternal"></b></div><div class="sc-box"><small>سقف إجمالي الالتزامات</small><b id="scTotalCap"></b></div></div>
-  <div class="sc-advice" id="scAdvice"></div><div class="sc-service">احتساب دقيق • ترشيح البنك الأنسب • متابعة وإنجاز التمويل</div>
-  <div class="sc-footer">للاحتساب الدقيق وتأكيد المعلومات وإنجاز التمويل:<br><span class="sc-phone">0506214458</span><br>موقع FINO99 المطورة</div>
+<div class="sc-head"><div class="sc-brand">FINO99</div><div id="scDate"></div></div>
+<div class="sc-title">ترشيح شراء مديونية التمويل الشخصي</div>
+<div class="sc-bank"><div class="sc-logo" id="scLogo"></div><div><div class="sc-bank-name" id="scBankName"></div><div id="scRate"></div></div></div>
+<div class="sc-cash"><small>صافي الكاش المتوقع بعد سداد المديونية</small><b id="scCash"></b></div>
+<div class="sc-row"><div class="sc-box"><small>القسط الشهري</small><b id="scInstallment"></b></div><div class="sc-box"><small>السداد المبكر</small><b id="scDebt"></b></div><div class="sc-box"><small>التزامات شهرية أخرى</small><b id="scExternal"></b></div><div class="sc-box"><small>سقف إجمالي الالتزامات</small><b id="scTotalCap"></b></div></div>
+<div class="sc-advice" id="scAdvice"></div><div class="sc-service">احتساب دقيق • ترشيح البنك الأنسب • متابعة وإنجاز التمويل</div>
+<div class="sc-footer">للاحتساب الدقيق وتأكيد المعلومات وإنجاز التمويل:<br/><span class="sc-phone">0506214458</span><br/>موقع FINO99 المطورة</div>
 </div>
-
-
-
 <div class="bot-login-overlay" id="specialistBotLoginOverlay">
-  <div class="bot-login-card">
-    <h3>دخول البوت للمختص</h3>
-    <p>البوت مخصص للكود الحر وللمسؤول أو المختص فقط.</p>
-    <div class="bot-login-warning">⚠️ الدخول غير المصرح به أو محاولة استخدام رمز خاطئ قد يعرضك للمساءلة القانونية.</div>
-    <input id="specialistBotPassword" type="password" autocomplete="off" placeholder="أدخل رمز دخول المختص">
-    <div class="bot-login-error" id="specialistBotLoginError"></div>
-    <div class="bot-login-actions">
-      <button class="bot-login-go" type="button" onclick="verifyFINOSpecialistBotLogin()">دخول البوت</button>
-      <button class="bot-login-close" type="button" onclick="closeFINOSpecialistBotLogin()">إلغاء</button>
-    </div>
-  </div>
+<div class="bot-login-card">
+<h3>دخول البوت للمختص</h3>
+<p>البوت مخصص للكود الحر وللمسؤول أو المختص فقط.</p>
+<div class="bot-login-warning">⚠️ الدخول غير المصرح به أو محاولة استخدام رمز خاطئ قد يعرضك للمساءلة القانونية.</div>
+<input autocomplete="off" id="specialistBotPassword" placeholder="أدخل رمز دخول المختص" type="password"/>
+<div class="bot-login-error" id="specialistBotLoginError"></div>
+<div class="bot-login-actions">
+<button class="bot-login-go" onclick="verifyFINOSpecialistBotLogin()" type="button">دخول البوت</button>
+<button class="bot-login-close" onclick="closeFINOSpecialistBotLogin()" type="button">إلغاء</button>
 </div>
-
+</div>
+</div>
 <div class="admin-overlay" id="adminLoginOverlay">
-  <div class="admin-login-card">
-    <h3>دخول المسؤول / المختص</h3>
-    <p>هذه البوابة مخصصة لإدارة بيانات العروض والنسب المحلية على هذا الجهاز.</p>
-    <div class="admin-warning">⚠️ الدخول غير المصرح به أو محاولة استخدام رمز دخول خاطئ قد يعرضك للمساءلة القانونية.</div>
-    <input id="adminAccessPassword" type="password" autocomplete="off" placeholder="أدخل رمز دخول المسؤول">
-    <div class="admin-login-error" id="adminLoginError"></div>
-    <div class="admin-login-actions">
-      <button class="admin-login-go" type="button" onclick="verifyFINOAdminLogin()">دخول لوحة الإدارة</button>
-      <button class="admin-login-close" type="button" onclick="closeFINOAdminLogin()">إلغاء</button>
-    </div>
-  </div>
+<div class="admin-login-card">
+<h3>دخول المسؤول / المختص</h3>
+<p>هذه البوابة مخصصة لإدارة بيانات العروض والنسب المحلية على هذا الجهاز.</p>
+<div class="admin-warning">⚠️ الدخول غير المصرح به أو محاولة استخدام رمز دخول خاطئ قد يعرضك للمساءلة القانونية.</div>
+<input autocomplete="off" id="adminAccessPassword" placeholder="أدخل رمز دخول المسؤول" type="password"/>
+<div class="admin-login-error" id="adminLoginError"></div>
+<div class="admin-login-actions">
+<button class="admin-login-go" onclick="verifyFINOAdminLogin()" type="button">دخول لوحة الإدارة</button>
+<button class="admin-login-close" onclick="closeFINOAdminLogin()" type="button">إلغاء</button>
 </div>
-
+</div>
+</div>
 <div class="admin-panel" id="adminPanel">
-  <div class="admin-head">
-    <div class="admin-head-title">
-      <b>FINO99 • لوحة المسؤول المحلية</b>
-      <small>تحديثات هذا الجهاز فقط • تحفظ تلقائيًا في المتصفح • مع نسخة احتياطية قبل كل حفظ</small>
-    </div>
-    <div class="admin-head-actions">
-      <button type="button" onclick="exportFINOAdminConfig()">تصدير JSON</button>
-      <button type="button" onclick="document.getElementById('adminImportFile').click()">استيراد JSON</button>
-      <input id="adminImportFile" type="file" accept=".json,application/json" hidden onchange="importFINOAdminConfigFile(this)">
-      <button type="button" onclick="restoreFINOAdminBackup()">استرجاع آخر نسخة</button>
-      <button type="button" class="danger" onclick="closeFINOAdminPanel()">إغلاق</button>
-    </div>
-  </div>
-  <div class="admin-body">
-    <aside class="admin-side">
-      <div class="admin-tabs">
-        <button id="adminTabBanks" class="active" onclick="setFINOAdminTab('banks')">البنوك</button>
-        <button id="adminTabEntities" onclick="setFINOAdminTab('entities')">جهات العمل</button>
-        <button id="adminTabBackup" onclick="setFINOAdminTab('backup')">النسخ</button>
-      </div>
-      <button class="admin-add-btn" id="adminAddBankBtn" type="button" onclick="startAddFINOAdminBank()">＋ إضافة بنك / جهة تمويلية</button>
-      <div class="admin-bank-list" id="adminBankList"></div>
-    </aside>
-    <main class="admin-main" id="adminMain"></main>
-  </div>
+<div class="admin-head">
+<div class="admin-head-title">
+<b>FINO99 • لوحة المسؤول المحلية</b>
+<small>تحديثات هذا الجهاز فقط • تحفظ تلقائيًا في المتصفح • مع نسخة احتياطية قبل كل حفظ</small>
+</div>
+<div class="admin-head-actions">
+<button onclick="exportFINOAdminConfig()" type="button">تصدير JSON</button>
+<button onclick="document.getElementById('adminImportFile').click()" type="button">استيراد JSON</button>
+<input accept=".json,application/json" hidden="" id="adminImportFile" onchange="importFINOAdminConfigFile(this)" type="file"/>
+<button onclick="restoreFINOAdminBackup()" type="button">استرجاع آخر نسخة</button>
+<button class="danger" onclick="closeFINOAdminPanel()" type="button">إغلاق</button>
+</div>
+</div>
+<div class="admin-body">
+<aside class="admin-side">
+<div class="admin-tabs">
+<button class="active" id="adminTabBanks" onclick="setFINOAdminTab('banks')">البنوك</button>
+<button id="adminTabEntities" onclick="setFINOAdminTab('entities')">جهات العمل</button>
+<button id="adminTabBackup" onclick="setFINOAdminTab('backup')">النسخ</button>
+</div>
+<button class="admin-add-btn" id="adminAddBankBtn" onclick="startAddFINOAdminBank()" type="button">＋ إضافة بنك / جهة تمويلية</button>
+<div class="admin-bank-list" id="adminBankList"></div>
+</aside>
+<main class="admin-main" id="adminMain"></main>
+</div>
 </div>
 <div class="admin-toast" id="adminToast"></div>
-
-
 <div class="portal-image-overlay" id="portalImageOverlay">
-  <div class="portal-image-overlay-head">
-    <b id="portalImageOverlayTitle">بطاقة التمويل</b>
-    <button type="button" onclick="closeFINOPortalImageOverlay()">الرجوع إلى المحادثة</button>
-  </div>
-  <div class="portal-image-overlay-body">
-    <img id="portalImageOverlayImg" alt="بطاقة التمويل">
-  </div>
-  <div class="portal-image-overlay-foot">
-    <button class="portal-image-overlay-share" type="button" onclick="shareCurrentFINOPortalPreview()">📲 مشاركة عبر واتساب</button>
-    <button class="portal-image-overlay-back" type="button" onclick="closeFINOPortalImageOverlay()">↩ الرجوع إلى المحادثة</button>
-    <div class="portal-image-overlay-note" id="portalImageOverlayNote">
+<div class="portal-image-overlay-head">
+<b id="portalImageOverlayTitle">بطاقة التمويل</b>
+<button onclick="closeFINOPortalImageOverlay()" type="button">الرجوع إلى المحادثة</button>
+</div>
+<div class="portal-image-overlay-body">
+<img alt="بطاقة التمويل" id="portalImageOverlayImg"/>
+</div>
+<div class="portal-image-overlay-foot">
+<button class="portal-image-overlay-share" onclick="shareCurrentFINOPortalPreview()" type="button">📲 مشاركة عبر واتساب</button>
+<button class="portal-image-overlay-back" onclick="closeFINOPortalImageOverlay()" type="button">↩ الرجوع إلى المحادثة</button>
+<div class="portal-image-overlay-note" id="portalImageOverlayNote">
       عند فتح واتساب بعد نسخ الصورة، افتح محادثة العميل واضغط لصق ثم إرسال.
     </div>
-  </div>
 </div>
-
+</div>
 <div class="phone-modal" id="phoneModal">
-  <div class="phone-modal-card">
-    <h3>📱 إرسال الحسبة عبر واتساب</h3>
-    <p>أدخل رقم جوال العميل أولاً.</p><div class="mode-note" id="shareModeNote"></div><div class="portal-phone-warning" id="portalPhoneWarning" style="display:none"></div>
-    <div class="free-share-name" id="freeShareNameWrap">
-      <label for="freeShareClientName">اسم العميل (اختياري للكود الحر)</label>
-      <input id="freeShareClientName" type="text" maxlength="40" placeholder="اكتب اسم العميل إذا رغبت">
-    </div>
-    <input id="clientWhatsappNumber" inputmode="tel" type="tel" placeholder="05XXXXXXXX" autocomplete="tel">
-    <div class="phone-error" id="clientPhoneError"></div>
-    <div class="phone-modal-actions">
-      <button type="button" class="phone-modal-send" onclick="handleShareToClient()">متابعة</button>
-      <button type="button" class="phone-modal-cancel" onclick="closePhoneModal()">إلغاء</button>
-    </div>
-  </div>
+<div class="phone-modal-card">
+<h3>📱 إرسال الحسبة عبر واتساب</h3>
+<p>أدخل رقم جوال العميل أولاً.</p><div class="mode-note" id="shareModeNote"></div><div class="portal-phone-warning" id="portalPhoneWarning" style="display:none"></div>
+<div class="free-share-name" id="freeShareNameWrap">
+<label for="freeShareClientName">اسم العميل (اختياري للكود الحر)</label>
+<input id="freeShareClientName" maxlength="40" placeholder="اكتب اسم العميل إذا رغبت" type="text"/>
 </div>
-
-
+<input autocomplete="tel" id="clientWhatsappNumber" inputmode="tel" placeholder="05XXXXXXXX" type="tel"/>
+<div class="phone-error" id="clientPhoneError"></div>
+<div class="phone-modal-actions">
+<button class="phone-modal-send" onclick="handleShareToClient()" type="button">متابعة</button>
+<button class="phone-modal-cancel" onclick="closePhoneModal()" type="button">إلغاء</button>
+</div>
+</div>
+</div>
 <div class="image-preview-modal" id="imagePreviewModal">
-  <div class="image-preview-card">
-    <div class="image-preview-head">
-      <h3 id="imagePreviewTitle">صورة الحسبة</h3>
-      <button type="button" onclick="closeImagePreview()">✕</button>
-    </div>
-
-    <img class="image-preview-img" id="imagePreviewImg" alt="صورة الحسبة">
-
-    <div class="image-preview-note" id="imagePreviewNote">
+<div class="image-preview-card">
+<div class="image-preview-head">
+<h3 id="imagePreviewTitle">صورة الحسبة</h3>
+<button onclick="closeImagePreview()" type="button">✕</button>
+</div>
+<img alt="صورة الحسبة" class="image-preview-img" id="imagePreviewImg"/>
+<div class="image-preview-note" id="imagePreviewNote">
       الصورة جاهزة. «مشاركة الصورة» تفتح مشاركة الجوال بملف PNG، و«فتح واتساب العميل» يفتح المحادثة على الرقم الذي أدخلته.
     </div>
-
-    <div class="image-preview-actions">
-      <button class="preview-share" type="button" onclick="nativeSharePreparedImage()">📤 مشاركة الصورة</button>
-      <button class="preview-download" type="button" onclick="downloadPreparedImage()">⬇️ حفظ الصورة</button>
-      <button class="preview-whatsapp" type="button" onclick="openPreparedClientWhatsapp()">📲 فتح واتساب العميل</button>
-    </div>
-  </div>
+<div class="image-preview-actions">
+<button class="preview-share" onclick="nativeSharePreparedImage()" type="button">📤 مشاركة الصورة</button>
+<button class="preview-download" onclick="downloadPreparedImage()" type="button">⬇️ حفظ الصورة</button>
+<button class="preview-whatsapp" onclick="openPreparedClientWhatsapp()" type="button">📲 فتح واتساب العميل</button>
 </div>
-
+</div>
+</div>
 <script>
 
 /* =========================================================
@@ -17073,73 +17036,66 @@ function f99ComputeFee(){const p=fino99ActivePackage(),i=Math.max(0,Number(docum
 function f99CopyFeeQuote(){const p=fino99ActivePackage(),i=Math.max(0,Number(document.getElementById('f99FeesService')?.value||0)),item=p.feeCatalog?.[i];if(!item)return;const txt=`FINO99\nالخدمة: ${item.name}\nأتعاب الوساطة والمتابعة: ${Number(item.fee||0).toLocaleString('en-US')} ريال\nتطبق الشروط الواردة في العقد أو الاتفاق، إن وجد.`;if(navigator.clipboard?.writeText)navigator.clipboard.writeText(txt).catch(()=>window.prompt('انسخ التفاصيل:',txt));else window.prompt('انسخ التفاصيل:',txt);}
 
 </script>
-
 <!-- FINO V21 — Broadcast Gateway -->
-<section id="broadcastGateway" class="broadcast-gateway">
-  <div class="broadcast-gateway-card">
-    <div class="broadcast-gateway-title" id="broadcastGatewayBrand">FINO99</div>
-    <div class="broadcast-gateway-sub">وضع البث المباشر</div>
-    <div class="broadcast-gateway-actions">
-      <button class="broadcast-gateway-btn primary" type="button" onclick="openFINIUMBroadcast()">
+<section class="broadcast-gateway" id="broadcastGateway">
+<div class="broadcast-gateway-card">
+<div class="broadcast-gateway-title" id="broadcastGatewayBrand">FINO99</div>
+<div class="broadcast-gateway-sub">وضع البث المباشر</div>
+<div class="broadcast-gateway-actions">
+<button class="broadcast-gateway-btn primary" onclick="openFINIUMBroadcast()" type="button">
         📡 البث
         <small>واجهة واضحة ومخصصة للبث المباشر</small>
-      </button>
-      <button class="broadcast-gateway-btn" type="button" onclick="openFINIUMBroadcastControl()">
+</button>
+<button class="broadcast-gateway-btn" onclick="openFINIUMBroadcastControl()" type="button">
         ⚙️ التحكم
         <small>فتح لوحة المالك الكاملة</small>
-      </button>
-    </div>
-  </div>
+</button>
+</div>
+</div>
 </section>
-
 <!-- FINO V21 — Broadcast Shell -->
-<section id="broadcastShell" class="broadcast-shell broadcast-no-meta">
-  <div class="broadcast-top">
-    <div class="broadcast-greeting" id="broadcastGreeting">حياكم الله جميعًا</div>
-    <div class="broadcast-clock" id="broadcastClock"></div>
-  </div>
-
-  <main class="broadcast-main">
-    <div id="broadcastHome" class="broadcast-home-grid">
-      <button class="broadcast-home-card" type="button" onclick="openBroadcastBuyout()">
-        <div class="emoji">🏦</div>
-        <b>تحويل المديونية</b>
-        <span>ترشيح العروض ومقارنة النتائج</span>
-      </button>
-      <button class="broadcast-home-card" type="button" onclick="openBroadcastSmart()">
-        <div class="emoji">🧮</div>
-        <b>الحاسبة الذكية</b>
-        <span>حسبة مباشرة وواضحة للبث</span>
-      </button>
-    </div>
-
-    <section id="broadcastBuyoutPanel" class="broadcast-panel">
-      <div class="broadcast-panel-head">
-        <h2>تحويل المديونية</h2>
-        <button class="broadcast-back" type="button" onclick="backBroadcastHome()">رجوع</button>
-      </div>
-      <div id="broadcastBuyoutChat" class="broadcast-chat"></div>
-      <div id="broadcastBuyoutInputWrap" class="broadcast-input-wrap" style="display:none">
-        <input id="broadcastBuyoutInput" class="broadcast-input" autocomplete="off">
-        <button class="broadcast-send" type="button" onclick="submitBroadcastBuyoutInput()">إرسال</button>
-      </div>
-    </section>
-
-    <section id="broadcastSmartPanel" class="broadcast-panel">
-      <div class="broadcast-panel-head">
-        <h2>الحاسبة الذكية</h2>
-        <button class="broadcast-back" type="button" onclick="backBroadcastHome()">رجوع</button>
-      </div>
-      <div id="broadcastSmartChat" class="broadcast-chat"></div>
-      <div id="broadcastSmartInputWrap" class="broadcast-input-wrap" style="display:none">
-        <input id="broadcastSmartInput" class="broadcast-input" autocomplete="off">
-        <button class="broadcast-send" type="button" onclick="submitBroadcastSmartInput()">إرسال</button>
-      </div>
-    </section>
-  </main>
+<section class="broadcast-shell broadcast-no-meta" id="broadcastShell">
+<div class="broadcast-top">
+<div class="broadcast-greeting" id="broadcastGreeting">حياكم الله جميعًا</div>
+<div class="broadcast-clock" id="broadcastClock"></div>
+</div>
+<main class="broadcast-main">
+<div class="broadcast-home-grid" id="broadcastHome">
+<button class="broadcast-home-card" onclick="openBroadcastBuyout()" type="button">
+<div class="emoji">🏦</div>
+<b>تحويل المديونية</b>
+<span>ترشيح العروض ومقارنة النتائج</span>
+</button>
+<button class="broadcast-home-card" onclick="openBroadcastSmart()" type="button">
+<div class="emoji">🧮</div>
+<b>الحاسبة الذكية</b>
+<span>حسبة مباشرة وواضحة للبث</span>
+</button>
+</div>
+<section class="broadcast-panel" id="broadcastBuyoutPanel">
+<div class="broadcast-panel-head">
+<h2>تحويل المديونية</h2>
+<button class="broadcast-back" onclick="backBroadcastHome()" type="button">رجوع</button>
+</div>
+<div class="broadcast-chat" id="broadcastBuyoutChat"></div>
+<div class="broadcast-input-wrap" id="broadcastBuyoutInputWrap" style="display:none">
+<input autocomplete="off" class="broadcast-input" id="broadcastBuyoutInput"/>
+<button class="broadcast-send" onclick="submitBroadcastBuyoutInput()" type="button">إرسال</button>
+</div>
 </section>
-
-
+<section class="broadcast-panel" id="broadcastSmartPanel">
+<div class="broadcast-panel-head">
+<h2>الحاسبة الذكية</h2>
+<button class="broadcast-back" onclick="backBroadcastHome()" type="button">رجوع</button>
+</div>
+<div class="broadcast-chat" id="broadcastSmartChat"></div>
+<div class="broadcast-input-wrap" id="broadcastSmartInputWrap" style="display:none">
+<input autocomplete="off" class="broadcast-input" id="broadcastSmartInput"/>
+<button class="broadcast-send" onclick="submitBroadcastSmartInput()" type="button">إرسال</button>
+</div>
+</section>
+</main>
+</section>
 <script>
 document.addEventListener('DOMContentLoaded',()=>{
  const n=document.getElementById('f99NewCentralNotice');
@@ -17360,7 +17316,6 @@ window.F99XOpenAdmin=openAdmin;function init(){renderBase();applyIdentity(DEFAUL
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
-
 <!-- FINO99 V6 Salla sales -->
 <style id="f99s-css">/* FINO99 V6 - responsive catalog */
 #f99s-modal[hidden]{display:none!important}#f99s-modal{position:fixed;inset:0;z-index:2147483100;overflow-y:auto;direction:rtl;background:#0c1e308c;padding:max(12px,env(safe-area-inset-top)) 10px max(22px,env(safe-area-inset-bottom));font-family:Cairo,system-ui}
@@ -17394,7 +17349,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 (()=>{'use strict';
  const KEY='f99x_storefront', SALLA_SCRIPT='https://cdn.assets.salla.network/prod/@salla.sa/fast-checkout-widget/v0.0.25/widget.esm.js';
  const DEFAULT={enabled:false,store_id:'1525498116',store_home_url:'',title:'اختر الباقة المناسبة لك',terms:'الخدمات إرشادية ولا تمثل موافقة تمويلية، ويخضع الترشيح للشروط والعروض المتاحة. تسري سياسة استخدام الأكواد والاسترجاع المبينة بمتجر سلة.',products:[],version:0};
- const SERVICES=[['buyout','شراء مديونية التمويل الشخصي'],['smart','الحاسبة الذكية'],['compare','مقارنات عروض البنوك'],['mortgage_quote','التمويل العقاري'],['mortgage_compare','مقارنات العقاري'],['contract','العقود والاتفاقيات']];
+ const SERVICES=[['buyout','شراء مديونية التمويل الشخصي'],['smart','الحاسبة الذكية'],['compare','مقارنات عروض البنوك'],['mortgage_quote','التمويل العقاري'],['mortgage_compare','مقارنات العقاري'],['contract','العقود والاتفاقيات'],['bot_buyout','بوت تحويل المديونية'],['bot_smart','بوت الحاسبة الذكية'],['bot_compare','بوت مقارنة عروض البنوك'],['bot_mortgage_quote','بوت التمويل العقاري'],['bot_contract','بوت العقود الإرشادي']];
  const SECTORS=[['government','حكومي'],['military','عسكري'],['semiGovernment','شبه حكومي'],['private','قطاع خاص'],['retired','متقاعد']];
  let cfg={...DEFAULT},scriptPromise=null,lastExport=[],loaded=false;
  const $=id=>document.getElementById(id);
@@ -17411,15 +17366,49 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  function uniqueId(){return 'pkg-'+(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2))}
  // Default personal-buyout eligibility screening, editable per package by the owner.
  const DEFAULT_BUYOUT_QUESTIONS=[
-  {text:'هل لديك تمويل عقاري قائم؟',options:['لا','نعم'],reject:'نعم'},
-  {text:'هل يوجد لديك ما يمنع تحويل المديونية؟',options:['لا يوجد','يوجد','يوجد ولكن بعد سداد بعض المديونية'],reject:'يوجد،يوجد ولكن بعد سداد بعض المديونية'}
+  {text:'هل لديك تمويل عقاري قائم؟',options:['لا','نعم'],reject:'نعم',enabled:true},
+  {text:'هل يوجد لديك ما يمنع تحويل المديونية؟',options:['لا يوجد','يوجد','يوجد ولكن بعد سداد بعض المديونية'],reject:'يوجد،يوجد ولكن بعد سداد بعض المديونية',enabled:true}
  ];
+ const DEFAULT_REJECTION='نعتذر منك، لا تنطبق شروط هذه الباقة على إجابتك. يمكنك العودة إلى الباقات المتاحة.';
+ function normalizeQuestion(q){const x=(q&&typeof q==='object')?q:{};
+  const options=(Array.isArray(x.options)&&x.options.length?x.options:['نعم','لا']).map(v=>String(v).trim()).filter(Boolean).slice(0,10);
+  const reject=listText(x.reject||'');
+  const rules=options.map(v=>{const rule=Array.isArray(x.rules)?x.rules.find(z=>z?.answer===v):null;
+    return {answer:v,reject:rule?rule.reject===true:reject.includes(v),message:String(rule?.message||'').slice(0,400)};
+  });
+  return {id:String(x.id||uniqueId()),enabled:x.enabled!==false,text:String(x.text||'').slice(0,200),options,rules,
+    reject:rules.filter(r=>r.reject).map(r=>r.answer).join('،'),
+    sectors:Array.isArray(x.sectors)?x.sectors.filter(v=>SECTORS.some(s=>s[0]===v)):[],rejection_message:String(x.rejection_message||'').slice(0,400)};
+ }
+ function effectivePrice(p){return offerVisible(p)?Number(p.price):Number(p.old_price)>Number(p.price)?Number(p.old_price):Number(p.price)}
+ function offerVisible(p){if(p.offer_enabled===false)return false;
+  const d=String(p.offer_end_date||'');if(!d)return true;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(d))return false;
+  const now=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Riyadh',day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date());
+  const parts=now.split('/');return parts.length===3 && `${parts[2]}-${parts[1]}-${parts[0]}`<=d;
+ }
+ function couponLabel(p){if(p.coupon_enabled!==true||!offerVisible(p)||!String(p.coupon_code||'').trim())return '';
+  const amount=Number(p.coupon_amount||0);return p.coupon_type==='percent' ? (amount+'٪'):(amount.toFixed(2)+' ريال');
+ }
+ function promoNode(p){if(!offerVisible(p))return null;const hasPrice=Number(p.old_price)>Number(p.price),coupon=couponLabel(p);
+  if(!hasPrice&&!coupon&&!p.offer_title)return null;
+  const n=el('section','f99v11-promo');
+  if(p.offer_title)n.append(el('strong','f99v11-offer-name',String(p.offer_title)));
+  if(p.offer_end_date)n.append(info('يسري العرض حتى نهاية '+p.offer_end_date+' بتوقيت الرياض، ويطبق السعر النهائي لدى سلة.'));
+  if(coupon){const row=el('div','f99v11-coupon');row.append(el('span','','قسيمة الخصم عند الدفع: '+coupon));
+    const val=el('b','',String(p.coupon_code).toUpperCase());row.append(val);
+    const cp=el('button','','نسخ القسيمة');cp.type='button';cp.onclick=async()=>{try{await navigator.clipboard.writeText(String(p.coupon_code).toUpperCase());cp.textContent='تم نسخ الرمز'}catch{cp.textContent='حدد الرمز وانسخه'}};row.append(cp);
+    n.append(row);n.append(info('انسخ رمز الخصم وأدخله في خانة كوبون الخصم لدى سلة قبل إتمام الدفع. صلاحية الكوبون وقيمته تعتمد على إعدادات سلة الفعلية.'));
+  }
+  return n;
+ }
+
  function normalizeProduct(p){
   const x=p&&typeof p==='object'?p:{};
   const services=Array.isArray(x.services)?x.services:['buyout'];
   const questions=Array.isArray(x.questions)&&x.questions.length?x.questions:
     (x.questions_configured===true?[]:(services.includes('buyout')?DEFAULT_BUYOUT_QUESTIONS.map(q=>({...q})):[]));
-  return {...x,key:String(x.key||uniqueId()),services,allowed_sectors:Array.isArray(x.allowed_sectors)?x.allowed_sectors:[],banks:Array.isArray(x.banks)?x.banks:[],bank_logos:x.bank_logos&&typeof x.bank_logos==='object'&&!Array.isArray(x.bank_logos)?x.bank_logos:{},warning_text:x.warning_configured===true?String(x.warning_text||''):String(x.warning_text||(services.includes('buyout')?'الاحتساب مبدئي ويخضع لشروط البنوك':'')),warning_color:x.warning_color||'#B42335',warning_size:x.warning_size||17,questions};
+  return {...x,key:String(x.key||uniqueId()),services,allowed_sectors:Array.isArray(x.allowed_sectors)?x.allowed_sectors:[],banks:Array.isArray(x.banks)?x.banks:[],bank_logos:x.bank_logos&&typeof x.bank_logos==='object'&&!Array.isArray(x.bank_logos)?x.bank_logos:{},warning_text:x.warning_configured===true?String(x.warning_text||''):String(x.warning_text||(services.includes('buyout')?'الاحتساب مبدئي ويخضع لشروط البنوك':'')),warning_color:x.warning_color||'#B42335',warning_size:x.warning_size||17,questions:questions.map(normalizeQuestion),rejection_text:String(x.rejection_text||DEFAULT_REJECTION),offer_title:String(x.offer_title||''),offer_end_date:String(x.offer_end_date||''),offer_enabled:x.offer_enabled!==false,coupon_enabled:x.coupon_enabled===true,coupon_code:String(x.coupon_code||''),coupon_type:x.coupon_type==='percent'?'percent':'amount',coupon_amount:Number(x.coupon_amount||0)};
  }
  function serviceNames(p){return (p.services||[]).map(k=>SERVICES.find(s=>s[0]===k)?.[1]||k).join(' • ')}
  function availableBanks(p){
@@ -17441,7 +17430,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   return '';
  }
  function rejectionValues(q){return listText(q.reject||'')}
- function isRejected(q,answer){return rejectionValues(q).includes(answer)}
+ function isRejected(q,answer){const rule=(q.rules||[]).find(r=>r.answer===answer);return rule?rule.reject===true:rejectionValues(q).includes(answer)}
+ function rejectionMessage(q,answer,p){const rule=(q.rules||[]).find(r=>r.answer===answer);return String(rule?.message||q.rejection_message||p.rejection_text||DEFAULT_REJECTION)}
  function questionForSector(q,sector){const only=Array.isArray(q.sectors)?q.sectors:[];return !only.length||only.includes(sector)}
 
 
@@ -17467,9 +17457,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
    if(p.badge)contents.append(el('small','f99v6-badge',p.badge));
    contents.append(el('h3','',p.name||'باقة'));
    if(p.tagline)contents.append(info(publicTagline(p)));
-   const price=el('div','f99v6-price',money(p.price)+' ريال');
-   if(Number(p.old_price)>Number(p.price))price.prepend(el('s','',money(p.old_price)+' ريال'));
-   contents.append(price);
+   const price=el('div','f99v6-price',money(effectivePrice(p))+' ريال');
+   if(offerVisible(p)&&Number(p.old_price)>Number(p.price))price.prepend(el('s','',money(p.old_price)+' ريال'));
+   contents.append(price);if(promoNode(p))contents.append(promoNode(p));
    contents.append(el('small','f99v6-features',serviceNames(p)));
    contents.append(el('small','f99v6-features','المدة: '+publicDuration(p.duration_minutes)+' من أول تفعيل'));
    const choose=el('button','f99v6-primary','عرض تفاصيل الباقة والشروط');choose.type='button';choose.onclick=()=>openDetail(p);
@@ -17485,21 +17475,21 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   const back=el('button','f99v6-text','رجوع لجميع الباقات');back.type='button';back.onclick=openShop;b.append(back);
   if(p.tagline)b.append(info(publicTagline(p)));
   const summary=el('div','f99v6-summary');
-  summary.append(el('strong','',money(p.price)+' ريال'));
-  if(Number(p.old_price)>Number(p.price))summary.append(el('s','',money(p.old_price)+' ريال'));
+  summary.append(el('strong','',money(effectivePrice(p))+' ريال'));
+  if(offerVisible(p)&&Number(p.old_price)>Number(p.price))summary.append(el('s','',money(p.old_price)+' ريال'));
   const bronze=p.key==='fino99-bronze-buyout-20261107';
   summary.append(info(bronze?'ثلاث حسبات تمويل مكتملة خلال ثلاثة أيام من أول استخدام، وبحد أقصى 15 فبراير 2027؛ أيهما أسبق. الدخول المتكرر من نفس الجهاز لا يخصم حسبة.':'مدة الاستخدام: '+publicDuration(p.duration_minutes)+' من أول تفعيل • الخدمات: '+serviceNames(p)));
-  b.append(summary);
+  b.append(summary);if(promoNode(p))b.append(promoNode(p));
   const caution=String(p.warning_text||'').trim();
   if(caution){const warning=el('div','f99v10-warning',publicCopy(caution));warning.style.color=/^#[0-9a-fA-F]{6}$/.test(p.warning_color)?p.warning_color:'#B42335';warning.style.fontSize=Math.max(14,Math.min(24,Number(p.warning_size)||17))+'px';b.append(warning)}
   const services=Array.isArray(p.services)?p.services:[];
   const requiresSector=services.some(k=>['buyout','smart','compare','mortgage_quote','mortgage_compare','mortgage_buyout'].includes(k))||(p.allowed_sectors||[]).length>0;
   const eligible=Array.isArray(p.allowed_sectors)?p.allowed_sectors:[];
   const banksRequired=services.some(k=>['buyout','smart','compare','mortgage_quote','mortgage_compare','mortgage_buyout'].includes(k));
-  const questions=Array.isArray(p.questions)?p.questions.filter(q=>q&&q.text):[];
+  const questions=Array.isArray(p.questions)?p.questions.filter(q=>q&&q.enabled!==false&&q.text):[];
   let sector='',step=0;
   const flow=el('div','f99v10-flow');b.append(flow);
-  const eligibleMessage='هذه الباقة لا تشمل حالتك وفق شروط الأهلية المعلنة. يمكنك الرجوع واختيار باقة أخرى أو التواصل مع الإدارة.';
+  const eligibleMessage=String(p.rejection_text||DEFAULT_REJECTION);
   function frame(title,number,total){flow.replaceChildren();const head=el('div','f99v10-flowhead');head.append(el('span','','الخطوة '+number+' من '+total));head.append(el('strong','',title));flow.append(head)}
   function note(message,kind='error'){const node=el('p','f99v10-msg',message);node.dataset.kind=kind;flow.append(node);return node}
   function buttons(prev,action,caption){const row=el('div','f99v10-actions');if(prev!=null){const back=el('button','f99v6-text','السابق');back.type='button';back.onclick=()=>renderStep(prev);row.append(back)}if(action){const next=el('button','f99v6-primary',caption||'التالي');next.type='button';next.onclick=action;row.append(next)}flow.append(row)}
@@ -17527,7 +17517,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     for(const value of options)select.append(new Option(String(value),String(value)));
     label.append(select);flow.append(label);const out=note('','info');
     function proceed(){out.textContent='';if(!select.value)return out.textContent='اختر إجابتك.';
-     if(isRejected(q,select.value))return out.textContent=eligibleMessage;
+     if(isRejected(q,select.value)){showDenial(b,p,rejectionMessage(q,select.value,p));return;}
      renderStep(index+1);
     }
     select.onchange=proceed;buttons(index-1,proceed,'التالي');return;
@@ -17535,7 +17525,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
    frame('البنوك المشمولة والشروط',all,all);
    if(banksRequired){
     const names=availableBanks(p);
-    if(!names.length){note('الشراء غير متاح لهذه الباقة حالياً. يرجى التواصل مع الإدارة.');buttons(index-1);return}
+    if(!names.length){note('نعتذر، هذه الباقة غير متاحة للشراء حالياً.');buttons(index-1);return}
     flow.append(el('h3','f99v10-bank-title','البنوك المشمولة في هذه الباقة'));
     const grid=el('div','f99v10-banks');for(const name of names){const box=el('div','f99v10-bank');const logo=logoForBank(name,p);if(logo){const img=el('img');img.src=logo;img.alt='شعار '+name;img.loading='lazy';box.append(img)}else box.append(el('span','f99v10-bank-icon','🏦'));box.append(el('strong','',name));grid.append(box)}flow.append(grid);
    }
@@ -17555,7 +17545,15 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   renderStep(0);
  }
  function loadWidget(){if(scriptPromise)return scriptPromise;scriptPromise=new Promise((resolve,reject)=>{if(customElements.get('salla-mini-checkout-widget'))return resolve();const s=document.createElement('script');s.type='module';s.src=SALLA_SCRIPT;s.onload=()=>resolve();s.onerror=()=>{scriptPromise=null;reject(Error('تعذر تحميل أداة الدفع السريع من سلة'))};document.head.append(s)});return scriptPromise}
+ async function showDenial(b,p,message){
+   b.replaceChildren();const top=el('header','f99v6-h');top.append(el('h2','','نتيجة الأهلية'));b.append(top);
+   const safe=String(message||DEFAULT_REJECTION).replace(/راجع\s+الإدارة|تواصل\s+مع\s+الإدارة/gu,'').trim()||DEFAULT_REJECTION;
+   const panel=el('section','f99v13-rejection');panel.append(el('h3','','نعتذر لك'));panel.append(el('p','',safe));
+   panel.append(info('لم يتم إتمام الشراء من خلال هذه الخطوة. يمكنك العودة لعرض الباقات المتاحة.'));
+   const back=el('button','f99v6-primary','العودة إلى الباقات');back.type='button';back.onclick=openShop;panel.append(back);b.append(panel);
+ }
  async function renderCheckout(b,p){b.replaceChildren();const bar=el('header','f99v6-h');bar.append(el('h2','','إكمال شراء '+p.name));const back=el('button','','رجوع');back.onclick=()=>openDetail(p);bar.append(back);b.append(bar);
+  if(promoNode(p))b.append(promoNode(p));
   b.append(info('أكمل عملية الشراء عبر وسيلة الدفع المتاحة. بعد تنفيذ طلب البطاقة الرقمية، انسخ الكود الذي تستلمه، ثم ارجع إلى FINO99 واضغط «لديك كود؟» أسفل «ابدأ الآن» وأدخل الكود فقط.'));
   const status=el('p','f99v6-feedback');b.append(status);
   // One merchant product per package: the product ID cannot be shared across unrelated packages.
@@ -17573,6 +17571,57 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  function serviceChecks(row,values){const wrap=el('div','f99v6-check-list');wrap.append(el('strong','','الخدمات المفعلة بالكود'));for(const [k,name] of SERVICES){const lab=el('label','f99v6-mini-check');const input=document.createElement('input');input.type='checkbox';input.dataset.service=k;input.checked=values.includes(k);lab.append(input,document.createTextNode(' '+name));wrap.append(lab)}row.append(wrap)}
  function sectorChecks(row,values){const wrap=el('div','f99v6-check-list');wrap.append(el('strong','','القطاعات المشمولة'));for(const [k,name] of SECTORS){const lab=el('label','f99v6-mini-check');const input=document.createElement('input');input.type='checkbox';input.dataset.sector=k;input.checked=values.includes(k);lab.append(input,document.createTextNode(' '+name));wrap.append(lab)}row.append(wrap)}
  function status(msg){const v=$('f99v6-admin-status');if(v)v.textContent=msg}
+ 
+ function miniToggle(label,checked=false,fieldName=''){
+  const wrap=el('label','f99v11-toggle'),input=document.createElement('input');input.type='checkbox';input.checked=checked;
+  if(fieldName)input.dataset[fieldName]='1';wrap.append(input,document.createTextNode(' '+label));return wrap;
+ }
+ function questionCard(target,source={}){
+  const q=normalizeQuestion(source);const card=el('details','f99v11-qcard');card.dataset.qid=q.id;
+  const summary=el('summary','f99v11-qtitle');const label=el('b','',q.text||'سؤال جديد');const status=el('small','',q.enabled?'مفعّل':'موقوف');summary.append(label,status);card.append(summary);
+  const section=el('div','f99v11-qcontent');const question=field(section,'نص السؤال','question-text',q.text,{placeholder:'مثال: هل لديك إيقاف خدمات؟'});question.addEventListener('input',()=>label.textContent=question.value||'سؤال جديد');
+  const check=miniToggle('تشغيل السؤال في رحلة العميل',q.enabled,'questionEnabled');section.append(check);check.querySelector('input').onchange=()=>status.textContent=check.querySelector('input').checked?'مفعّل':'موقوف';
+  const options=el('div','f99v11-qoptions');options.dataset.options='1';section.append(el('h4','','الإجابات وقرار كل إجابة'));section.append(options);
+  function optionRow(answer='',reject=false,message=''){
+   if(options.children.length>=10)return;
+   const row=el('div','f99v11-option');const name=field(row,'نص الإجابة','option-text',answer,{placeholder:'مثال: نعم'});
+   const rule=el('label','f99s-field');rule.append(el('span','','إذا اختارها العميل'));
+   const decision=document.createElement('select');decision.dataset.reject='1';for(const [value,label] of [['no','السماح بالمتابعة'],['yes','رفض أهلية الباقة']])decision.append(new Option(label,value));decision.value=reject?'yes':'no';rule.append(decision);row.append(rule);
+   const msg=field(row,'رسالة الرفض لهذه الإجابة (اختياري)','option-message',message,{textarea:true,placeholder:DEFAULT_REJECTION});
+   const del=el('button','f99v11-remove','حذف الإجابة');del.type='button';del.onclick=()=>row.remove();row.append(del);options.append(row);
+  }
+  q.rules.forEach(r=>optionRow(r.answer,r.reject,r.message));
+  const add=el('button','f99v11-secondary','+ إضافة إجابة');add.type='button';add.onclick=()=>optionRow();section.append(add);
+  field(section,'نص الرفض الافتراضي لهذا السؤال','question-rejection',q.rejection_message,{textarea:true,placeholder:DEFAULT_REJECTION});
+  const sectors=el('div','f99v11-sector');sectors.append(el('strong','','القطاعات المشمولة (بلا اختيار = جميع القطاعات)'));
+  for(const [key,text] of SECTORS){const lab=miniToggle(text,q.sectors.includes(key));lab.querySelector('input').dataset.qsector=key;sectors.append(lab)}section.append(sectors);
+  const actions=el('div','f99v11-qactions');const up=el('button','f99v11-secondary','↑ أعلى');up.type='button';up.onclick=()=>{if(card.previousElementSibling?.classList.contains('f99v11-qcard'))target.insertBefore(card,card.previousElementSibling)};
+  const down=el('button','f99v11-secondary','↓ أسفل');down.type='button';down.onclick=()=>{const next=card.nextElementSibling;if(next?.classList.contains('f99v11-qcard'))target.insertBefore(next,card)};
+  const del=el('button','f99v11-remove','حذف السؤال');del.type='button';del.onclick=()=>card.remove();actions.append(up,down,del);section.append(actions);
+  card.append(section);target.append(card);return card;
+ }
+ function questionEditor(row,questions){const section=el('section','f99v11-question-editor');const header=el('div','f99v11-question-header');header.append(el('h4','','إدارة أسئلة الأهلية بشكل مستقل'));header.append(info('اضغط السؤال لفتحه، عدّل الإجابات، واختر السماح أو الرفض لكل إجابة. التغييرات لا تصل للأجهزة إلا بعد حفظ الباقات.'));section.append(header);
+  const list=el('div');list.dataset.questionList='1';section.append(list);questions.forEach(q=>questionCard(list,q));
+  const add=el('button','f99v11-secondary','+ إضافة سؤال جديد');add.type='button';add.onclick=()=>{if(list.children.length>=20)return status('الحد الأقصى 20 سؤالاً للباقة');const card=questionCard(list,{text:'',options:['نعم','لا'],reject:'',enabled:true});card.open=true;};section.append(add);row.append(section);
+ }
+ function readQuestions(row){const list=row.querySelector('[data-question-list]');if(!list)return [];
+  return [...list.querySelectorAll(':scope > .f99v11-qcard')].map(card=>{
+   const text=card.querySelector('[data-field=question-text]')?.value.trim()||'';
+   if(!text)return null;
+   const rules=[...card.querySelectorAll('[data-options] > .f99v11-option')].map(option=>({answer:option.querySelector('[data-field=option-text]')?.value.trim().slice(0,100)||'',reject:option.querySelector('[data-reject]')?.value==='yes',message:option.querySelector('[data-field=option-message]')?.value.trim().slice(0,400)||''})).filter(r=>r.answer);
+   return {id:card.dataset.qid,enabled:!!card.querySelector('[data-question-enabled]')?.checked,text:text.slice(0,200),options:rules.map(r=>r.answer),rules,reject:rules.filter(r=>r.reject).map(r=>r.answer).join('،'),sectors:[...card.querySelectorAll('[data-qsector]:checked')].map(x=>x.dataset.qsector),rejection_message:card.querySelector('[data-field=question-rejection]')?.value.trim().slice(0,400)||''};
+  }).filter(Boolean).slice(0,20);
+ }
+ function promoEditor(row,p){const wrap=el('details','f99v11-offer-editor');wrap.open=Boolean(p.offer_title||p.coupon_code);wrap.append(el('summary','','العرض التسويقي وقسيمة خصم سلة (اضغط للتعديل)'));
+  const grid=el('div','f99v11-offer-grid');field(grid,'اسم العرض','offer_title',p.offer_title||'');field(grid,'نهاية العرض (توقيت الرياض)','offer_end_date',p.offer_end_date||'',{type:'date'});
+  grid.append(miniToggle('إظهار العرض للعميل',p.offer_enabled!==false,'offerEnabled'));
+  field(grid,'كوبون الخصم في سلة (ينشأ في سلة أولًا)','coupon_code',p.coupon_code||'');
+  const type=el('label','f99s-field');type.append(el('span','','نوع الخصم'));const sel=document.createElement('select');sel.dataset.field='coupon_type';sel.append(new Option('مبلغ بالريال','amount'),new Option('نسبة مئوية','percent'));sel.value=p.coupon_type==='percent'?'percent':'amount';type.append(sel);grid.append(type);
+  field(grid,'قيمة الخصم','coupon_amount',p.coupon_amount||'',{type:'number'});
+  grid.append(miniToggle('إظهار رمز الخصم للعملاء',p.coupon_enabled===true,'couponEnabled'));
+  wrap.append(grid,info('السعر المعلن في FINO99 لا يعدّل سعر المنتج أو الكوبون في سلة. طابق السعر والرمز وتاريخ الانتهاء في سلة قبل النشر.'));row.append(wrap);
+ }
+
  function productRow(p={}){const list=$('f99v6-admin-products');if(!list)return;if(list.children.length>=60){status('الحد الأقصى 60 باقة');return}const norm=normalizeProduct(p);const row=el('section','f99s-product');row.dataset.packageKey=norm.key;
   const hd=el('div','f99s-product-head');hd.append(el('h3','',norm.name||'باقة جديدة'));const del=el('button','f99s-remove','حذف الباقة من العرض');del.onclick=()=>{row.remove();status('تم حذف الصف؛ اضغط حفظ لاعتماد التعديل بالمركزية')};hd.append(del);row.append(hd);
   field(row,'اسم الباقة','name',norm.name||'');field(row,'عنوان تسويقي مختصر','tagline',norm.tagline||'');field(row,'شارة العرض (اختياري)','badge',norm.badge||'');field(row,'السعر الحالي (ريال)','price',norm.price??17.8,{type:'number'});field(row,'السعر السابق للعرض (اختياري)','old_price',norm.old_price||'',{type:'number'});
@@ -17585,18 +17634,18 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   field(row,'عبارة تنبيه واضحة على الباقة','warning_text',norm.warning_text||'الاحتساب مبدئي ويخضع لشروط البنك',{textarea:true});
   field(row,'لون التنبيه (رمز HEX)','warning_color',norm.warning_color||'#B42335');
   field(row,'حجم خط التنبيه (14 إلى 24)','warning_size',norm.warning_size||17,{type:'number'});
-  field(row,'أسئلة قبل الشراء (سؤال بكل سطر): السؤال | الخيارات | الإجابات المرفوضة | القطاع اختياري','questions',norm.questions.map(q=>q.text+' | '+(q.options||['نعم','لا']).join('،')+' | '+(q.reject||'')+' | '+(q.sectors||[]).join('،')).join('\n'),{textarea:true});
+  questionEditor(row,norm.questions);field(row,'رسالة الاعتذار العامة عند عدم الأهلية','rejection_text',norm.rejection_text||DEFAULT_REJECTION,{textarea:true});promoEditor(row,norm);
   field(row,'الشروط الخاصة بالباقة','terms',norm.terms||'',{textarea:true});field(row,'مدة الكود بالدقائق','duration_minutes',norm.duration_minutes??1440,{type:'number'});field(row,'إعادات الحسبة بعد الأولى','restarts',norm.restarts??3,{type:'number'});
   serviceChecks(row,norm.services);sectorChecks(row,norm.allowed_sectors);
   const active=el('label','f99v6-mini-check');const input=document.createElement('input');input.type='checkbox';input.dataset.active='1';input.checked=norm.enabled===true;active.append(input,document.createTextNode(' إظهار الباقة والسماح بالشراء'));row.append(active);
-  const batch=el('div','f99v6-batch');const n=document.createElement('input');n.type='number';n.min='1';n.max='200';n.value='50';n.dataset.batch='1';const generate=el('button','','إنشاء 50/100 كود فريد في المركزية');generate.onclick=()=>issueBatch(row,Number(n.value));batch.append(el('span','','مخزون أكواد هذه الباقة: '),n,generate);row.append(batch);list.append(row)
+  const batch=el('div','f99v6-batch');const stock=el('button','','تخصيص أكواد من المخزون بعد حفظ الباقة');stock.type='button';stock.onclick=()=>{if(!window.F99V9OpenInventory)return status('ركّب تحديث المخزون في المركزية أولاً');window.F99V9OpenInventory(norm.key)};batch.append(stock);row.append(batch);list.append(row)
  }
  async function uploadCover(file,row){if(!owner())return status('هذه الميزة للمالك فقط');const f=file.files?.[0];if(!f)return status('اختر صورة أولاً');if(f.size>8*1024*1024)return status('أقصى حجم 8 ميجابايت');const data=new FormData();data.append('file',f);data.append('kind','background');data.append('admin_token',finoCentralAdminToken);status('جار رفع الصورة عبر خدمة الوسائط الآمنة...');try{const r=await fetch(FINO_SUPABASE_URL+'/functions/v1/f99x-owner-media',{method:'POST',headers:{apikey:FINO_SUPABASE_PUBLISHABLE_KEY},body:data});const x=await r.json();if(!r.ok||!x.ok||!urlOK(x.url))throw Error(x.error||'خدمة رفع الصورة غير مفعلة');row.querySelector('[data-field=image_url]').value=x.url;status('رُفعت الصورة. اضغط حفظ ونشر الباقات لاعتمادها على جميع الأجهزة.')}catch(e){status('تعذر رفع الصورة: '+e.message+'؛ يلزم نشر خدمة f99x-owner-media وربط التخزين.')}}
  function readRow(row){const v=k=>row.querySelector(`[data-field="${k}"]`)?.value.trim()||'';const s=[...row.querySelectorAll('[data-service]:checked')].map(x=>x.dataset.service),secs=[...row.querySelectorAll('[data-sector]:checked')].map(x=>x.dataset.sector),q=[];
-  for(const line of v('questions').split('\n').map(x=>x.trim()).filter(Boolean)){const [text,choices,rej,bySector]=line.split('|').map(x=>x.trim());if(!text)continue;q.push({text:text.slice(0,200),options:choices?listText(choices).slice(0,10):['نعم','لا'],reject:(rej||'').slice(0,200),sectors:bySector?listText(bySector).filter(x=>SECTORS.some(s=>s[0]===x)).slice(0,5):[]})}
+  q.push(...readQuestions(row));
   const bank_logos={};for(const line of v('bank_logos').split('\n')){const [name,url]=line.split('|').map(x=>x.trim());if(name&&url)bank_logos[name.slice(0,100)]=url.slice(0,500)}
   const preserve=cfg.products.find(x=>x.key===row.dataset.packageKey)||{};
-  return {questions_configured:true,warning_configured:true,bank_logos,auto_include_new_banks:!!row.querySelector('[data-auto-banks]')?.checked,warning_text:v('warning_text').slice(0,600),warning_color:v('warning_color'),warning_size:Number(v('warning_size')),max_calculations:preserve.max_calculations,redeem_last_day:preserve.redeem_last_day,key:row.dataset.packageKey,name:v('name').slice(0,100),tagline:v('tagline').slice(0,200),badge:v('badge').slice(0,60),price:Number(v('price')),old_price:v('old_price')?Number(v('old_price')):null,image_url:v('image_url'),salla_product_id:v('salla_product_id'),url:v('url'),banks:listText(v('banks')).slice(0,50),questions:q.slice(0,20),terms:v('terms').slice(0,8000),services:s,allowed_sectors:secs,duration_minutes:Number(v('duration_minutes')),restarts:Number(v('restarts')),enabled:!!row.querySelector('[data-active]')?.checked};
+  return {questions_configured:true,warning_configured:true,rejection_text:v('rejection_text').slice(0,400)||DEFAULT_REJECTION,offer_title:v('offer_title').slice(0,100),offer_end_date:v('offer_end_date'),offer_enabled:!!row.querySelector('[data-offer-enabled]')?.checked,coupon_enabled:!!row.querySelector('[data-coupon-enabled]')?.checked,coupon_code:v('coupon_code').toUpperCase().slice(0,40),coupon_type:v('coupon_type')==='percent'?'percent':'amount',coupon_amount:Number(v('coupon_amount')||0),bank_logos,auto_include_new_banks:!!row.querySelector('[data-auto-banks]')?.checked,warning_text:v('warning_text').slice(0,600),warning_color:v('warning_color'),warning_size:Number(v('warning_size')),max_calculations:preserve.max_calculations,redeem_last_day:preserve.redeem_last_day,key:row.dataset.packageKey,name:v('name').slice(0,100),tagline:v('tagline').slice(0,200),badge:v('badge').slice(0,60),price:Number(v('price')),old_price:v('old_price')?Number(v('old_price')):null,image_url:v('image_url'),salla_product_id:v('salla_product_id'),url:v('url'),banks:listText(v('banks')).slice(0,50),questions:q.slice(0,20),terms:v('terms').slice(0,8000),services:s,allowed_sectors:secs,duration_minutes:Number(v('duration_minutes')),restarts:Number(v('restarts')),enabled:!!row.querySelector('[data-active]')?.checked};
  }
  function validateProduct(p){if(!p.name)return 'أدخل اسم الباقة';if(!Number.isFinite(p.price)||p.price<0||p.price>100000)return 'سعر غير صحيح: '+p.name;
   if(p.old_price!==null&&(!Number.isFinite(p.old_price)||p.old_price<=p.price))return 'السعر السابق يجب أن يكون أكبر من الحالي: '+p.name;
@@ -17607,7 +17656,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if(!p.services.length)return 'اختر خدمة على الأقل للباقة: '+p.name;
   const financing=p.services.some(k=>['buyout','smart','compare','mortgage_quote','mortgage_compare'].includes(k));if(p.enabled&&financing&&!p.allowed_sectors.length)return 'حدد القطاعات المشمولة في: '+p.name;if(p.enabled&&financing&&!availableBanks(p).length)return 'حدد البنوك المشمولة في: '+p.name;
   if(!Number.isInteger(p.duration_minutes)||p.duration_minutes<1||p.duration_minutes>525600||!Number.isInteger(p.restarts)||p.restarts<0||p.restarts>50)return 'المدة أو إعادة الحسبة خارج الحدود: '+p.name;
-  if(p.questions.some(q=>rejectionValues(q).some(x=>!q.options.includes(x))))return 'الإجابات المستبعدة يجب أن تكون ضمن خيارات السؤال: '+p.name;
+  if(p.questions.some(q=>!q.text||q.options.length<1||new Set(q.options).size!==q.options.length||q.rules.some(r=>!q.options.includes(r.answer))))return 'راجع صياغة الأسئلة والإجابات المكررة في: '+p.name;
+  if(p.coupon_enabled&&(!/^[A-Z0-9_-]{2,40}$/.test(p.coupon_code)||p.coupon_amount<=0))return 'تحقق من رمز الخصم وقيمته في: '+p.name;
+  if(p.offer_end_date&&!/^\d{4}-\d{2}-\d{2}$/.test(p.offer_end_date))return 'تاريخ انتهاء العرض غير صحيح: '+p.name;
   if(Object.values(p.bank_logos||{}).some(url=>!urlOK(url)))return 'تحقق من رابط شعار البنك الإضافي: '+p.name;
   if(p.warning_color&&!/^#[0-9a-fA-F]{6}$/.test(p.warning_color))return 'لون التنبيه غير صالح: '+p.name;
   if(p.warning_size&&(!Number.isFinite(p.warning_size)||p.warning_size<14||p.warning_size>24))return 'حجم خط التنبيه خارج الحدود: '+p.name;
@@ -17623,7 +17674,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   status('جار الحفظ في المركزية والتحقق من قراءة النسخة نفسها...');try{const r=await window.finoCentralAdminCall('fino_admin_upsert_setting',{p_setting_key:KEY,p_value:value});if(!r.ok||r.data?.ok===false)throw Error(r.error?.message||r.data?.reason||'رفض الحفظ');const v=await window.finoRpc('fino_public_settings',{},12000);if(!v.ok||v.data?.settings?.[KEY]?.version!==value.version)throw Error('لم تتأكد المزامنة');cfg={...DEFAULT,...v.data.settings[KEY],products:v.data.settings[KEY].products.map(normalizeProduct)};renderButton();status('✅ تم تأكيد حفظ '+products.length+' باقة في المركزية.')}catch(e){status('❌ تعذر الاعتماد: '+e.message)}
  }
  function openOwner(){if(!owner())return alert('ادخل بكود المالك واتصل بالمركزية أولاً');if(!loaded){alert('لم تُقرأ إعدادات الباقات من المركزية بعد. لا يمكن تعديلها قبل نجاح الاتصال.');return;}const target=$('f99x-content');if(!target)return alert('افتح قسم الإدارة أولاً');target.replaceChildren();const root=el('section');root.id='f99s-owner';root.append(el('h2','','إدارة باقات FINO99 وسلة'));
-  root.append(info('كل باقة لها صورة وتسعير وتسويق وخدمات وشروط وأسئلة ومعرّف ثابت. أكواد كل باقة تُنشأ في المركزية ثم تُرفع لسلة قبل فتح البيع.'));
+  root.append(info('كل باقة لها صورة وتسعير وتسويق وخدمات وشروط وأسئلة ومعرّف ثابت. الأكواد تُسحب حصريًا من مخزون المركزية، وتُجهز للعمل في نفس عملية التخصيص، ثم تُنزل كملف سلة مطابق. لا تصدر أكواد بديلة من هذه الشاشة.'));
   function simple(label,id,value){const w=el('label','f99s-field');w.append(el('span','',label));const x=document.createElement(id==='f99v6-terms'?'textarea':'input');x.id=id;x.value=value??'';if(id==='f99v6-terms')x.rows=4;w.append(x);root.append(w)}
   simple('معرّف المتجر في سلة','f99v6-store-id',cfg.store_id||DEFAULT.store_id);
   simple('رابط المتجر العام (اختياري)','f99v6-home-url',cfg.store_home_url||'');simple('عنوان صفحة الباقات','f99v6-title',cfg.title||DEFAULT.title);simple('الشروط العامة','f99v6-terms',cfg.terms||DEFAULT.terms);
@@ -17631,20 +17682,14 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   const rows=el('div');rows.id='f99v6-admin-products';root.append(rows);
   const buttons=el('div','f99s-actions');const add=el('button','','+ إنشاء باقة جديدة');add.type='button';add.onclick=()=>productRow({enabled:false});buttons.append(add);const save=el('button','','حفظ ونشر الباقات');save.type='button';save.onclick=saveStore;buttons.append(save);root.append(buttons);
   const msg=el('p','f99v6-feedback');msg.id='f99v6-admin-status';msg.setAttribute('role','status');root.append(msg);target.append(root);
-  for(const p of cfg.products)productRow(p);if(!cfg.products.length)productRow({name:'الباقة البرونزية',tagline:'خدمة شراء مديونية التمويل الشخصي وترشيح البنوك',price:17.80,services:['buyout'],allowed_sectors:[],banks:[],restarts:2,duration_minutes:4320,enabled:false});
- }
- async function issueBatch(row,count){if(!owner())return status('غير مصرح');const p=readRow(row);const er=validateProduct({...p,enabled:false});if(er)return status(er);if(!Number.isSafeInteger(count)||count<1||count>200)return status('عدد الأكواد من 1 إلى 200');if(p.services.includes('contract'))return status('أكواد العقود تحتاج قالب عقد خاص؛ لا تجهزها كمخزون بيع عام');
-  if(!confirm(`إنشاء ${count} كود جديد مستقل للباقة «${p.name}»؟ يجب رفع الأكواد نفسها في منتج سلة قبل البيع.`))return;
-  status('جار إنشاء الأكواد مركزياً...');try{const r=await window.finoCentralAdminCall('f99v6_admin_issue_batch',{p_package_key:p.key,p_count:count,p_template:{name:p.name,allowed_services:p.services,duration_minutes:p.duration_minutes,max_restarts_per_entry:p.restarts,package_name:p.name}});if(!r.ok||r.data?.ok!==true||!Array.isArray(r.data.codes)||r.data.codes.length!==count)throw Error(r.error?.message||r.data?.reason||'فشل إصدار الأكواد');lastExport=r.data.codes.map(x=>x.code||x);const out=el('textarea');out.readOnly=true;out.rows=8;out.value=lastExport.join('\n');out.style.width='100%';row.append(out);const cp=el('button','','نسخ الأكواد لسلة');cp.onclick=async()=>{try{await navigator.clipboard.writeText(out.value);status('نُسخت '+lastExport.length+' كوداً. تأكد من استلام الأكواد في سلة قبل فتح البيع.')}catch{out.select();status('حدد النص ثم انسخه يدوياً')}};row.append(cp);status('✅ أنشأت المركزية '+count+' كوداً فريداً للباقة. لا ترفعها مرتين لسلة.')}catch(e){status('❌ تعذر إنشاء المخزون: '+e.message+' — يلزم تثبيت إضافة المركزية V6 أولاً.')}
+  for(const p of cfg.products)productRow(p);if(!cfg.products.length)productRow({key:'fino99-bronze-buyout-20261107',name:'البرونزية — تحويل المديونية ومقارنة البنوك',tagline:'شراء مديونية التمويل الشخصي مع مقارنة البنوك',price:4,old_price:17.80,offer_title:'عرض السند',offer_enabled:true,offer_end_date:'2026-11-30',services:['buyout','compare'],allowed_sectors:[],banks:[],restarts:2,duration_minutes:4320,enabled:false});
  }
  function installOwner(){const tabs=document.querySelector('#f99x-layer .f99x-tabs');if(!tabs)return;let b=$('f99s-owner-tab');if(!b){b=el('button','','سلة والباقات');b.id='f99s-owner-tab';tabs.append(b)}b.onclick=openOwner}
  window.FINO99OpenStorefront=openShop;window.F99SOpenOwner=openOwner;window.FINO99ReadStorefront=()=>JSON.parse(JSON.stringify(cfg));
- function init(){renderButton();installOwner();fetchStore();setInterval(()=>{installOwner();fetchStore()},25000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)fetchStore()})}
+ function init(){renderButton();installOwner();fetchStore();setInterval(()=>{if(!document.hidden){installOwner();fetchStore()}},7000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)fetchStore()})}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
-
-
 <style id="f99l-css">
 /* FINO99 public landing shell only. Old full calculator DOM is retained unchanged. */
 #page1{inset:0!important;height:100dvh!important;min-height:100dvh!important;background:#fff!important}
@@ -17678,8 +17723,6 @@ body:has(#page1.active) #subscriptionBadge{display:none!important}
 #f99l-root button:focus-visible,#f99l-root a:focus-visible{outline:3px solid #3b9bca;outline-offset:3px}
 @media(prefers-reduced-motion:reduce){#f99l-root *{animation:none!important;transition:none!important}}
 </style>
-
-
 <script id="f99l-js">
 (()=>{'use strict';
 const DEFAULT={landing_title:'FINO99',landing_start_enabled:true,landing_start_label:'ابدأ الآن',landing_code_enabled:true,landing_code_label:'لديك كود؟ اضغط هنا',landing_footer_enabled:true,landing_motion:true,landing_weather_enabled:true,weather_city:'الرياض',weather_lat:24.7136,weather_lon:46.6753,landing_tiles:[],accent:'#AE744A',logo_url:'',background_url:''};
@@ -17737,8 +17780,6 @@ window.FINO99OpenCodeEntry=showCode;
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
-
-
 <!-- FINO99 COMPARE additive update: no deletion of V23 calculators / original brand QR -->
 <style id="f99c-finance-style">
 /* FINO99 independent calculator/compare shell; never overrides existing bank logos or QR */
@@ -18199,7 +18240,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 
 </script>
-
 <script id="f99m-core-script">/* FINO99 — Independent mortgage scenario engine. Preliminary estimates only. */
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;if(root)root.F99MortgageCore=api;})(typeof window!=='undefined'?window:null,function(){'use strict';
 const round=x=>Math.round((Number(x)+Number.EPSILON)*100)/100;
@@ -18536,7 +18576,6 @@ function init(){installOwner()};if(document.readyState==='loading')document.addE
  if(flag){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();}
 })();
 </script>
-
 <style id="f99fix-owner-styles">
 body:has(#ownerHub.active) .ticker{display:none!important}
 #ownerHub .owner-hero{padding:7px 4px;text-align:right;background:transparent;border:none;box-shadow:none}
@@ -18577,54 +18616,54 @@ body:has(#ownerHub.active) .ticker{display:none!important}
 @media(max-width:530px){.f99fix-grid,.f99fix-checks,.f99fix-steps{grid-template-columns:1fr}#ownerHub .owner-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#ownerHub .owner-tile{min-height:95px;padding:10px}}
 </style>
 <section class="page" id="f99fixCodePage"><div class="f99fix-wrap">
- <div class="f99fix-head"><h1>الأكواد والباقات</h1><button onclick="openOwnerHub()">رجوع للرئيسية</button></div>
- <div id="f99fix-code-status" class="f99fix-status" aria-live="polite">تحميل الأكواد من المركزية...</div>
- <div class="f99fix-card"><div class="f99fix-actions"><button class="f99fix-btn" onclick="f99fixNewCode()">+ إنشاء كود</button><button class="f99fix-btn secondary" onclick="f99fixLoadCodes()">تحديث القائمة</button></div><div id="f99fix-codes-list"></div></div>
- <div class="f99fix-card" id="f99fix-editor" hidden role="dialog" aria-modal="true" aria-label="تفاصيل الكود"><div class="f99v4-code-head"><div><span class="f99v4-eyebrow">FINO99 / إدارة الأكواد</span><h2 id="f99fix-editor-title">إنشاء كود</h2></div><button type="button" class="f99fix-btn secondary" onclick="f99v4CloseEditor()">رجوع للقائمة</button></div>
- <div id="f99v4-code-message" class="f99fix-status" aria-live="polite">أدخل البيانات المطلوبة.</div>
- <nav class="f99v4-code-tabs" role="tablist"><button type="button" data-f99v4-tab="edit" onclick="f99v4CodeTab('edit')">البيانات</button><button type="button" data-f99v4-tab="upgrade" onclick="f99v4CodeTab('upgrade')">الخدمات والترقية</button><button type="button" data-f99v4-tab="renew" onclick="f99v4CodeTab('renew')">التجديد والحالة</button></nav>
- <section class="f99v4-code-pane" data-f99v4-pane="edit"><div class="f99fix-grid">
-  <label>اسم الكود أو العميل<input id="f99fix-name" placeholder="كود برونزي"></label>
-  <label>رمز الدخول<input id="f99fix-code" dir="ltr" placeholder="BR-XXXX-XXXX"></label>
-  <label>المدة بالدقائق<input id="f99fix-minutes" type="number" min="0" step="1" value="1440"></label>
-  <label>أقصى عدد دخولات (0 = غير محدود)<input id="f99fix-entries" type="number" min="0" value="1"></label>
-  <label>إعادات الحسبة بعد الأولى<input id="f99fix-restarts" type="number" min="0" value="3"></label>
-  <label>الحالة<select id="f99fix-enabled"><option value="1">مفعل</option><option value="0">موقوف</option></select></label>
-  <label>تصنيف الكود<select id="f99fix-kind"><option value="private">خدمة خاصة أو عقد</option><option value="package">اشتراك / باقة سلة</option></select></label>
-  <label>اسم الباقة مطابق لاسم منتجها في سلة<input id="f99fix-package-name" placeholder="مثلاً FINO99 – البرونزية"></label>
-  </div><div class="f99fix-actions"><button type="button" class="f99fix-btn success" onclick="f99v4CodeTab('upgrade')">التالي: الخدمات والصلاحيات</button></div></section>
-  <section class="f99v4-code-pane" data-f99v4-pane="upgrade"><div class="f99fix-checks">
-    <label><input type="checkbox" data-f99fix-service="buyout" checked> تحويل المديونية</label>
-    <label><input type="checkbox" data-f99fix-service="smart"> الحاسبة الذكية</label>
-    <label><input type="checkbox" data-f99fix-service="compare"> المقارنات</label>
-    <label><input type="checkbox" data-f99fix-service="mortgage_quote"> التمويل العقاري</label>
-    <label><input type="checkbox" data-f99fix-service="mortgage_compare"> مقارنة العقاري</label>
-    <label><input type="checkbox" data-f99fix-service="contract"> العقود</label>
-    <label><input type="checkbox" id="f99fix-device" checked> ربط بأول جهاز</label>
-    <label><input type="checkbox" id="f99fix-single" checked> منع تعدد الجلسات</label>
-    <label><input type="checkbox" id="f99fix-location"> الموقع باختيار المالك وموافقة العميل</label>
-  </div>
-  <div class="f99fix-actions"><button class="f99fix-btn success" id="f99fix-save" onclick="f99fixSaveCode()">اعتماد التعديل في المركزية</button><button class="f99fix-btn secondary" onclick="f99v4CodeTab('renew')">التجديد والحالة</button></div></section>
-  <section class="f99v4-code-pane" data-f99v4-pane="renew"><div id="f99fix-existing" hidden>
-  <div class="f99fix-actions"><button class="f99fix-btn secondary" onclick="f99fixCodeAction('enable')">تفعيل</button><button class="f99fix-btn secondary" onclick="f99fixCodeAction('disable')">إيقاف</button><button class="f99fix-btn danger" onclick="f99fixCodeAction('delete')">حذف من القائمة مع حفظ الأرشيف</button></div>
-  <div class="f99fix-grid"><label>تجديد الكود بالدقائق<input type="number" min="1" value="1440" id="f99fix-renew-minutes"></label><label>الجهاز<select id="f99fix-renew-device"><option value="0">الاحتفاظ بنفس الجهاز</option><option value="1">فك ربط الجهاز السابق</option></select></label></div>
-  <div class="f99fix-actions"><button class="f99fix-btn success" onclick="f99fixCodeAction('renew')">تجديد نفس الكود</button><button class="f99fix-btn secondary" onclick="f99fixCodeAction('reset')">تصفير الدخولات وإغلاق الجلسة</button><button class="f99fix-btn secondary" onclick="f99fixCheckCode()">فحص سبب رفض الدخول</button><button type="button" class="f99fix-btn secondary" onclick="F99V8ShowCurrentCodeReport()">تقرير الاستخدام والموقع المشارك</button></div>
-  </div><p class="f99v4-note">لتغيير الباقة أو صلاحيات الخدمات اختر «الخدمات والترقية» ثم احفظ؛ ولتمديد الكود المنتهي اختر «تجديد نفس الكود».</p></section>
- </div>
+<div class="f99fix-head"><h1>الأكواد والباقات</h1><button onclick="openOwnerHub()">رجوع للرئيسية</button></div>
+<div aria-live="polite" class="f99fix-status" id="f99fix-code-status">تحميل الأكواد من المركزية...</div>
+<div class="f99fix-card"><div class="f99fix-actions"><button class="f99fix-btn" onclick="f99fixNewCode()">+ إنشاء كود</button><button class="f99fix-btn secondary" onclick="f99fixLoadCodes()">تحديث القائمة</button></div><div id="f99fix-codes-list"></div></div>
+<div aria-label="تفاصيل الكود" aria-modal="true" class="f99fix-card" hidden="" id="f99fix-editor" role="dialog"><div class="f99v4-code-head"><div><span class="f99v4-eyebrow">FINO99 / إدارة الأكواد</span><h2 id="f99fix-editor-title">إنشاء كود</h2></div><button class="f99fix-btn secondary" onclick="f99v4CloseEditor()" type="button">رجوع للقائمة</button></div>
+<div aria-live="polite" class="f99fix-status" id="f99v4-code-message">أدخل البيانات المطلوبة.</div>
+<nav class="f99v4-code-tabs" role="tablist"><button data-f99v4-tab="edit" onclick="f99v4CodeTab('edit')" type="button">البيانات</button><button data-f99v4-tab="upgrade" onclick="f99v4CodeTab('upgrade')" type="button">الخدمات والترقية</button><button data-f99v4-tab="renew" onclick="f99v4CodeTab('renew')" type="button">التجديد والحالة</button></nav>
+<section class="f99v4-code-pane" data-f99v4-pane="edit"><div class="f99fix-grid">
+<label>اسم الكود أو العميل<input id="f99fix-name" placeholder="كود برونزي"/></label>
+<label>رمز الدخول<input dir="ltr" id="f99fix-code" placeholder="BR-XXXX-XXXX"/></label>
+<label>المدة بالدقائق<input id="f99fix-minutes" min="0" step="1" type="number" value="1440"/></label>
+<label>أقصى عدد دخولات (0 = غير محدود)<input id="f99fix-entries" min="0" type="number" value="1"/></label>
+<label>إعادات الحسبة بعد الأولى<input id="f99fix-restarts" min="0" type="number" value="3"/></label>
+<label>الحالة<select id="f99fix-enabled"><option value="1">مفعل</option><option value="0">موقوف</option></select></label>
+<label>تصنيف الكود<select id="f99fix-kind"><option value="private">خدمة خاصة أو عقد</option><option value="package">اشتراك / باقة سلة</option></select></label>
+<label>اسم الباقة مطابق لاسم منتجها في سلة<input id="f99fix-package-name" placeholder="مثلاً FINO99 – البرونزية"/></label>
+</div><div class="f99fix-actions"><button class="f99fix-btn success" onclick="f99v4CodeTab('upgrade')" type="button">التالي: الخدمات والصلاحيات</button></div></section>
+<section class="f99v4-code-pane" data-f99v4-pane="upgrade"><div class="f99fix-checks">
+<label><input checked="" data-f99fix-service="buyout" type="checkbox"/> تحويل المديونية</label>
+<label><input data-f99fix-service="smart" type="checkbox"/> الحاسبة الذكية</label>
+<label><input data-f99fix-service="compare" type="checkbox"/> المقارنات</label>
+<label><input data-f99fix-service="mortgage_quote" type="checkbox"/> التمويل العقاري</label>
+<label><input data-f99fix-service="mortgage_compare" type="checkbox"/> مقارنة العقاري</label>
+<label><input data-f99fix-service="contract" type="checkbox"/> العقود</label>
+<label><input checked="" id="f99fix-device" type="checkbox"/> ربط بأول جهاز</label>
+<label><input checked="" id="f99fix-single" type="checkbox"/> منع تعدد الجلسات</label>
+<label><input id="f99fix-location" type="checkbox"/> الموقع باختيار المالك وموافقة العميل</label>
+</div>
+<div class="f99fix-actions"><button class="f99fix-btn success" id="f99fix-save" onclick="f99fixSaveCode()">اعتماد التعديل في المركزية</button><button class="f99fix-btn secondary" onclick="f99v4CodeTab('renew')">التجديد والحالة</button></div></section>
+<section class="f99v4-code-pane" data-f99v4-pane="renew"><div hidden="" id="f99fix-existing">
+<div class="f99fix-actions"><button class="f99fix-btn secondary" onclick="f99fixCodeAction('enable')">تفعيل</button><button class="f99fix-btn secondary" onclick="f99fixCodeAction('disable')">إيقاف</button><button class="f99fix-btn danger" onclick="f99fixCodeAction('delete')">حذف من القائمة مع حفظ الأرشيف</button></div>
+<div class="f99fix-grid"><label>تجديد الكود بالدقائق<input id="f99fix-renew-minutes" min="1" type="number" value="1440"/></label><label>الجهاز<select id="f99fix-renew-device"><option value="0">الاحتفاظ بنفس الجهاز</option><option value="1">فك ربط الجهاز السابق</option></select></label></div>
+<div class="f99fix-actions"><button class="f99fix-btn success" onclick="f99fixCodeAction('renew')">تجديد نفس الكود</button><button class="f99fix-btn secondary" onclick="f99fixCodeAction('reset')">تصفير الدخولات وإغلاق الجلسة</button><button class="f99fix-btn secondary" onclick="f99fixCheckCode()">فحص سبب رفض الدخول</button><button class="f99fix-btn secondary" onclick="F99V8ShowCurrentCodeReport()" type="button">تقرير الاستخدام والموقع المشارك</button></div>
+</div><p class="f99v4-note">لتغيير الباقة أو صلاحيات الخدمات اختر «الخدمات والترقية» ثم احفظ؛ ولتمديد الكود المنتهي اختر «تجديد نفس الكود».</p></section>
+</div>
 </div></section>
 <section class="page" id="f99fixAdminPage"><div class="f99fix-wrap">
- <div class="f99fix-head"><h1>الإدارة</h1><button onclick="openOwnerHub()">رجوع للرئيسية</button></div>
- <div class="f99fix-card"><h2>إدارة المنصة والبنوك والخدمات</h2>
- <div class="f99fix-steps">
- <button class="f99fix-btn" onclick="f99fixOpenCodes()">إدارة الأكواد والتجديد</button>
- <button class="f99fix-btn" onclick="f99v4OpenBankFees()">أتعاب البنوك ورسوم السلعة</button>
- <button class="f99fix-btn" onclick="window.F99COpenOwner?.()">نسب البنوك وإعدادات المقارنات</button>
- <button class="f99fix-btn" onclick="ownerOpenAdminSection('contracts')">قوالب العقود</button>
- <button class="f99fix-btn" onclick="ownerOpenAdminSection('archive')">الأرشفة والتقارير</button>
- <button class="f99fix-btn" onclick="openFINOAdminPanel()">الإعدادات العامة</button>
- <button class="f99fix-btn" onclick="f99fixOpenCodes()">صلاحيات الباقات والعملاء</button>
- </div></div>
- <div id="f99fix-owner-settings"></div>
+<div class="f99fix-head"><h1>الإدارة</h1><button onclick="openOwnerHub()">رجوع للرئيسية</button></div>
+<div class="f99fix-card"><h2>إدارة المنصة والبنوك والخدمات</h2>
+<div class="f99fix-steps">
+<button class="f99fix-btn" onclick="f99fixOpenCodes()">إدارة الأكواد والتجديد</button>
+<button class="f99fix-btn" onclick="f99v4OpenBankFees()">أتعاب البنوك ورسوم السلعة</button>
+<button class="f99fix-btn" onclick="window.F99COpenOwner?.()">نسب البنوك وإعدادات المقارنات</button>
+<button class="f99fix-btn" onclick="ownerOpenAdminSection('contracts')">قوالب العقود</button>
+<button class="f99fix-btn" onclick="ownerOpenAdminSection('archive')">الأرشفة والتقارير</button>
+<button class="f99fix-btn" onclick="openFINOAdminPanel()">الإعدادات العامة</button>
+<button class="f99fix-btn" onclick="f99fixOpenCodes()">صلاحيات الباقات والعملاء</button>
+</div></div>
+<div id="f99fix-owner-settings"></div>
 </div></section>
 <script id="f99fix-controller">
 (function(){'use strict';
@@ -18672,6 +18711,7 @@ body:has(#ownerHub.active) .ticker{display:none!important}
    if(!Number.isSafeInteger(duration)||duration<0||duration>525600||!Number.isSafeInteger(max)||max<0||!Number.isSafeInteger(restart)||restart<0){status('المدة وعدد الدخولات والإعادات يجب أن تكون أرقاماً صحيحة غير سالبة.');return;}
    const payload={id:currentId||'',name:$('f99fix-name').value.trim()||'كود عميل',code:$('f99fix-code').value.trim().toUpperCase(),enabled:$('f99fix-enabled').value==='1',duration_minutes:duration,max_entries:max,max_restarts_per_entry:restart,allow_restart:restart>0,activate_on_first_use:true,
     lock_to_first_device:$('f99fix-device').checked,require_location:$('f99fix-location').checked,allowed_services:services,config:{...(prev?.config||{}),f99x:{...(prev?.config?.f99x||{}),single_session:$('f99fix-single').checked,sellable:$('f99fix-kind').value==='package',store_package_id:$('f99fix-kind').value==='package'?$('f99fix-package-name').value.trim():''}}};
+   if(payload.config.f99x.sellable&&!currentId){status('أكواد الباقات للبيع تُسحب من مخزون المركزية فقط؛ لا تنشئ كوداً موازياً.');return;}
    if(payload.config.f99x.sellable&&(!payload.config.f99x.store_package_id||max!==1)){status('لكود باقة سلة: اكتب اسم الباقة المطابق واجعل أقصى عدد الدخولات 1.');return;}
    if(!/^[A-Z0-9-]{8,32}$/.test(payload.code)){status('رمز الكود يجب أن يكون 8 إلى 32 حرفاً أو رقماً أو شرطة.');return;}
    saving=true;$('f99fix-save').disabled=true;status('جاري الحفظ والتحقق من المركزية...');try{
@@ -18690,7 +18730,7 @@ body:has(#ownerHub.active) .ticker{display:none!important}
    if(action==='delete'&&!confirm('سيُخفى الكود ويُوقف فوراً مع إبقاء الأرشيف والعقود. هل تؤكد؟'))return;
    if(action==='renew'&&!confirm('تجديد نفس الكود وإغلاق جلساته السابقة وتصفير الدخولات المستهلكة؟'))return;
    status('جاري تنفيذ '+action+' والتحقق من المركزية...');try{const r=action==='renew'
-      ? await api('f99v8_admin_renew_code',{p_code_id:currentId,p_minutes:minutes,p_unlock_device:unlock})
+      ? await api('f99v12_admin_renew_verified',{p_code_id:currentId,p_minutes:minutes,p_unlock_device:unlock})
       : await api('f99v3_admin_action',{p_code_id:currentId,p_action:action,p_minutes:minutes,p_enabled:true,p_unlock_device:unlock});
      if(!r.ok||r.data?.ok===false)throw Error(explain(r));const id=currentId;if(!await refresh())throw Error('تعذر التحقق بعد العملية');const saved=codes.find(x=>x.id===id);if(action==='delete'){currentId='';$('f99fix-editor').hidden=true;status('✅ تم إيقاف وإخفاء الكود مع بقاء الأرشيف.');return}
      if(!saved)throw Error('الكود لم يظهر بعد العملية');
@@ -18701,7 +18741,7 @@ body:has(#ownerHub.active) .ticker{display:none!important}
      setForm(saved);status('✅ تم تنفيذ '+action+' والتحقق من حالة الكود '+saved.code);
    }catch(e){status('❌ تعذر التنفيذ: '+e.message+'؛ تأكد من تركيب SQL التصحيحي أولاً.');}
  };
- window.f99fixCheckCode=async function(){if(!owner()||!currentId)return;const r=await api('f99v3_admin_code_status',{p_code_id:currentId});status(r.ok&&r.data?.ok!==false?'حالة الكود: '+r.data.reason+' • استخدامات '+r.data.use_count+' من '+(r.data.max_entries||'غير محدود')+' • جلسات نشطة '+r.data.active_sessions:'تعذر فحص الكود: '+explain(r))};
+ window.f99fixCheckCode=async function(){if(!owner()||!currentId)return;const r=await api('f99v12_admin_health',{p_code_id:currentId});status(r.ok&&r.data?.ok===true?'فحص المركزية: '+r.data.reason+' • عدد الدخول: '+r.data.use_count+'/'+(r.data.max_entries||'غير محدود')+' • جلسات نشطة: '+r.data.active_sessions+' • الباقة: '+(r.data.package_key||'غير مرتبطة'):'تعذر فحص الكود: '+explain(r))};
  window.f99fixOpenAdmin=function(){if(!owner()){alert('يجب الدخول بكود المالك أولاً');return;}window.showPage('f99fixAdminPage')};
  function moveSettings(){const dock=$('f99fix-owner-settings');const hub=document.querySelector('#ownerHub .owner-shell');if(!dock||!hub)return;
   [...hub.children].filter(e=>e.classList.contains('owner-section-title')||e.classList.contains('owner-platform-card')).forEach(e=>dock.append(e));
@@ -18837,7 +18877,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 
 </script>
-
 <style id="f99v5-diagnostics-style">
 #f99v5-diag{padding:12px 14px;background:#fff;border:1px solid #d7e5ed;border-radius:14px;margin:12px auto;max-width:760px;color:#173d53;font:700 13px/1.8 Cairo,system-ui,sans-serif}
 #f99v5-diag button{background:#165d81;color:white;border:0;border-radius:10px;padding:10px 16px;font:800 13px Cairo,system-ui,sans-serif}
@@ -18891,31 +18930,47 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 #f99v6-service-quick{position:fixed;z-index:1300;bottom:max(12px,env(safe-area-inset-bottom));left:13px;font:800 12px Cairo,system-ui;border:1px solid #adc3d2;border-radius:999px;background:#fff;color:#1d5b7d;padding:10px 14px;box-shadow:0 4px 18px #23425723}
 @media(max-width:520px){#f99v6-services .f99v6-service-grid{grid-template-columns:1fr}#f99v6-services h2{font-size:20px}}
 </style>
-<script id="f99v6-services-js">/* FINO99 V6: one paid code may authorize several existing calculators/services. */
+<script id="f99v6-services-js">/* FINO99 V13 | Explicit calculator vs bot entitlements, server-provided grant list. */
 (()=>{'use strict';
- const NAMES={buyout:['تحويل المديونية','حساب شراء المديونية والترشيح','calculator'],smart:['الحاسبة الذكية','الاحتساب والترشيح الذكي','brain-circuit'],compare:['مقارنات العروض','مقارنة عرضين إلى أربعة','chart-no-axes-column'],mortgage_quote:['التمويل العقاري','الحاسبة العقارية','house'],mortgage_compare:['مقارنات العقاري','مقارنة التمويل العقاري','chart-column'],contract:['العقود','الاطلاع والموافقة على العقد','file-text']};
- const getAllowed=()=>{try{return Array.isArray(activeAccess?.record?.centralData?.allowed_services)?activeAccess.record.centralData.allowed_services:[]}catch{return []}};
- const allowed=(k)=>!!activeAccess?.record?.central&&!activeAccess?.record?.owner&&getAllowed().includes(k);
- function close(){const p=document.getElementById('f99v6-services');if(p)p.hidden=true}
- function open(requested){const all=getAllowed().filter(k=>NAMES[k]);if(!activeAccess?.record?.central||activeAccess?.record?.owner||!all.length)return;
-  let root=document.getElementById('f99v6-services');if(!root){root=document.createElement('div');root.id='f99v6-services';root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');document.body.append(root)}root.replaceChildren();root.hidden=false;
-  const box=document.createElement('section');const head=document.createElement('header');const title=document.createElement('h2');title.textContent='خدمات باقتك';head.append(title);const hide=document.createElement('button');hide.textContent='إغلاق';hide.onclick=close;head.append(hide);box.append(head);
-  const note=document.createElement('p');note.textContent='اختر إحدى الخدمات المسموحة لك بهذا الكود. تظهر هنا الخدمات التي فعّلها المالك فقط.';box.append(note);
-  const grid=document.createElement('div');grid.className='f99v6-service-grid';for(const k of all){const b=document.createElement('button');b.type='button';const t=document.createElement('b');t.textContent=NAMES[k][0];const hint=document.createElement('small');hint.textContent=NAMES[k][1];b.append(t,hint);b.onclick=()=>run(k);grid.append(b)}box.append(grid);root.append(box);
-  const quick=document.getElementById('f99v6-service-quick');if(quick)quick.hidden=all.length<2;
+const NAMES={
+ buyout:['تحويل المديونية','الحاسبة الأساسية لشراء المديونية'],smart:['الحاسبة الذكية','ترشيح البنوك'],
+ compare:['مقارنة عروض البنوك','مقارنة العروض التمويلية'],mortgage_quote:['التمويل العقاري','حسبة التمويل العقاري'],
+ mortgage_compare:['مقارنات العقاري','مقارنة عروض التمويل العقاري'],contract:['العقود','عرض العقد الخاص بالعميل'],
+ bot_buyout:['بوت تحويل المديونية','المساعد التفاعلي لشراء المديونية'],bot_smart:['بوت الحاسبة الذكية','مساعد الحسبة الذكية'],
+ bot_compare:['بوت مقارنة العروض','المساعد الإرشادي لمقارنة عروض البنوك'],
+ bot_mortgage_quote:['بوت التمويل العقاري','المساعد الإرشادي للعقاري'],bot_contract:['بوت العقود','مساعد إرشادي للعقود']};
+function allowedList(){try{return Array.isArray(activeAccess?.record?.centralData?.allowed_services)?activeAccess.record.centralData.allowed_services:[]}catch{return []}}
+function allowed(k){return !!activeAccess?.record?.central&&!activeAccess.record.owner&&allowedList().includes(k)}
+function close(){const p=document.getElementById('f99v6-services');if(p)p.hidden=true}
+function choose(){const all=allowedList().filter(k=>NAMES[k]);if(!activeAccess?.record?.central||activeAccess.record.owner||!all.length)return;
+ let root=document.getElementById('f99v6-services');if(!root){root=document.createElement('div');root.id='f99v6-services';root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');document.body.append(root)}
+ root.replaceChildren();root.hidden=false;const box=document.createElement('section');const head=document.createElement('header');const title=document.createElement('h2');title.textContent='خدمات باقتك';head.append(title);const x=document.createElement('button');x.textContent='إغلاق';x.type='button';x.onclick=close;head.append(x);box.append(head);
+ const note=document.createElement('p');note.textContent='الخدمات التي حددها المالك لهذا الكود فقط. البوت مختلف عن الحاسبة المباشرة.';box.append(note);
+ const grid=document.createElement('div');grid.className='f99v6-service-grid';for(const k of all){const b=document.createElement('button');b.type='button';const t=document.createElement('b');t.textContent=NAMES[k][0];const hint=document.createElement('small');hint.textContent=NAMES[k][1];b.append(t,hint);b.onclick=()=>run(k);grid.append(b)}box.append(grid);root.append(box);
+ const quick=document.getElementById('f99v6-service-quick');if(quick)quick.hidden=all.length<2;
+}
+function run(k){if(!allowed(k))return;close();try{
+ if(k==='buyout'){window.showPage('page2');if(typeof window.refreshPersonalizedCopy==='function')window.refreshPersonalizedCopy();}
+ else if(k==='smart'){if(typeof window.renderSmartBanks==='function')window.renderSmartBanks();window.showPage('smartPage');}
+ else if(k==='compare'){if(typeof window.F99COpenClient!=='function')throw Error('لم تُحمّل شاشة المقارنة');window.F99COpenClient();}
+ else if(k==='mortgage_quote'||k==='mortgage_compare'){if(typeof window.F99MOpenClient!=='function')throw Error('لم تُحمّل شاشة العقاري');window.F99MOpenClient(k==='mortgage_compare');}
+ else if(k==='contract'){if(typeof window.openFINOContractClient!=='function')throw Error('قالب العقد غير متاح');window.openFINOContractClient();}
+ else if(k==='bot_buyout'){
+   if(typeof window.openFINOSmartPortal!=='function')throw Error('بوت المديونية غير مُحمّل');
+   window.openFINOSmartPortal(true);if(typeof finoPortal!=='undefined')finoPortal.strictServiceScope='buyout';
+   if(typeof window.startFINOPortalBuyout==='function')setTimeout(()=>window.startFINOPortalBuyout(),60);
  }
- function run(k){if(!allowed(k))return;close();try{
-  if(k==='compare'){if(typeof window.F99COpenClient==='function')window.F99COpenClient();else throw Error('شاشة المقارنة غير محملة');}
-  else if(k==='mortgage_quote'||k==='mortgage_compare'){if(typeof window.F99MOpenClient==='function')window.F99MOpenClient(k==='mortgage_compare');else throw Error('شاشة العقاري غير محملة');}
-  else if(k==='smart'){if(typeof window.renderSmartBanks==='function')window.renderSmartBanks();if(typeof window.showPage==='function')window.showPage('smartPage');else throw Error('الحاسبة الذكية غير متاحة');}
-  else if(k==='buyout'){if(typeof window.showPage==='function')window.showPage('page2');else throw Error('حاسبة المديونية غير متاحة');}
-  else if(k==='contract'){if(typeof window.openFINOContractClient==='function')window.openFINOContractClient();else throw Error('قالب العقد غير متاح');}
- }catch(e){alert('تعذر فتح الخدمة: '+(e.message||e));open()}}
- function setup(){let q=document.getElementById('f99v6-service-quick');if(!q){q=document.createElement('button');q.id='f99v6-service-quick';q.type='button';q.textContent='خدمات باقتي';q.hidden=true;q.onclick=()=>open();document.body.append(q)} }
- window.F99V6OpenServices=open;window.F99V6CloseServices=close;
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup,{once:true});else setup();
-})();
-</script>
+ else if(k==='bot_smart'){
+   if(typeof window.openFINOSmartPortal!=='function')throw Error('بوت الحاسبة غير مُحمّل');
+   window.openFINOSmartPortal(false);if(typeof finoPortal!=='undefined')finoPortal.strictServiceScope='smart';
+   if(typeof window.startFINOPortalSmart==='function')setTimeout(()=>window.startFINOPortalSmart(),60);
+ }
+ else if(k.startsWith('bot_')){if(typeof window.F99V13GuidedBot==='function')window.F99V13GuidedBot(k,allowedList());else throw Error('المساعد الإرشادي غير مُحمّل');}
+ }catch(e){alert('تعذر فتح الخدمة: '+String(e.message||e));choose()}}
+function setup(){let q=document.getElementById('f99v6-service-quick');if(!q){q=document.createElement('button');q.id='f99v6-service-quick';q.type='button';q.textContent='خدمات باقتي';q.hidden=true;q.onclick=choose;document.body.append(q)}}
+window.F99V6OpenServices=choose;window.F99V6CloseServices=close;window.F99V13RunService=run;
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup,{once:true});else setup();
+})();</script>
 <style id="f99v7-owner-style">
 #f99v7-owner-panel[hidden]{display:none!important}
 #f99v7-owner-panel{position:fixed;inset:0;background:#f3f6fa;z-index:2850;overflow:auto;padding:18px;color:#123b52;font-family:Cairo,system-ui,sans-serif}
@@ -18981,13 +19036,21 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  const DEFAULT={ok:true,whatsapp:'',show_public_renewal:true,offers:[{id:'bronze-3d',title:'تجديد البرونزية — 3 أيام',price:17.80,duration_minutes:4320,enabled:true}],contract_accepted:'تم اعتماد العقد بكامل أركانه.',contract_rejected:'تم تسجيل عدم الموافقة على العقد.',contract_expired:'انتهت صلاحية كود العقد.',code_invalid:'رمز الدخول غير صحيح أو غير معتمد. تأكد من الرمز، ولا تستخدم رموز الآخرين دون تصريح؛ قد يخضع الدخول غير المصرح به للإجراءات النظامية.',renewal_note:'بعد التواصل والتحقق من السداد، يجدد المالك نفس الكود.'};
  let config={...DEFAULT},currentOwnerReport=null;
  const owner=()=>!!(typeof activeAccess!=='undefined'&&activeAccess?.record?.owner&&typeof finoCentralAdminToken!=='undefined'&&finoCentralAdminToken);
- function extract(s){const raw=String(s||'').toUpperCase().trim().replace(/[\u200e\u200f\u202a-\u202e]/g,'');
-   if(/^[A-Z0-9-]{8,32}$/.test(raw)&&/[A-Z]/.test(raw))return raw;
-   let match=raw.match(/(?:F9S-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}|BR-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}|F99-[A-Z0-9]{5}-[A-Z0-9]{5})/);
-   if(match)return match[0];
-   match=raw.match(/(?:الكود|رمز الدخول|CODE)\s*[:：]\s*([A-Z0-9-]{8,32})/i);
-   return match?match[1]:raw;
+ function extract(s){
+   const raw=String(s||'').toUpperCase().replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069\u00a0]/g,' ').trim();
+   // First match known access-code shapes anywhere in a Salla/WhatsApp clipboard.
+   const matched=raw.match(/(?:^|[^A-Z0-9-])(BR-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}|F9S-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}|F9-[A-HJ-NP-Z2-9]{5}-[A-HJ-NP-Z2-9]{5}|F9-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}|F99-[A-Z0-9]{5}-[A-Z0-9]{5})(?=$|[^A-Z0-9-])/);
+   if(matched)return matched[1];
+   // Distinct owner token stays unchanged if it is itself a single valid token.
+   if(/^[A-Z0-9-]{4,32}$/.test(raw))return raw;
+   const lines=raw.split(/[\r\n\t]+/).map(x=>x.trim()).filter(Boolean);
+   for(const line of lines){
+      const candidate=line.match(/(?:الكود|رمز التفعيل|رمز الدخول|CODE)\s*[:：]\s*([A-Z0-9-]{4,32})/i);
+      if(candidate)return candidate[1];
+   }
+   return '';
  }
+ document.addEventListener('paste',event=>{const target=event.target;if(!target||!['password','f99l-code'].includes(target.id))return;const copied=event.clipboardData?.getData('text/plain');if(!copied)return;const code=extract(copied);event.preventDefault();event.stopImmediatePropagation();target.value=code;target.dispatchEvent(new Event('input',{bubbles:true}));},true);
  window.F99V8ExtractCode=extract;
  function fmtTime(d){if(!d)return 'لم يسجل';const t=new Date(d);return Number.isNaN(t.getTime())?'غير معروف':t.toLocaleString('ar-SA',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Riyadh'})}
  function node(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=String(txt);return e}
@@ -18996,11 +19059,28 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  function mkTextarea(parent,label,value=''){const l=node('label','',label),e=document.createElement('textarea');e.value=value;l.append(e);parent.append(l);return e}
  function message(box,txt){box.textContent=txt;box.setAttribute('role','status')}
  async function loadPublic(){try{const r=await finoRpc('f99v8_public_renewal_settings',{},8000);if(r.ok&&r.data?.ok)config={...DEFAULT,...r.data}}catch(e){}window.F99V8PublicSettings=config;const btn=$('f99v8-public-renew');if(btn)btn.style.display=config.show_public_renewal===false?'none':'block';return config}
- function pasteGuard(){const input=$('password');if(!input||input.dataset.f99v8Paste)return;input.dataset.f99v8Paste='1';input.addEventListener('paste',e=>{const raw=e.clipboardData?.getData('text/plain');if(!raw)return;const code=extract(raw);if(code!==raw.toUpperCase().trim()&&/^[A-Z0-9-]{8,32}$/.test(code)){e.preventDefault();input.value=code;input.dispatchEvent(new Event('input',{bubbles:true}))}})}
+ function pasteGuard(){
+   for(const id of ['password','f99l-code']){
+     const input=$(id);if(!input||input.dataset.f99v12Paste)return;input.dataset.f99v12Paste='1';
+     input.autocomplete='off';input.setAttribute('autocapitalize','characters');input.setAttribute('spellcheck','false');
+     input.addEventListener('paste',e=>{
+       const raw=e.clipboardData?.getData('text/plain');if(raw===undefined)return;
+       const extracted=extract(raw);
+       e.preventDefault();e.stopImmediatePropagation();
+       // Never append clipboard to existing text, and never append page footer.
+       input.value=extracted;
+       input.dispatchEvent(new Event('input',{bubbles:true}));
+     },true);
+     input.addEventListener('input',()=>{
+       const value=String(input.value||'');
+       if(/[\r\n\t\s]/.test(value)||value.length>32){input.value=extract(value)}
+     });
+   }
+ }
  async function publicStatus(code){const r=await finoRpc('f99v8_public_code_status',{p_code:code,p_device_id:typeof finoCentralDeviceId==='function'?finoCentralDeviceId():''},12000);return r.ok?r.data:null}
  window.F99V8OpenRenewal=async function(prefill=''){
    await loadPublic();if(config.show_public_renewal===false)return alert('التجديد عبر المنصة متوقف مؤقتاً. تواصل مع الإدارة.');const sheet=showModal('f99v8-renew','تجديد أو ترقية نفس الكود');sheet.append(node('p','','اختر نوع التجديد ثم أدخل كود باقتك. لن يصدر كود جديد؛ التجديد يتم بعد مراجعة المالك للسداد.'));
-   const codeInput=mkInput(sheet,'كود الباقة',extract(prefill));codeInput.dir='ltr';codeInput.placeholder='BR-XXXXX-XXXXX-XXXXX';
+   const codeInput=mkInput(sheet,'كود الباقة',extract(prefill));codeInput.dir='ltr';codeInput.placeholder='F9-XXXXX-XXXXX';
    const options=node('div');sheet.append(options);let choice='';
    const offers=(Array.isArray(config.offers)?config.offers:[]).filter(x=>x.enabled!==false&&x.title&&Number.isFinite(Number(x.price))&&Number(x.price)>=0);
    offers.forEach((p,i)=>{const lab=node('label','f99v8-plan');const radio=document.createElement('input');radio.type='radio';radio.name='f99v8-plan-choice';radio.value=p.id||String(i);radio.checked=i===0;if(i===0)choice=radio.value;radio.onchange=()=>choice=radio.value;const contents=node('div');contents.append(node('b','',p.title),node('small','',Number(p.price).toFixed(2)+' ريال — السعر يؤكده المالك قبل السداد'));lab.append(radio,contents);options.append(lab)});
@@ -19056,7 +19136,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
 })();
 </script>
-
 <style id="f99v9-stock-css">
 /* V9 inventory is accessible only from owner controls. Hide legacy code generator
    to avoid accidentally selling auto-enabled codes without batch tracking. */
@@ -19088,7 +19167,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <script id="f99v9-stock-js">
 (()=>{'use strict';
 const $=id=>document.getElementById(id);
-const SERVICES={buyout:'شراء مديونية التمويل الشخصي',smart:'الحاسبة الذكية',compare:'مقارنات البنوك',mortgage_quote:'التمويل العقاري',mortgage_compare:'مقارنات العقاري',mortgage_buyout:'شراء المديونية العقارية',contracts:'العقود',chat:'بوت الخدمات'};
+const SERVICES={buyout:'حاسبة شراء المديونية الشخصية',smart:'الحاسبة الذكية',compare:'مقارنات عروض البنوك',mortgage_quote:'حاسبة التمويل العقاري',mortgage_compare:'مقارنات العقاري',mortgage_buyout:'شراء المديونية العقارية',contract:'العقود',contracts:'العقود',chat:'بوت الخدمات',bot_buyout:'بوت تحويل المديونية',bot_smart:'بوت الحاسبة الذكية',bot_compare:'بوت مقارنات البنوك',bot_mortgage_quote:'بوت التمويل العقاري',bot_contract:'بوت العقود'};
 let summary=null,latest=null,locked=false;
 function owner(){try{return !!(activeAccess?.record?.owner && activeAccess?.record?.central && finoCentralAdminToken)}catch{return false}}
 function e(t,text,cls){const a=document.createElement(t);if(cls)a.className=cls;if(text!==undefined)a.textContent=String(text);return a}
@@ -19096,29 +19175,43 @@ function button(text,action,secondary=false){const b=e('button',text);b.type='bu
 function field(target,title,type,value){const l=e('label',title),inp=document.createElement('input');inp.type=type;inp.value=value??'';l.append(inp);target.append(l);return inp}
 function flash(message){const p=$('v9-feedback');if(p){p.textContent=message;p.setAttribute('role','status')}}
 async function api(name,args={}){if(!owner())throw Error('انتهت جلسة المالك، ادخل بكود المالك من جديد.');const r=await window.finoCentralAdminCall(name,args);if(!r?.ok||!r?.data?.ok)throw Error(r?.data?.reason||r?.error?.message||'تعذر التحقق من المركزية');return r.data}
-function csv(codes){const rows=['code',...codes.map(c=>'"'+String(c).replace(/"/g,'""')+'"')];return '\ufeff'+rows.join('\r\n')+'\r\n'}
+function csv(codes,lastDay){const rows=['كود التفعيل,تاريخ الانتهاء',...codes.map(c=>String(c)+','+String(lastDay||''))];return '\ufeff'+rows.join('\r\n')+'\r\n'}
 function download(name,text,type){const blob=new Blob([text],{type});const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000)}
-function exportBatch(batch){const codes=batch?.codes;if(!Array.isArray(codes)||codes.length!==batch.count||codes.some(c=>!/^[A-Z0-9-]{8,32}$/.test(c))||new Set(codes).size!==codes.length)throw Error('ملف الأكواد غير مكتمل؛ أُلغِي التنزيل.');const id=String(batch.allocation_id).slice(0,8);download('FINO99_SALLA_'+id+'_'+codes.length+'.csv',csv(codes),'text/csv;charset=utf-8');flash('تم تنزيل '+codes.length+' كوداً مطابقاً لدفعة المركزية. أضفها إلى منتج الباقة الصحيح في سلة، ثم بعد التأكد اضغط اعتماد طرح الدفعة. لا تكرر إدراج المجموعة.');}
+function exportBatch(batch){
+ const codes=batch?.codes,expected=Number(batch?.count);
+ if(batch?.state!=='published'||batch?.published!==undefined&&batch?.published!==true)throw Error('لا يمكن تصدير أكواد سلة قبل اعتماد الدفعة وتفعيلها في المركزية.');
+ if(!Number.isInteger(expected)||expected<1||expected>500||!Array.isArray(codes)||codes.length!==expected||codes.some(c=>!/^[A-Z0-9-]{8,32}$/.test(c))||new Set(codes).size!==codes.length)throw Error('ملف الأكواد غير مكتمل أو عددها غير مطابق؛ أُلغي التنزيل.');
+ if(!/^[a-fA-F0-9-]{36}$/.test(String(batch.allocation_id)))throw Error('معرف الدفعة غير صالح؛ أُلغي التنزيل.');
+ if(batch?.last_day!=null&&!/^\d{4}-\d{2}-\d{2}$/.test(String(batch.last_day)))throw Error('تاريخ صلاحية الدفعة غير صحيح؛ أُلغي التنزيل.');
+ const id=String(batch.allocation_id).slice(0,8);download('FINO99_SALLA_'+id+'_'+codes.length+'.csv',csv(codes,batch?.last_day),'text/csv;charset=utf-8');
+ flash('تم إنشاء ملف '+codes.length+' كود من الدفعة المعتمدة. تأكد أن الملف نزل في جهازك، وارفعه مرة واحدة فقط لمنتج سلة المطابق للباقة.');
+}
 async function refresh(){summary=await api('f99v9_admin_stock_summary');for(const [key,id] of [['total','v9-total'],['available','v9-available'],['reserved','v9-reserved'],['published','v9-published'],['legacy','v9-old']]){const el=$(id);if(el)el.textContent=Number(summary[key]||0).toLocaleString('en-US')}
-const list=$('v9-batches');if(list){list.replaceChildren();for(const a of (summary.allocations||[])){const row=e('div',undefined,'v9-batch');row.append(e('strong',a.package_name+' — '+a.item_count+' كود'),e('p','الحالة: '+(a.state==='published'?'مطروحة':'محجوزة بانتظار سلة')+' • '+new Date(a.created_at).toLocaleString('ar-SA',{timeZone:'Asia/Riyadh'})));const actions=e('div',undefined,'v9-actions');actions.append(button('تنزيل ملف سلة مجدداً',async()=>{try{const d=await api('f99v9_admin_allocation',{p_allocation_id:a.id});latest=d;exportBatch(d)}catch(ex){flash(ex.message)}},true));if(a.state!=='published')actions.append(button('اعتماد طرح الدفعة',async()=>{if(!confirm('هل تأكدت أن ملفات الدفعة وصلت إلى منتج سلة الصحيح؟ لن يتأكد النظام تلقائياً من المبيعات.'))return;try{flash('جاري اعتماد الأكواد في المركزية...');await api('f99v9_admin_publish',{p_allocation_id:a.id});await refresh();flash('تم تفعيل الدفعة في المركزية. اختبر الدخول قبل بيعها.')}catch(ex){flash(ex.message)}}));row.append(actions);list.append(row)}}}
+const list=$('v9-batches');if(list){list.replaceChildren();for(const a of (summary.allocations||[])){const row=e('div',undefined,'v9-batch');row.append(e('strong',a.package_name+' — '+a.item_count+' كود'),e('p','الحالة: '+(a.state==='published'?'مفعّلة في المركزية — جاهزة للتصدير إلى سلة':'محجوزة من إصدار سابق — يلزم اعتمادها')+' • '+new Date(a.created_at).toLocaleString('ar-SA',{timeZone:'Asia/Riyadh'})));const actions=e('div',undefined,'v9-actions');if(a.state==='published')actions.append(button('تنزيل ملف سلة مجدداً',async()=>{try{const d=await api('f99v9_admin_allocation',{p_allocation_id:a.id});latest=d;exportBatch(d)}catch(ex){flash('تعذر إعادة تنزيل الملف: '+ex.message)}},true));
+ else actions.append(button('اعتماد الدفعة المحجوزة سابقاً',async()=>{if(!confirm('هل راجعت هذه الدفعة القديمة وتأكدت أنها ليست مباعة برموز غير مطابقة؟ الاعتماد يفعّل جميع أكوادها.'))return;try{flash('جاري اعتماد أكواد الدفعة القديمة...');await api('f99v9_admin_publish',{p_allocation_id:a.id});await refresh();flash('تم تفعيل الدفعة القديمة. افتحها ونزّل ملف سلة واختبر الدخول قبل البيع.')}catch(ex){flash('تعذر اعتماد الدفعة القديمة: '+ex.message)}}));row.append(actions);list.append(row)}}}
 function packageOptions(){const c=window.FINO99ReadStorefront?.()||{};return Array.isArray(c.products)?c.products:[]}
 function choosePackage(){const sel=$('v9-package'),list=packageOptions();sel.replaceChildren();sel.append(new Option('اختر الباقة المحفوظة في المركزية',''));
-for(const p of list){if(!p?.key)continue;sel.append(new Option(String(p.name||p.key),p.key))}sel.onchange=()=>{const p=list.find(x=>x.key===sel.value);const wrap=$('v9-services');wrap.replaceChildren();for(const service of p?.services||[]){const l=e('label');const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.checked=true;checkbox.value=service;l.append(checkbox,e('span',SERVICES[service]||service));wrap.append(l)}$('v9-duration').value=Number(p?.duration_minutes||4320);$('v9-count').value='100';$('v9-cap').value='3';};if(list.length){sel.value=list[0].key;sel.dispatchEvent(new Event('change'))}}
+for(const p of list){if(!p?.key)continue;sel.append(new Option(String(p.name||p.key),p.key))}sel.onchange=()=>{const p=list.find(x=>x.key===sel.value);const wrap=$('v9-services');wrap.replaceChildren();for(const service of p?.services||[]){const l=e('label');const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.checked=true;checkbox.value=service;l.append(checkbox,e('span',SERVICES[service]||service));wrap.append(l)}$('v9-duration').value=Number(p?.duration_minutes||4320);$('v9-count').value='100';$('v9-expiry').value=String(p?.key||'').includes('bronze')?(p?.redeem_last_day||'2027-02-15'):'';$('v9-cap').value=String(p?.max_calculations||3);};if(list.length){sel.value=list[0].key;sel.dispatchEvent(new Event('change'))}}
 async function allocate(){if(locked)return;const key=$('v9-package').value,count=Number($('v9-count').value),mins=Number($('v9-duration').value),cap=Number($('v9-cap').value),last=$('v9-expiry').value||null,services=Array.from(document.querySelectorAll('#v9-services input:checked')).map(x=>x.value);
-if(!key||!Number.isInteger(count)||count<1||count>500||!services.length||!Number.isInteger(mins)||mins<1||!Number.isInteger(cap)||cap<1)return flash('اختر الباقة والخدمات والعدد من 1 إلى 500 والمدة والحد الصحيح.');if(!confirm('حجز '+count+' كوداً جديداً من المخزون لهذه الباقة؟ لا ترسلها إلى سلة قبل تنزيل الملف والتحقق من نجاح المركزية.'))return;
-locked=true;$('v9-allocate').disabled=true;flash('جاري حجز الرموز في المركزية وتسجيل أكواد الباقة...');try{const result=await api('f99v9_admin_allocate',{p_package_key:key,p_count:count,p_duration_minutes:mins,p_services:services,p_max_calculations:cap,p_last_day:last});latest=result;await refresh();exportBatch(result)}catch(ex){flash('فشل التسجيل: '+ex.message+' — لم نعتمد الدفعة للطرح.')}finally{locked=false;$('v9-allocate').disabled=false}}
+if(!key||!Number.isInteger(count)||count<1||count>500||!services.length||!Number.isInteger(mins)||mins<1||!Number.isInteger(cap)||cap<1)return flash('اختر الباقة والخدمات والعدد من 1 إلى 500 والمدة والحد الصحيح.');if(!confirm('تخصيص '+count+' كود من المخزون وتفعيلها لهذه الباقة في المركزية فوراً؟ يجب رفع نفس الملف لمنتج سلة قبل الإعلان عن البيع.'))return;
+locked=true;$('v9-allocate').disabled=true;flash('جاري تخصيص الأكواد واعتمادها في المركزية...');
+ let result=null;try{result=await api('f99v12_admin_allocate_ready',{p_package_key:key,p_count:count,p_duration_minutes:mins,p_services:services,p_max_calculations:cap,p_last_day:last})}
+ catch(ex){flash('تعذر اعتماد الدفعة بالمركزية: '+ex.message+' — إذا انقطع الاتصال، افحص الدفعات السابقة قبل إعادة المحاولة.');}
+ if(result){latest=result;let dateReady=true;try{const dateCheck=await api('f99v13_admin_allocation_date',{p_allocation_id:result.allocation_id});result.last_day=dateCheck.last_day||null;if(dateCheck.state!=='published'||Number(dateCheck.count)!==count||dateCheck.package_key!==key)throw Error('حالة الدفعة غير مطابقة');}catch(dateErr){dateReady=false;flash('تم تخصيص الدفعة، لكن تعذر التحقق من تفاصيلها. لا تعيد تخصيص أكواد جديدة؛ افتح قائمة الدفعات لإعادة التنزيل بعد التحقق.');}
+ if(dateReady){try{exportBatch(result)}catch(ex){flash('الدفعة محفوظة بالمركزية لكن لم ينزل ملفها: '+ex.message+' — استخدم «تنزيل ملف سلة مجدداً» من الدفعات السابقة، ولا تنشئ دفعة بديلة.')}}
+ try{await refresh()}catch(ex){flash('تمت معالجة الدفعة في المركزية لكن تعذر تحديث القائمة: '+ex.message+' — أعد فتح المخزون لمراجعة الدفعة. لا تُكرر التخصيص.')}}
+ locked=false;$('v9-allocate').disabled=false;}
 async function addMore(){const n=Number($('v9-more').value);if(!Number.isInteger(n)||n<1||n>500)return flash('أدخل بين 1 و500؛ للتزويد بأكثر من 500 كرر العملية.');if(!confirm('إضافة '+n+' رمزاً جديداً غير مخصص إلى مخزون المركزية؟'))return;try{await api('f99v9_admin_add_stock',{p_count:n});await refresh();flash('تمت إضافة '+n+' رموز إلى المخزون غير المخصص.')}catch(ex){flash(ex.message)}}
-function open(){if(!owner())return alert('هذه الشاشة للمالك المسجل فقط.');let overlay=$('f99v9-overlay');if(!overlay){overlay=e('div');overlay.id='f99v9-overlay';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');document.body.append(overlay)}overlay.replaceChildren();const wrap=e('main',undefined,'v9-wrap');overlay.append(wrap);const hd=e('div',undefined,'v9-head');hd.append(e('h2','مخزون الأكواد — FINO99'));hd.append(button('إغلاق',()=>{overlay.hidden=true},true));wrap.append(hd);wrap.append(e('p','الرموز غير المخصصة لا تعمل للعملاء ولا يجوز رفعها لسلة. اختر باقة واحجز دفعة؛ المركزية تسجل الأكواد وتُصدر ملفها، وبعد رفعها في سلة تؤكد طرحها من هنا.'));
+function open(preselect=''){if(!owner())return alert('هذه الشاشة للمالك المسجل فقط.');let overlay=$('f99v9-overlay');if(!overlay){overlay=e('div');overlay.id='f99v9-overlay';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');document.body.append(overlay)}overlay.replaceChildren();const wrap=e('main',undefined,'v9-wrap');overlay.append(wrap);const hd=e('div',undefined,'v9-head');hd.append(e('h2','مخزون الأكواد — FINO99'));hd.append(button('إغلاق',()=>{overlay.hidden=true},true));wrap.append(hd);wrap.append(e('p','اختر باقة محفوظة وعدداً حتى 500. المركزية تسحب نفس العدد من المخزون وتربطه بالباقة وتفعله في عملية واحدة، ثم تحمل ملف الأكواد لسلة. لا ترفع ملف المخزون الكامل ولا تكرر تحميل نفس الدفعة إلى سلة.'));
 const metrics=e('div',undefined,'v9-metrics');for(const [id,label] of [['v9-total','المخزون الإجمالي'],['v9-available','جديدة غير مخصصة'],['v9-reserved','محجوزة'],['v9-published','مطروحة'],['v9-old','100 برونزية أصلية']]){const card=e('div',undefined,'v9-stat');const n=e('strong','—');n.id=id;card.append(n,e('small',label));metrics.append(card)}wrap.append(metrics);
-wrap.append(e('h3','سحب أكواد لباقة من المخزون'));const l=e('label','اختر الباقة');const s=document.createElement('select');s.id='v9-package';l.append(s);wrap.append(l);wrap.append(e('label','الخدمات المفعلة لهذه الدفعة'));const services=e('div',undefined,'v9-svcs');services.id='v9-services';wrap.append(services);const qty=field(wrap,'عدد الأكواد (1 إلى 500 لكل ملف)', 'number','100');qty.id='v9-count';qty.min=1;qty.max=500;const minutes=field(wrap,'مدة الاستخدام بعد أول تفعيل (دقائق)', 'number','4320');minutes.id='v9-duration';minutes.min=1;const cap=field(wrap,'حد الحسبات (معمول به حالياً في البرونزية الشخصية)', 'number','3');cap.id='v9-cap';cap.min=1;const date=field(wrap,'آخر يوم لاستخدام الكود (اختياري للباقات الأخرى؛ مطلوب للبرونزية)', 'date','');date.id='v9-expiry';const actions=e('div',undefined,'v9-actions');const create=button('حجز الأكواد وتنزيل ملف سلة',allocate);create.id='v9-allocate';actions.append(create);wrap.append(actions);
-wrap.append(e('h3','إضافة مخزون غير مخصص'));const more=field(wrap,'عدد الرموز الجديدة (حتى 500 في الطلب)', 'number','500');more.id='v9-more';more.min=1;more.max=500;wrap.append(button('توليد رموز جديدة في المركزية',addMore,true));wrap.append(e('h3','الدفعات السابقة'));const batches=e('div');batches.id='v9-batches';wrap.append(batches);const feedback=e('div','', 'v9-alert');feedback.id='v9-feedback';feedback.setAttribute('role','status');wrap.append(feedback);choosePackage();overlay.hidden=false;refresh().catch(ex=>flash('تعذر قراءة المخزون: '+ex.message));}
+wrap.append(e('h3','سحب أكواد لباقة من المخزون'));const l=e('label','اختر الباقة');const s=document.createElement('select');s.id='v9-package';l.append(s);wrap.append(l);wrap.append(e('label','الخدمات المفعلة لهذه الدفعة'));const services=e('div',undefined,'v9-svcs');services.id='v9-services';wrap.append(services);const qty=field(wrap,'عدد الأكواد (1 إلى 500 لكل ملف)', 'number','100');qty.id='v9-count';qty.min=1;qty.max=500;const minutes=field(wrap,'مدة الاستخدام بعد أول تفعيل (دقائق)', 'number','4320');minutes.id='v9-duration';minutes.min=1;const cap=field(wrap,'حد الحسبات (معمول به حالياً في البرونزية الشخصية)', 'number','3');cap.id='v9-cap';cap.min=1;const date=field(wrap,'آخر يوم لاستخدام الكود (اختياري للباقات الأخرى؛ مطلوب للبرونزية)', 'date','');date.id='v9-expiry';const actions=e('div',undefined,'v9-actions');const create=button('تخصيص وتفعيل الأكواد وتنزيل ملف سلة',allocate);create.id='v9-allocate';actions.append(create);wrap.append(actions);
+const repairBox=e('details',undefined,'v9-batch');repairBox.append(e('summary','تصحيح ربط كود مباع بعد التأكد من طلب سلة'));repairBox.append(e('p','هذه عملية استثنائية. تحقق يدويًا من أن الطلب مدفوع وأن الرمز سُلّم للعميل قبل اعتماد التصحيح. لا تصفّر استخدام الكود ولا تستبدله.'));const repairCode=field(repairBox,'الكود المباع كما ظهر في سلة','text','');repairCode.id='v13-repair-code';const repairBtn=button('فحص وربط هذا الكود بباقة الاختيار',async()=>{const code=String(repairCode.value||'').trim().toUpperCase(),key=$('v9-package').value;if(!/^[A-Z0-9-]{8,32}$/.test(code)||!key)return flash('أدخل كودًا صحيحًا وحدد الباقة.');if(!confirm('هل تحققت بنفسك من عملية البيع في سلة، وأن الكود يخص الباقة المحددة؟'))return;try{const r=await api('f99v13_admin_reconcile_sold_code',{p_code:code,p_package_key:key,p_confirm:true});flash('نتيجة المركزية: '+(r.reason||'READY')+' — '+(r.code||code));await refresh()}catch(ex){flash('لا يمكن التصحيح: '+ex.message)}});repairBox.append(repairBtn);wrap.append(repairBox);
+wrap.append(e('p','المخزون المركزي غير المخصص لا يُرفع إلى سلة. يحتفظ النظام بالأكواد المباعة مسبقًا حتى لا يتعطل العملاء.'));wrap.append(e('h3','الدفعات السابقة'));const batches=e('div');batches.id='v9-batches';wrap.append(batches);const feedback=e('div','', 'v9-alert');feedback.id='v9-feedback';feedback.setAttribute('role','status');wrap.append(feedback);choosePackage();if(preselect&&Array.from($('v9-package').options).some(x=>x.value===preselect)){$('v9-package').value=preselect;$('v9-package').dispatchEvent(new Event('change'))}overlay.hidden=false;refresh().catch(ex=>flash('تعذر قراءة المخزون: '+ex.message));}
 window.F99V9OpenInventory=open;
 function install(){const row=$('f99fixAdminPage')?.querySelector('.f99fix-steps');if(row&&!$('v9-admin-button')){const b=button('مخزون 5000 كود وتصدير سلة',open);b.id='v9-admin-button';b.className='f99fix-btn';row.prepend(b)}const hub=$('ownerHub')?.querySelector('.owner-grid');if(hub&&!$('v9-owner-button')){const b=button('مخزون الأكواد',open);b.id='v9-owner-button';b.className='owner-tile';hub.append(b)}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
 })();
 </script>
-
-
 <style id="f99v10-polish">
 #f99s-modal h2{font-size:clamp(20px,4.7vw,27px)!important;font-weight:900!important;color:#173c54}
 #f99s-modal .f99v6-tile h3{font-size:20px!important;font-weight:900}
@@ -19148,5 +19241,19 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 #f99s-modal .f99v10-renew{width:100%;margin-top:17px;background:white!important;color:#194963!important;border:1px solid #cadce7!important}
 @media(max-width:600px){#f99s-modal .f99v10-banks{grid-template-columns:repeat(2,minmax(0,1fr))}#f99s-modal .f99v10-flow{padding:12px}}
 </style>
-</body>
+<script>/* FINO99 V13 guided topic helper. No AI credentials and no unlicensed automation. */
+(()=>{'use strict';
+const topics={
+ bot_compare:{name:'مساعد مقارنة عروض البنوك',intro:'للمقارنة الدقيقة تحتاج مبلغ التمويل، عدد الأقساط، القسط، وأي رسوم إضافية.',questions:['هل تتوفر لديك عروض مكتوبة من بنكين أو أكثر؟','هل قارنت إجمالي المبلغ المستحق وليس النسبة وحدها؟','هل يشمل العرض رسومًا إدارية أو إعفاء أقساط؟'],service:'compare'},
+ bot_mortgage_quote:{name:'مساعد التمويل العقاري',intro:'الحسبة العقارية تقديرية. تحتاج سعر العقار، الدعم إن وجد، مدة التمويل، ومواعيد التقاعد.',questions:['هل التمويل مدعوم سكنيًا؟','هل راتبك أو أقساطك ستتغير بعد التقاعد؟','هل قارنت إجمالي تكلفة الأرباح والرسوم؟'],service:'mortgage_quote'},
+ bot_contract:{name:'مساعد العقود',intro:'هذا مساعد إرشادي لفهم خطوات العقد؛ الموافقة الرسمية والوكالة الشرعية لها إجراءاتها المعتمدة.',questions:['هل قرأت بيانات الأطراف والعوض كاملًا؟','هل راجعت حدود الصلاحيات والمواعيد؟','هل يحتاج الإجراء وكالة رسمية موثقة؟'],service:'contract'}
+};
+window.F99V13GuidedBot=function(key,grants){const topic=topics[key];if(!topic)return;const valid=Array.isArray(grants)?grants:[];let modal=document.getElementById('f99v13-bot');if(!modal){modal=document.createElement('div');modal.id='f99v13-bot';modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');document.body.append(modal)}modal.replaceChildren();modal.hidden=false;
+const wrap=document.createElement('section');wrap.className='f99v13-bot-panel';const header=document.createElement('header');const name=document.createElement('h2');name.textContent=topic.name;const close=document.createElement('button');close.textContent='إغلاق';close.onclick=()=>modal.hidden=true;header.append(name,close);wrap.append(header);const intro=document.createElement('p');intro.textContent=topic.intro;wrap.append(intro);
+const chat=document.createElement('div');chat.className='f99v13-bot-chat';wrap.append(chat);let index=0;
+function say(text,who){const bubble=document.createElement('div');bubble.className='f99v13-bubble '+who;bubble.textContent=text;chat.append(bubble);chat.scrollTop=chat.scrollHeight}
+function step(){if(index>=topic.questions.length){say('اكتملت الخطوات الإرشادية. تختلف شروط البنك أو العقد بحسب بياناتك والمستندات الرسمية.','bot');if(valid.includes(topic.service)){const b=document.createElement('button');b.textContent='فتح الحاسبة أو الخدمة المرتبطة';b.onclick=()=>{modal.hidden=true;window.F99V13RunService?.(topic.service)};wrap.append(b)}return}
+ const q=topic.questions[index++];say(q,'bot');const buttons=document.createElement('div');buttons.className='f99v13-answers';for(const answer of ['نعم','لا','غير متأكد']){const b=document.createElement('button');b.type='button';b.textContent=answer;b.onclick=()=>{buttons.remove();say(answer,'user');step()};buttons.append(b)}chat.append(buttons);chat.scrollTop=chat.scrollHeight}
+step();modal.append(wrap)};
+})();</script></body>
 </html>
