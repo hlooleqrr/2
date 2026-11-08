@@ -8516,7 +8516,7 @@ function finoHideDisallowedPortalActions(){
   page.querySelectorAll('button').forEach(btn=>{
     const txt=(btn.textContent||'').trim();
     const admin=txt.includes('المختص')||txt.includes('إعدادات');
-    if(admin||(scope==='smart'&&txt.includes('تحويل المديونية'))||(scope==='buyout'&&txt.includes('الحاسبة الذكية'))){
+    if(admin||(scope==='smart'&&txt.includes('تحويل المديونية'))||(scope==='buyout'&&(txt.includes('الحاسبة الذكية')||txt.includes('تمويل استهلاكي')||txt.includes('تمويل شركات')||txt.includes('التمويل الاستهلاكي')))){
       btn.style.display='none';btn.dataset.finoScopeHidden='1';
     }
   });
@@ -8640,9 +8640,10 @@ function finoCentralGuard(){
 async function finoCentralRestart(){
   const e=finoCentralRestoreEntry();
   if(!e?.entryToken)return {ok:false,local:true};
-  const r=await finoRpc('fino_client_restart',{
+  const r=await finoRpc('f99v22_client_restart',{
     p_entry_token:e.entryToken,
-    p_device_id:e.deviceId||finoCentralDeviceId()
+    p_device_id:e.deviceId||finoCentralDeviceId(),
+    p_request_id:f99v7CreateRequestId()
   });
   if(!r.ok)return r;
   return {ok:r.data?.ok!==false,data:r.data};
@@ -8965,13 +8966,9 @@ function portalDefaultsApply(){
   return !!(finoPortal && (finoPortal.includeFees || finoPortal.clientNote));
 }
 function portalSaudiGreeting(){
-  const p=saudiDateParts();
-  const h=Number(p.hour||0);
+  const h=Number(saudiDateParts().hour||0);
   const n=cleanClientName(clientName);
-  const suffix=n?` يا ${n}`:'';
-  if(h>=5&&h<12)return `صباح الخير${suffix}`;
-  if(h>=12&&h<18)return `مساء الخير${suffix}`;
-  return `مساء الخير${suffix}`;
+  return (h>=0&&h<12?'صباح الخير':'مساء الخير')+(n?` يا ${n}`:'');
 }
 function portalEsc(s){return escapeFINOAdminHtml(String(s??''))}
 function portalAdd(role,htmlContent){
@@ -9025,7 +9022,7 @@ function setPortalInput(show,placeholder='اكتب الإجابة هنا',mode='
   if(h)h.textContent=helper;
   if(show)setTimeout(()=>input?.focus(),70);
 }
-function openFINOSmartPortal(trial=false){
+function openFINOSmartPortal(trial=false,requestedService=''){
   finoPortal={
     trial:!!trial||isSmartTrialAccess(),
     mode:null,step:null,data:{},
@@ -9040,6 +9037,7 @@ function openFINOSmartPortal(trial=false){
   }
   showPage('specialistBotPage');
   finoApplyStrictServiceScope();
+  if(requestedService && ['buyout','smart'].includes(requestedService) && (!activeAccess?.record?.central || (activeAccess.record.centralData?.allowed_services||[]).some(k=>k===requestedService||k==='bot_'+requestedService))) finoPortal.strictServiceScope=requestedService;
   setTimeout(()=>{fino99ClientIntro();fino99ApplyClientPackage()},100);
   incrementFINOPortalUsage();
   const title=document.getElementById('portalMainTitle');
@@ -9058,14 +9056,14 @@ function openFINOSmartPortal(trial=false){
       topSub.classList.add('portal-warning-sub');
     }
   }else{
-    if(title)title.textContent='المنصة الذكية';
-    if(sub)sub.textContent='تحويل المديونية، التمويل الشخصي، وأدوات المختص.';
+    if(title)title.textContent='FINO99';
+    if(sub)sub.textContent='';
     if(top){
-      top.textContent='المنصة الذكية';
+      top.textContent='FINO99';
       top.classList.remove('portal-warning-title');
     }
     if(topSub){
-      topSub.textContent='اختر الخدمة ونكمل معك خطوة بخطوة';
+      topSub.textContent='';
       topSub.classList.remove('portal-warning-sub');
     }
   }
@@ -9114,7 +9112,8 @@ async function handleFINOPortalRestart(){
     const r=await finoCentralRestart();
     if(r.ok){
       resetFINOSmartPortal();
-      portalAssistant(`<div class="portal-note">إعادة الحسبة المركزية تمت. ${r.data?.restarts_left===null||r.data?.restarts_left===undefined?'':`المتبقي: ${r.data.restarts_left}`}</div>`);
+      window.F99V22RefreshStatus?.();
+      if(r.data?.restarts_left===0)portalAssistant('<div class="portal-note">هذه آخر بداية جديدة متاحة في باقتك. أكمل الحسبة الحالية؛ لن تتمكن من البدء من جديد بعدها.</div>');
       return;
     }
     const reason=r.data?.reason||'';
@@ -9367,28 +9366,27 @@ function applyFINOFreeConversationSettings(mode){
 }
 function startFINOPortalBuyout(){
   if(!finoCentralGuard()||!finoScopeGuard('buyout'))return;
-  portalAssistant(personalizedGreeting()+'، نبدأ حسبة تحويل المديونية خطوة بخطوة.');
-  if(isFreeAccess())showFINOFreeConversationSettings('buyout');
-  else{
-    portalAssistant(`أبشر${cleanClientName(clientName)?` يا ${cleanClientName(clientName)}`:''}. اختر جهة عملك.`);
+  if(isFreeAccess()){
+    portalAssistant(`${portalSaudiGreeting()}، اذكر جهة عملك.`);
+    showFINOFreeConversationSettings('buyout');
+  }else{
+    portalAssistant(`${portalSaudiGreeting()}، اذكر جهة عملك.`);
     showPortalWorkTypes('buyout');
   }
 }
 function startFINOPortalSmart(){
   if(!finoCentralGuard()||!finoScopeGuard('smart'))return;
   if(finoPortal.trial)return;
-  portalAssistant(personalizedGreeting()+'، نبدأ الحاسبة الذكية مع بعض.');
-  if(isFreeAccess())showFINOFreeConversationSettings('smart');
-  else{
+  if(isFreeAccess()){
+    portalAssistant(`${portalSaudiGreeting()}، اذكر جهة عملك.`);
+    showFINOFreeConversationSettings('smart');
+  }else{
     smartTitleMode='personal';
     finoPortal.data.smartTitleMode='personal';
-    portalAssistant(`حياك الله${cleanClientName(clientName)?` يا ${cleanClientName(clientName)}`:''}. نبدأ بالحاسبة الذكية.`);
-    askFINOPortalSmartFinanceKind();
+    portalAssistant(`${portalSaudiGreeting()}، اذكر جهة عملك.`);
+    showPortalWorkTypes('smart');
   }
 }
-
-
-
 
 function restartFINOSmartWithEdit(kind){
   if(!finoScopeAllows('smart'))return;
@@ -12799,14 +12797,14 @@ function startSubscriptionBadge(record,state){
       if(exp>0){
         const left=exp-Date.now();
         if(left<=0){expireCurrentSubscription();return;}
-        const entries=state.entriesLeft;
-        remaining.textContent=`${formatRemaining(left)}${entries===null||entries===undefined?'':` • المتبقي ${entries} دخلة`}`;
+        const status=window.F99V22LatestStatus;
+        const calc=status?.max_calculations>0?` • الحسبات: ${status.calculations_remaining} من ${status.max_calculations}`:'';
+        const starts=status?.max_restarts>0?` • البدء من جديد: ${status.restarts_remaining}`:'';
+        remaining.textContent=`${formatRemaining(left)}${calc}${starts}`;
       }else{
-        remaining.textContent=state.entriesLeft===null||state.entriesLeft===undefined
-          ? 'كود مركزي • غير محدد المدة'
-          : `كود مركزي • المتبقي ${state.entriesLeft} دخلة`;
+        remaining.textContent='تبدأ المدة من أول دخول فعلي';
       }
-      type.textContent=`${record.label||'اشتراك مركزي'} • مركزية FINO99 الجديدة`;
+      type.textContent='FINO99';
       return;
     }
 
@@ -13236,7 +13234,9 @@ async function login(){
       error.style.display='none';
       input.value='';
       activeAccess={record,state};
+      window.F99V22LatestStatus=null;
       startSubscriptionBadge(record,state);
+      if(!record.owner)setTimeout(()=>window.F99V22RefreshStatus?.(),200);
 if(record.owner){
         // The server already issued an owner-only session after verifying the
         // access-code entry AND device. Never elevate using a UI label or local flag.
@@ -13906,6 +13906,7 @@ async function fino99BronzeAcceptCalculation(){
       if(['CALCULATIONS_FINISHED','CODE_EXPIRED'].includes(reason))window.F99V8OpenRenewal?.(code);
       return false;
     }
+    window.F99V22RefreshStatus?.();
     if(r.data.tracked){
       const label=document.getElementById('f99v7CalcStatus');
       if(label)label.textContent='الحسبات المكتملة: '+r.data.used+' من '+(Number(r.data.max_calculations)===0?'غير محدود':Number(r.data.max_calculations))+' • المتبقي: '+(r.data.remaining??'غير محدود');
@@ -17852,7 +17853,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   const active=el('label','f99v6-mini-check');const chk=el('input');chk.id='f99v6-enabled';chk.type='checkbox';chk.checked=cfg.enabled===true;active.append(chk,document.createTextNode(' تشغيل عرض الباقات للزوار'));settings.append(active);
   root.append(settings);
   const rows=el('div');rows.id='f99v6-admin-products';root.append(rows);
-  const newPackage={key:uniqueId(),name:'',tagline:'',price:4,old_price:null,services:['buyout'],allowed_sectors:[],banks:[],duration_minutes:4320,restarts:2,enabled:false,questions_configured:false};
+  const newPackage={key:uniqueId(),name:'',tagline:'',price:4,old_price:null,services:['buyout'],allowed_sectors:[],banks:[],duration_minutes:4320,restarts:3,enabled:false,questions_configured:false};
   productRow(creating?newPackage:original);
   const remove=rows.querySelector('.f99s-remove');if(remove)remove.remove();
   const stockPanel=rows.querySelector('.f99v16-package-stock');if(stockPanel)stockPanel.remove();
@@ -19135,11 +19136,11 @@ function run(k){if(!allowed(k))return;close();try{
  else if(k==='contract'){if(typeof window.openFINOContractClient!=='function')throw Error('قالب العقد غير متاح');window.openFINOContractClient();}
  else if(k==='bot_buyout'){
    if(typeof window.openFINOSmartPortal!=='function')throw Error('بوت المديونية غير مُحمّل');
-   window.F99V21WelcomeBot('bot_buyout',()=>{window.openFINOSmartPortal(true);if(typeof finoPortal!=='undefined')finoPortal.strictServiceScope='buyout';if(typeof window.startFINOPortalBuyout==='function')setTimeout(()=>window.startFINOPortalBuyout(),150);});
+   window.F99V21WelcomeBot('bot_buyout',()=>window.openFINOSmartPortal(false,'buyout'));
  }
  else if(k==='bot_smart'){
    if(typeof window.openFINOSmartPortal!=='function')throw Error('بوت الحاسبة غير مُحمّل');
-   window.F99V21WelcomeBot('bot_smart',()=>{window.openFINOSmartPortal(false);if(typeof finoPortal!=='undefined')finoPortal.strictServiceScope='smart';if(typeof window.startFINOPortalSmart==='function')setTimeout(()=>window.startFINOPortalSmart(),150);});
+   window.F99V21WelcomeBot('bot_smart',()=>window.openFINOSmartPortal(false,'smart'));
  }
  else if(k.startsWith('bot_')){if(typeof window.F99V13GuidedBot==='function')window.F99V13GuidedBot(k,allowedList());else throw Error('المساعد الإرشادي غير مُحمّل');}
  }catch(e){alert('تعذر فتح الخدمة: '+String(e.message||e));choose()}}
@@ -19821,19 +19822,20 @@ function renderCode(root,d){const c=d.record,details=card(root,'حالة الر�
  details.append(el('p','أول استخدام: '+date(c.activated_at)+' • انتهاء الاشتراك: '+date(c.expires_at)+' • مدة الدورة: '+c.duration_minutes+' دقيقة'));
  details.append(el('p','الباقة: '+(d.package_key||c.name||'غير مرتبطة')+' • الخدمات: '+(c.allowed_services||[]).join('، ')));
  const form=card(root,'سياسة هذا الكود','0 في عدد الدخولات = غير محدود ضمن المدة. 0 في عدد الحسبات = غير محدود. تغيير السياسة يطبق على هذا الكود وحده.');const g=block('','f19-grid');
- const minutes=field(g,'مدة الصلاحية بالدقائق',c.duration_minutes);const entries=field(g,'عدد الدخولات',c.max_entries);const calc=field(g,'عدد الحسبات',d.calcs_max);const restarts=field(g,'إعادة الحسبة من نفس الدخول',c.max_restarts_per_entry);
+ const minutes=field(g,'مدة الصلاحية بالدقائق',c.duration_minutes);const entries=field(g,'عدد الدخولات',c.max_entries);const calc=field(g,'عدد الحسبات',d.calcs_max);const restarts=field(g,'مرات «ابدأ من جديد» (على كامل مدة الكود)',c.config?.f99x?.max_bot_restarts??c.max_restarts_per_entry);
  const lock=select(g,'الجهاز',[['1','ربط بأول جهاز'],['0','السماح بأجهزة متعددة']],c.lock_to_first_device?'1':'0');form.append(g);
  const actions=block('','f19-actions');const save=btn('حفظ السياسة في المركزية',async()=>{
  if(!check(minutes.value,525600)||Number(minutes.value)<1||!check(entries.value,500)||!check(calc.value,1000)||!check(restarts.value,1000))return status('تحقق من حدود الأرقام المدخلة.',true);
  if(!confirm('تطبيق مدة وصلاحيات جديدة لهذا الكود؟ إذا بدأ استخدامه فسيعاد احتساب تاريخ الانتهاء من تاريخ بدايته.'))return;
  try{save.disabled=true;await rpc('f99v19_admin_save_code_policy',{p_code_id:c.id,p_minutes:+minutes.value,p_entries:+entries.value,p_calculations:+calc.value,p_restarts:+restarts.value,p_lock_device:lock.value==='1'});
- await updateCode(c.code);status('تم حفظ السياسة والتحقق من المركزية.');}catch(e){status('لم يكتمل الحفظ: '+e.message,true)}finally{save.disabled=false}});actions.append(save);
+ await rpc('f99v22_admin_set_restarts',{p_code_id:c.id,p_max_restarts:+restarts.value});
+ await updateCode(c.code);status('تم حفظ السياسة والبدء من جديد والتحقق من المركزية.');}catch(e){status('لم يكتمل الحفظ: '+e.message,true)}finally{save.disabled=false}});actions.append(save);
  const renew=btn('تجديد نفس الكود من أول دخول جديد',async()=>{const mins=Number(minutes.value);if(!Number.isInteger(mins)||mins<1||mins>525600)return status('أدخل مدة تجديد صحيحة.',true);
  if(!confirm('تجديد الكود بنفس الرمز، وإغلاق الجلسات الحالية، وبدء مدة جديدة من أول دخول لاحق؟ تأكد من استحقاق العميل للتجديد.'))return;
- try{renew.disabled=true;const r=await rpc('f99v19_admin_renew_code',{p_code_id:c.id,p_minutes:mins,p_unlock_device:false});if(r.verified!==true)throw Error('لم يؤكد الخادم عملية التجديد');await updateCode(c.code);status('نجح التجديد وتحققنا من بدء دورة جديدة.');}catch(e){status('تعذر التجديد: '+e.message,true)}finally{renew.disabled=false}},'secondary');actions.append(renew);
+ try{renew.disabled=true;const r=await rpc('f99v22_admin_renew_code',{p_code_id:c.id,p_minutes:mins,p_unlock_device:false});if(r.verified!==true)throw Error('لم يؤكد الخادم عملية التجديد');await updateCode(c.code);status('نجح التجديد وتحققنا من بدء دورة جديدة.');}catch(e){status('تعذر التجديد: '+e.message,true)}finally{renew.disabled=false}},'secondary');actions.append(renew);
  const unlock=btn('تجديد وفك ربط الجهاز السابق',async()=>{const mins=Number(minutes.value);if(!Number.isInteger(mins)||mins<1||mins>525600)return status('أدخل مدة تجديد صحيحة.',true);
  if(!confirm('هل تؤكد التجديد مع فك ارتباط الجهاز السابق؟ يجب التحقق من هوية العميل وموافقته.'))return;
- try{unlock.disabled=true;const r=await rpc('f99v19_admin_renew_code',{p_code_id:c.id,p_minutes:mins,p_unlock_device:true});if(r.verified!==true)throw Error('التجديد غير مؤكد');await updateCode(c.code);status('تم التجديد وفك ارتباط الجهاز. سيعاد ربط الجهاز عند أول دخول حسب السياسة.');}catch(e){status('فشل التجديد: '+e.message,true)}finally{unlock.disabled=false}},'secondary');actions.append(unlock);form.append(actions);
+ try{unlock.disabled=true;const r=await rpc('f99v22_admin_renew_code',{p_code_id:c.id,p_minutes:mins,p_unlock_device:true});if(r.verified!==true)throw Error('التجديد غير مؤكد');await updateCode(c.code);status('تم التجديد وفك ارتباط الجهاز. سيعاد ربط الجهاز عند أول دخول حسب السياسة.');}catch(e){status('فشل التجديد: '+e.message,true)}finally{unlock.disabled=false}},'secondary');actions.append(unlock);form.append(actions);
  const devices=card(root,'الأجهزة المرتبطة بهذه الباقة','الحظر خاص بمعرّف المتصفح الذي دخل بالكود. قد يتغير إذا مسح العميل بيانات المتصفح، فلا يعتبر حظرًا عتاديًا دائمًا.');
  if(!(d.devices||[]).length)devices.append(el('p','لا توجد أجهزة سجلت دخولًا بهذا الرمز.'));
   window.F99V21RenderUpgrade?.(root,d,updateCode);
@@ -19846,9 +19848,9 @@ async function updateCode(code){const d=await rpc('f99v19_admin_code_detail',{p_
 async function packagesView(){const root=layer('سياسات الباقات الجديدة');const intro=card(root,'مدة الباقة وعدد الدخولات والحسبات','أولًا احفظ سياسة الباقة هنا، ثم خصص الأكواد الجديدة من مخزون المركزية. هذه السياسة لا تغير أكواد العملاء القديمة تلقائيًا.');
  const list=window.FINO99ReadStorefront?.()?.products||[];if(!Array.isArray(list)||!list.length){intro.append(el('p','أنشئ باقة أولًا من إدارة الباقات ثم ارجع لهذه الصفحة.'));return}
  const picker=select(intro,'اختر الباقة',list.map(x=>[x.key,x.name||x.key]),list[0].key);
- const fields=card(root,'السياسة الافتراضية للأكواد القادمة');const layout=block('','f19-grid');const mins=field(layout,'المدة بالدقائق',4320);const entries=field(layout,'عدد الدخولات (0 = غير محدود)',0);const calcs=field(layout,'عدد الحسبات (0 = غير محدود)',3);const restarts=field(layout,'إعادة الحسبة داخل الجلسة',50);
+ const fields=card(root,'السياسة الافتراضية للأكواد القادمة');const layout=block('','f19-grid');const mins=field(layout,'المدة بالدقائق',4320);const entries=field(layout,'عدد الدخولات (0 = غير محدود)',0);const calcs=field(layout,'عدد الحسبات (0 = غير محدود)',3);const restarts=field(layout,'مرات «ابدأ من جديد» خلال الاشتراك',3);
  const lock=select(layout,'ربط الجهاز',[['1','نعم، أول جهاز'],['0','لا، عدة أجهزة']],'1');fields.append(layout);
- function populate(){const p=list.find(x=>x.key===picker.value)||list[0];const cfg=p.code_policy||{};mins.value=cfg.duration_minutes??p.duration_minutes??4320;entries.value=cfg.max_entries??0;calcs.value=cfg.max_calculations??p.max_calculations??3;restarts.value=cfg.max_restarts_per_entry??50;lock.value=String(cfg.lock_to_first_device===false?0:1)}picker.addEventListener('change',populate);populate();
+ function populate(){const p=list.find(x=>x.key===picker.value)||list[0];const cfg=p.code_policy||{};mins.value=cfg.duration_minutes??p.duration_minutes??4320;entries.value=cfg.max_entries??0;calcs.value=cfg.max_calculations??p.max_calculations??3;restarts.value=cfg.max_restarts_per_entry??3;lock.value=String(cfg.lock_to_first_device===false?0:1)}picker.addEventListener('change',populate);populate();
  fields.append(btn('حفظ سياسة الباقة على جميع الأجهزة',async()=>{if(!check(mins.value,525600)||+mins.value<1||!check(entries.value,500)||!check(calcs.value,1000)||!check(restarts.value,1000))return status('القيم غير صحيحة.',true);
  if(!confirm('حفظ سياسة أكواد هذه الباقة الجديدة في المركزية؟ لا تتغير الأكواد المباعة مسبقًا.'))return;
  try{const r=await rpc('f99v19_admin_save_package_policy',{p_package_key:picker.value,p_policy:{duration_minutes:+mins.value,max_entries:+entries.value,max_calculations:+calcs.value,max_restarts_per_entry:+restarts.value,lock_to_first_device:lock.value==='1'}});
@@ -20031,6 +20033,7 @@ window.F99V21ConsumeCalculation=async function(service){
       alert(msgs[reason]||'تعذر اعتماد الحسبة من المركزية: '+reason);
       return false;
     }
+    window.F99V22RefreshStatus?.();
     const x=byId('f99v7CalcStatus');
     if(x&&r.data.max_calculations>0)x.textContent='الحسبات المستخدمة '+r.data.used+' من '+r.data.max_calculations+' • المتبقي '+r.data.remaining;
     return true;
@@ -20046,14 +20049,14 @@ window.F99V21WelcomeBot=function(service,launch){
  modal.hidden=false;modal.replaceChildren();
  const box=document.createElement('section');box.className='f21-card';
  const mark=document.createElement('div');mark.className='f21-eyebrow';mark.textContent='FINO99 • البداية';
- const h=document.createElement('h2');h.textContent='حياك الله، وش نناديك؟';
- const p=document.createElement('p');p.textContent='قبل ما نبدأ، اكتب اسمك الأول عشان نكمل معك المحادثة خطوة بخطوة.';
- const input=document.createElement('input');input.placeholder='اسمك الأول';input.maxLength=40;input.autocomplete='given-name';input.setAttribute('aria-label','اسم العميل');
+ const h=document.createElement('h2');h.textContent='اكتب اسمك الكريم';
+ const p=document.createElement('p');p.textContent='';
+ const input=document.createElement('input');input.placeholder='اسمك الكريم';input.maxLength=40;input.autocomplete='given-name';input.setAttribute('aria-label','اسم العميل');
  const error=document.createElement('div');error.className='f21-error';error.setAttribute('role','status');
  const actions=document.createElement('div');actions.className='f21-actions';
- const go=document.createElement('button');go.textContent='ابدأ المحادثة';
+ const go=document.createElement('button');go.textContent='متابعة';
  const cancel=document.createElement('button');cancel.className='secondary';cancel.textContent='رجوع';cancel.onclick=()=>modal.hidden=true;
- function submit(){const name=typeof cleanClientName==='function'?cleanClientName(input.value):input.value.trim().slice(0,40);if(!name){error.textContent='اكتب اسمك الأول للمتابعة.';input.focus();return;}clientName=name;modal.hidden=true;try{if(typeof finoCentralSaveCase==='function')Promise.resolve(finoCentralSaveCase({type:'identity',client_name:name})).catch(()=>{});}catch{}launch();}
+ function submit(){const name=typeof cleanClientName==='function'?cleanClientName(input.value):input.value.trim().slice(0,40);if(!name){error.textContent='اكتب اسمك الكريم للمتابعة.';input.focus();return;}clientName=name;modal.hidden=true;try{if(typeof finoCentralSaveCase==='function')Promise.resolve(finoCentralSaveCase({type:'identity',client_name:name})).catch(()=>{});}catch{}launch();}
  go.onclick=submit;input.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();submit()}};
  actions.append(go,cancel);box.append(mark,h,p,input,error,actions);modal.append(box);setTimeout(()=>input.focus(),40);
 };
@@ -20097,5 +20100,111 @@ if(typeof document!=='undefined')document.addEventListener('visibilitychange',()
 });
 })();
 </script>
+
+<script id="f99v22-ui">
+(()=>{'use strict';
+let refreshing=false,lastCheck=0;
+window.F99V22LatestStatus=null;
+window.F99V22RefreshStatus=async function(){
+ if(refreshing||!activeAccess?.record?.central||activeAccess.record.owner)return null;
+ const entry=typeof finoCentralRestoreEntry==='function'?finoCentralRestoreEntry():null;
+ if(!entry?.entryToken)return null;
+ if(Date.now()-lastCheck<1500)return window.F99V22LatestStatus;
+ refreshing=true;lastCheck=Date.now();
+ try{
+  const result=await finoRpc('f99v22_client_status',{p_entry_token:entry.entryToken,p_device_id:entry.deviceId||finoCentralDeviceId()},12000);
+  if(result.ok&&result.data?.ok){
+   window.F99V22LatestStatus=result.data;
+   const x=document.getElementById('f99v22-usage');
+   if(x){const d=result.data;x.textContent=(d.max_calculations?`الحسبات المتبقية: ${d.calculations_remaining} من ${d.max_calculations}`:'الحسبات: غير محدودة')+' • '+(d.max_restarts?`البدء من جديد: ${d.restarts_remaining}`:'البدء من جديد: غير متاح');}
+   return result.data;
+  }
+ }catch(e){console.warn('Status refresh failed without changing authorization',e)}
+ finally{refreshing=false}
+ return null;
+};
+const init=()=>{
+ const page=document.getElementById('specialistBotPage');
+ if(page&&!document.getElementById('f99v22-usage')){
+  const badge=document.createElement('div');badge.id='f99v22-usage';badge.setAttribute('role','status');
+  badge.textContent='جاري قراءة رصيد الباقة من المركزية…';badge.className='f22-usage';
+  const chat=document.getElementById('finoBotChat');
+  if(chat)chat.before(badge);else page.prepend(badge);
+ }
+ const owner=document.getElementById('ownerHub');
+ if(owner){
+  const grid=owner.querySelector('.owner-grid');
+  if(grid){
+   if(!document.getElementById('f22-owner-operations')){
+     const shell=owner.querySelector('.owner-shell')||owner;
+     const primary=document.createElement('section');primary.id='f22-owner-operations';
+     const heading=document.createElement('div');heading.className='f22-owner-heading';
+     const h=document.createElement('h2');h.textContent='مركز الإدارة';
+     const p=document.createElement('p');p.textContent='اختر المهمة، والباقي في الأدوات المتقدمة.';
+     heading.append(h,p);primary.append(heading);
+     const nav=document.createElement('div');nav.className='f22-owner-links';
+     const buttons=[
+       ['▦','الباقات والمخزون','إدارة الباقات وأكواد سلة',()=>window.F99V17OpenInventory?.()],
+       ['⌕','أكواد العملاء','بحث وتجديد وترقية',()=>window.f99fixOpenCodes?.()],
+       ['▣','العقود','القوالب والسجلات',()=>window.F99V20OpenContracts?.('all')],
+       ['⚙','إعدادات المركزية','البنوك والنسب والصلاحيات',()=>window.f99fixOpenAdmin?.()]
+     ];
+     for(const [symbol,title,sub,action] of buttons){
+       const btn=document.createElement('button');btn.type='button';btn.className='f22-owner-action';
+       const icon=document.createElement('span');icon.className='f22-owner-icon';icon.textContent=symbol;
+       const body=document.createElement('span');const b=document.createElement('b');b.textContent=title;
+       const small=document.createElement('small');small.textContent=sub;body.append(b,small);
+       btn.append(icon,body);btn.addEventListener('click',action);nav.append(btn);
+     }
+     primary.append(nav);
+     const hero=shell.querySelector('.owner-hero');
+     if(hero)hero.after(primary);else shell.prepend(primary);
+     const adv=document.createElement('details');adv.id='f22-owner-advanced';
+     const summary=document.createElement('summary');summary.textContent='جميع الأدوات المتقدمة';
+     adv.append(summary);grid.before(adv);adv.append(grid);
+   }
+   if(document.getElementById('f99v17-home-button')){
+     for(const id of ['v9-owner-button','v9-admin-button']){
+       const duplicate=document.getElementById(id);
+       if(duplicate){duplicate.hidden=true;duplicate.setAttribute('aria-hidden','true')}
+     }
+   }
+   const dup=grid.querySelectorAll('button.owner-tile');
+   const seen=new Set();
+   for(const tile of dup){const action=tile.getAttribute('onclick');
+    if(action==="F99V20OpenContracts('accepted')"){tile.hidden=true;tile.setAttribute('aria-hidden','true');continue}
+    if(action==='ownerOpenSmartPortal()'&&tile.dataset.v4Deprecated==='1'){tile.hidden=true;continue}
+    if(action==='F99V17OpenInventory()'||action==="F99V17OpenInventory('')"){
+      if(seen.has('inventory'))tile.hidden=true;seen.add('inventory');
+    }
+   }
+  }
+ }
+};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+setInterval(()=>{if(!document.hidden&&activeAccess?.record?.central&&!activeAccess.record.owner)window.F99V22RefreshStatus?.()},14000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){lastCheck=0;window.F99V22RefreshStatus?.();}});
+})();
+</script>
+<style id="f99v22-style">
+#f99v22-usage{position:relative;margin:10px 12px 4px;border:1px solid #d5e5ee;background:#f6fafc;color:#1d506b;padding:9px 12px;border-radius:14px;font:800 12px/1.8 Cairo,system-ui,sans-serif;direction:rtl}
+#specialistBotPage .portal-top-sub:empty{display:none!important}
+#f99v21-name-panel .f21-card{border-radius:20px;padding:22px 19px}
+#f99v21-name-panel .f21-card p:empty{display:none}
+#ownerHub .owner-grid button[hidden]{display:none!important}
+#f22-owner-operations{margin:12px auto 16px;max-width:900px;padding:18px;border:1px solid #dae8f0;border-radius:20px;background:linear-gradient(140deg,#ffffff,#f8fbfd)}
+#f22-owner-operations .f22-owner-heading h2{font:900 22px Cairo,system-ui;color:#163f58;margin:0 0 3px}
+#f22-owner-operations .f22-owner-heading p{font:600 13px Cairo,system-ui;color:#6b8799;margin:0 0 14px}
+#f22-owner-operations .f22-owner-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#f22-owner-operations .f22-owner-action{display:flex;align-items:center;gap:11px;text-align:right;direction:rtl;min-height:84px;padding:13px;background:#fff;border:1px solid #dbe9f1;border-radius:14px;color:#173b53;box-shadow:0 3px 12px #173e560a;font-family:Cairo,system-ui;cursor:pointer}
+#f22-owner-operations .f22-owner-action:active{transform:translateY(1px)}
+#f22-owner-operations .f22-owner-icon{display:grid;place-items:center;flex:0 0 36px;height:36px;border-radius:11px;background:#edf5fa;color:#246f92;font:800 22px system-ui}
+#f22-owner-operations .f22-owner-action b{display:block;font-size:14px}
+#f22-owner-operations .f22-owner-action small{display:block;font:600 11px/1.7 Cairo,system-ui;color:#66869a}
+#f22-owner-advanced{max-width:900px;margin:10px auto 18px;border:1px solid #dbe9f1;border-radius:16px;background:#fff;overflow:hidden}
+#f22-owner-advanced>summary{cursor:pointer;list-style-position:inside;padding:15px;font:850 14px Cairo,system-ui;color:#276586}
+#f22-owner-advanced .owner-grid{padding:12px}
+@media(max-width:365px){#f22-owner-operations .f22-owner-links{grid-template-columns:1fr}}
+</style>
 </body>
 </html>
