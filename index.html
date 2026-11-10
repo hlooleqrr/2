@@ -21486,7 +21486,7 @@ function guestName(){try{return typeof clientName!=='undefined'?String(clientNam
 function greet(){return new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Riyadh',hour:'2-digit',hour12:false}).format(new Date())<'12'?'صباح الخير':'مساء الخير'}
 async function openRenew(prefill=''){
  const root=frame('f29-renew-modal','تجديد اشتراكك');const intro=text('p','اختر التجديد المناسب. تبدأ المدة من أول استخدام بعد اعتماد التجديد، وتنتهي عند نفاد الحسبات أو انتهاء الوقت، أيهما أولًا.','f29-sub');root.append(intro);
- const box=text('div');box.className='f29-plans';root.append(box);const input=label(root,'رمز الاشتراك المراد تجديده',cleanCode(prefill||window.F99V29LastCode||(typeof activeAccess!=='undefined'?activeAccess?.record?.code||'':'')));input.dir='ltr';input.autocapitalize='characters';
+ const box=text('div');box.className='f29-plans';root.append(box);const input=label(root,'رمز الاشتراك المراد تجديده',cleanCode(prefill||window.F99V29LastCode||(typeof f99LastAttemptedCode!=='undefined'?f99LastAttemptedCode:'')||(typeof activeAccess!=='undefined'?activeAccess?.record?.code||'':'')));input.dir='ltr';input.autocapitalize='characters';
  const platform=document.createElement('div');platform.className='f45-renew-platform';
   const platformImage=document.createElement('img');platformImage.src=window.F99V45PlatformQR||'';platformImage.alt='رمز QR لمنصة FINO99';platformImage.width=100;platformImage.height=100;
   const link=document.createElement('a');link.href='https://hlooleqrr.github.io/2/';link.target='_blank';link.rel='noopener noreferrer';link.textContent='افتح منصة FINO99 من هنا';
@@ -21494,7 +21494,7 @@ async function openRenew(prefill=''){
   const stat=text('p','','f29-status');root.append(stat);const send=text('button','إرسال طلب التجديد عبر واتساب','f29-btn');send.type='button';root.append(send);
  let chosen='';try{const catalog=await read();if(catalog.enabled===false)throw Error('خدمة التجديد غير متاحة حاليًا');
  const offers=(catalog.offers||[]).filter(x=>x.enabled===true);if(!offers.length)throw Error('لا توجد عروض تجديد متاحة حاليًا');chosen=offers[0].id;
- for(const p of offers){const item=text('label',null,'f29-plan');const radio=document.createElement('input');radio.type='radio';radio.name='f29-renew-choice';radio.value=p.id;radio.checked=p.id===chosen;radio.onchange=()=>{chosen=p.id};item.append(radio,text('b',p.title),text('strong',money(p.price),'f29-price'),text('small',p.max_calculations+' حسبات • '+(p.duration_minutes/1440)+' يوم من أول استخدام • صلاحية بدء التجديد '+p.redeem_window_days+' يومًا بعد الاعتماد'));box.append(item)}
+ for(const p of offers){const item=text('label',null,'f29-plan');const radio=document.createElement('input');radio.type='radio';radio.name='f29-renew-choice';radio.value=p.id;radio.checked=p.id===chosen;radio.onchange=()=>{chosen=p.id};item.append(radio,text('b',p.title));if(Number(p.old_price)>Number(p.price)&&Number(p.price)>=0){const previous=text('small','كان '+money(p.old_price));previous.style.textDecoration='line-through';item.append(previous)}item.append(text('strong',money(p.price),'f29-price'),text('small',p.max_calculations+' حسبات • '+(p.duration_minutes===1440?'24 ساعة':p.duration_minutes/1440+' يوم')+' من أول استخدام • صلاحية بدء التجديد '+p.redeem_window_days+' يومًا بعد الاعتماد'));box.append(item)}
  send.onclick=async()=>{const code=cleanCode(input.value);if(!/^[A-Z0-9-]{8,32}$/.test(code)){stat.textContent='أدخل رمز اشتراكك الصحيح.';return}input.value=code;
  const p=offers.find(x=>x.id===chosen);if(!p)return;const wa=String(catalog.whatsapp||'').replace(/\D/g,'');if(!mobile(wa)){stat.textContent='استقبال طلبات التجديد غير متاح حاليًا.';return}
  send.disabled=true;stat.textContent='جاري التأكد من الرمز...';try{const r=await window.finoRpc('f99v8_public_code_status',{p_code:code,p_device_id:typeof finoCentralDeviceId==='function'?finoCentralDeviceId():''},12000);if(!r?.ok||r.data?.ok!==true||r.data.kind!=='package'){stat.textContent='تعذر التأكد من الرمز. تحقق منه وأعد المحاولة.';return}
@@ -21518,12 +21518,22 @@ async function openOwner(){
  if(!authorized)return;const root=frame('f29-renew-owner','عروض التجديد');root.append(text('p','تعديل الأسعار والمدة والحسبات ورقم استقبال الطلب. يتم حفظ الإعدادات لجميع الأجهزة بعد تأكيد المركزية. لا يحدث تجديد تلقائي قبل تأكيد الدفع.','f29-sub'));
  let config;try{config=await read()}catch(e){root.append(text('p',e.message,'f29-status'));return}
  const enabled=label(root,'تشغيل عروض التجديد (1 تشغيل / 0 إخفاء)',config.enabled?1:0,'number');enabled.min='0';enabled.max='1';const wa=label(root,'رقم واتساب استقبال طلب التجديد بصيغة 9665XXXXXXXX',config.whatsapp,'tel');
- const fields=[];for(const item of config.offers||[]){const part=text('fieldset');part.style.cssText='border:1px solid #d9e6ee;border-radius:14px;margin:10px 0;padding:12px';part.append(text('legend',item.title));const title=label(part,'اسم العرض',item.title);const price=label(part,'السعر بالريال',item.price,'number');const cap=label(part,'عدد الحسبات',item.max_calculations,'number');const mins=label(part,'المدة بالأيام من أول استخدام',item.duration_minutes/1440,'number');const days=label(part,'آخر موعد لبدء الاستخدام بعد الاعتماد (بالأيام)',item.redeem_window_days,'number');const on=label(part,'عرض البطاقة (1 أو 0)',item.enabled?1:0,'number');fields.push({id:item.id,title,price,cap,mins,days,on});root.append(part)}
+ const fields=[];for(const item of config.offers||[]){const part=text('fieldset');part.style.cssText='border:1px solid #d9e6ee;border-radius:14px;margin:10px 0;padding:12px';part.append(text('legend',item.title));const title=label(part,'اسم العرض',item.title);const price=label(part,'السعر بالريال',item.price,'number');price.step='.01';const oldPrice=label(part,'السعر السابق لعرض الخصم — اختياري (ريال)',item.old_price??'','number');oldPrice.step='.01';const cap=label(part,'عدد الحسبات',item.max_calculations,'number');const mins=label(part,'المدة بالأيام من أول استخدام',item.duration_minutes/1440,'number');const days=label(part,'آخر موعد لبدء الاستخدام بعد الاعتماد (بالأيام)',item.redeem_window_days,'number');const on=label(part,'عرض البطاقة (1 أو 0)',item.enabled?1:0,'number');fields.push({item,id:item.id,title,price,oldPrice,cap,mins,days,on});root.append(part)}
  const status=text('p','','f29-status');root.append(status);const save=text('button','اعتماد ونشر عروض التجديد','f29-btn');root.append(save);
- save.onclick=async()=>{const offers=fields.map(f=>({id:f.id,title:f.title.value.trim(),price:+f.price.value,max_calculations:+f.cap.value,duration_minutes:Math.round(+f.mins.value*1440),redeem_window_days:+f.days.value,enabled:f.on.value==='1'}));const data={enabled:enabled.value==='1',whatsapp:wa.value.replace(/\D/g,''),offers};save.disabled=true;status.textContent='جاري الحفظ والتحقق من المركزية...';try{const r=await window.finoCentralAdminCall('f99v29_admin_save_renewal_catalog',{p_value:data,p_expected_version:Number(config.version||0)});if(!r?.ok||r.data?.ok!==true)throw Error(r?.data?.reason||'رفضت المركزية الاعتماد');const v=await read();if(Number(v.version)!==Number(r.data.version)||v.offers.length!==offers.length)throw Error('تعذر التحقق من الحفظ');status.textContent='✓ تم اعتماد عروض التجديد وتحديثها في المركزية. الإصدار '+v.version;save.textContent='✓ تم الاعتماد';setTimeout(()=>{if(save.isConnected)save.textContent='اعتماد ونشر عروض التجديد'},2200)}catch(e){status.textContent='لم يُعتمد التعديل: '+e.message}finally{save.disabled=false}}
+ save.onclick=async()=>{
+ const offers=fields.map(f=>({...f.item,id:f.id,title:f.title.value.trim(),price:Number(f.price.value),max_calculations:Number(f.cap.value),duration_minutes:Math.round(Number(f.mins.value)*1440),redeem_window_days:Number(f.days.value),enabled:f.on.value==='1',...(f.oldPrice.value.trim()?{old_price:Number(f.oldPrice.value)}:{old_price:null})}));
+ const data={enabled:enabled.value==='1',whatsapp:wa.value.replace(/\D/g,''),offers};
+ if(!mobile(data.whatsapp))return void(status.textContent='اكتب واتساب صحيحًا بصيغة 9665XXXXXXXX.');
+ if(offers.some(p=>!p.title||!Number.isFinite(p.price)||p.price<0||!Number.isInteger(p.max_calculations)||p.max_calculations<1||p.max_calculations>300||!Number.isInteger(p.duration_minutes)||p.duration_minutes<1||p.duration_minutes>525600||!Number.isInteger(p.redeem_window_days)||p.redeem_window_days<1||p.redeem_window_days>365||(p.old_price!==null&&(!Number.isFinite(p.old_price)||p.old_price<p.price))))return void(status.textContent='تحقق من السعر، السعر السابق، عدد الحسبات، المدة وصلاحية بدء التجديد.');
+ save.disabled=true;status.textContent='جاري الحفظ والتحقق من المركزية...';try{
+ const r=await window.finoCentralAdminCall('f99v29_admin_save_renewal_catalog',{p_value:data,p_expected_version:Number(config.version||0)});if(!r?.ok||r.data?.ok!==true)throw Error(r?.data?.reason||'رفضت المركزية الاعتماد');
+ const v=await read();if(Number(v.version)!==Number(r.data.version)||v.offers?.length!==offers.length||v.offers.some((p,i)=>String(p.id)!==offers[i].id||Number(p.price)!==offers[i].price||Number(p.max_calculations)!==offers[i].max_calculations||Number(p.duration_minutes)!==offers[i].duration_minutes||Number(p.redeem_window_days)!==offers[i].redeem_window_days))throw Error('لم تتطابق تفاصيل عروض التجديد بعد الحفظ');
+ status.textContent='✓ تم اعتماد جميع تفاصيل التجديد وتحديثها في المركزية. الإصدار '+v.version;
+ }catch(e){status.textContent='لم يُعتمد التعديل: '+e.message}finally{save.disabled=false}}
+
 }
 window.F99V29RenewalOpen=openRenew;
-function attach(){window.F99V8OpenRenewal=openRenew;window.openSubscriptionRenewal=()=>openRenew();const hub=document.querySelector('#ownerHub .owner-grid');if(hub&&!document.getElementById('f29-owner-btn')){const b=text('button','تجديد الاشتراكات');b.className='owner-tile';b.id='f29-owner-btn';b.onclick=openOwner;hub.append(b)}
+function attach(){window.F99V8OpenRenewal=openRenew;window.openSubscriptionRenewal=(prefill='')=>openRenew(prefill||window.F99V29LastCode||(typeof f99LastAttemptedCode!=='undefined'?f99LastAttemptedCode:''));const hub=document.querySelector('#ownerHub .owner-grid');if(hub&&!document.getElementById('f29-owner-btn')){const b=text('button','تجديد الاشتراكات');b.className='owner-tile';b.id='f29-owner-btn';b.onclick=openOwner;hub.append(b)}
  const expired=document.getElementById('f99v23-end');if(expired&&!expired.querySelector('[data-f29-renew]')){const b=text('button','اختر عرض التجديد');b.type='button';b.dataset.f29Renew='1';b.className='f29-btn';b.onclick=()=>openRenew();expired.append(b)}
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',attach,{once:true});else attach();setInterval(()=>{if(!document.hidden)attach()},5000);
@@ -21679,7 +21689,7 @@ if(typeof oldCompare==='function')window.F99COpenClient=async function(...args){
  return res;
 };
 
-async function openCompletion(key){if(!ownerGate())return;try{const r=await window.finoRpc('f99v25_completion_preflight',{},11000);if(!r?.ok||r.data?.ready!==true)throw Error('خدمة عرض الإنجاز (V25) غير مثبتة في المركزية');if(typeof window.F99V25OpenOwner!=='function')throw Error('محرر العروض غير موجود في الموقع');(typeof window.F99V41CompletionOwner==='function'?window.F99V41CompletionOwner(key):window.F99V25OpenOwner(key))}catch(e){alert('لم يُفتح العرض ولم يُعدل شيء: '+e.message+'\nملف تحديث المركزية V31 يصلح وظائف V25 الناقصة بعد اختباره على نسخة مستقلة.')}}
+async function openCompletion(key){if(!ownerGate())return;try{if(typeof window.F99V41CompletionOwner==='function'){await window.F99V41CompletionOwner(key);return;}const r=await window.finoRpc('f99v25_completion_preflight',{},11000);if(!r?.ok||r.data?.ready!==true)throw Error('خدمة الأتعاب غير مثبتة في المركزية');if(typeof window.F99V25OpenOwner!=='function')throw Error('محرر الأتعاب غير موجود في الموقع');await window.F99V25OpenOwner(key)}catch(e){alert('تعذر فتح إعدادات الأتعاب: '+(e.message||e))}}
 function openDesk(tab='packages'){if(!ownerGate())return;if(tab==='packages'){void editPackage();return;}close('f31-options');close('f31-used');deskTab=tab;const root=buildFrame('f31-desk','FINO99 • مركز الإدارة','أربع مجموعات فقط — كل عملية تتطلب اعتمادها من المالك',()=>close('f31-desk'));
  const nav=E('nav',null,'f31-nav');const defs=[['packages','المتجر'],['stock','الأكواد والمخزون'],['calc','الحاسبات والمقارنات'],['settings','العقود والإعدادات']];for(const [id,lbl] of defs){const b=E('button',lbl);b.classList.toggle('active',id===tab);b.onclick=()=>openDesk(id);nav.append(b)}root.append(nav);const body=E('div',null,'f31-grid');root.append(body);
  if(tab==='packages'){row(body,'إنشاء باقة جديدة','تظهر مباشرة في لوحة الباقات بعد اعتماد وحفظ الإعدادات؛ ربط المنتج بسلة يحتاج ضبط بياناته.',[['+ إنشاء باقة',()=>editPackage('__new__'),true]]);
@@ -22863,6 +22873,25 @@ window.F99V41CompletionOwner=async key=>{if(!ownerOk())return alert('سجل ال
  const days=makeForm(card,'مدة العرض من أول حسبة — بالأيام',Number(policy.customer_hours||0)/24,'number');days.min=0;days.max=365;days.step='1';
  const start=makeForm(card,'بداية حملة العرض بتوقيت الرياض (اختياري)',dateToLocal(policy.campaign_starts_at),'datetime-local');
  const end=makeForm(card,'نهاية حملة العرض بتوقيت الرياض (اختياري)',dateToLocal(policy.campaign_ends_at),'datetime-local');
+ const previewCash=makeForm(card,'مثال للمعاينة فقط — صافي الكاش (ريال)',100000,'number');
+ const previewPrincipal=makeForm(card,'مثال للمعاينة فقط — أصل التمويل (ريال)',150000,'number');
+ const feePreview=el('section','f41-owner-message');feePreview.setAttribute('role','status');feePreview.style.cssText='background:#f1f8fc;border:1px solid #d3e5ee;border-radius:10px;padding:11px;line-height:2';card.append(feePreview);
+ const previewMoney=n=>Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+ function renderFeePreview(){
+  const cash=Number(previewCash.value),principal=Number(previewPrincipal.value),base=Number(old.value),special=Number(price.value),basisAmount=basis.value==='principal'?principal:cash;
+  if(![cash,principal,base,special].every(x=>Number.isFinite(x)&&x>=0)||special>base){feePreview.textContent='أدخل قيمًا صحيحة لعرض المعاينة.';return}
+  let before=base,after=special,detail='الأتعاب المحددة للباقة';
+  if(tiersEnabled.checked){
+   const matching=entries.map(x=>x.get()).filter(x=>Number.isFinite(x.min_cash)&&x.min_cash<=basisAmount).sort((a,b)=>b.min_cash-a.min_cash)[0];
+   if(matching){before=matching.method==='fixed'?matching.value:basisAmount*matching.value/100;const disc=matching.discount_method==='fixed'?matching.discount:before*matching.discount/100;after=Math.max(0,before-disc);detail='الشريحة المعتمدة عند هذا المثال'}
+  }
+  const valid=[before,after].every(x=>Number.isFinite(x)&&x>=0);
+  if(!valid){feePreview.textContent='راجع قيم الأتعاب والشرائح.';return}
+  const saving=Math.max(0,before-after);
+  feePreview.textContent='معاينة للمالك فقط — '+detail+'\nقبل الخصم: '+previewMoney(before)+' ريال\nأثناء سريان العرض: '+previewMoney(campaignEnabled.checked?after:before)+' ريال\nقيمة الخصم: '+previewMoney(campaignEnabled.checked?saving:0)+' ريال'+(campaignEnabled.checked?'\nالخصم الفعلي للعميل مشروط ببداية الحملة ونهايتها ووقت أول حسبة موثقة.':'\nالعرض المؤقت غير مفعل، لذا لا يظهر الخصم للعميل.');
+  feePreview.style.whiteSpace='pre-line';
+ }
+ card.addEventListener('input',renderFeePreview);card.addEventListener('change',renderFeePreview);renderFeePreview();
  const save=el('button','f41-owner-save','اعتماد الأتعاب والخصم والصلاحية لجميع عملاء هذه الباقة');save.type='button';card.append(save);
  save.onclick=async()=>{
   const list=entries.map(r=>r.get()),pOld=Number(old.value),pNow=Number(price.value),d=Number(days.value);
@@ -22874,7 +22903,8 @@ window.F99V41CompletionOwner=async key=>{if(!ownerOk())return alert('سجل ال
   if(!Number.isFinite(pOld)||pOld<0||!Number.isFinite(pNow)||pNow<0||pNow>pOld)return statusLine(message,'السعر المعروض يجب ألا يتجاوز السعر الأساسي',true);
    if(buttonText.value.trim().length<5||buttonText.value.trim().length>90)return statusLine(message,'عبارة الزر بين 5 و90 حرفًا',true);
   if(!Number.isInteger(d)||d<0||d>365)return statusLine(message,'مدة العميل يجب أن تكون أيامًا صحيحة بين 0 و365',true);
-  if(list.some(r=>r.min_cash<0||r.value<0||r.discount<0||(r.method==='percent_cash'&&r.value>100)||(r.discount_method==='percent'&&r.discount>100)))return statusLine(message,'راجع نسب ومبالغ الشرائح',true);
+  if(list.some(r=>![r.min_cash,r.value,r.discount].every(x=>Number.isFinite(x))||r.min_cash<0||r.value<0||r.discount<0||(r.method==='percent_cash'&&r.value>100)||(r.discount_method==='percent'&&r.discount>100)))return statusLine(message,'راجع نسب ومبالغ الشرائح',true);
+  if(campaignEnabled.checked&&d===0&&!end.value)return statusLine(message,'حدد مدة للخصم بالأيام أو تاريخًا لانتهاء الحملة حتى لا يبقى الخصم مفتوحًا دون حد',true);
   if(start.value&&end.value&&dateToISO(end.value)<=dateToISO(start.value))return statusLine(message,'انتهاء العرض يجب أن يكون بعد بدايته',true);
   if(!confirm('اعتماد إعدادات الإنجاز لهذه الباقة بجميع أجزائها؟'))return;
   save.disabled=true;try{const payload={enabled:enabled.checked,title:title.value.trim(),offer_name:'عرض متابعة التمويل',old_price:pOld,new_price:pNow,whatsapp:phone.value.trim(),message:text.value.trim(),documents:[],show_documents:false,button_text:buttonText.value.trim()||'أبي نتابع معاملتي معكم',expiry:'',disclaimer:'حسبة مبدئية وأتعاب متابعة اختيارية مستقلة عن رسوم البنك.'};
@@ -23258,6 +23288,55 @@ window.F99V47ApplyVisualMode=async()=>{if(!inBot()||mode()!=='image')return;cons
 const old=window.showFINOPortalRank;
 if(typeof old==='function')window.showFINOPortalRank=function(...args){const val=old.apply(this,args);Promise.resolve(val).then(()=>{if(inBot())void window.F99V47ApplyVisualMode()});return val};
 })();
+</script>
+<script id="f99v48-fixes">
+/* FINO99 V48: owner fee entry and approved same-code renewals. Backend remains authoritative. */
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const owner=()=>{try{return activeAccess?.record?.owner===true&&!!activeAccess?.record?.central&&!!finoCentralAdminToken}catch{return false}};
+const el=(tag,label)=>{const n=document.createElement(tag);if(label!=null)n.textContent=String(label);return n};
+const code=x=>{try{return window.F99V8ExtractCode?.(x)||String(x||'').trim().toUpperCase()}catch{return String(x||'').trim().toUpperCase()}};
+const fmt=n=>Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+async function rpc(name,args={}){if(!owner())throw Error('صلاحية المالك غير متاحة');const r=await window.finoCentralAdminCall(name,args);if(!r?.ok||r.data?.ok!==true)throw Error(r?.data?.reason||r?.error?.message||'رفضت المركزية العملية');return r.data}
+function layout(title){$('f48-panel')?.remove();const layer=el('section');layer.id='f48-panel';layer.setAttribute('role','dialog');layer.setAttribute('aria-modal','true');
+ layer.style.cssText='position:fixed;inset:0;z-index:2147483630;background:#001c2f99;overflow-y:auto;padding:18px 10px;direction:rtl;font:700 14px/1.9 Cairo,system-ui,sans-serif';
+ const sheet=el('div');sheet.style.cssText='max-width:680px;margin:0 auto;background:white;color:#193d58;border-radius:18px;padding:18px;box-shadow:0 15px 45px #18304a55';
+ const heading=el('h2',title);heading.style.cssText='font-size:20px;margin:0 0 15px';const close=el('button','إغلاق');close.type='button';close.onclick=()=>layer.remove();close.style.cssText='float:left;padding:6px 12px';sheet.append(close,heading);layer.append(sheet);document.body.append(layer);return sheet}
+function button(root,label,cb){const b=el('button',label);b.type='button';b.style.cssText='background:#145e86;color:white;display:block;width:100%;padding:12px;border:0;border-radius:11px;font:800 14px Cairo,system-ui;margin:10px 0';b.onclick=cb;root.append(b);return b}
+function field(root,label,def=''){const l=el('label',label);l.style.cssText='display:block;margin:8px 0';const input=el('input');input.value=def;input.style.cssText='display:block;width:100%;border:1px solid #b7cbd6;border-radius:9px;padding:10px;box-sizing:border-box;direction:ltr';l.append(input);root.append(l);return input}
+function p(root,message){const n=el('p',message);n.style.cssText='white-space:pre-line;padding:10px;border-radius:8px;background:#f0f7fb;color:#1c4e6b';root.append(n);return n}
+function packages(){return (window.FINO99ReadStorefront?.()?.products||[]).filter(x=>x&&typeof x.key==='string'&&x.key.length)}
+window.F99V48OpenFees=()=>{if(!owner())return alert('هذه الإعدادات خاصة بالمالك.');const sheet=layout('إدارة أتعاب الإنجاز والخصومات');p(sheet,'اختر الباقة لتعديل الأتعاب الأساسية والشرائح وخصم الحملة ومدتها من شاشة اعتماد واحدة. تحفظ البيانات في المركزية بعد التحقق منها.');
+ const products=packages();if(!products.length)return p(sheet,'تعذر قراءة قائمة الباقات من المركزية. افتح المتجر وحدّث البيانات أولًا.');
+ products.forEach(a=>button(sheet,String(a.name||a.title||a.key)+' — إعداد الأتعاب والخصم',async()=>{if(!owner())return;try{const r=await window.finoRpc('f99v41_preflight',{},12000);if(!r?.ok||r.data?.completion_bundle_ready!==true)throw Error('لم تؤكد المركزية تثبيت إعدادات الأتعاب V41');$('f48-panel')?.remove();await window.F99V41CompletionOwner(a.key)}catch(e){alert('تعذر فتح عرض الأتعاب: '+(e.message||e))}}));
+};
+window.F99V48ApproveRenewal=async()=>{if(!owner())return alert('هذه الإعدادات خاصة بالمالك.');const sheet=layout('اعتماد تجديد نفس الكود');p(sheet,'يعتمد التجديد على عرض السعر المنشور حاليًا. لا تجدد الكود إلا بعد التحقق من السداد الفعلي. لا ينشئ النظام كودًا جديدًا ولا يُفعِّل العرض من رسالة العميل وحدها.');
+ const current=code(typeof f99LastAttemptedCode!=='undefined'?f99LastAttemptedCode:'');const input=field(sheet,'الكود المطلوب تجديده',current);input.autocapitalize='characters';
+ const sl=el('label','عرض التجديد');sl.style.cssText='display:block;margin:8px 0';const select=el('select');select.style.cssText='display:block;width:100%;padding:12px;border:1px solid #b7cbd6;border-radius:9px;background:white';sl.append(select);sheet.append(sl);const status=p(sheet,'جاري قراءة عروض التجديد من المركزية...');
+ const accept=el('label');accept.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 0';const check=el('input');check.type='checkbox';check.style.cssText='width:22px;height:22px;flex:none';accept.append(check,el('span','راجعت سداد العميل وتحققت منه، وأوافق على تجديد هذا الكود بالعرض المختار.'));sheet.append(accept);
+ const save=button(sheet,'اعتماد التجديد بعد التحقق من السداد',async()=>{const value=code(input.value);input.value=value;
+ if(!/^[A-Z0-9-]{8,32}$/.test(value))return void(status.textContent='أدخل الكود الصحيح كاملًا.');
+ const selected=offers.find(a=>a.id===select.value);if(!selected)return void(status.textContent='حدد عرض تجديد صحيحًا.');
+ if(!check.checked)return void(status.textContent='يلزم تأكيد التحقق من سداد العميل قبل التجديد.');
+ if(!confirm('تأكيد تجديد نفس الكود: '+value+'\nالعرض: '+selected.title+'\nالقيمة: '+fmt(selected.price)+' ريال\nعدد الحسبات: '+selected.max_calculations+'\nهل تم التحقق من الدفع؟'))return;
+ save.disabled=true;status.textContent='جار اعتماد التجديد والتحقق من المركزية...';try{const result=await rpc('f99v48_admin_approve_renewal',{p_code:value,p_offer_id:selected.id,p_payment_confirmed:true});
+ const verified=await rpc('f99v19_admin_code_detail',{p_code:value});const rec=verified.record;const a=rec?.config?.f99x||{};
+ if(rec?.code!==value||Number(a.max_calculations)!==Number(selected.max_calculations)||Number(rec.duration_minutes)!==Number(selected.duration_minutes)||String(a.renewal_offer_id)!==selected.id||Number(verified.renewal_cycle)!==Number(result.renewal_cycle))throw Error('عاد الخادم باستجابة ناجحة لكن تفاصيل التجديد لم تتطابق؛ يلزم التحقق يدويًا من المركزية قبل إعادة العملية');
+ status.textContent='✅ اعتُمد تجديد نفس الكود وقرأت تفاصيله من المركزية.\nالكود: '+value+'\nالعرض: '+selected.title+'\nالحسبات: '+selected.max_calculations+'\nالمدة: '+(selected.duration_minutes===1440?'24 ساعة':selected.duration_minutes/1440+' يوم')+' من أول تفعيل.\nصلاحية بدء الاستخدام: '+selected.redeem_window_days+' يومًا.\nلم يُرسل أي إشعار واتساب تلقائيًا.';check.checked=false;
+ }catch(e){status.textContent='❌ لم يمكن تأكيد التجديد: '+(e.message||e)}finally{save.disabled=false}}
+ );save.disabled=true;let offers=[];try{const r=await window.finoRpc('f99v29_public_renewal_catalog',{},12000);if(!r?.ok||r.data?.ok!==true||r.data.catalog?.enabled!==true)throw Error('عروض التجديد غير متاحة في المركزية');offers=(r.data.catalog.offers||[]).filter(p=>p.enabled===true);if(!offers.length)throw Error('لا يوجد عرض تجديد منشور');
+ offers.forEach(o=>{const opt=el('option',o.title+' — '+fmt(o.price)+' ريال — '+o.max_calculations+' حسبات');opt.value=o.id;select.append(opt)});status.textContent='اختر العرض الذي طلبه العميل وتحقق من سداد قيمته قبل الاعتماد.';save.disabled=false
+ }catch(e){status.textContent='تعذر جلب عروض التجديد: '+(e.message||e)}};
+function bind(){const hub=$('ownerHub')?.querySelector('.owner-grid');if(hub&&owner()){
+ if(!$('f48-owner-fees')){const b=el('button','أتعاب الإنجاز والخصومات');b.id='f48-owner-fees';b.className='owner-tile';b.onclick=window.F99V48OpenFees;hub.append(b)}
+ if(!$('f48-owner-renew')){const b=el('button','اعتماد تجديد نفس الكود');b.id='f48-owner-renew';b.className='owner-tile';b.onclick=window.F99V48ApproveRenewal;hub.append(b)}
+ }
+ const contact=$('f23-contact');if(contact&&!contact.dataset.f48Renew){contact.dataset.f48Renew='1';contact.textContent='اختر عرض تجديد نفس الكود';contact.addEventListener('click',e=>{e.preventDefault();window.F99V29RenewalOpen?.(typeof f99LastAttemptedCode!=='undefined'?f99LastAttemptedCode:'')},true)}
+ const oldEntry=$('f99v8-public-renew');if(oldEntry){oldEntry.textContent='تجديد نفس الكود';oldEntry.onclick=()=>window.F99V29RenewalOpen?.(typeof f99LastAttemptedCode!=='undefined'?f99LastAttemptedCode:'')}
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();document.addEventListener('visibilitychange',()=>{if(!document.hidden)bind()});setInterval(()=>{if(!document.hidden)bind()},6000);
+})();
+
 </script>
 </body>
 </html>
