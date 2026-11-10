@@ -22190,7 +22190,8 @@ document.addEventListener('click',e=>{if(e.target.closest('#f31-desk .f31-nav'))
 </script>
 
 <script>
-/* FINO99 V35 — owner-only READ-ONLY readiness dashboard, embedded in existing متجر screen.
+
+/* FINO99 V44 — verified owner audit based on V35; embedded in existing متجر screen.
    Never resets codes, guesses sales, stores credentials, or changes central data. */
 (()=>{'use strict';
  const $=id=>document.getElementById(id);
@@ -22209,20 +22210,34 @@ document.addEventListener('click',e=>{if(e.target.closest('#f31-desk .f31-nav'))
   bar.append(el('h2','فحص جاهزية FINO99 — قراءة فقط'));
   const close=el('button','إغلاق');close.type='button';close.onclick=()=>root.remove();bar.append(close);content.append(bar);
   const disclaimer=el('p','الفحص يكشف بعض الوظائف والأعداد؛ لا يثبت مبيعات سلة أو سلامة الحقوق أو نجاح كل مسارات العقود. لا يغيّر أي بيانات.');content.append(disclaimer);
-  const out=el('div');out.setAttribute('role','status');out.setAttribute('aria-live','polite');out.append(el('p','جاري فحص الإصدار والمخزون...'));content.append(out);root.append(content);document.body.append(root);
+  const out=el('div');out.setAttribute('role','status');out.setAttribute('aria-live','polite');out.append(el('p','جاري فحص الإصدار والمخزون...'));content.append(out);
+  const copy=el('button','نسخ ملخص الفحص');copy.type='button';copy.onclick=async()=>{
+    const report='FINO99 | فحص المالك (قراءة فقط)\n'+out.innerText.trim();
+    try{if(!navigator.clipboard?.writeText)throw Error('Clipboard unavailable');await navigator.clipboard.writeText(report);copy.textContent='تم نسخ الملخص'}
+    catch(_){window.prompt('انسخ ملخص الفحص:',report)}
+  };content.append(copy);root.append(content);document.body.append(root);
   try{
     out.replaceChildren();
-    for(const [name,label] of [['f99v31_preflight','إعدادات الباقات V31'],['f99v32_preflight','تحديث النسب المباشر V32'],['f99v33_preflight','متجر الباقات V33'],['f99v34_preflight','جاهزية ميزة نسبة العميل V34']]){
+    for(const [name,label] of [['f99v31_preflight','إعدادات الباقات V31'],['f99v32_preflight','تحديث النسب المباشر V32'],['f99v33_preflight','متجر الباقات V33'],['f99v34_preflight','جاهزية ميزة نسبة العميل V34'],['f99v39_preflight','إدارة المتجر والرصيد V39'],['f99v41_preflight','الأتعاب وخلفيات الثيم V41'],['f99v43_preflight','صور الباقات والحسبة الأخيرة V43']]){
       const r=await safeRpc(name);
       if(!r.ok){show(out,label,false,r.detail);continue;}
-      const ready=r.data.ok===true&&r.data.ready!==false;
-      show(out,label,ready,ready?'استجاب خادم المركزية؛ يلزم اختبار العمل الفعلي':String(r.data.reason||'الرد لا يؤكد جاهزية الخدمة'));
+      const required={
+       f99v39_preflight:['store_and_quota','time_limited_quote','bulk_reclaim_preview'],
+       f99v41_preflight:['completion_bundle_ready','completion_status_ready','theme_image_ready','code_fee_override_ready'],
+       f99v43_preflight:['product_image_rpc','v41_ready','v39_store_save']
+      }[name]||[];
+      const ready=r.data.ok===true&&r.data.ready!==false&&required.every(k=>r.data[k]===true);
+      const incomplete=required.filter(k=>r.data[k]!==true);
+      show(out,label,ready,ready?'استجاب خادم المركزية؛ يلزم اختبار العمل الفعلي':String(incomplete.length?'وظائف ناقصة: '+incomplete.join(', '):(r.data.reason||'الرد لا يؤكد جاهزية الخدمة')));
     }
     const products=window.FINO99ReadStorefront?.()?.products;
     const keys=['fino99-bronze-buyout-20261107','fino99-compare-offers-v33','fino99-mortgage-coming-v33'];
     const catalog=Array.isArray(products)?keys.every(key=>products.some(p=>p.key===key)):false;
     show(out,'وجود الباقات الثلاث في المتجر',catalog,catalog?'البرونزية، المقارنات، والعقارية':'يلزم تهيئة المنتجات من المتجر واعتماد المالك');
     if(Array.isArray(products)){
+      const visible=products.filter(p=>p&&p.enabled!==false);
+      const withImages=visible.filter(p=>typeof(p.image_url||p.image)==='string' && /^(https:\/\/|data:image\/(?:png|jpeg|webp);base64,)/i.test(p.image_url||p.image));
+      show(out,'صور المنتجات المعتمدة',null,`${withImages.length} من ${visible.length} من المنتجات المعروضة لها صورة مباشرة؛ هذا فحص للبيانات وليس إثباتًا لعرض الصورة على جهاز العميل.`);
       const mortgage=products.find(p=>p.key===keys[2]);
       const safeComing=!!mortgage&&mortgage.enabled!==true&&!mortgage.url&&!mortgage.salla_product_id;
       show(out,'العقارية بدون شراء قبل الإطلاق',safeComing,safeComing?'غير مفعلة للشراء':'راجع المنتج العقاري والرابط وظهور السعر قبل النشر');
@@ -22232,16 +22247,25 @@ document.addEventListener('click',e=>{if(e.target.closest('#f31-desk .f31-nav'))
       const d=r.data;
       show(out,'سلامة رصيد الأكواد',d.exactly_5000===true&&Number(d.integrity_errors)===0,
         `الفعلي: ${d.registered_total??'?'}، المتاح: ${d.available??'?'}، المحجوز: ${d.reserved??'?'}، المنشور: ${d.published??'?'}، المستخدم/المفعّل: ${d.used_or_activated??'?'}، اختلافات البيانات: ${d.integrity_errors??'?'}`);
-      show(out,'حجز المئة البرونزية والخمسين مقارنة',Number(d.bronze_published)===100&&Number(d.comparison_published)===50,
-        `البرونزية (محجوز/منشور/قديم): ${d.bronze_published??'?'}، المقارنات: ${d.comparison_published??'?'} — لا يثبت نشرها أو رفعها لسلة`);
+      show(out,'هدف البرونزية (115) والمقارنات (50)',Number(d.bronze_published)===115&&Number(d.comparison_published)===50,
+        `المسجل برونزيًا بحسب التقرير: ${d.bronze_published??'?'} (الهدف 115)، المقارنات: ${d.comparison_published??'?'} (الهدف 50). تُراجع الأكواد القديمة على حدة، ولا يعد الرقم دليلًا على صلاحية إعادة البيع.`);
     }else show(out,'مطابقة المخزون الفعلي',false,r.detail||'لم تؤكد المركزية المخزون');
     show(out,'مطابقة المبيعات الفعلية مع سلة',null,'لم تُفحص تلقائيًا؛ يلزم مطابقة طلبات سلة قبل إعادة كود أو نشر دفعة');
     show(out,'اختبارات العقود والتوثيق على المركزية الحية',null,'غير محسومة بهذا الفحص؛ يلزم اختبار منفصل ببيانات تجريبية');
     show(out,'آخر تعديل معتمد لنسب البنك على أجهزة العملاء',null,'لا تكفي استجابة RPC؛ جرّب تعديل نسبة غير إنتاجية على حساب اختبار وإعادة القراءة من جهازين');
   }catch(e){out.append(el('p','تعذر اكتمال الفحص: '+String(e?.message||e)));}
  }
+ function installStoreAudit(){
+   if(!owner())return;
+   const toolbar=$('f99s-owner')?.querySelector('.f37-store-quick, .f99v17-toolbar');
+   if(!toolbar||toolbar.querySelector('#f35-store-readiness'))return;
+   const btn=el('button','فحص الجاهزية');btn.id='f35-store-readiness';btn.type='button';
+   btn.title='فحص قراءة فقط للباقات والأكواد والصور وإصدارات المركزية';btn.onclick=performReadOnly;
+   toolbar.append(btn);
+ }
  function install(){
    if(!owner())return;
+   installStoreAudit();
    const root=$('f31-desk');if(!root||root.hidden)return;
    const active=root.querySelector('.f31-nav button.active');if(!active||!active.textContent.includes('المتجر'))return;
    const grid=root.querySelector('.f31-grid');if(!grid||grid.querySelector('#f35-audit-card'))return;
@@ -22253,7 +22277,16 @@ document.addEventListener('click',e=>{if(e.target.closest('#f31-desk .f31-nav'))
  if(typeof old==='function')window.F99V31OpenDesk=function(...args){const res=old.apply(this,args);queueMicrotask(install);return res};
  document.addEventListener('click',e=>{if(e.target?.closest?.('#f31-desk .f31-nav'))queueMicrotask(install)});
  document.addEventListener('DOMContentLoaded',install,{once:true});
+ document.addEventListener('click',e=>{
+   if(!owner())return;
+   if(e.target?.closest?.('#f99s-owner, #f31-desk, #ownerHub'))setTimeout(installStoreAudit,150);
+ });
+ const previousStoreOpen=window.F99SOpenOwner;
+ if(typeof previousStoreOpen==='function')window.F99SOpenOwner=async function(...args){
+   const r=await previousStoreOpen.apply(this,args);installStoreAudit();return r;
+ };
 })();
+
 </script>
 <style id="f35-readiness-style">
 #f35-readiness-dialog{position:fixed;inset:0;background:rgba(5,25,45,.78);z-index:2147483200;display:flex;align-items:center;justify-content:center;padding:12px;direction:rtl}
@@ -22851,47 +22884,62 @@ window.F99V38CompletionRules=key=>window.F99V41CompletionOwner(key);
 </style>
 <script id="f99v43-quota-patch">
 (()=>{'use strict';
-// Server continues to enforce quota in f99v21_consume_calculation. This patch only
-// preserves viewing the final PAID result; it never authorizes another calculation.
-let reminded=false;
-function paidSession(){return !!(typeof activeAccess!=='undefined'&&activeAccess?.record?.central&&!activeAccess?.record?.owner);}
-function inConversation(){try{return document.getElementById('specialistBotPage')?.classList.contains('active')||finoPortal?.step==='buyout_result'||(typeof latestResults!=='undefined'&&latestResults?.length>0)}catch{return false}}
-function notice(){
- if(reminded||!paidSession())return;reminded=true;
- const chat=document.getElementById('finoBotChat');
- if(!chat)return;
- const n=document.createElement('div');n.className='f43-last-use';n.setAttribute('role','status');
- n.textContent='اكتملت الحسبات المدفوعة. هذه النتيجة الأخيرة حقك كاملًا، وتقدر تراجع تفاصيلها وتسأل عنها. بدء حسبة جديدة يحتاج تجديد.';
- chat.append(n);n.scrollIntoView?.({block:'nearest',behavior:'auto'});
+// V44 — fix duplicated renewal notices without modifying the server-side quota.
+// The last paid result is always readable; starting a NEW calculation remains gated
+// by the existing f99v21_consume_calculation RPC and V43 client status checks.
+const NOTICE_ID='f99v44-paid-result-notice';
+const RENEW_ID='f99v44-renew-required';
+function paidSession(){try{return !!activeAccess?.record?.central&&!activeAccess?.record?.owner}catch{return false}}
+function chat(){return document.getElementById('finoBotChat')}
+function inConversation(){try{return !!(document.getElementById('specialistBotPage')?.classList.contains('active')||finoPortal?.step==='buyout_result'||(typeof latestResults!=='undefined'&&latestResults?.length>0))}catch{return false}}
+function notifyLast(){
+ if(!paidSession())return;
+ const c=chat();if(!c)return;
+ if(c.querySelector('#'+NOTICE_ID))return;
+ const n=document.createElement('div');n.id=NOTICE_ID;n.className='f43-last-use';n.setAttribute('role','status');
+ n.textContent='انتهت الحسبات الجديدة المسموحة. حسبتك الأخيرة ونتائجها متاحة لك للمراجعة. لتبدأ حسبة أخرى، يلزم تجديد الباقة.';
+ c.append(n);
 }
+function clearNotices(){document.getElementById(NOTICE_ID)?.remove();document.getElementById(RENEW_ID)?.remove()}
 window.F99V43LastResultStatus=(d)=>{
  if(!paidSession())return;
- if(d?.reason==='CALCULATIONS_FINISHED' || (Number(d?.max_calculations)>0 && Number(d?.calculations_remaining)===0)){
-   window.__F99V43QuotaExhausted=true;
-   if(inConversation()||window.__F99V43LastPending)notice();
- }else if(Number(d?.calculations_remaining)>0){window.__F99V43QuotaExhausted=false;reminded=false;window.__F99V43LastPending=false;}
+ if(d?.reason==='CALCULATIONS_FINISHED'||(Number(d?.max_calculations)>0&&Number(d?.calculations_remaining)===0)){
+  window.__F99V43QuotaExhausted=true;
+  if(inConversation()||window.__F99V43LastPending)notifyLast();
+ }else if(Number(d?.calculations_remaining)>0){
+  window.__F99V43QuotaExhausted=false;window.__F99V43LastPending=false;clearNotices();
+ }
 };
 window.F99V43BlockNewCalculation=()=>{
  if(!paidSession()||window.__F99V43QuotaExhausted!==true)return false;
- notice();
- const chat=document.getElementById('finoBotChat');if(chat){
-   const n=document.createElement('div');n.className='f43-last-use';n.textContent='الحد المدفوع اكتمل. لتبدأ حسبة جديدة، جدّد الباقة أولًا.';
-   const b=document.createElement('button');b.type='button';b.textContent='تجديد الباقة';
-   b.onclick=()=>{try{if(typeof window.F99V29RenewalOpen==='function')window.F99V29RenewalOpen();else window.F99V8OpenRenewal?.(typeof f99LastAttemptedCode==='string'?f99LastAttemptedCode:'');}catch(_){}};
-   n.append(b);chat.append(n);
- }else{alert('اكتمل رصيد الحسبات؛ يلزم التجديد لبدء حسبة أخرى.');}
+ const c=chat();notifyLast();
+ if(c&&!c.querySelector('#'+RENEW_ID)){
+  const n=document.createElement('div');n.id=RENEW_ID;n.className='f43-last-use';n.setAttribute('role','status');
+  n.append(document.createTextNode('لا يمكن بدء حسبة جديدة بعد نفاد الرصيد. '));
+  const b=document.createElement('button');b.type='button';b.textContent='تجديد الباقة';
+  b.onclick=()=>{try{if(typeof window.F99V29RenewalOpen==='function')window.F99V29RenewalOpen();else window.F99V8OpenRenewal?.(typeof f99LastAttemptedCode==='string'?f99LastAttemptedCode:'')}catch(_){}};
+  n.append(b);c.append(n);
+ }else if(!c){alert('اكتمل رصيد الحسبات. لتبدأ حسبة جديدة يلزم التجديد.');}
  return true;
 };
-// A renewal overlay must not erase or sign-out the chat just because the last
-// successful calculation brought remaining credits to zero.
 const prior=window.F99V23ShowEnd;
 if(typeof prior==='function')window.F99V23ShowEnd=function(reason){
  if(reason==='CALCULATIONS_FINISHED'&&paidSession()&&(inConversation()||window.__F99V43LastPending)){
-   window.__F99V43QuotaExhausted=true;notice();return;
+  window.__F99V43QuotaExhausted=true;notifyLast();return;
  }
  return prior.apply(this,arguments);
 };
 })();
 </script>
+
+<style id="f99v44-accessibility">
+/* V44: presentation enhancements only; no service permissions or finance formulas changed */
+#f99s-owner .f37-store-quick #f35-store-readiness{white-space:nowrap}
+#f99v44-paid-result-notice,#f99v44-renew-required{margin-block:8px;line-height:1.7}
+#f99v44-renew-required button{min-height:42px;cursor:pointer}
+@media (prefers-reduced-motion:reduce){
+ *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
 </body>
 </html>
