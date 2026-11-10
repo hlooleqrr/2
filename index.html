@@ -13,7 +13,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" name="viewport"/>
 <meta content="#ffffff" name="theme-color"/>
-<title>FINO99 — المتجر والحاسبات | V39</title>
+<title>FINO99 — المتجر والحاسبات | V40</title><meta name="fino99-site-version" content="V40-2026-11-10">
 <meta content="2026-11-06-v3" name="fino99-code-fix-release"/><meta content="FINO99" name="description"/><meta content="website" property="og:type"/><meta content="FINO99" property="og:title"/><meta content="FINO99" property="og:description"/>
 <meta content="image-rates-audit-2026-11-03" name="fino99-release"/>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
@@ -17505,7 +17505,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  function productImageOK(s){return urlOK(s)||/^data:image\/(?:webp|png|jpeg);base64,[A-Za-z0-9+/=]{50,110000}$/.test(String(s||''))}
  function idOK(s){return /^\d{5,20}$/.test(String(s||''))}
  function esc(s){return String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
- function money(n){return Number(n||0).toLocaleString('ar-SA',{minimumFractionDigits:2,maximumFractionDigits:2})}
+ function money(n){return Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
  // Customer-facing copy is independent from internal owner-only package configuration.
  function publicCopy(value){return String(value??'').replace(/البنوك\s+التي\s+يحددها\s+المالك/gu,'البنوك المشمولة في هذه الباقة').replace(/حسب\s+إعدادات\s+المالك/gu,'وفق شروط الباقة').replace(/التي\s+يحددها\s+المالك/gu,'المشمولة في الباقة')}
 
@@ -17576,7 +17576,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  }
  function availableBanks(p){
    const banks=centrallyRatedBanks();
-   if(p?.auto_include_new_banks===true)return banks.map(b=>b.name);
+   // V40: legacy products without an explicit bank-choice mode inherit the live
+   // centrally approved list. Explicit 'false' plus no banks still means NONE.
+   if(p?.auto_include_new_banks===true ||
+      (p?.auto_include_new_banks==null && !(Array.isArray(p?.banks)&&p.banks.length)))
+     return banks.map(b=>b.name);
    const choices=new Set((Array.isArray(p?.banks)?p.banks:[]).map(x=>String(x).trim()));
    return banks.filter(b=>choices.has(b.id)||choices.has(b.name)||choices.has(BANKS.find(x=>x.id===b.id)?.short)).map(b=>b.name);
  }
@@ -17806,7 +17810,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   const block=el('details','f99v17-bank-editor');const head=el('summary','','البنوك المشمولة — اختر من البطاقات أو أربطها بعروض المركزية');block.append(head);
   const explanation=el('p','f99v17-bank-explain','الاختيار اليدوي يحدد بنوك الباقة. الوضع التلقائي يعرض فقط البنوك التي أضاف المالك عروضها ونسبها السارية والمؤكدة في إعدادات التمويل المركزي. الملاحظات النصية إرشادية ولا تغيّر حساب الأهلية أو نسب الربح.');block.append(explanation);
   const hidden=document.createElement('textarea');hidden.dataset.field='banks';hidden.hidden=true;hidden.style.display='none';hidden.value=(p.banks||[]).join('\n');block.append(hidden);
-  const raw=el('label','f99v17-bank-mode');const auto=document.createElement('input');auto.type='checkbox';auto.dataset.autoBanks='1';auto.checked=p.auto_include_new_banks===true;raw.append(auto,document.createTextNode(' اختيار البنوك تلقائيًا من عروض ونسب المركزية السارية'));block.append(raw);
+  const raw=el('label','f99v17-bank-mode');const auto=document.createElement('input');auto.type='checkbox';auto.dataset.autoBanks='1';auto.checked=p.auto_include_new_banks===true || (p.auto_include_new_banks==null && !(Array.isArray(p.banks)&&p.banks.length));raw.append(auto,document.createTextNode(' اختيار البنوك تلقائيًا من عروض ونسب المركزية السارية'));block.append(raw);
   const bankList=el('div','f99v17-bank-cards');block.append(bankList);
   const notes=p.bank_notes||{};
   const declared=new Map();
@@ -22393,7 +22397,14 @@ if(typeof previousFinance==='function')window.F99V32BeforeFinance=async function
  return previousFinance(kind);
 };
 function smallButtons(entries){return `<div class="f37-bot-options f38-choices">${entries.map(([label,code])=>`<button type="button" onclick="${code}">${esc(label)}</button>`).join('')}</div>`}
-function nextAvailable(){return results().findIndex(r=>!visited.has(currentId(r)))}
+function nextAvailable(){
+ const list=results(),current=rank();
+ // Prefer the next higher-ranked *unseen* bank. Only wrap after the end,
+ // and never repeat a bank already viewed in the same calculation.
+ const after=list.findIndex((r,i)=>i>current&&!visited.has(currentId(r)));
+ if(after>=0)return after;
+ return list.findIndex((r,i)=>i!==current&&!visited.has(currentId(r)));
+}
 function canCompare(){const a=access();const config=window.F99V32GetState?.()?.options?.products?.[k()]||{};
  return config.compare_enabled===true&&(a.owner||((a.allowedServices||[]).some(x=>['compare','bot_compare'].includes(x))))&&window.F99V38FeatureAllowed('compare_enabled');}
 function completionSwitch(){const o=window.F99V32GetState?.()?.options?.products?.[k()]||{};
