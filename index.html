@@ -14001,7 +14001,7 @@ async function calculate(v32Options={}){
 
   const maxTotalObligations=salary*0.45;
   if(externalObligations>=maxTotalObligations){
-    alert('الالتزامات الشهرية الأخرى وصلت أو تجاوزت 45% من صافي الراتب، ولا يوجد استقطاع متاح للتمويل الشخصي حسب هذه الحسبة.');
+    alert('بحسب البيانات المدخلة، الالتزامات الشهرية الأخرى استهلكت القسط المتاح لهذه الحسبة. يمكن مراجعة الالتزامات أو تجربة بيانات مختلفة؛ ولا تعني النتيجة رفضًا من البنك.');
     return;
   }
 
@@ -21699,7 +21699,7 @@ function openDesk(tab='packages'){if(!ownerGate())return;if(tab==='packages'){vo
  row(body,'الصحة المركزية','وظائف الحفظ والجلسات والأكواد. لا تدّعي اكتمال الربط دون فحصها.',[['فحص المنصة',()=>{close('f31-desk');window.F99V30OpenAudit?.()||window.F99V30Open?.()}]]);
  }
 }
-function optionsBase(o){return {mode:['calculator','conversation','compare_only'].includes(o?.mode)?o.mode:'calculator',compare_enabled:o?.compare_enabled===true,compare_position:['after_result','final','compare_only'].includes(o?.compare_position)?o.compare_position:'final',compare_limit:Math.max(2,Math.min(4,Number(o?.compare_limit)||4)),label_ar:safe(o?.label_ar).slice(0,70),label_en:safe(o?.label_en).slice(0,70),service_labels:o?.service_labels&&typeof o.service_labels==='object'?o.service_labels:{},bank_offers:Array.isArray(o?.bank_offers)?o.bank_offers:[],reduce_installment:o?.reduce_installment!==false,reduce_amount:o?.reduce_amount!==false,show_obligation_impact:o?.show_obligation_impact!==false,show_debt_suggestions:o?.show_debt_suggestions!==false,show_max_without_bank:o?.show_max_without_bank===true,show_bank_when_unqualified:o?.show_bank_when_unqualified===true,show_completion:o?.show_completion!==false,summary_enabled:o?.summary_enabled!==false,custom_bank_quote:o?.custom_bank_quote===true,custom_bank_prompts:o?.custom_bank_prompts&&typeof o.custom_bank_prompts==='object'?o.custom_bank_prompts:{}}}
+function optionsBase(o){return {mode:['calculator','conversation','compare_only'].includes(o?.mode)?o.mode:'calculator',compare_enabled:o?.compare_enabled===true,compare_position:['after_result','final','compare_only'].includes(o?.compare_position)?o.compare_position:'final',compare_limit:Math.max(2,Math.min(4,Number(o?.compare_limit)||4)),label_ar:safe(o?.label_ar).slice(0,70),label_en:safe(o?.label_en).slice(0,70),service_labels:o?.service_labels&&typeof o.service_labels==='object'?o.service_labels:{},bank_offers:Array.isArray(o?.bank_offers)?o.bank_offers:[],reduce_installment:o?.reduce_installment!==false,reduce_amount:o?.reduce_amount!==false,show_obligation_impact:o?.show_obligation_impact!==false,show_debt_suggestions:o?.show_debt_suggestions!==false,show_max_without_bank:o?.show_max_without_bank===true,show_bank_when_unqualified:o?.show_bank_when_unqualified===true,show_completion:o?.show_completion!==false,summary_enabled:o?.summary_enabled!==false,custom_bank_quote:o?.custom_bank_quote===true,result_display_mode:o?.result_display_mode==='chat'?'chat':'image',custom_bank_prompts:o?.custom_bank_prompts&&typeof o.custom_bank_prompts==='object'?o.custom_bank_prompts:{}}}
 async function editOptions(key){if(!ownerGate())return;const pack=pkg(key);if(!pack){alert('احفظ الباقة أولًا');return}close('f31-desk');try{await pull()}catch(e){alert(e.message);return}
  const base=optionsBase(publicOptions.products?.[key]);const root=buildFrame('f31-options','إعدادات باقة: '+pack.name,'الخدمات والمقارنة والبنوك تخص هذه الباقة فقط؛ لا تغيير دون «اعتماد»',()=>{close('f31-options');openDesk('packages')});const form=E('div',null,'f31-grid');root.append(form);const a=E('section',null,'f31-card');form.append(a);a.append(E('h3','التسمية وتجربة العميل'));const ar=field(a,'مسمى الخدمة الظاهر للعميل — عربي',base.label_ar||pack.service_display_title||pack.name);const en=field(a,'المسمى بالإنجليزية (اختياري)',base.label_en);
  const mode=field(a,'تجربة الباقة','', 'select');for(const [id,txt] of [['calculator','الحاسبة مباشرة'],['conversation','محادثة تفاعلية'],['compare_only','مقارنة فقط']])mode.append(new Option(txt,id));mode.value=base.mode;
@@ -21715,6 +21715,7 @@ async function editOptions(key){if(!ownerGate())return;const pack=pkg(key);if(!p
  const fBank=checked(customer,'عند عدم التأهل: السماح بإظهار اسم البنك مع الإشارة لعدم الأهلية',base.show_bank_when_unqualified);
  const fComplete=checked(customer,'إظهار عرض إنجاز المعاملة عند توفره',base.show_completion);
  const fSummary=checked(customer,'السماح بتلخيص الحسبة داخل المحادثة',base.summary_enabled);
+ const displayMode=field(customer,'طريقة عرض أول ترشيح للعميل','','select');displayMode.append(new Option('صورة الحسبة مباشرة مع خيارات المحادثة','image'),new Option('التفاصيل نصيًا ثم اختيار الصورة','chat'));displayMode.value=base.result_display_mode;
  const bronzeConfig=(pack.services||[]).some(s=>s==='buyout'||s==='bot_buyout');
  const fCustomBank=bronzeConfig?checked(customer,'تفعيل حسبة بنسبة يحددها العميل بعد الترشيحات',base.custom_bank_quote):null;
  const f34Prompts={};
@@ -21737,7 +21738,7 @@ async function editOptions(key){if(!ownerGate())return;const pack=pkg(key);if(!p
  function renderBanks(){list.replaceChildren();for(const [i,x] of offers.entries()){const r=E('div',null,'f31-row');const heading=E('div');heading.append(E('strong',x.name),E('small',` ${x.rate}% • ${x.rate_kind||'flat'} • ${x.expires||'لا تاريخ'} • أتعاب ${x.service_fee||0} ريال`));r.append(heading,B('حذف',()=>{offers.splice(i,1);renderBanks()}));list.append(r)}if(!offers.length)list.append(E('p','لا توجد عروض مسجلة لهذه الباقة.','f31-note'))}
  renderBanks();banks.append(B('+ إضافة بنك للباقة',()=>{const name=safe(manual.value||available.value),r=Number(rate.value),f=Number(fee.value);if(!name||name.length>95||!Number.isFinite(r)||r<0||r>100||!Number.isFinite(f)||f<0||f>1e7||!/^20\d{2}-\d{2}-\d{2}$/.test(until.value))return alert('أدخل بنكًا ونسبة صحيحة وتاريخ صلاحية حقيقي وأتعابًا صحيحة');if(offers.some(x=>x.name===name))return alert('هذا البنك مضاف بالفعل؛ احذفه ثم أعد إضافته لتعديل تفاصيله');if(offers.length>=20)return alert('حد أقصى 20 بنكًا للباقة');const official=typeof BANKS!=='undefined'?BANKS.find(b=>b.id===name||b.name===name):null;offers.push({name,bank_id:official?.id||'',rate:r,rate_kind:type.value,expires:until.value,service_fee:f,note:safe(notes.value).slice(0,350),verified:true,reviewed_at:new Date().toISOString().slice(0,10)});renderBanks();manual.value='';notes.value='';}));
  const bar=E('div',null,'f31-side');root.append(bar);const status=E('p','','f31-status');status.id='f31-options-status';root.append(status);
- bar.append(B('اعتماد ونشر إعدادات هذه الباقة',async()=>{if(!ownerGate())return;const o={mode:mode.value,compare_enabled:enabled.checked,compare_position:pos.value,compare_limit:Number(limit.value),label_ar:safe(ar.value),label_en:safe(en.value),service_labels:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,safe(v.value).slice(0,70)])),bank_offers:offers,reduce_installment:fReduceInstallment.checked,reduce_amount:fReduceAmount.checked,show_obligation_impact:fImpact.checked,show_debt_suggestions:fSuggestion.checked,show_max_without_bank:fMax.checked,show_bank_when_unqualified:fBank.checked,show_completion:fComplete.checked,summary_enabled:fSummary.checked,custom_bank_quote:fCustomBank?.checked===true,custom_bank_prompts:Object.fromEntries(Object.entries(f34Prompts).map(([k,e])=>[k,safe(e.value)]))};if(Object.values(o.custom_bank_prompts).some(v=>v.length<3||v.length>180))return showMsg('f31-options-status','كل سؤال يحتاج 3 إلى 180 حرفًا','f31-error');if(!Number.isInteger(o.compare_limit)||o.compare_limit<2||o.compare_limit>4)return showMsg('f31-options-status','الحد الأعلى للمقارنة 2 إلى 4','f31-error');if(o.compare_enabled&&!pack.services?.some(x=>['compare','bot_compare','mortgage_compare'].includes(x)))return showMsg('f31-options-status','فعّل خدمة المقارنة في محرر الباقة أولاً ثم اعتمدها بالمركزية.','f31-error');if(!confirm('اعتماد تغيير مسميات وعروض ومقارنات باقة «'+pack.name+'» ونشرها لكل الأجهزة؟'))return;
+ bar.append(B('اعتماد ونشر إعدادات هذه الباقة',async()=>{if(!ownerGate())return;const o={mode:mode.value,compare_enabled:enabled.checked,compare_position:pos.value,compare_limit:Number(limit.value),label_ar:safe(ar.value),label_en:safe(en.value),service_labels:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,safe(v.value).slice(0,70)])),bank_offers:offers,reduce_installment:fReduceInstallment.checked,reduce_amount:fReduceAmount.checked,show_obligation_impact:fImpact.checked,show_debt_suggestions:fSuggestion.checked,show_max_without_bank:fMax.checked,show_bank_when_unqualified:fBank.checked,show_completion:fComplete.checked,summary_enabled:fSummary.checked,result_display_mode:displayMode.value,custom_bank_quote:fCustomBank?.checked===true,custom_bank_prompts:Object.fromEntries(Object.entries(f34Prompts).map(([k,e])=>[k,safe(e.value)]))};if(Object.values(o.custom_bank_prompts).some(v=>v.length<3||v.length>180))return showMsg('f31-options-status','كل سؤال يحتاج 3 إلى 180 حرفًا','f31-error');if(!Number.isInteger(o.compare_limit)||o.compare_limit<2||o.compare_limit>4)return showMsg('f31-options-status','الحد الأعلى للمقارنة 2 إلى 4','f31-error');if(o.compare_enabled&&!pack.services?.some(x=>['compare','bot_compare','mortgage_compare'].includes(x)))return showMsg('f31-options-status','فعّل خدمة المقارنة في محرر الباقة أولاً ثم اعتمدها بالمركزية.','f31-error');if(!confirm('اعتماد تغيير مسميات وعروض ومقارنات باقة «'+pack.name+'» ونشرها لكل الأجهزة؟'))return;
  const save=bar.querySelector('button');save.disabled=true;try{const d=await call('f99v31_admin_save_options',{p_package_key:key,p_options:o,p_expected_version:Number(publicOptions.version||0)});await pull();if(Number(publicOptions.version)!==Number(d.version)||stable(publicOptions.products?.[key])!==stable(o))throw Error('تعذر إثبات تطابق القيم بعد الحفظ؛ لا تعِد العملية حتى تراجع المركزية');showMsg('f31-options-status','تم اعتماد إعدادات الباقة ونشرها مركزيًا، الإصدار '+d.version,'f31-ok')}catch(e){showMsg('f31-options-status','لم يُعتمد التعديل: '+e.message,'f31-error')}finally{save.disabled=false}},true),B('تعديل بيانات المنتج والسعر',()=>editPackage(key)));
 }
 async function openUsed(code=''){if(!ownerGate())return;close('f31-desk');const root=buildFrame('f31-used','مراجعة كود مستخدم محدد','لا يُباع أو يُفعّل الكود القديم مجددًا. بعد مراجعة الحقوق يمكن تعويض المخزون بكود مختلف.',()=>{close('f31-used');openDesk('stock')});const card=E('article',null,'f31-card');root.append(card);const input=field(card,'الكود المراد مراجعته',code);input.autocapitalize='characters';const output=E('p',null,'f31-note');card.append(output);card.append(B('فحص حالة الكود',async()=>{try{const d=await call('f99v17_admin_search_code',{p_code:safe(input.value).toUpperCase()});output.textContent=`الحالة: ${d.stock_state} • مرات الاستخدام: ${d.use_count||0} • تفعيل سابق: ${d.activated_at?'نعم':'لا'}`;}catch(e){output.textContent=e.message}},true));const reason=field(card,'سبب سحب الكود المستخدم — 20 حرفًا على الأقل','','textarea');const sold=checked(card,'راجعت طلبات سلة والمدفوعات: الكود لم يُبع أو تم تسوية حقوق العميل بالكامل',false);const delivered=checked(card,'تحققت أن العميل لا يملك حق استخدام قائمًا، ولا يوجد عقد أو طلب نشط مرتبط بالكود',false);const removed=checked(card,'أزلت الكود من سلة وأي قناة تسليم أخرى ولن أعرضه مجددًا',false);const result=E('p',null,'f31-status');card.append(result);
@@ -21944,12 +21945,18 @@ window.F99V37ApplyBotAdjustment=async(kind,value)=>{
  return {ok:true,results:[...latestResults],kind,value};
 };
 window.F99V38CurrentResult=()=>Array.isArray(latestResults)?(latestResults[selectedResultIndex]||latestResults[0]):null;
-window.F99V37ResetBotAdjustment=async()=>{
+window.F99V37ResetBotAdjustment=async(kind='all')=>{
+ if(!['all','installment','finance'].includes(kind))throw Error('اختيار الرجوع غير صحيح');
  const chosen=(latestResults||[])[Number(selectedResultIndex)||0];const chosenId=chosen?.key||chosen?.name;
+ const before=[desiredInstallment,desiredCash,desiredPrincipal];
+ // The current UI applies one reduction at a time; either reset returns to the CURRENT bank maximum.
  [desiredInstallment,desiredCash,desiredPrincipal]=[null,null,null];
- const ok=await calculate({recalculate:true,botKeep:true});
- if(ok!==false&&chosenId){const ix=(latestResults||[]).findIndex(r=>(r.key||r.name)===chosenId);if(ix>=0)selectedResultIndex=ix}
- return ok!==false?[...latestResults]:null;
+ let ok=false;try{ok=await calculate({recalculate:true,botKeep:true})}catch(e){[desiredInstallment,desiredCash,desiredPrincipal]=before;throw e}
+ if(ok===false){[desiredInstallment,desiredCash,desiredPrincipal]=before;return null}
+ if(chosenId){const ix=(latestResults||[]).findIndex(r=>(r.key||r.name)===chosenId);
+   if(ix<0)throw Error('البنك الذي اخترته لم يعد مؤهلًا بعد تحديث النسب؛ اختر ترشيحًا آخر.');
+   selectedResultIndex=ix}
+ return [...latestResults];
 };
 window.F99V32OpenAdjust=()=>{try{showPage('page3');drawControls();Q('f32-buyout-controls')?.scrollIntoView({behavior:'smooth',block:'nearest'})}catch(e){alert(e.message)}};
 const oldOpen=window.showFINOPortalRank;
@@ -22108,7 +22115,7 @@ document.addEventListener('click',e=>{if(e.target.closest('#f31-desk .f31-nav'))
   try{
    await verify();
    scenario={};stage='bank';finoPortal.step='f34_bank';
-   user('أعرف بنك أقل نسبة من المذكورة');
+   user(String(promptText('button')));
    portalAssistant('<b>'+safe(promptText('bank'))+'</b><div class="f34-sub">حسبة استرشادية، ولا تثبت وجود العرض لدى البنك.</div>');
    setPortalInput(true,'اسم البنك أو جهة التمويل','text','اكتب اسم الجهة، مثل: بنك الجزيرة.');
   }catch(e){waitMessage(e.message)}finally{processing=false}
@@ -22169,7 +22176,7 @@ document.addEventListener('click',e=>{if(e.target.closest('#f31-desk .f31-nav'))
  function render(r){
    const name=cleanClientName(clientName)||'غير مذكور';
    const labels=[['البنك',r.bank],['نسبة العميل',fmt(r.rate)+'%'],['المدة',r.months+' شهرًا'],['القسط',fmt(r.monthly)+' ريال'],['صافي الكاش',fmt(r.cashAfterDebt)+' ريال'],['أصل التمويل',fmt(r.principal)+' ريال'],['إجمالي الأرباح',fmt(r.profit)+' ريال'],['الرسوم والضريبة',fmt(r.adminFee+r.adminVat+r.commodityFee+r.fixedFees)+' ريال']];
-   portalAssistant(`<div class="f34-report"><h3>${safe(promptText('title'))}</h3><div><b>العميل: ${safe(name)}</b></div><div class="f34-sub">البنك: <b>${safe(r.bank)}</b> • هامش مسطح أدخله العميل: ${fmt(r.rate)}% • مدة: ${r.months} شهرًا. <b>ليست نسبة معتمدة من البنك.</b></div><div class="f34-figures">${labels.slice(3).map(([k,v])=>`<div><span>${safe(k)}</span><b>${safe(v)}</b></div>`).join('')}</div><div class="f34-sub">${safe(r.reason||r.minimumCheck)}</div><div class="f34-actions"><button type="button" onclick="F99V34Image()">عرض صورة الحسبة</button><button type="button" class="secondary" onclick="F99V34Copy()">نسخ الحسبة كنص</button><button type="button" class="secondary" onclick="F99V34Start()">تجربة نسبة أخرى</button><button type="button" class="f42-custom-completion" hidden onclick="F99V42CustomCompletion()">أبي نتابع معاملتي معكم</button></div></div>`);void window.F99V42SyncOffer?.();
+   portalAssistant(`<div class="f34-report"><h3>${safe(promptText('title'))}</h3><div><b>العميل: ${safe(name)}</b></div><div class="f34-sub">البنك: <b>${safe(r.bank)}</b> • هامش مسطح أدخله العميل: ${fmt(r.rate)}% • مدة: ${r.months} شهرًا. <b>ليست نسبة معتمدة من البنك.</b></div><div class="f34-figures">${labels.slice(3).map(([k,v])=>`<div><span>${safe(k)}</span><b>${safe(v)}</b></div>`).join('')}</div><div class="f34-sub">${safe(r.reason||r.minimumCheck)}</div><div class="f34-actions"><button type="button" onclick="F99V34Image()">عرض صورة الحسبة</button><button type="button" class="secondary" onclick="F99V34Copy()">نسخ الحسبة كنص</button><button type="button" class="secondary" onclick="F99V34Start()">تجربة نسبة أخرى</button></div></div>`);void window.F99V42SyncOffer?.();
  }
  async function quote(){
   const d=await verify();
@@ -22178,7 +22185,9 @@ document.addEventListener('click',e=>{if(e.target.closest('#f31-desk .f31-nav'))
   // A new custom quote consumes one additional paid calculation; blocked when the quota is exhausted.
   if(typeof fino99BronzeAcceptCalculation!=='function'||!(await fino99BronzeAcceptCalculation())){waitMessage('لم تُعتمد الحسبة من المركزية ولم نعرض نتيجتها.');stage='months';finoPortal.step='f34_months';setPortalInput(true,'مدة التمويل بالأشهر');return}
   shareText=composeText(r);lastCanvas={...r,name:cleanClientName(clientName)||'غير مذكور'};
-  render(r);stage='done';finoPortal.step='buyout_result';setPortalInput(true,'أعرف بنك أقل نسبة من المذكورة','text','يمكنك بدء تجربة جديدة، وتُحسب ضمن استخدامات الباقة.');
+  render(r);stage='done';finoPortal.step='buyout_result';setPortalInput(false);
+  portalAssistant('<div class="portal-note">إذا تبي تكمل خيارات الترشيح السابق، اختر من الأسئلة هنا. هذه النسبة أُدخلت منك ولم تدخل ضمن البنوك المرشحة.</div>'+String(window.F99V38BotStepsHtml?.(Number(selectedResultIndex)||0)||''));
+  queueMicrotask(()=>{void window.F99V46SyncClientActions?.(Number(selectedResultIndex)||0)});
  }
  window.F99V37GetCustomQuote=()=>lastCanvas&&{...lastCanvas};
  window.F99V34Copy=()=>{if(!shareText)return;try{if(navigator.clipboard?.writeText)navigator.clipboard.writeText(shareText).catch(()=>window.prompt('انسخ:',shareText));else window.prompt('انسخ:',shareText)}catch(_){window.prompt('انسخ:',shareText)}};
@@ -22194,7 +22203,7 @@ document.addEventListener('click',e=>{if(e.target.closest('#f31-desk .f31-nav'))
    c.fillStyle='#fff4e6';c.fillRect(45,1134,1070,100);c.fillStyle='#7f5724';c.textAlign='right';c.font='bold 21px Cairo, sans-serif';c.fillText('نسبة أدخلها العميل — ليست نسبة مؤكدة من البنك',1085,1172);c.font='19px Cairo, sans-serif';c.fillText('نتيجة تقديرية ولا تعني موافقة أو ترشيحًا بنكيًا معتمدًا',1085,1209);
    return canvas.toDataURL('image/png');
  }
- window.F99V34Image=()=>{if(!lastCanvas)return;const old=$('f34-image-preview');old?.remove();const overlay=document.createElement('div');overlay.id='f34-image-preview';const body=document.createElement('div');body.className='f34-image-body';const img=document.createElement('img');img.alt='صورة حسبة التمويل بنسبة أدخلها العميل';img.src=makeImage(lastCanvas);const dl=document.createElement('a');dl.href=img.src;dl.download='FINO99-client-rate-quote.png';dl.textContent='حفظ صورة الحسبة';dl.style.cssText='padding:12px;color:#17678a;text-align:center;font-weight:bold';const close=document.createElement('button');close.textContent='إغلاق الصورة';close.onclick=()=>overlay.remove();body.append(img,dl,close);overlay.append(body);document.body.append(overlay)};
+ window.F99V34Image=()=>{if(!lastCanvas)return;const old=$('f34-image-preview');old?.remove();const overlay=document.createElement('div');overlay.id='f34-image-preview';const body=document.createElement('div');body.className='f34-image-body';const img=document.createElement('img');img.alt='صورة حسبة التمويل بنسبة أدخلها العميل';img.src=makeImage(lastCanvas);const dl=document.createElement('a');dl.href=img.src;dl.download='FINO99-client-rate-quote.png';dl.textContent='حفظ صورة الحسبة';dl.style.cssText='padding:12px;color:#17678a;text-align:center;font-weight:bold';const share=document.createElement('button');share.type='button';share.textContent='مشاركة الصورة';share.onclick=()=>window.F99V47ShareDataUrl?.(img.src);const close=document.createElement('button');close.textContent='إغلاق الصورة';close.onclick=()=>overlay.remove();body.append(img,dl,share,close);overlay.append(body);document.body.append(overlay)};
  // Intercept the existing portal composer without disrupting other services.
  const originalInput=window.submitFINOPortalInput;
  if(typeof originalInput==='function')window.submitFINOPortalInput=function(...args){
@@ -22210,10 +22219,10 @@ document.addEventListener('click',e=>{if(e.target.closest('#f31-desk .f31-nav'))
    return originalInput.apply(this,args);
  };
  const originalRanking=window.renderFINOPortalRankings;
- if(typeof originalRanking==='function')window.renderFINOPortalRankings=function(...args){const html=originalRanking.apply(this,args);return html+(allowed()?chooseHTML():'')};
+ if(typeof originalRanking==='function')window.renderFINOPortalRankings=function(...args){return originalRanking.apply(this,args)};
  const originalBuyout=window.runFINOPortalBuyout;
  if(typeof originalBuyout==='function')window.runFINOPortalBuyout=async function(...args){reset();const out=await originalBuyout.apply(this,args);if(allowed()&&finoPortal?.step==='buyout_result'){
-  if(!(latestResults||[]).length)portalAssistant(chooseHTML());
+  if(!(latestResults||[]).length)portalAssistant('<div class="portal-note">ما ظهرت ترشيحات مؤهلة بهذه البيانات. تقدر تعدل البيانات وتجرب من جديد.</div>');
   setPortalInput(true,'أعرف بنك أقل نسبة من المذكورة','text','اختياري: تقدر تكتب العبارة أو تضغط الزر بعد الترشيح.');
  }return out};
  // Restart/reset invalidates a previously prepared shareable image.
@@ -22394,9 +22403,9 @@ if(typeof previousInput==='function')window.submitFINOPortalInput=function(...ar
  return previousInput.apply(this,args);
 };
 window.F99V37Reset=async()=>{
- if(!inBot())return;try{const out=await window.F99V37ResetBotAdjustment();
+ if(!inBot())return;try{const out=await window.F99V37ResetBotAdjustment('all');
    if(!out){fail('لم يتم تحديث الحسبة من المركزية.');return}
-   const active=window.F99V38CurrentResult?.()||out[0];const r=active;textBox('رجّعنا الحسبة إلى الحد الأعلى المتاح للبنك الذي اخترته، وبنفس نسب التمويل المعتمدة.');
+   window.F99V47ClearAdjustment?.();const active=window.F99V38CurrentResult?.()||out[0];const r=active;textBox('رجّعنا القسط ومبلغ التمويل إلى الحد الأعلى المتاح حاليًا للبنك الذي اخترته، بعد إعادة الحساب بالنسب السارية.');
    say(r?window.F99V38FullResultHtml?.(r,'reset')||`<div class="portal-result">${escapeHTML(r.name)} • القسط ${fmt(r.installment)} ريال</div>`:'لا توجد نتائج مؤهلة');if(r)window.F99V38AfterAdjustment?.();
  }catch(e){fail(String(e?.message||e))}
 };
@@ -22557,15 +22566,17 @@ function details(r,type){const title=type==='installment'?'تم تخفيض ال�
  const newAmount=type==='installment'?r.installment:type==='principal'?r.principalBeforeFees:r.cashAfterDebt;
  const beforeLine=old!==null&&old!==undefined?`<div class="f38-change"><div><small>قبل التخفيض</small><s>${m(old)} ريال</s></div><div><small>بعد التخفيض</small><b>${m(newAmount)} ريال</b></div></div>`:'';
  const l=[['الجهة المرشحة',r.name],['أصل التمويل قبل الرسوم',m(r.principalBeforeFees)+' ريال'],['الرسوم الإدارية',m(r.adminFee)+' ريال'],['الضريبة على الرسوم الإدارية',m(r.adminVat)+' ريال'],['رسوم السلعة',m(r.commodityFee)+' ريال'],['رسوم بنكية إضافية',m(r.additionalFee)+' ريال'],['الصافي قبل سداد المديونية',m(r.netBeforeDebt)+' ريال'],['السداد المبكر',m(finoPortal?.data?.settlement)+' ريال'],['صافي الكاش بعد السداد',m(r.cashAfterDebt)+' ريال'],['القسط الشهري',m(r.installment)+' ريال'],['مدة التمويل',String(r.actualPayments)+' شهر'],['هامش الربح المسطح',m(r.rate)+'%'],['إجمالي الأرباح',m(r.totalProfit)+' ريال'],['إجمالي الأقساط مع الأرباح',m(r.grossWithProfit)+' ريال']];
- return `<div class="portal-result f38-full"><div class="portal-result-head"><b>${esc(title)} — ${esc(nm())}</b><span>حسبة مبدئية</span></div>${beforeLine}<div class="portal-detail-lines">${l.map(([a,b])=>`<div class="portal-detail-line"><span>${esc(a)}</span><b>${esc(b)}</b></div>`).join('')}</div><small>التاريخ والوقت (الرياض): ${time()} • الأرقام تقريبية وخاضعة لشروط جهة التمويل. أتعاب إنجاز المعاملة الاختيارية غير داخلة في حساب التمويل.</small>${smallButtons([['بطاقة الحسبة الكاملة',`F99V38ShowImage()`],['ترشيح بنك آخر','F99V38NextBank()'],['الرجوع للحد الأعلى','F99V37Reset()'],...(canCompare()&&results().length>=2?[['مقارنة','F99V38ComparePicker()']]:[])])}</div>`;
+ return `<div class="portal-result f38-full"><div class="portal-result-head"><b>${esc(title)} — ${esc(nm())}</b><span>حسبة مبدئية</span></div>${beforeLine}<div class="portal-detail-lines">${l.map(([a,b])=>`<div class="portal-detail-line"><span>${esc(a)}</span><b>${esc(b)}</b></div>`).join('')}</div><small>التاريخ والوقت (الرياض): ${time()} • الأرقام تقريبية وخاضعة لشروط جهة التمويل. أتعاب إنجاز المعاملة الاختيارية غير داخلة في حساب التمويل.</small><div class="portal-chat-actions">${window.F99V38BotStepsHtml?.(Number(selectedResultIndex)||0)||''}</div></div>`;
 }
 window.F99V38FullResultHtml=details;
 window.F99V38BeforeAdjustment=(kind,r)=>{adjustment={kind,before:kind==='installment'?Number(r.installment):kind==='principal'?Number(r.principalBeforeFees):Number(r.cashAfterDebt)};};
-window.F99V38AfterAdjustment=()=>{void window.F99V38ShowImage(true)};
+window.F99V47ClearAdjustment=()=>{adjustment=null};
+window.F99V38AfterAdjustment=()=>{void window.F99V38ShowImage(true);queueMicrotask(()=>{void window.F99V46SyncClientActions?.(Number(selectedResultIndex)||0)})};
 window.F99V38ShowImage=async silent=>{if(!inBot())return;try{
  const png=await createFINOPortalDetailedPngBlob();const decorated=await window.F99V38DecorateBlob(png);
  const url=URL.createObjectURL(decorated);urls.push(url);if(urls.length>3)URL.revokeObjectURL(urls.shift());
- tell(`<div class="f38-image-wrap"><p>بطاقة تفاصيل الحسبة ${adjustment?'بعد التخفيض':''} — حسبة مبدئية</p><img src="${esc(url)}" alt="بطاقة تمويل مبدئية مفصلة بعد التعديل" loading="lazy"></div>`);
+ const imageId=window.F99V47RegisterImage?.(decorated)||'';
+ tell(`<div class="f38-image-wrap"><p>بطاقة تفاصيل الحسبة ${adjustment?'بعد التخفيض':''} — حسبة مبدئية</p><img src="${esc(url)}" alt="بطاقة تمويل مبدئية مفصلة بعد التعديل" loading="lazy"><div class="f47-image-actions"><button type="button" onclick="F99V47SaveImage('${imageId}')">حفظ الصورة</button><button type="button" onclick="F99V47ShareImage('${imageId}')">مشاركة الصورة</button></div></div>`);
  }catch(e){if(!silent)note('تعذر إنشاء الصورة الآن؛ التفاصيل النصية محفوظة في المحادثة.')}};
 window.F99V38DecorateBlob=async blob=>{if(!adjustment)return blob;
  try{const bitmap=await createImageBitmap(blob),canvas=document.createElement('canvas');canvas.width=bitmap.width;canvas.height=bitmap.height+158;
@@ -22675,7 +22686,7 @@ const error=t=>say(`<div class="f41-error" role="alert">${esc(t)}</div>`);
 const findIndex=()=>Math.min(Math.max(Number(typeof selectedResultIndex!=='undefined'?selectedResultIndex:0)||0,0),Math.max(0,results().length-1));
 const packageKey=()=>window.F99V32MainAccess?.()?.packageKey||'';
 let authorization=null,authStamp=0,explicit=false,busy=false,lastTrigger='',lastThird='',impactInput=null;
-window.F99V41OfferEnabled=()=>authorization?.enabled===true&&Date.now()-authStamp<20000;
+window.F99V41OfferEnabled=()=>capOfferReady(authorization)&&Date.now()-authStamp<20000;
 window.F99V41OfferExplicit=()=>explicit===true&&Date.now()-authStamp<20000;
 window.F99V42OfferLabel=()=>String(authorization?.button_text||'أبي نتابع معاملتي معكم').slice(0,90);
 window.F99V42CustomCompletion=async()=>{
@@ -22695,25 +22706,18 @@ async function status(force=false){if(!active())return null;const token=eToken()
  const d=await finoRpc('f99v41_client_completion_status',{p_entry_token:token.entryToken,p_device_id:token.deviceId},12000);
  if(!d?.ok||d.data?.ok!==true){authorization=null;explicit=false;return null}
  authorization=d.data;authStamp=Date.now();explicit=authorization.enabled===true;
- if(authorization.enabled===true){
+ if(capOfferReady(authorization)){
   try{const publicOffers=await finoRpc('f99v25_public_completion_offers',{},12000);
     const offer=publicOffers?.data?.data?.packages?.[authorization.package_key];
     if(offer?.button_text)authorization.button_text=String(offer.button_text).slice(0,90);
   }catch(_){/* default label, never infer owner pricing */}
  }
  for(const btn of document.querySelectorAll('.f42-custom-completion')){
-   btn.hidden=authorization.enabled!==true;btn.textContent=window.F99V42OfferLabel();
+   btn.hidden=!capOfferReady(authorization);btn.textContent=window.F99V42OfferLabel();
  }
- for(const b of document.querySelectorAll('#finoBotChat [data-f42-completion]'))if(authorization.enabled!==true)b.remove();
- if(authorization.enabled===true && active()){ 
-   const menus=[...document.querySelectorAll('#finoBotChat .f41-options')];const menu=menus.at(-1);
-   if(menu && !menu.querySelector('[data-f42-completion]') && ![...menu.querySelectorAll('button')].some(b=>b.textContent.trim()===window.F99V42OfferLabel())){
-      const btn=document.createElement('button');btn.type='button';btn.dataset.f42Completion='1';
-      btn.textContent=window.F99V42OfferLabel();btn.onclick=()=>window.F99V42RequestCompletion(findIndex());
-      const before=[...menu.querySelectorAll('button')].find(x=>x.textContent.includes('المرشح التالي')||x.textContent.includes('بنك آخر'));
-      menu.insertBefore(btn,before||null);
-   }
- }return authorization;
+ for(const b of document.querySelectorAll('#finoBotChat [data-f42-completion]'))if(!capOfferReady(authorization))b.remove();
+ /* V47: verified buttons are rendered exclusively by the unified chat menu synchronizer. */
+ return authorization;
 }
 function capOfferReady(d){return d?.enabled===true&&d.has_whatsapp===true&&d.has_first_calculation===true}
 async function quote(r){const token=eToken(),k=packageKey();if(!token?.entryToken||!token?.deviceId||!k)throw Error('تعذر التحقق من جلسة العميل');
@@ -22730,22 +22734,22 @@ function remember(){const x=(window.F99V32GetSignature?.()||'')+'|'+packageKey()
 const baseQuestions=[['installment','كم القسط؟'],['rate','كم هامش الربح؟'],['cash','كم الكاش؟'],['term','كم المدة؟'],['profit','كم الأرباح؟'],['fees','كم رسوم البنك؟']];
 const impactFor=(r)=>{try{
  const salary=Number(finoPortal.data?.salary||0),external=Number(finoPortal.data?.external||0);
- if(!(salary>0&&external>0)||opts().show_obligation_impact===false||!window.F99V32Can?.('show_obligation_impact'))return null;
- const x=obligationImpactInfo(salary,external,finoPortal.data?.customerType||'government',Number(r.rate||0),Number(r.actualPayments||60),false);
- return x?.affected&&x.installmentReduction>.01?x:null;
+ if(!(salary>0&&external>0)||opts().show_obligation_impact!==true||!window.F99V32Can?.('show_obligation_impact')||window.F99V38FeatureAllowed?.('show_obligation_impact')===false)return null;
+ const x=(r?.obligationImpact&&typeof r.obligationImpact==='object')?r.obligationImpact:obligationImpactInfo(salary,external,finoPortal.data?.customerType||'government',Number(r.rate||0),Number(r.actualPayments||60),false);
+ return x?.affected&&Number(x.installmentReduction)>.01&&Number(x.excess)>0?x:null;
  }catch{return null}};
 function listActions(i){if(!active())return '';remember();const used=selectedKeys.get(i)||new Set();const all=baseQuestions.filter(([k])=>!used.has(k)).map(([k,l])=>[l,`F99V41Ask('${k}',${i})`]);
- if(impactFor(results()[i]))all.push(['كم أثرت عليّ الالتزامات؟',`F99V41Impact(${i})`]);
+ /* V47: impact button inserted only after current owner/code verification. */
  if(window.F99V38FeatureAllowed?.('reduce_installment'))all.push(['تقليل القسط',"F99V37BeginAdjust('installment')"]);
  if(window.F99V38FeatureAllowed?.('reduce_amount'))all.push(['تقليل التمويل',"F99V37BeginAdjust('principal')"],['تقليل الكاش',"F99V37BeginAdjust('cash')"]);
- if(window.F99V41OfferEnabled?.()===true)all.push([window.F99V42OfferLabel?.()||'أبي نتابع معاملتي معكم',`F99V42RequestCompletion(${i})`]);
+ /* V47: completion action inserted only after current server authorization. */
  if(window.F99V38HasNextBank?.())all.push(['المرشح التالي','F99V38NextBank()']);
  if(window.F99V38FeatureAllowed?.('summary_enabled'))all.push(['تلخيص الحسبة',`F99V38ShowSummary(${i})`]);
- if(window.F99V34CustomQuoteAllowed?.()===true && results().length>0 && window.__F99V43QuotaExhausted!==true)
-   all.push(['عندي بنك بنسبة أقل','F99V34Start()']);
+ /* V47: customer-supplied bank quote belongs in the same verified options menu. */
  if(opts().compare_enabled===true&&window.F99V38FeatureAllowed?.('compare_enabled'))all.push(['مقارنة','F99V38ComparePicker()']);
- if(window.F99V38FeatureAllowed?.('reduce_installment')||window.F99V38FeatureAllowed?.('reduce_amount'))all.push(['الحد الأعلى','F99V37Reset()']);
- return choices(all);
+ if(window.F99V38FeatureAllowed?.('reduce_installment'))all.push(['العودة لأعلى قسط مسموح','F99V47ResetInstallment()']);
+ if(window.F99V38FeatureAllowed?.('reduce_amount'))all.push(['العودة لأعلى مبلغ تمويل','F99V47ResetFinance()']);
+ return choices(all).replace('class="f41-options"','class="f41-options f47-main-options"');
 }
 window.F99V38BotStepsHtml=listActions;
 window.F99V41Ask=(key,i)=>{if(!active()||!baseQuestions.some(q=>q[0]===key))return;
@@ -22754,6 +22758,7 @@ window.F99V41Ask=(key,i)=>{if(!active()||!baseQuestions.some(q=>q[0]===key))retu
  used.add(key);
  document.querySelectorAll('#finoBotChat button').forEach(b=>{if(b.getAttribute('onclick')===`F99V41Ask('${key}',${i})`)b.remove()});
  window.F99V38Ask?.(key,i);
+ queueMicrotask(()=>{if(typeof window.F99V46SyncClientActions==='function')void window.F99V46SyncClientActions(i)});
 };
 // Obligation reduction is a scenario, NOT a statement that the loan was actually settled.
 window.F99V41Impact=i=>{if(!active())return;const r=results()[i],d=r&&impactFor(r);if(!d)return;
@@ -22761,9 +22766,8 @@ window.F99V41Impact=i=>{if(!active())return;const r=results()[i],d=r&&impactFor(
  const allowedPay=opts().show_debt_suggestions!==false&&window.F99V32Can?.('show_debt_suggestions')===true;
  const buttons=[...(allowedPay?[['أقدر أخفف بعض الأقساط','F99V41SettleChoice()']]:[]),['أكمل بالالتزامات الحالية','F99V41KeepDebts()']];
  say(`<div class="f41-impact"><b>أثر أقساطك الأخرى — ${esc(who())}</b>
- <p>أقساطك الأخرى تجاوزت الحد الذي لا يؤثر على التمويل الشخصي بنحو <b>${money(d.excess)} ريال شهريًا</b>.</p>
- <p>بسبب هذا التجاوز انخفض قسطك المتاح بنحو <b>${money(d.installmentReduction)} ريال</b> شهريًا، وانخفض أصل التمويل التقديري بنحو <b>${money(d.principalReduction)} ريال</b>.</p>
- <p>النسبة المتاحة حاليًا لقسط التمويل الشخصي من الراتب نحو <b>${ratio.toFixed(2)}%</b> وفق المعلومات المدخلة.</p>
+ <p>التزاماتك الشهرية تجاوزت المبلغ الذي لا يؤثر على التمويل بنحو <b>${money(d.excess)} ريال</b> شهريًا؛ لذلك انخفض القسط المتاح لك بنحو <b>${money(d.installmentReduction)} ريال</b>.</p>
+ <p>القسط المتاح حاليًا يعادل نحو <b>${ratio.toFixed(2)}%</b> من صافي الراتب، وقد يقل أصل التمويل بنحو <b>${money(d.principalReduction)} ريال</b>.</p>
  <p class="f41-disclaimer">هذه حسبة مبدئية ولا تعني أن جهة التمويل وافقت على سداد التزام أو تغيير سقف التمويل.</p>
  ${choices(buttons)}</div>`);
 };
@@ -23111,5 +23115,149 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 @media(max-height:670px){#f99l-root .f99l-main{gap:9px!important;padding-block:10px!important}#f99l-root .f99l-top{padding-top:12px!important}}
 
 </style>
+<script id="f99v46-three-actions">
+/* FINO99 V46 -- narrow client-action synchronization repair. Does not change finance formulas, inventory, contracts, or central database. */
+(()=>{'use strict';
+const lastArea=()=>{
+ const menus=[...document.querySelectorAll('#finoBotChat .f47-main-options')];
+ return menus.at(-1)||null;
+};
+const active=()=>{try{return finoPortal?.mode==='buyout'&&finoPortal?.step==='buyout_result'}catch{return false}};
+const results=()=>{try{return Array.isArray(latestResults)?latestResults:[]}catch{return []}};
+const ownerOptions=()=>{
+ try{const access=window.F99V32MainAccess?.(),key=access?.packageKey;
+  return {access,options:window.F99V32GetState?.()?.options?.products?.[key]||{}};
+ }catch{return {access:null,options:{}}}
+};
+const perCodeAllowed=type=>window.F99V38FeatureAllowed?.(type)===true;
+const actionButton=(area,identifier)=>[...area.querySelectorAll('button')].find(b=>String(b.getAttribute('onclick')||'').includes(identifier)||String(b.dataset.f46Action||'')===identifier);
+const makeButton=(area,identifier,label,callback)=>{
+ let btn=actionButton(area,identifier);
+ if(btn){btn.textContent=label;return btn}
+ let wrap=area.matches('.f41-options')?area:area.querySelector('.f41-options');
+ if(!wrap){wrap=document.createElement('div');wrap.className='f41-options f47-main-options';area.append(wrap)}
+ btn=document.createElement('button');btn.type='button';btn.dataset.f46Action=identifier;btn.textContent=label;btn.onclick=callback;
+ const next=[...wrap.querySelectorAll('button')].find(b=>/ترشيح بنك آخر|المرشح التالي/.test(b.textContent));
+ wrap.insertBefore(btn,next||null);
+ return btn;
+};
+const drop=(area,identifier)=>{
+ for(const b of [...area.querySelectorAll('button')])if(String(b.getAttribute('onclick')||'').includes(identifier)||b.dataset.f46Action===identifier)b.remove();
+ for(const c of [...area.querySelectorAll('[data-f46-actions]')])if(!c.querySelector('button'))c.remove();
+};
+const effect=()=>{
+ try{
+  const {access,options}=ownerOptions();const r=results()[Math.max(0,Number(selectedResultIndex)||0)];
+  if(!access?.central||access?.owner||options.show_obligation_impact!==true||!perCodeAllowed('show_obligation_impact')||!r)return false;
+  const salary=Number(finoPortal.data?.salary),external=Number(finoPortal.data?.external);
+  if(!(salary>0&&external>0))return false;
+  const d=r.obligationImpact||obligationImpactInfo(salary,external,finoPortal.data?.customerType||'government',Number(r.rate||0),Number(r.actualPayments||60),false);
+  return d?.affected===true&&Number(d.installmentReduction)>0.01&&Number(d.excess)>0;
+ }catch{return false}
+};
+let sequence=0;
+async function sync(i){
+ const serial=++sequence,area=lastArea();
+ if(!area||!active()||!results()[i])return;
+ // Fail closed: never display completion before a server authorization reply.
+ drop(area,'F99V42RequestCompletion');
+ try{
+  await window.F99V32Refresh?.(true);
+  await window.F99V38SyncCodeFeatures?.(true);
+  if(!active()||serial!==sequence)return;
+  const {access,options}=ownerOptions();
+  if(!access?.central||access.owner)return;
+  if(effect())makeButton(area,'F99V41Impact','كم أثّرت الالتزامات على تمويلي؟',()=>window.F99V41Impact?.(i));
+  else drop(area,'F99V41Impact');
+  if(options.custom_bank_quote===true&&window.F99V34CustomQuoteAllowed?.()===true&&window.__F99V43QuotaExhausted!==true){
+    const label=String(window.F99V34CustomQuoteConfig?.()?.button||'عندي بنك بنسبة أقل').slice(0,90);
+    makeButton(area,'F99V34Start',label,()=>window.F99V34Start?.());
+  }else drop(area,'F99V34Start');
+  let auth=null;
+  for(let attempt=0;attempt<3;attempt++){
+    const token=typeof finoCentralRestoreEntry==='function'?finoCentralRestoreEntry():null;
+    if(!token?.entryToken||!token?.deviceId)break;
+    const r=await finoRpc('f99v41_client_completion_status',{p_entry_token:token.entryToken,p_device_id:token.deviceId},12000);
+    if(serial!==sequence||!active())return;
+    if(r?.ok&&r.data?.ok===true){auth=r.data;
+      if(auth.has_first_calculation===true||attempt===2)break;
+    }
+    if(attempt<2)await new Promise(resolve=>setTimeout(resolve,500*(attempt+1)));
+  }
+  if(auth?.enabled===true&&auth.has_whatsapp===true&&auth.has_first_calculation===true&&auth.package_key===access.packageKey&&options.show_completion!==false&&perCodeAllowed('show_completion')){
+    const label=String(auth.button_text||window.F99V42OfferLabel?.()||'أبي نتابع معاملتي معكم').slice(0,90);
+    makeButton(area,'F99V42RequestCompletion',label,()=>window.F99V42RequestCompletion?.(i));
+  }else drop(area,'F99V42RequestCompletion');
+ }catch(e){
+  drop(area,'F99V42RequestCompletion');
+  // Leave existing result intact when the permission service is temporarily unavailable.
+  console.warn('FINO99 V46: optional client action verification failed',String(e?.message||e));
+ }
+}
+window.F99V46SyncClientActions=sync;
+const original=window.showFINOPortalRank;
+if(typeof original==='function')window.showFINOPortalRank=function(i,...args){
+ const result=original.call(this,i,...args);
+ Promise.resolve(result).then(v=>{if(v!==false&&active())return sync(i)}).catch(e=>console.warn('FINO99 V46 rank check:',e?.message||e));
+ return result;
+};
+})();
+</script>
+<style id="f99v47-style">
+#finoBotChat .f47-main-options{display:flex;gap:7px;flex-wrap:wrap}
+#finoBotChat .f47-main-options button{flex:0 1 auto;max-width:100%;font-size:12px}
+#finoBotChat .f38-image-wrap .f47-image-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+#finoBotChat .f47-image-actions button,#finoBotChat .f47-image-actions a{font:700 12px Cairo,system-ui;border:1px solid #b6d6e6;border-radius:10px;padding:9px 12px;background:#eef7fc;color:#154c73;text-decoration:none;cursor:pointer}
+#finoBotChat .f47-mode-photo .portal-detail-lines,#finoBotChat .f47-mode-photo .portal-cash-hero{display:none}
+#finoBotChat .f47-mode-photo .f47-inline-image{margin:10px 0}
+#finoBotChat .f47-mode-photo .f47-inline-image img{width:100%;max-height:680px;object-fit:contain;border-radius:12px}
+@media(max-width:560px){#finoBotChat .f47-main-options button{min-height:39px}#finoBotChat .f47-image-actions>*{flex:1 1 120px;text-align:center}}
+</style>
+<script id="f99v47-optional-ui">
+/* Targeted V47: owner-selected result visual, sharable in-chat images, two distinct reset labels. */
+(()=>{'use strict';
+const images=new Map();let nextImage=0;
+const inBot=()=>{try{return finoPortal?.step==='buyout_result'&&finoPortal?.mode==='buyout'}catch{return false}};
+const access=()=>window.F99V32MainAccess?.()||{};
+const chosen=()=>{try{return latestResults?.[Number(selectedResultIndex)||0]||null}catch{return null}};
+const mode=()=>{const a=access();return window.F99V32GetState?.()?.options?.products?.[a.packageKey]?.result_display_mode==='chat'?'chat':'image'};
+const ident=(blob)=>{const id='f47-'+(++nextImage);images.set(id,blob);if(images.size>8)images.delete(images.keys().next().value);return id};
+window.F99V47RegisterImage=ident;
+window.F99V47SaveImage=id=>{const blob=images.get(id);if(!blob)return alert('الصورة قديمة؛ افتح الحسبة مرة أخرى.');const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='FINO99-calculation.png';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000)};
+window.F99V47ShareDataUrl=async url=>{try{if(!url?.startsWith('data:image/png'))throw Error('IMAGE_FORMAT');const blob=await (await fetch(url)).blob();const id=ident(blob);return window.F99V47ShareImage(id)}catch(e){alert('تعذر تجهيز مشاركة الصورة. جرّب حفظ الصورة أولًا.')}};
+window.F99V47ShareImage=async id=>{const blob=images.get(id);if(!blob)return alert('الصورة قديمة؛ افتح الحسبة مرة أخرى.');const file=new File([blob],'FINO99-calculation.png',{type:'image/png'});try{
+ if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[file]}))){await navigator.share({files:[file],title:'FINO99 — حسبة مبدئية'});return}
+ }catch(e){if(e?.name==='AbortError')return;console.warn('FINO99 V47 sharing unavailable',e)}
+ window.F99V47SaveImage(id);alert('تم تجهيز الصورة للحفظ؛ يمكنك مشاركتها من تطبيق الصور أو الملفات.');};
+window.F99V47ResetInstallment=()=>window.F99V47ResetChosen('installment');
+window.F99V47ResetFinance=()=>window.F99V47ResetChosen('finance');
+let resetting=false;
+window.F99V47ResetChosen=async kind=>{if(!inBot()||resetting)return;resetting=true;try{
+ const out=await window.F99V37ResetBotAdjustment?.(kind);if(!out)return portalAssistant('<div class="portal-alert">تعذر إعادة الحد الأعلى، ولم تُعتمد نتيجة جديدة.</div>');
+ window.F99V47ClearAdjustment?.();const r=chosen();if(!r)return portalAssistant('<div class="portal-alert">البنك المختار لم يعد مؤهلًا؛ اختر أحد الترشيحات الأخرى.</div>');
+ const fmt=n=>Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+ const label=kind==='installment'?'العودة إلى أعلى قسط':'العودة إلى أعلى مبلغ تمويل';
+ portalAssistant(`<div class="portal-note"><b>${label}</b> — تمت إعادة الحسبة على ${String(r.name||'البنك المختار').replaceAll('<','&lt;')} بالنسب السارية. القسط ${fmt(r.installment)} ريال، وأصل التمويل ${fmt(r.principalBeforeFees)} ريال.</div>`);
+ portalAssistant(window.F99V38FullResultHtml?.(r,'reset')||'تمت إعادة الحسبة');
+ window.F99V38AfterAdjustment?.();
+ }catch(e){portalAssistant(`<div class="portal-alert">${String(e?.message||'تعذر إعادة الحد الأعلى').replaceAll('<','&lt;')}</div>`)}finally{resetting=false}};
+// After rendering a verified bank result, optionally replace its long text with a directly shareable picture.
+let displaySeq=0;
+window.F99V47ApplyVisualMode=async()=>{if(!inBot()||mode()!=='image')return;const bank=chosen(),name=bank?.name;if(!bank)return;
+ const list=[...document.querySelectorAll('#finoBotChat .portal-result:not(.f38-full)')];const result=list.at(-1);if(!result||result.dataset.f47Processed)return;
+ const seq=++displaySeq;result.dataset.f47Processed='1';try{
+  let blob=await createFINOPortalDetailedPngBlob();if(window.F99V38DecorateBlob)blob=await window.F99V38DecorateBlob(blob);
+  if(seq!==displaySeq||!inBot()||chosen()?.name!==name)return;
+  const url=URL.createObjectURL(blob),id=ident(blob);const card=document.createElement('div');card.className='f47-inline-image f38-image-wrap';
+  const caption=document.createElement('p');caption.textContent='صورة الحسبة المبدئية — '+name;const img=document.createElement('img');img.alt='صورة حسبة التمويل المقدرة';img.src=url;
+  const actions=document.createElement('div');actions.className='f47-image-actions';for(const [text,fn] of [['حفظ الصورة',()=>window.F99V47SaveImage(id)],['مشاركة الصورة',()=>window.F99V47ShareImage(id)]]){const button=document.createElement('button');button.type='button';button.textContent=text;button.onclick=fn;actions.append(button)}
+  card.append(caption,img,actions);const detail=result.querySelector('.portal-detail-lines');if(detail)detail.before(card);else result.append(card);
+  result.classList.add('f47-mode-photo');setTimeout(()=>URL.revokeObjectURL(url),240000);
+ }catch(e){result.removeAttribute('data-f47-processed');result.classList.remove('f47-mode-photo');console.warn('FINO99 V47 picture fallback',e?.message||e)}
+};
+const old=window.showFINOPortalRank;
+if(typeof old==='function')window.showFINOPortalRank=function(...args){const val=old.apply(this,args);Promise.resolve(val).then(()=>{if(inBot())void window.F99V47ApplyVisualMode()});return val};
+})();
+</script>
 </body>
 </html>
