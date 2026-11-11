@@ -13,7 +13,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" name="viewport"/>
 <meta content="#ffffff" name="theme-color"/>
-<title>FINO99 — المتجر والحاسبات | V45</title><meta name="fino99-site-version" content="V45-2026-11-10">
+<title>FINO99 — الحلول التمويلية الذكية | V58</title><meta name="fino99-site-version" content="V58-2026-11-12">
 <meta content="2026-11-06-v3" name="fino99-code-fix-release"/><meta content="FINO99" name="description"/><meta content="website" property="og:type"/><meta content="FINO99" property="og:title"/><meta content="FINO99" property="og:description"/>
 <meta content="image-rates-audit-2026-11-03" name="fino99-release"/>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
@@ -5761,6 +5761,14 @@ window.F99V45PlatformQR='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK8AAACvC
 window.F99V45DefaultCover=function(p){const k=String(p?.key||'').toLowerCase(),name=String(p?.name||'');const ss=Array.isArray(p?.services)?p.services:[];if(k.includes('mortgage')||ss.includes('mortgage_quote')||/عقار/.test(name))return '';if(k.includes('compare')||ss.includes('compare')||/مقارن/.test(name))return window.F99V45Covers.compare;if(k.includes('bronze')||ss.includes('buyout')||/برونز|مشاوير/.test(name))return window.F99V45Covers.bronze;return '';};
 </script>
 <meta name="fino99-site-patch" content="V53-client-copy-money-fee-diagnostics">
+<meta name="application-name" content="FINO99"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<link rel="apple-touch-icon" href="./fino99-icon-180.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="./fino99-icon-192.png"/>
+<link rel="manifest" href="./manifest.webmanifest"/>
+
 </head>
 <body>
 <div class="app">
@@ -17692,7 +17700,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if(p.launch_status==='coming_soon'){b.append(info('ها حصلت لك بيت؟ كم يعطونك للتمويل العقاري؟ — والله خبطوني، كل جهة تمويلية وكل موظف يعطيني حسبة! قريبًا حاسبة موحدة تساعدك تقارن.'));return}
   if(p.enabled!==true){b.append(info('يمكنك استعراض تفاصيل هذا المنتج، وسيتاح الشراء بعد اكتمال اعتماد رابط الدفع.'));return}
   const caution=String(p.warning_text||'').trim();
-  if(caution){const warning=el('div','f99v10-warning',publicCopy(caution));warning.style.color=/^#[0-9a-fA-F]{6}$/.test(p.warning_color)?p.warning_color:'#B42335';warning.style.fontSize=Math.max(14,Math.min(24,Number(p.warning_size)||17))+'px';b.append(warning)}
+  if(caution){const warning=el('div','f99v10-warning',publicCopy(caution));warning.style.color=/^#[0-9a-fA-F]{6}$/.test(p.warning_color)?p.warning_color:'#B42335';warning.style.fontSize=Math.max(10,Math.min(28,Number(p.warning_size)||17))+'px';b.append(warning)}
   const services=Array.isArray(p.services)?p.services:[];
   const requiresSector=services.some(k=>['buyout','smart','compare','mortgage_quote','mortgage_compare','mortgage_buyout'].includes(k))||(p.allowed_sectors||[]).length>0;
   const eligible=Array.isArray(p.allowed_sectors)?p.allowed_sectors:[];
@@ -17927,7 +17935,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   bankEditor(row,norm);
   field(row,'عبارة تنبيه واضحة على الباقة','warning_text',norm.warning_text||'الاحتساب مبدئي ويخضع لشروط البنك',{textarea:true});
   field(row,'لون التنبيه (رمز HEX)','warning_color',norm.warning_color||'#B42335');
-  field(row,'حجم خط التنبيه (14 إلى 24)','warning_size',norm.warning_size||17,{type:'number'});
+  field(row,'حجم خط التنبيه (10 إلى 28)','warning_size',norm.warning_size||17,{type:'number'});
   questionEditor(row,norm.questions);field(row,'رسالة الاعتذار العامة عند عدم الأهلية','rejection_text',norm.rejection_text||DEFAULT_REJECTION,{textarea:true});promoEditor(row,norm);
   field(row,'الشروط الخاصة بالباقة','terms',norm.terms||'',{textarea:true});field(row,'عدد الحسبات لكل كود','max_calculations',norm.max_calculations??3,{type:'number'});field(row,'نص المدة والحسبات تحت المنتج (اختياري)','duration_note',norm.duration_note||'',{type:'text'});field(row,'حجم خط المدة تحت المنتج (10–16)','duration_font_size',norm.duration_font_size??11,{type:'number'});row.append(miniToggle('إظهار مدة الباقة وعدد الحسبات في المتجر',norm.show_duration_note!==false,'showDurationNote'));field(row,'مدة الكود بالدقائق','duration_minutes',norm.duration_minutes??1440,{type:'number'});field(row,'إعادات الحسبة بعد الأولى','restarts',norm.restarts??3,{type:'number'});
   row.append(miniToggle('اسأل العميل عن اسمه قبل فتح الخدمة',norm.ask_name_first===true,'askNameFirst'));row.append(miniToggle('إظهار اسم العميل المسجل في رسالة التجديد لهذه الباقة',norm.renewal_name_enabled!==false,'renewalNameEnabled'));
@@ -18015,7 +18023,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if(p.offer_end_date&&!/^\d{4}-\d{2}-\d{2}$/.test(p.offer_end_date))return 'تاريخ انتهاء العرض غير صحيح: '+p.name;
   if(Object.values(p.bank_logos||{}).some(url=>!urlOK(url)))return 'تحقق من رابط شعار البنك الإضافي: '+p.name;
   if(p.warning_color&&!/^#[0-9a-fA-F]{6}$/.test(p.warning_color))return 'لون التنبيه غير صالح: '+p.name;
-  if(p.warning_size&&(!Number.isFinite(p.warning_size)||p.warning_size<14||p.warning_size>24))return 'حجم خط التنبيه خارج الحدود: '+p.name;
+  if(p.warning_size&&(!Number.isFinite(p.warning_size)||p.warning_size<10||p.warning_size>28))return 'حجم خط التنبيه خارج الحدود: '+p.name;
   return ''
  }
  async function saveStore(){
@@ -24905,5 +24913,202 @@ window.F99V57Smoke={normalize,questionContext,defaultKeys,decorateQuestions,getN
 })();
 
 </script>
+<style id="f99v58-style">
+/* V58: product coupon is beside product detail button, and all related content stays inside one tile. */
+#f99s-modal .f50-coupon,#f99s-modal .f50-coupon.f54-permitted,#f99s-modal .f55-price-box{display:none!important}
+#f99s-modal .f58-product-actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;gap:8px;width:100%;margin-top:auto;direction:rtl}
+#f99s-modal .f58-product-actions>.f99v6-primary{order:1;min-width:0;margin:0!important;min-height:45px!important}
+#f99s-modal .f58-product-actions>.f56-discount{display:contents}
+#f99s-modal .f58-product-actions .f56-entry{order:2;min-height:45px!important;width:100%;background:#eef7fb;border:1px solid #a7cbde;border-radius:10px;color:#174f70;font-size:12px;font-weight:900;padding:7px 5px;white-space:normal}
+#f99s-modal .f58-product-actions .f56-fields{order:3;grid-column:1/-1;border:1px solid #d8e6ee;border-radius:12px;background:#f8fbfe;padding:10px;min-width:0;box-sizing:border-box}
+#f99s-modal .f58-product-actions .f56-price-card{display:none!important}
+#f99s-modal .f58-product-actions:not(:has(.f56-entry))>.f99v6-primary{grid-column:1/-1}
+#f99s-modal .f58-product-actions .f56-fields[hidden]{display:none!important}
+#f99s-modal .f58-product-actions .f56-discount[hidden]{display:none!important}
+#f99s-modal .f58-product-actions .f56-status{font-size:11px;line-height:1.75}
+#f99s-modal .f58-store-prices{border:1px solid #b9dfcf;background:#f0fbf5;border-radius:12px;padding:10px;display:grid;gap:4px;color:#155e46;line-height:1.65}
+#f99s-modal .f58-store-prices s{font-size:13px;color:#6c7d80}
+#f99s-modal .f58-store-prices strong{font-size:22px;font-weight:900;color:#116146}
+#f99s-modal .f58-store-prices small{font-size:11px;color:#26694f}
+#f99s-modal .f58-store-prices .f58-gift{font-size:12px;font-weight:900;color:#0a7150}
+#f58-install-tip{position:fixed;z-index:73;bottom:calc(16px + env(safe-area-inset-bottom));left:12px;max-width:min(220px,58vw);direction:rtl;border:1px solid #b8d6e5;background:#fff;color:#174961;border-radius:15px;box-shadow:0 7px 25px #092a4233;padding:10px;display:grid;gap:7px;font:700 11px/1.7 Cairo,system-ui,sans-serif}
+#f58-install-tip button{border:0;border-radius:9px;background:#1d6385;color:#fff;padding:7px;font:800 11px Cairo,system-ui;cursor:pointer}
+#f58-install-tip .f58-dismiss{position:absolute;top:2px;left:3px;background:transparent;color:#597789;padding:1px 6px;font-size:13px;min-width:0;min-height:0}
+#f58-install-tip[hidden]{display:none!important}
+#f58-install-help{position:fixed;inset:0;background:#0b2435a8;z-index:2147483600;display:grid;place-items:center;padding:15px;direction:rtl}
+#f58-install-help>section{background:#fff;width:min(460px,96vw);border-radius:17px;padding:19px;color:#193e52;line-height:2;font:14px Cairo,system-ui;box-shadow:0 18px 45px #051c2840}
+#f58-install-help button{background:#1c6887;color:#fff;border:0;border-radius:9px;padding:10px 18px;font:inherit;margin-top:12px}
+.f58-owner-btn{display:inline-block;padding:9px 12px;border:1px solid #b5d5e7;background:#edf7fc;color:#145371;border-radius:10px;cursor:pointer;margin:5px}
+#f58-config-sheet{position:fixed;inset:0;z-index:2147483530;display:grid;place-items:center;background:#102f41ac;padding:12px;direction:rtl}
+#f58-config-sheet>section{max-height:90dvh;overflow:auto;width:min(650px,98vw);border-radius:17px;background:white;padding:18px;color:#1c4054;font:14px/1.8 Cairo,system-ui}
+#f58-config-sheet h3{font-size:18px;margin-bottom:5px}#f58-config-sheet label{display:block;font-weight:800;margin:10px 0}
+#f58-config-sheet input:not([type=checkbox]),#f58-config-sheet textarea,#f58-config-sheet select{width:100%;border:1px solid #bed5e2;border-radius:9px;padding:10px;display:block;min-height:39px;color:#173e55;font:inherit}
+#f58-config-sheet input[type=checkbox]{width:20px;height:20px;vertical-align:middle;margin-left:6px}
+#f58-config-sheet button{border:0;border-radius:10px;padding:10px 14px;background:#206687;color:white;cursor:pointer;margin:5px;font:inherit;font-weight:800}
+#f58-config-sheet details{background:#f8fbfe;border:1px solid #d6e5ec;padding:11px;border-radius:11px;margin:10px 0}
+#f58-config-sheet summary{cursor:pointer;font-weight:900}
+#f58-config-sheet .f58-owner-status{color:#216181;white-space:pre-wrap}
+#finoBotChat .f58-label-override{font-weight:900;display:block;margin-bottom:6px}
+#finoBotChat .f58-question-tone-red{color:#ac333e!important;border-right-color:#bd6670!important;background:#fff6f6!important}
+#finoBotChat .f58-question-tone-gray{color:#626f78!important;border-right-color:#abb8c0!important;background:#f8f9fa!important}
+#finoBotChat .f58-question-tone-blue{color:#116a99!important;border-right-color:#49a1d2!important;background:#f0f9fd!important}
+#finoBotChat .f58-pinned-hint{position:sticky;top:0;z-index:8;background:#f5fafc;border:1px solid #c3d8e4;border-radius:9px;padding:7px 10px;color:#224d64;font-size:12px;line-height:1.7;box-shadow:0 2px 8px #123c5118}
+#f58-top-alert{border:1px solid #e3b0b0;background:#fff7f7;color:#9b2834;border-radius:10px;padding:7px;margin:8px 0;line-height:1.8}
+</style>
+<script id="f99v58-patch">
+(()=>{'use strict';
+/* FINO99 V58: incremental presentation only; no calculator math, completion pricing, or checkout authorization changes. */
+const $=q=>document.querySelector(q);
+const E=(tag,content='',className='')=>{const n=document.createElement(tag);if(className)n.className=className;n.textContent=String(content??'');return n};
+const B=(box,label,handler,className='')=>{const b=E('button',label,className);b.type='button';b.addEventListener('click',handler);box.append(b);return b};
+const adminEnabled=()=>{try{return !!activeAccess?.record?.owner&&!!finoCentralAdminToken}catch{return false}};
+const call=async(name,params={},isAdmin=false)=>{
+ if(isAdmin&&!adminEnabled())throw Error('هذه الإعدادات لصاحب صلاحية المالك فقط');
+ const result=isAdmin?await window.finoCentralAdminCall(name,params):await window.finoRpc(name,params,16000);
+ if(!result?.ok||result.data?.ok!==true)throw Error(result?.data?.reason||result?.error?.message||'تعذر الوصول للمركزية');
+ return result.data;
+};
+const keys=[['work_type','اختر جهة عملك'],['salary_general','صافي الراتب — للجميع'],['salary_military','صافي الراتب — العسكري'],['obligations','الالتزامات'],['cash','الكاش'],['installment','القسط'],['top_alert','تنبيه أعلى المحادثة']];
+let settings=null,settingsAt=0,loading=null;
+const defaultConfig={install:{enabled:true,hint:'خل FINO99 قريب منك — أضف المنصة إلى شاشة جوالك.',button:'طريقة الإضافة'},question_styles:{}};
+async function getConfig(force=false){
+ if(!force&&settings&&Date.now()-settingsAt<12000)return settings;
+ if(loading&&!force)return loading;
+ loading=(async()=>{try{settings=await call('f99v58_public_ui');settingsAt=Date.now();return settings}
+  catch{return settings||defaultConfig}finally{loading=null}})();return loading;
+}
+// Add-to-home-screen is a browser shortcut. It is not an offline guarantee or native app.
+function installHelp(){let panel=$('#f58-install-help');if(panel)return;
+ panel=E('div');panel.id='f58-install-help';panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');
+ const card=E('section');card.append(E('h3','أضف FINO99 إلى الشاشة الرئيسية'));
+ const ios=/iPad|iPhone|iPod/.test(navigator.userAgent);
+ const android=/Android/.test(navigator.userAgent);
+ let steps='من قائمة المتصفح اختر «إضافة إلى الشاشة الرئيسية»، ثم اضغط «إضافة». لا يلزم تنزيل برنامج مستقل.';
+ if(ios)steps='افتح FINO99 في Safari، واضغط زر المشاركة (مربع وسهم للأعلى)، ثم اختر «إضافة إلى الشاشة الرئيسية». إذا ظهر خيار «فتح كتطبيق ويب» فعّله، واضغط «إضافة». إذا لم يظهر الخيار، مرّر قائمة المشاركة للأسفل.';
+ if(android)steps='افتح FINO99 في Chrome، واضغط القائمة ⋮، ثم اختر «إضافة إلى الشاشة الرئيسية» أو «تثبيت التطبيق» إذا ظهر، وأكد الإضافة.';
+ card.append(E('p',steps));card.append(E('p','هذا اختصار للموقع على جوالك؛ يلزم الإنترنت لاستخدام الحسبات والخدمات.'));
+ B(card,'إغلاق',()=>panel.remove());panel.append(card);panel.addEventListener('click',e=>{if(e.target===panel)panel.remove()});document.body.append(panel);
+}
+function homeTip(){
+ let p=$('#f58-install-tip');if(!p){p=E('aside');p.id='f58-install-tip';p.append(E('strong','📱 منصة FINO99 على جوالك'));
+ p.append(E('span','','f58-install-message'));B(p,'طريقة الإضافة',installHelp,'f58-install-button');
+ B(p,'×',()=>{p.hidden=true;p.dataset.dismissed='true'},'f58-dismiss');document.body.append(p)}
+ const c=settings||defaultConfig;
+ p.querySelector('.f58-install-message').textContent=c.install?.hint||defaultConfig.install.hint;
+ p.querySelector('.f58-install-button').textContent=c.install?.button||defaultConfig.install.button;
+ p.hidden=c.install?.enabled===false||!$('#page1.active')||p.dataset.dismissed==='true';
+}
+// Replace only supplemental visual content; do not alter input, contractual, or financing values.
+const rawPrices=new WeakMap();
+const applied=()=>window.F99V56Test?.applied;
+const currency=n=>{const v=Number(n);return Number.isFinite(v)?v.toLocaleString('en-US',{maximumFractionDigits:2}):'—'};
+function priceView(tile,record){const price=tile.querySelector('.f99v6-price');if(!price)return;
+ if(!rawPrices.has(price))rawPrices.set(price,[...price.childNodes].map(n=>n.cloneNode(true)));
+ if(!record?.quote){if(price.dataset.f58Applied){price.replaceChildren(...rawPrices.get(price).map(n=>n.cloneNode(true)));delete price.dataset.f58Applied}return}
+ const q=record.quote;const prev=Number(q.after_package_discount),final=Number(q.final_preview),saving=Number(q.coupon_discount);
+ if(!Number.isFinite(prev)||!Number.isFinite(final)||!Number.isFinite(saving)||final<0||saving<=0)return;
+ const code=String(record.code||'');if(price.dataset.f58Applied===code+':'+final)return;
+ const card=E('div','','f58-store-prices');card.append(E('span','قبل كود الخصم:'));
+ card.append(E('s',currency(prev)+' ريال'));card.append(E('span','🎁 مبروك! وفّرت '+currency(saving)+' ريال','f58-gift'));
+ card.append(E('strong',currency(final)+' ريال'));card.append(E('small','السعر المتوقع بعد الكود. يثبت الخصم النهائي عند تطبيقه في منصة الدفع.'));
+ price.replaceChildren(card);price.dataset.f58Applied=code+':'+final;
+}
+function alignStore(){const root=$('#f99s-modal');if(!root||root.hidden)return;const all=window.FINO99ReadStorefront?.()?.products||[];
+ for(const tile of root.querySelectorAll('.f99v6-tile')){
+  const buy=tile.querySelector('.f99v6-primary'),coupon=tile.querySelector('.f56-discount'),name=tile.querySelector('h3')?.textContent?.trim();
+  const pkg=all.find(p=>p.name===name);if(!buy||!pkg)continue;
+  if(coupon&&!coupon.hidden){let group=tile.querySelector('.f58-product-actions');if(!group){group=E('div','','f58-product-actions');buy.before(group)}
+   if(buy.parentElement!==group)group.append(buy);if(coupon.parentElement!==group)group.append(coupon);
+  }else{const group=tile.querySelector('.f58-product-actions');if(group&&buy.parentElement===group){group.before(buy);group.remove()}}
+  const record=applied()?.get(pkg.key);priceView(tile,record);
+ }
+}
+// Per-question notice presentation: V57 controls note text; V58 controls visibility, size, color and custom work-sector label.
+function applyNotes(){const s=settings?.question_styles||{};const root=$('#finoBotChat');if(!root)return;
+ for(const n of root.querySelectorAll('.f57-question-hint')){
+  const cfg=s[n.dataset.noteKey];if(!cfg)continue;
+  n.hidden=cfg.note_visible===false;n.style.fontSize=Math.max(10,Math.min(28,Number(cfg.font_size)||12))+'px';
+  n.classList.remove('f58-question-tone-red','f58-question-tone-gray','f58-question-tone-blue');
+  if(['red','gray','blue'].includes(cfg.tone))n.classList.add('f58-question-tone-'+cfg.tone);
+  n.style.position=cfg.sticky?'sticky':'';n.style.top=cfg.sticky?'0':'';n.style.zIndex=cfg.sticky?'2':'';
+ }
+ // If the owner chooses a persistent hint, pin only the latest active hint to the top of chat.
+ const latest=[...root.querySelectorAll('.f57-question-hint')].reverse().find(n=>{
+  const c=s[n.dataset.noteKey];return c?.sticky===true&&c?.note_visible!==false&&!n.hidden;
+ });
+ let pinned=root.querySelector('.f58-pinned-hint');
+ if(latest){if(!pinned){pinned=E('div','','f58-pinned-hint');root.prepend(pinned)}
+  pinned.textContent=latest.textContent;pinned.style.fontSize=latest.style.fontSize;
+ }else if(pinned)pinned.remove();
+ const work=s.work_type;
+ if(work?.note_visible!==false&&work?.label_text){for(const bubble of root.querySelectorAll('.portal-row.assistant .portal-bubble')){
+   if(bubble.dataset.f58WorkLabel)return;const raw=(bubble.textContent||'').slice(0,350);
+   if(!/اختر جهة عملك|اذكر جهة عملك/.test(raw))continue;
+   const walk=document.createTreeWalker(bubble,NodeFilter.SHOW_TEXT);let node;
+   while((node=walk.nextNode())){if(node.parentElement?.closest('button,select,.f57-question-hint,.portal-option'))continue;
+    if(/اختر جهة عملك|اذكر جهة عملك/.test(node.nodeValue||'')){
+     node.nodeValue=node.nodeValue.replace(/اختر جهة عملك|اذكر جهة عملك/g,work.label_text);bubble.dataset.f58WorkLabel='1';break;
+    }
+   }
+ }}
+ let alert=$('#f58-top-alert'),top=s.top_alert;
+ if(top?.note_visible&&top.label_text){if(!alert){alert=E('div','','f58-top-alert');alert.id='f58-top-alert';const chat=$('#finoBotChat');chat?.before(alert)}
+  alert.textContent=top.label_text;alert.hidden=false;alert.style.fontSize=Math.max(10,Math.min(28,Number(top.font_size)||14))+'px';
+  alert.style.color=top.tone==='red'?'#a12b36':top.tone==='gray'?'#667783':top.tone==='blue'?'#096b97':'#173e55';
+  alert.style.position=top.sticky?'sticky':'';alert.style.top=top.sticky?'0':'';
+ }else if(alert)alert.hidden=true;
+}
+function closeSheet(){document.querySelector('#f58-config-sheet')?.remove()}
+function ownerSheet(){if(!adminEnabled())return;
+ closeSheet();const shade=E('div');shade.id='f58-config-sheet';shade.setAttribute('role','dialog');shade.setAttribute('aria-modal','true');
+ const box=E('section');shade.append(box);box.append(E('h3','التحكم بواجهة FINO99 والأسئلة'));
+ box.append(E('p','الملاحظات اختيارية، ولا يؤدي إخفاؤها إلى حذف الأسئلة الأساسية اللازمة للحسبة.'));const status=E('p','','f58-owner-status');status.setAttribute('role','status');
+ const control=(container,label,value='',type='text')=>{const l=E('label',label),i=E('input');i.type=type;if(type==='checkbox')i.checked=!!value;else i.value=String(value??'');l.append(i);container.append(l);return i};
+ const install=E('details');install.open=true;install.append(E('summary','📱 تنبيه إضافة المنصة إلى الجوال'));
+ const enabled=control(install,'إظهار التنبيه في الصفحة الرئيسية',false,'checkbox'),hint=control(install,'نص التنبيه'),action=control(install,'نص زر التعليمات');
+ B(install,'حفظ واعتماد تنبيه التطبيق',async()=>{try{await call('f99v58_owner_install_save',{p_enabled:enabled.checked,p_hint:hint.value,p_button:action.value},true);settings=null;await getConfig(true);homeTip();status.textContent='تم اعتماد إعدادات تنبيه الجوال.'}catch(e){status.textContent='تعذر الحفظ: '+e.message}});
+ box.append(install);
+ const notes=E('details');notes.open=true;notes.append(E('summary','✏️ مظهر أسئلة المحادثة والتنبيهات'));
+ notes.append(E('p','اختر السؤال، ويمكنك إخفاء ملاحظته أو تعديل خطها ولونها. النص الأصلي للملاحظات يعدّل من «ملاحظات أسئلة المحادثة».'));
+ const choose=E('select');for(const [k,title] of keys)choose.add(new Option(title,k));notes.append(choose);
+ const show=control(notes,'إظهار الملاحظة/التنبيه',true,'checkbox'),sz=control(notes,'حجم الخط (10 إلى 28)',12,'number');sz.min='10';sz.max='28';sz.step='1';
+ const tone=E('select');for(const [v,t] of [['navy','كحلي'],['red','أحمر'],['gray','رمادي'],['blue','أزرق']])tone.add(new Option(t,v));notes.append(tone);
+ const pin=control(notes,'تثبيت الملاحظة أثناء العرض',false,'checkbox');const label=control(notes,'عنوان بديل اختياري للسؤال / نص التنبيه الأحمر');
+ function update(){const value=(settings?.question_styles||{})[choose.value]||{};show.checked=value.note_visible??(choose.value!=='top_alert');sz.value=value.font_size||12;tone.value=value.tone||'navy';pin.checked=!!value.sticky;label.value=value.label_text||''}
+ choose.addEventListener('change',update);
+ B(notes,'حفظ واعتماد مظهر السؤال',async()=>{try{const size=Number(sz.value);if(!Number.isInteger(size)||size<10||size>28)throw Error('اختر حجم خط من 10 إلى 28');await call('f99v58_owner_question_style_save',{
+  p_key:choose.value,p_visible:show.checked,p_size:size,p_tone:tone.value,p_sticky:pin.checked,p_label:label.value},true);
+  settings=null;await getConfig(true);applyNotes();status.textContent='✓ تم حفظ مظهر السؤال، دون تغيير خطوة الحسبة.';
+ }catch(e){status.textContent='تعذر اعتماد السؤال: '+e.message}});
+ box.append(notes);box.append(status);B(box,'إغلاق',closeSheet);document.body.append(shade);
+ call('f99v58_owner_ui_read',{},true).then(data=>{settings=data;settingsAt=Date.now();enabled.checked=!!data.install?.enabled;hint.value=data.install?.hint||'';action.value=data.install?.button||'';update()}).catch(e=>status.textContent='تعذر قراءة الإعدادات: '+e.message);
+}
+function ownerControls(){if(!adminEnabled())return;
+ for(const root of [$('#f55-owner-tools'),$('#f49-admin-modal .f49-modal-body')]){
+  if(root&&!root.querySelector('[data-f58-admin]')){const b=B(root,'📱 إعدادات تنبيه الجوال وأسئلة المحادثة',ownerSheet,'f58-owner-btn');b.dataset.f58Admin='1'}
+ }
+ // Every existing package can open the same dedicated coupon portal with its own key selected.
+ for(const row of document.querySelectorAll('#f99s-owner .f99s-product')){
+  if(row.querySelector('[data-f58-coupon]'))continue;
+  const b=B(row.querySelector('.f99s-product-head')||row,'🎟️ خصم هذه الباقة',()=>{
+   if(typeof window.FINO99OpenDiscountPortal!=='function')return alert('بوابة الخصم تحتاج تركيب V56');
+   window.FINO99OpenDiscountPortal();const sel=$('#f56-popup select.f56-package-select');if(sel){sel.value=row.dataset.packageKey;sel.dispatchEvent(new Event('change'))}
+  },'f58-owner-btn');b.dataset.f58Coupon='1';
+ }
+}
+let last=0;
+async function tick(){const now=Date.now();if(now-last<700)return;last=now;
+ if(document.hidden)return;
+ if(!settings||now-settingsAt>30000)await getConfig(true);
+ homeTip();alignStore();applyNotes();ownerControls();
+}
+let running=false;const boot=()=>{if(running)return;running=true;tick().finally(()=>{running=false})};
+const listener=new MutationObserver(()=>{if(!running)boot()});
+listener.observe(document.body,{childList:true,subtree:true});
+setInterval(boot,2000);void boot();
+window.F99V58Test={currency,priceView,alignStore,homeTip,applyNotes,getConfig,ownerSheet};
+})();
+</script>
+
 </body>
 </html>
