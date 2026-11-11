@@ -24387,5 +24387,290 @@ const prior=window.F99V49OwnerPanel;if(typeof prior==='function')window.F99V49Ow
 
 
 
+
+<style id="f99v55-style">
+#f55-owner-tools{position:sticky;top:0;z-index:15;background:#f5faff;border:1px solid #d2e1eb;padding:12px;border-radius:12px;margin:8px 0;direction:rtl;box-shadow:0 2px 8px #173c5014}
+#f55-owner-tools .f55-pins{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0}
+#f55-owner-tools input{width:100%;min-height:40px;border:1px solid #aac4d2;border-radius:8px;padding:8px}
+#f55-owner-tools button,.f55-card-btn{border:1px solid #adcddd;background:white;color:#183f56;border-radius:9px;padding:9px;cursor:pointer}
+#f55-owner-tools details{margin-top:10px}#f55-owner-tools label{display:block;padding:5px}
+#f55-owner-tools .f55-status{white-space:pre-wrap;line-height:1.7;color:#234963}
+#finoBotChat .f55-identity-notice{border:1px solid #c9dfea;background:#f1f8fb;border-radius:12px;padding:10px;line-height:1.8}
+#f99s-modal .f55-price-box{border:1px solid #b7d8e5;background:#f2f9fc;border-radius:10px;padding:10px;margin:8px 0;text-align:right;line-height:1.85}
+#f99s-modal .f55-price-box .f55-now{font-weight:900;font-size:19px;color:#125679}#f99s-modal .f55-price-box s{color:#7a8289}
+#f55-role-layer{position:fixed;inset:0;background:#122c3ca8;z-index:99999;display:grid;place-items:center;padding:16px;direction:rtl}
+#f55-role-layer>section{background:white;max-height:90vh;overflow:auto;max-width:550px;width:100%;border-radius:15px;padding:18px;line-height:1.9}
+#f55-role-layer label{display:block;margin:12px 0}#f55-role-layer input,#f55-role-layer select{width:100%;padding:9px;border:1px solid #a9c3d2;border-radius:7px}
+#f55-role-layer button{padding:10px 15px;margin:5px;border-radius:8px;border:1px solid #b1c6d1;background:white}
+</style>
+<script id="f99v55-patch">
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const txt=(tag,content)=>{const e=document.createElement(tag);if(content!=null)e.textContent=String(content);return e};
+const clean=s=>String(s??'').trim();
+const safeName=s=>{try{return cleanClientName(s)}catch{return clean(s).slice(0,40)}};
+const owner=()=>{try{return !!activeAccess?.record?.owner&&!!finoCentralAdminToken}catch{return false}};
+const entry=()=>{try{return finoCentralRestoreEntry?.()||null}catch{return null}};
+const rpc=async(n,p={})=>{const r=await window.finoRpc(n,p,16000);if(!r?.ok||r.data?.ok!==true)throw Error(r?.data?.reason||r?.error?.message||'تعذر التحقق من المركزية');return r.data};
+const admin=async(n,p={})=>{if(!owner())throw Error('هذه الصلاحية للمالك');const r=await window.finoCentralAdminCall(n,p);if(!r?.ok||r.data?.ok!==true)throw Error(r?.data?.reason||r?.error?.message||'تعذر الاعتماد');return r.data};
+const amount=n=>{const a=Number(n);return Number.isFinite(a)?a.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'—'};
+const errorText=e=>{const s=String(e?.message||e||'');return /read.only transaction/i.test(s)?'تعذّر فتح إعدادات الإنجاز بسبب تعريف قديم لوظيفة القراءة في المركزية. يجب تنفيذ إصلاح V55 أولًا.':s};
+function dialog(title){$('f55-role-layer')?.remove();const shade=txt('div');shade.id='f55-role-layer';shade.setAttribute('role','dialog');shade.setAttribute('aria-modal','true');const panel=txt('section');panel.append(txt('h3',title));shade.append(panel);document.body.append(shade);return {shade,panel}}
+function button(p,label,action){const b=txt('button',label);b.type='button';b.onclick=action;p.append(b);return b}
+function field(p,title,value=''){const l=txt('label',title),input=txt('input');input.value=value;input.maxLength=90;l.append(input);p.append(l);return input}
+
+// Re-entry: ask whose financing is being calculated. Identity is attached to this code/session.
+let identitySeen='';
+function sessionKey(){const e=entry();return String(e?.code_id||e?.codeId||activeAccess?.record?.id||'')+'|'+String(e?.entryToken||'')};
+function persistActor(n){const e=entry();const k=String(e?.code_id||e?.codeId||'');if(k&&n){try{localStorage.setItem('fino99-v50-name:'+k,n)}catch{}}}
+const previousWelcome=window.F99V21WelcomeBot;
+if(typeof previousWelcome==='function')window.F99V21WelcomeBot=function(service,launch){
+  const k=sessionKey(),e=entry(),code=String(e?.code_id||e?.codeId||'');
+  let stored='';try{stored=code?localStorage.getItem('fino99-v50-name:'+code)||'':''}catch{}
+  const actor=safeName(stored||(typeof actedFor!=='undefined'&&actedFor?actedFor:clientName));
+  const nameAwareLaunch=(...args)=>{const s=safeName(clientName);if(s)persistActor(safeName(actedFor||s));return launch?.apply(this,args)};
+  if(activeAccess?.record?.owner||!code||identitySeen===k)return previousWelcome.call(this,service,nameAwareLaunch);
+  if(!stored){clientName='';actedFor='';return previousWelcome.call(this,service,nameAwareLaunch)};
+  if(!actor)return previousWelcome.call(this,service,nameAwareLaunch);
+  identitySeen=k;
+  const {shade,panel}=dialog('نكمل الحسبة لمين؟');
+  const greet=(new Date().getHours()>=5&&new Date().getHours()<12)?'صباح الخير':'مساء الخير';
+  panel.append(txt('p',greet+' يا '+actor+'، حياك الله. بتحسب لنفسك أو لشخص آخر؟'));
+  button(panel,'الحسبة لي',()=>{clientName=actor;actedFor=actor;requestedScenario='';persistActor(actor);shade.remove();previousWelcome.call(this,service,launch)});
+  button(panel,'أحسب لشخص آخر',()=>{panel.replaceChildren();panel.append(txt('h3','وش اسم الشخص اللي بنحسب له يا '+actor+'؟'));const inp=field(panel,'اسم صاحب الحسبة');const status=txt('p');panel.append(status);button(panel,'متابعة حسبة الشخص',()=>{const target=safeName(inp.value);if(!target||target.length<2){status.textContent='اكتب اسمًا واضحًا.';return}actedFor=actor;clientName=target;requestedScenario='أُدخلت بيانات الحسبة بواسطة '+actor+' لصالح '+target;persistActor(actor);shade.remove();previousWelcome.call(this,service,launch)});button(panel,'رجوع',()=>shade.remove());});
+  button(panel,'إلغاء',()=>{identitySeen='';shade.remove()});
+};
+
+// Personalize the first qualifying data-collection question without changing user inputs or banking calculations.
+const earlierPortalAssistant=window.portalAssistant;
+if(typeof earlierPortalAssistant==='function')window.portalAssistant=function(html){
+ let t=String(html??'');try{
+  if(typeof requestedScenario==='string'&&requestedScenario&&typeof clientName==='string'&&finoPortal?.step?.includes('buyout')){
+   const person=safeName(clientName);
+   if(person&&!t.includes(person)&&!t.includes('<button')&&/^(?:اختر جهة عملك|اذكر جهة عملك|كم صافي الراتب|اذكر صافي الراتب|كم التزاماتك|وش التزامات)/.test(t.replace(/<[^>]*>/g,'').trim()))t='يا '+person+'، '+t;
+  }
+ }catch{}return earlierPortalAssistant.call(this,t);
+};
+
+// Correct stacked discount = current sale price -> package reduction -> extra coupon reduction.
+const shopChecks=new WeakMap();
+async function updateTile(tile){
+ if(!tile?.isConnected)return;const products=window.FINO99ReadStorefront?.()?.products||[];const name=tile.querySelector('h3')?.textContent?.trim();const p=products.find(x=>x.name===name);if(!p?.key||p.enabled===false)return;
+ const buy=tile.querySelector('.f99v6-primary');if(!buy)return;
+ let a;try{a=await rpc('f99v55_coupon_availability',{p_package_key:p.key})}catch{return}
+ let wrap=tile.querySelector('.f50-coupon');if(!wrap){wrap=txt('div');wrap.className='f50-coupon';const trigger=button(wrap,'لدي كود خصم',()=>{const body=wrap.querySelector('.f50-coupon-fields');body.hidden=!body.hidden;if(!body.hidden)body.querySelector('input')?.focus()});trigger.className='f50-coupon-trigger';const body=txt('div');body.className='f50-coupon-fields';body.hidden=true;const input=txt('input');input.placeholder='أدخل كود الخصم';input.maxLength=40;input.autocapitalize='characters';body.append(input);body.append(txt('p',''));body.append(button(body,'تطبيق الخصم',()=>{}));wrap.append(body);buy.before(wrap)}
+ const visible=a.available===true;wrap.hidden=!visible;wrap.classList.toggle('f54-permitted',visible);if(!visible){tile.querySelector('.f55-price-box')?.remove();return}
+ const body=wrap.querySelector('.f50-coupon-fields'),input=body?.querySelector('input');const verify=body?.querySelector('button');if(!input||!verify)return;
+ if(verify.dataset.f55Attached)return;verify.dataset.f55Attached='1';verify.textContent='تطبيق الكود وعرض السعر الجديد';
+ verify.onclick=async()=>{const code=clean(input.value).toUpperCase();const out=body.querySelector('p');if(!/^[A-Z0-9_-]{3,40}$/.test(code)){out.textContent='أدخل كودًا صالحًا.';return}
+ verify.disabled=true;try{const q=await rpc('f99v55_stacked_coupon_preview',{p_package_key:p.key,p_code:code});if(!wrap.isConnected||!visible)return;
+ let price=tile.querySelector('.f55-price-box');if(!price){price=txt('div');price.className='f55-price-box';buy.before(price)}price.replaceChildren();
+ price.append(txt('div','السعر قبل كود الخصم: '+amount(q.after_package_discount)+' ريال'));
+ const line=txt('div');line.append(txt('s',amount(q.after_package_discount)+' ريال'));price.append(line);
+ price.append(txt('div','قيمة الخصم الإضافي: '+amount(q.coupon_discount)+' ريال'));
+ const final=txt('div','السعر بعد الكود: '+amount(q.final_preview)+' ريال');final.className='f55-now';price.append(final);
+ price.append(txt('small','السعر المعتمد هو ما تقبله سلة عند الدفع؛ يجب إدخال الكود في سلة.'));
+ out.replaceChildren();const go=button(out,'نسخ الكود وإكمال الشراء',async()=>{try{await navigator.clipboard.writeText(code)}catch{window.prompt('انسخ الكود لاستخدامه في سلة:',code)}buy.click()});go.className='f55-card-btn';
+ }catch(e){out.textContent='تعذر تطبيق الكود: '+errorText(e);tile.querySelector('.f55-price-box')?.remove()}finally{verify.disabled=false}};
+ let discountTimer;input.addEventListener('input',()=>{clearTimeout(discountTimer);if(clean(input.value).length>=3)discountTimer=setTimeout(()=>verify.click(),550)});
+}
+let busyShop=false,lastShopTick=0;async function syncShop(){const root=$('f99s-modal');if(!root||root.hidden||!root.querySelector('.f99v6-tile')||busyShop||Date.now()-lastShopTick<1800)return;busyShop=true;lastShopTick=Date.now();try{for(const tile of root.querySelectorAll('.f99v6-tile'))await updateTile(tile)}finally{busyShop=false}}
+setInterval(()=>{if(!document.hidden)void syncShop()},2200);
+
+// Owner actions: quick find, pinnable modules. Shortcuts always resolve through approved handlers.
+const actions={buyout:{text:'تحويل المديونية',fn:()=>ownerOpenBuyout()},codes:{text:'التحكم بالأكواد',fn:()=>f99fixOpenCodes()},contracts:{text:'العقود',fn:()=>F99V20OpenContracts('all')},archive:{text:'الأرشيف',fn:()=>ownerOpenAdminSection('archive')},store:{text:'الباقات والمتجر',fn:()=>window.F99V49OwnerPanel?.()},mortgage:{text:'العقاري',fn:()=>ownerOpenSmartCalculator()},admin:{text:'الإدارة',fn:()=>f99fixOpenAdmin()}};
+let navCache=['buyout','codes','store'];
+function ownerTools(){const root=$('ownerHub');if(!root||!owner())return;const grid=root.querySelector('.owner-grid');if(!grid||$('f55-owner-tools'))return;const bar=txt('section');bar.id='f55-owner-tools';bar.append(txt('strong','الوصول السريع والبحث في الإدارة'));const pins=txt('div');pins.className='f55-pins';bar.append(pins);const search=txt('input');search.placeholder='ابحث عن خدمة، عقد، باقة، كود، خصم...';search.setAttribute('aria-label','بحث في قائمة المالك');bar.append(search);const status=txt('div');status.className='f55-status';bar.append(status);const box=txt('details'),sum=txt('summary','تخصيص اختصارات القائمة العلوية');box.append(sum);const options={};for(const [key,a] of Object.entries(actions)){const l=txt('label'),check=txt('input');check.type='checkbox';check.checked=navCache.includes(key);check.style.width='auto';l.append(check,document.createTextNode(' '+a.text));options[key]=check;box.append(l)}button(box,'حفظ واعتماد الاختصارات',async()=>{try{const keys=Object.keys(options).filter(k=>options[k].checked);const x=await admin('f99v55_owner_nav_save',{p_items:keys});navCache=keys;draw();status.textContent='تم اعتماد الاختصارات: '+x.count}catch(e){status.textContent=errorText(e)}});bar.append(box);grid.before(bar);
+ function draw(){pins.replaceChildren();for(const id of navCache){const a=actions[id];if(a)button(pins,a.text,()=>a.fn())}}draw();
+ search.addEventListener('input',()=>{const needle=search.value.trim().toLocaleLowerCase('ar');for(const b of grid.querySelectorAll('button'))b.hidden=Boolean(needle)&&!b.textContent.toLocaleLowerCase('ar').includes(needle);});
+ admin('f99v55_owner_nav_read').then(x=>{if(Array.isArray(x.items)){navCache=x.items;for(const [k,b] of Object.entries(options))b.checked=navCache.includes(k);draw()}}).catch(e=>status.textContent='تعذّر تحميل الاختصارات: '+errorText(e));
+ button(bar,'صلاحيات أكواد فريق العمل',()=>window.F99V55Roles?.());button(bar,'كود خصم لكامل المتجر',()=>window.F99V55GlobalDiscount?.());
+}
+function roles(){if(!owner())return alert('هذا الإعداد للمالك فقط');const {shade,panel}=dialog('تخصيص صلاحيات كود فريق العمل');panel.append(txt('p','الصلاحيات تُحفظ في المركزية. لا تعطي الكود كلمة مرور المالك أو صلاحياته العامة. صلاحيات القراءة/التصميم والإجراءات تحتاج اعتمادًا خادميًا مستقلًا لكل إجراء.'));const code=field(panel,'الكود المراد تخصيصه');const role=txt('select');for(const [id,title] of Object.entries({finance_operator:'مختص تحويل المديونية',contracts_manager:'مدير العقود',lawyer:'مراجع قانوني',executive:'مدير تنفيذي — صلاحيات محددة'}))role.add(new Option(title,id));panel.append(role);const check=txt('label');const enabled=txt('input');enabled.type='checkbox';enabled.style.width='auto';enabled.checked=true;check.append(enabled,document.createTextNode(' تمكين هذه الصلاحية'));panel.append(check);const status=txt('p');panel.append(status);button(panel,'اعتماد الصلاحية',async()=>{try{const x=await admin('f99v55_owner_role_assign',{p_code:code.value.toUpperCase().trim(),p_role:role.value,p_enabled:enabled.checked});status.textContent='تم الحفظ بعد التحقق من الكود. صلاحية الدخول: '+x.role+'. النطاق: '+x.scopes.join('، ')}catch(e){status.textContent=errorText(e)}});button(panel,'إغلاق',()=>shade.remove())}
+window.F99V55Roles=roles;
+function globalDiscount(){if(!owner())return alert('الصلاحية للمالك');const {shade,panel}=dialog('كود خصم مشترك لكل الباقات');panel.append(txt('p','هذا الكود لا يصبح صالحًا للدفع إلا إذا أنشأته في سلة وحددت المنتجات المشمولة بنفس الخصم.'));const code=field(panel,'رمز الخصم في سلة');const method=txt('select');method.add(new Option('خصم بالنسبة المئوية','percent'));method.add(new Option('خصم ثابت بالريال','fixed'));panel.append(method);const val=field(panel,'قيمة الخصم','30');val.type='number';const label=txt('label');const en=txt('input');en.type='checkbox';en.style.width='auto';label.append(en,document.createTextNode(' أؤكد أنني جهزت الكود نفسه في سلة'));panel.append(label);const msg=txt('p');panel.append(msg);button(panel,'حفظ الكود وتفعيله بعد إعداد سلة',async()=>{try{const x=await admin('f99v55_owner_global_coupon_save',{p_code:code.value.toUpperCase().trim(),p_method:method.value,p_discount:Number(val.value),p_enabled:en.checked});msg.textContent=x.enabled?'تم اعتماد الكود في FINO99. لا يزال سلة المسؤول عن التحقق عند الدفع.':'تم حفظ الكود بحالة غير مفعّلة.'}catch(e){msg.textContent=errorText(e)}});button(panel,'إغلاق',()=>shade.remove())}
+window.F99V55GlobalDiscount=globalDiscount;
+let lastRoleSession='';async function showRoleNotice(){const e=entry(),id=e?.entryToken;if(!id||id===lastRoleSession||owner())return;lastRoleSession=id;try{const x=await rpc('f99v55_staff_permissions',{p_entry_token:id,p_device_id:e.deviceId});if(x.role&&x.enabled){const el=$('finoBotChat');if(el){const n=txt('div','صلاحياتك الحالية: '+(x.scopes||[]).join('، ')+'. بعض خدمات الإدارة تتطلب موافقة المالك من المركزية.');n.className='f55-identity-notice';el.prepend(n)}}}catch{/* ordinary code */}}
+setInterval(()=>{ownerTools();void showRoleNotice()},1800);
+})();
+</script>
+
+<style id="f99v56-style">
+/* FINO99 V56: hide superseded coupon preview to prevent duplicate options */
+#f99s-modal .f50-coupon,#f99s-modal .f55-price-box{display:none!important}
+#f99s-modal .f56-discount{margin:8px 0;padding:12px;border:1px solid #b6d8e9;border-radius:14px;background:#f4fafd;direction:rtl;color:#173b50}
+#f99s-modal .f56-discount[hidden],#f99s-modal .f56-fields[hidden]{display:none!important}
+#f99s-modal .f56-discount .f56-entry{background:#fff;color:#195c7c;border:1px dashed #95bcce;min-height:42px;border-radius:11px;width:100%;font-weight:800}
+#f99s-modal .f56-fields{margin-top:10px;display:grid;gap:8px}
+#f99s-modal .f56-fields input{padding:11px;border:1px solid #a9c7d6;border-radius:10px;font:750 16px system-ui;direction:ltr;text-align:center;letter-spacing:.7px;width:100%}
+#f99s-modal .f56-fields .f56-status{font-size:12px;line-height:1.9;color:#345e70;margin:0}
+#f99s-modal .f56-price-card{padding:11px 12px;margin-top:10px;border-radius:12px;border:1px solid #91cfb6;background:#f3fbf6;display:grid;gap:5px;line-height:1.7}
+#f99s-modal .f56-before{font-size:13px;color:#71818b}#f99s-modal .f56-before s{margin-inline-start:7px;color:#64737c}
+#f99s-modal .f56-saved{color:#146a4b;font-size:15px;font-weight:900}
+#f99s-modal .f56-final{color:#086642;font-size:26px;font-weight:900}#f99s-modal .f56-price-note{color:#536e62;font-size:10px;line-height:1.8}
+#f99s-modal .f56-detail{margin-top:10px;background:#ecf9f2;border:1px solid #b1dec4;border-radius:10px;padding:11px;font-size:13px;color:#14684a;line-height:1.9}
+.f56-popup{position:fixed;inset:0;z-index:2147483645;background:#102d44a6;display:grid;place-items:center;direction:rtl;padding:15px;overflow:auto}
+.f56-dialog{max-width:650px;width:100%;background:#fff;border-radius:20px;max-height:92vh;overflow:auto;padding:20px;color:#173950;box-shadow:0 16px 55px #081d2d55;font:650 14px/1.9 Cairo,system-ui,sans-serif}
+.f56-dialog h3{font-size:21px;margin:0 0 10px;color:#123c56}
+.f56-popup-reward{font-weight:900;color:#118457;background:#e6f8f0;padding:12px;border-radius:10px}
+.f56-code-row{background:#f1f6f9;border:1px dashed #a2b6c3;border-radius:11px;padding:13px;text-align:center;font-size:21px;letter-spacing:1.1px;user-select:all}
+.f56-dialog button{display:inline-block;padding:11px 14px;margin:7px 5px 5px 0;border:0;border-radius:10px;background:#17678a;color:white;min-height:43px;font:800 13px Cairo,system-ui;cursor:pointer}
+.f56-dialog button.f56-go{background:#168453}.f56-dialog button.f56-back{color:#17425d;background:#eaf3f8}
+.f56-popup-status,.f56-owner-status{font-size:12px;color:#3b6781;line-height:1.9}
+.f56-owner{max-width:760px}.f56-owner .f56-field{display:block;font-size:13px;font-weight:750;margin:10px 0 5px}
+.f56-owner input:not([type=checkbox]),.f56-owner textarea,.f56-owner select{display:block;width:100%;padding:10px;border:1px solid #bdd2df;border-radius:9px;color:#183c50;background:white;margin-top:5px;font:600 14px/1.6 Cairo,system-ui}
+.f56-owner .f56-checkbox{display:flex;align-items:center;gap:10px;margin:12px 0;font-size:13px;font-weight:800}.f56-owner .f56-checkbox input{width:19px;height:19px}
+.f56-owner .f56-owner-extra{border:1px solid #d3e3ee;border-radius:12px;padding:12px;margin:14px 0;background:#f8fbfd}
+.f56-owner .f56-owner-extra summary{font-weight:850;color:#18516f;cursor:pointer}
+.f56-owner .f56-small,.f56-owner-hint{display:block;font-size:12px;color:#5c7383;line-height:1.9}
+.f56-owner .f56-generated textarea{direction:ltr;font-family:monospace;user-select:all}
+
+</style>
+<script id="f99v56-patch">
+(()=>{'use strict';
+/* FINO99 V56: additive coupon portal, no finance/calculation modifications. */
+const $=id=>document.getElementById(id);
+const text=(tag,value='',className='')=>{const e=document.createElement(tag);if(className)e.className=className;e.textContent=String(value??'');return e};
+const button=(parent,label,fn,cls='')=>{const b=text('button',label,cls);b.type='button';b.addEventListener('click',fn);parent.append(b);return b};
+const owner=()=>{try{return !!activeAccess?.record?.owner&&!!finoCentralAdminToken}catch{return false}};
+const rpc=async(name,params={})=>{const r=await window.finoRpc(name,params,16000);if(!r?.ok||r.data?.ok!==true)throw Error(r?.data?.reason||r?.error?.message||'CENTER_UNAVAILABLE');return r.data};
+const admin=async(name,params={})=>{if(!owner())throw Error('OWNER_ONLY');const r=await window.finoCentralAdminCall(name,params);if(!r?.ok||r.data?.ok!==true)throw Error(r?.data?.reason||r?.error?.message||'SAVE_FAILED');return r.data};
+const fmt=n=>{const x=Number(n);return Number.isFinite(x)?x.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2}):'—'};
+const products=()=>Array.isArray(window.FINO99ReadStorefront?.()?.products)?window.FINO99ReadStorefront().products.filter(p=>p&&p.key):[];
+const keys=()=>products().map(p=>({key:p.key,name:p.name||p.key}));
+const RE=/^[A-Z0-9_-]{3,40}$/;
+const cleanCode=s=>String(s||'').trim().toUpperCase();
+const rendered=new WeakMap(),loading=new WeakSet(),cache=new Map(),applied=new Map();let inCheckoutContinue=false;
+const defaultText={entry_label:'معك كود خصم؟ 🎁',reward_label:'🎉 مبروك! وفّرت {discount} ريال على هذه الباقة',checkout_notice:'قبل ما تكمل الشراء، انسخ كود الخصم مرة ثانية والصقه في خانة «كود الخصم» في منصة الدفع، ثم اضغط تطبيق للتأكد من السعر النهائي.',copy_label:'نسخ كود الخصم',continue_label:'أكمل الشراء'};
+function errorLabel(code){const map={INVALID_COUPON:'تأكد من كتابة الكود كما وصلك.',COUPON_NOT_ACTIVE_FOR_PACKAGE:'هذا الكود غير مفعّل لهذه الباقة.',COUPON_UNAVAILABLE_OR_EXHAUSTED:'الكود منتهي أو غير متاح حاليًا.',CAMPAIGN_UNAVAILABLE:'العرض غير متاح حاليًا.',COUPON_FIELD_DISABLED:'أوقف المتجر استقبال الكوبونات لهذه الباقة.',PACKAGE_PRICE_UNAVAILABLE:'تعذر قراءة السعر المعتمد.',CENTER_UNAVAILABLE:'تعذر الاتصال بالمركزية. جرّب لاحقًا.'};return map[code]||'تعذر التحقق من الكود حاليًا.'}
+function tmpl(s,values){return String(s||'').replace(/\{(discount|price|code|package)\}/g,(_,k)=>String(values[k]??''))}
+const visibleShop=()=>{const r=$('f99s-modal');return r&&!r.hidden&&r.querySelector('.f99v6-tiles')};
+async function getConfig(key,refresh=false){const old=cache.get(key);if(old&&!refresh&&Date.now()-old.ts<4500)return old.value;const value=await rpc('f99v56_public_coupon_portal',{p_package_key:key});cache.set(key,{ts:Date.now(),value});return value}
+function priceCard(host,q,config){let box=host.querySelector('.f56-price-card');if(!box){box=text('section','','f56-price-card');box.setAttribute('aria-live','polite');host.append(box)}box.replaceChildren();
+ const prev=text('div','السعر قبل الكود','f56-before');prev.append(text('s',fmt(q.after_package_discount)+' ريال'));box.append(prev);
+ const save=text('strong',tmpl(config.reward_label,{discount:fmt(q.coupon_discount),price:fmt(q.final_preview),code:q.coupon_code}),'f56-saved');box.append(save);
+ const newPrice=text('div',fmt(q.final_preview)+' ريال','f56-final');box.append(newPrice);
+ box.append(text('small','السعر المتوقع بعد الكود. يُعتمد الخصم النهائي عند إدخاله في منصة الدفع.','f56-price-note'));
+ return box;
+}
+function makeTilePortal(tile,p,config){let w=tile.querySelector('.f56-discount');if(!w){w=text('section','','f56-discount');w.dataset.packageKey=p.key;
+  const entry=button(w,config.entry_label,()=>{const body=w.querySelector('.f56-fields');body.hidden=!body.hidden;if(!body.hidden)body.querySelector('input')?.focus()},'f56-entry');
+  const body=text('div','','f56-fields');body.hidden=true;const input=document.createElement('input');input.maxLength=40;input.autocapitalize='characters';input.autocomplete='off';input.placeholder='أدخل الكود الذي وصلك';input.setAttribute('aria-label','كود الخصم');body.append(input);
+  const status=text('p','','f56-status');status.setAttribute('role','status');body.append(status);
+  const apply=button(body,'تطبيق الكود',()=>void applyCode(tile,p,config),'f56-apply');input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();apply.click()}});
+  w.append(body);tile.querySelector('.f99v6-primary')?.before(w);
+ }
+ w.hidden=false;w.querySelector('.f56-entry').textContent=config.entry_label;
+ const active=applied.get(p.key);if(active?.quote&&active?.code){const q=active.quote;priceCard(w,q,config)}
+ rendered.set(tile,{key:p.key,config});return w;
+}
+async function applyCode(tile,p,config){const w=tile.querySelector('.f56-discount');if(!w)return;const input=w.querySelector('input');const code=cleanCode(input?.value);const status=w.querySelector('.f56-status');if(!RE.test(code)){status.textContent='اكتب كود الخصم كاملًا.';return}
+ const btn=w.querySelector('.f56-apply');btn.disabled=true;status.textContent='جاري التحقق من الكود…';
+ try{const q=await rpc('f99v56_coupon_price_preview',{p_package_key:p.key,p_code:code});
+   if(!w.isConnected||!visibleShop())return;
+   applied.set(p.key,{code,quote:q,config,confirmedAt:Date.now()});priceCard(w,q,config);status.textContent='تم احتساب الخصم. اضغط «تفاصيل المنتج» ثم أكمل خطوات الشراء.';
+ }catch(e){applied.delete(p.key);w.querySelector('.f56-price-card')?.remove();status.textContent=errorLabel(e?.message)}finally{btn.disabled=false}}
+async function syncTile(tile){if(!tile.isConnected||loading.has(tile))return;const name=tile.querySelector('h3')?.textContent?.trim(),p=products().find(i=>i.name===name);if(!p||p.enabled===false)return;
+ loading.add(tile);try{const c=await getConfig(p.key);if(!tile.isConnected)return;
+  if(c.available===true)makeTilePortal(tile,p,c);
+  else{tile.querySelector('.f56-discount')?.remove();rendered.delete(tile);applied.delete(p.key)}
+ }catch{tile.querySelector('.f56-discount')?.remove();rendered.delete(tile)}finally{loading.delete(tile)}}
+let syncInProgress=false;async function sync(){if(!visibleShop()||syncInProgress)return;syncInProgress=true;try{for(const tile of document.querySelectorAll('#f99s-modal .f99v6-tile'))await syncTile(tile)}finally{syncInProgress=false}}
+
+function selectedProduct(){const t=$('f99s-modal')?.querySelector('.f99v6-h h2')?.textContent?.trim()||'';return products().find(p=>t===p.name||t==='إتمام شراء '+p.name)||null}
+function detailReminder(){const root=$('f99s-modal');if(!root||root.hidden)return;const p=selectedProduct(),v=p&&applied.get(p.key);if(!v)return;
+ const summary=root.querySelector('.f99v6-summary');if(!summary||summary.querySelector('.f56-detail'))return;
+ const msg=text('div','','f56-detail');msg.append(text('strong',tmpl(v.config.reward_label,{discount:fmt(v.quote.coupon_discount),price:fmt(v.quote.final_preview),code:v.code,package:p.name})));msg.append(text('div','السعر المتوقع: '+fmt(v.quote.final_preview)+' ريال. احتفظ بالكود لإدخاله عند الدفع.'));summary.append(msg);
+}
+function overlay(title){$('f56-popup')?.remove();const dim=text('div','','f56-popup');dim.id='f56-popup';dim.setAttribute('role','dialog');dim.setAttribute('aria-modal','true');const box=text('section','','f56-dialog');box.append(text('h3',title));dim.append(box);document.body.append(dim);return {dim,box}}
+function beforePay(event,trigger){const p=selectedProduct();if(!p)return false;const v=applied.get(p.key);if(!v)return false;
+ event.preventDefault();event.stopPropagation();event.stopImmediatePropagation?.();
+ const {dim,box}=overlay('كود الخصم جاهز للدفع 🎁');const config=v.config;
+ box.append(text('p',tmpl(config.reward_label,{discount:fmt(v.quote.coupon_discount),price:fmt(v.quote.final_preview),code:v.code,package:p.name}),'f56-popup-reward'));
+ box.append(text('p',config.checkout_notice));const row=text('div','','f56-code-row');const code=text('b',v.code);code.dir='ltr';row.append(code);box.append(row);
+ const status=text('p','انسخ الكود ثم انتقل إلى منصة الدفع.','f56-popup-status');status.setAttribute('role','status');box.append(status);
+ let copied=false;
+ button(box,config.copy_label||defaultText.copy_label,async()=>{
+ try{const fresh=await rpc('f99v56_coupon_price_preview',{p_package_key:p.key,p_code:v.code});
+  if(Number(fresh.final_preview)!==Number(v.quote.final_preview)){
+   v.quote=fresh;applied.set(p.key,v);
+   box.querySelector('.f56-popup-reward').textContent=tmpl(config.reward_label,{discount:fmt(fresh.coupon_discount),price:fmt(fresh.final_preview),code:v.code,package:p.name});
+   status.textContent='تغيّر السعر منذ المعاينة؛ السعر المتوقع الآن '+fmt(fresh.final_preview)+' ريال.';
+  }
+ }catch(e){copied=false;status.textContent='الكود لم يعد متاحًا: '+errorLabel(e.message)+' راجع الباقة قبل الدفع.';return}
+ try{await navigator.clipboard.writeText(v.code);copied=true;status.textContent='✓ تم نسخ الكود. الصقه في خانة كود الخصم وقت الدفع.'}
+ catch{copied=false;const area=document.createElement('textarea');area.value=v.code;area.readOnly=true;area.rows=1;box.append(area);area.focus();area.select();status.textContent='تعذر النسخ تلقائيًا؛ انسخ الكود المحدد يدويًا ثم اضغط زر التأكيد.';button(box,'نسخت الكود يدويًا',()=>{copied=true;status.textContent='تمام، الصق الكود في منصة الدفع قبل إتمام الشراء.'},'f56-manual')}},'f56-copy');
+ button(box,config.continue_label||defaultText.continue_label,()=>{if(!copied){status.textContent='انسخ الكود أولًا، حتى لا يفوتك الخصم في منصة الدفع.';return}dim.remove();inCheckoutContinue=true;try{trigger.click()}finally{inCheckoutContinue=false}},'f56-go');
+ button(box,'العودة',()=>dim.remove(),'f56-back');return true;
+}
+document.addEventListener('click',e=>{if(inCheckoutContinue||!applied.size)return;const modal=$('f99s-modal');if(!modal||!modal.contains(e.target))return;
+ const t=e.target.closest('button,a');if(!t)return;
+ const label=t.textContent?.trim()||'';
+ if(t.matches('a[data-checkout="link"]')||/(?:^إتمام الشراء$|^نعم، تأكيد الشراء$|^إتمام الدفع$|^فتح رابط الدفع البديل$)/.test(label))beforePay(e,t);
+},true);
+
+function rowField(p,label,value='',multiline=false){const l=text('label',label,'f56-field'),i=document.createElement(multiline?'textarea':'input');i.value=value??'';if(multiline)i.rows=3;l.append(i);p.append(l);return i}
+function numeric(p,label,value,step='1'){const i=rowField(p,label,String(value));i.type='number';i.step=step;i.min='0';return i}
+function check(p,label,value){const l=text('label',label,'f56-checkbox');const i=document.createElement('input');i.type='checkbox';i.checked=Boolean(value);l.prepend(i);p.append(l);return i}
+function datetime(p,label,value){const i=rowField(p,label,value?String(value).slice(0,16):'');i.type='datetime-local';return i}
+const iso=s=>s?new Date(s).toISOString():null;
+function chooseProducts(p){const sel=document.createElement('select');sel.className='f56-package-select';sel.add(new Option('جميع الباقات (إعداد افتراضي)','*'));for(const x of keys())sel.add(new Option(x.name,x.key));p.append(sel);return sel}
+function fileDownload(data,filename,type){const blob=new Blob([data],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000)}
+function ownerPortal(){if(!owner())return alert('البوابة مخصصة للمالك');const {dim,box}=overlay('بوابة أكواد الخصم');box.classList.add('f56-owner');
+ box.append(text('p','اختَر باقة لتعديل عرض الكود، تنبيه الدفع، عدد الاستخدامات والمدة. أي باقة جديدة تظهر هنا تلقائيًا.'));
+ const selector=chooseProducts(box);const intro=text('p','','f56-owner-hint');box.append(intro);const configBox=text('div','','f56-config');box.append(configBox);
+ const other=text('details','','f56-owner-extra');other.append(text('summary','إنشاء أكواد خصم جديدة وربطها بسلة'));box.append(other);
+ const limitBox=text('details','','f56-owner-extra');limitBox.append(text('summary','تخصيص حد الاستخدام لكود موجود'));box.append(limitBox);
+ const response=text('p','','f56-owner-status');response.setAttribute('role','status');box.append(response);
+ let activeVersion=0;
+ async function refresh(){configBox.replaceChildren();response.textContent='جاري قراءة الإعدادات من المركزية…';
+  try{const {config:c}=await admin('f99v56_owner_portal_read',{p_package_key:selector.value});activeVersion=c.version||0;response.textContent='';
+   const enabled=check(configBox,'إظهار أيقونة الخصم للعملاء',c.enabled);
+   const entry=rowField(configBox,'نص أيقونة الخصم',c.entry_label);
+   const reward=rowField(configBox,'رسالة التوفير (استخدم {discount} للمبلغ)',c.reward_label,true);
+   const notice=rowField(configBox,'تنبيه نسخ الكود قبل الدفع',c.checkout_notice,true);
+   const copy=rowField(configBox,'نص زر النسخ',c.copy_label);
+   const cont=rowField(configBox,'نص زر إكمال الشراء',c.continue_label);
+   const from=datetime(configBox,'بداية العرض (اختياري)',c.starts_at),to=datetime(configBox,'نهاية العرض (اختياري)',c.ends_at);
+   const quota=numeric(configBox,'الحد العام للاستخدامات المؤكدة (0 = بلا حد)',c.max_uses);
+   configBox.append(text('small','المسجل كمبيعات مؤكدة: '+c.used_confirmed+' | يجب ضبط الفترة والحد نفسيهما في سلة.','f56-small'));
+   button(configBox,'حفظ واعتماد إعدادات الباقة',async()=>{const b=configBox.querySelector('.f56-save');b.disabled=true;
+    try{const payload={enabled:enabled.checked,entry_label:entry.value,reward_label:reward.value,checkout_notice:notice.value,copy_label:copy.value,continue_label:cont.value,starts_at:iso(from.value),ends_at:iso(to.value),max_uses:Number(quota.value)};
+     const x=await admin('f99v56_owner_portal_save',{p_package_key:selector.value,p_payload:payload,p_expected_version:activeVersion});activeVersion=x.version;cache.clear();response.textContent='✓ تم الحفظ والاعتماد مركزيًا. تحقّق من إعدادات سلة المطابقة.';
+    }catch(e){response.textContent='تعذر الاعتماد: '+(e.message||e)}finally{b.disabled=false}
+   },'f56-save');
+  }catch(e){response.textContent='تعذر تحميل الإعدادات: '+(e.message||e)}}
+ selector.addEventListener('change',()=>{refresh();updateCodeControls()});
+ const q=numeric(other,'كم كود جديد؟ (من 1 إلى 50 في الدفعة)',50);
+ const method=document.createElement('select');method.add(new Option('نسبة مئوية','percent'));method.add(new Option('خصم ثابت بالريال','fixed'));other.append(method);
+ const value=numeric(other,'قيمة الخصم',30,'.01');const max=numeric(other,'أقصى استخدام للكود الواحد (0 = بدون حد)',1);
+ const start=datetime(other,'بداية الاستخدام (اختياري)',null);const end=datetime(other,'نهاية الاستخدام (اختياري)',null);
+ let codes=[];let codesPackage='';const generated=text('div','','f56-generated');other.append(generated);
+ button(other,'إنشاء أكواد وتصديرها',async()=>{if(selector.value==='*'){response.textContent='لجميع الباقات استخدم كودًا مشتركًا موجودًا في سلة من لوحة المالك السابقة.';return}
+  const count=Number(q.value);if(!Number.isInteger(count)||count<1||count>50){response.textContent='الدفعة من 1 إلى 50 كودًا فقط.';return}
+  try{const r=await admin('f99v56_owner_generate_code_batch',{p_package_key:selector.value,p_quantity:count,p_method:method.value,p_amount:Number(value.value),p_max_uses:Number(max.value),p_starts_at:iso(start.value),p_ends_at:iso(end.value)});
+   if(!Array.isArray(r.codes)||r.codes.length!==count)throw Error('عدد الأكواد غير متطابق');codes=r.codes;codesPackage=selector.value;generated.replaceChildren();const area=document.createElement('textarea');area.readOnly=true;area.rows=5;area.value=codes.join('\n');generated.append(area);
+   button(generated,'تحميل أكواد TXT',()=>fileDownload(codes.join('\n')+'\n','FINO99_V56_CODES.txt','text/plain;charset=utf-8'));
+   button(generated,'تحميل أكواد CSV',()=>fileDownload('\uFEFFكود الخصم\r\n'+codes.join('\r\n')+'\r\n','FINO99_V56_CODES.csv','text/csv;charset=utf-8'));
+   const confirm=check(generated,'أؤكد أن الأكواد نفسها أُنشئت في سلة، بقيمها ومددها وحدود استخدامها الصحيحة',false);
+   button(generated,'تفعيل الدفعة بعد تجهيز سلة',async()=>{if(!confirm.checked){response.textContent='لا تفعّل قبل ضبط جميع الأكواد في سلة.';return}
+    try{const x=await admin('f99v56_owner_activate_code_batch',{p_package_key:codesPackage,p_codes:codes,p_confirm_salla:true});response.textContent='✓ تم تفعيل '+x.quantity+' كودًا داخل FINO99. اختبر خصمًا في سلة قبل الإعلان.';cache.clear()}
+    catch(e){response.textContent='تعذر تفعيل الدفعة: '+e.message}});
+   response.textContent='تم إنشاء '+count+' كودًا غير مفعّل، جهّزها أولًا في سلة.';
+  }catch(e){response.textContent='فشل إنشاء الدفعة: '+(e.message||e)}});
+ const oldCode=rowField(limitBox,'رمز الخصم الموجود');const oldLimit=numeric(limitBox,'عدد الاستخدامات المسموح (0 غير محدود)',0);
+ const oldStart=datetime(limitBox,'بداية الصلاحية',null);const oldEnd=datetime(limitBox,'نهاية الصلاحية',null);
+ const oldReady=check(limitBox,'الكود متطابق ومفعّل في سلة',false);
+ button(limitBox,'اعتماد حد الكود',async()=>{try{const x=await admin('f99v56_owner_coupon_limit_save',{p_package_key:selector.value,p_code:cleanCode(oldCode.value),p_max_uses:Number(oldLimit.value),p_starts_at:iso(oldStart.value),p_ends_at:iso(oldEnd.value),p_salla_ready:oldReady.checked});response.textContent=x.ok?'✓ تم اعتماد حد الاستخدام في FINO99. تأكد من تطابقه في سلة.':'تعذر الاعتماد'}catch(e){response.textContent='تعذر اعتماد الكود: '+(e.message||e)}});
+ function updateCodeControls(){other.hidden=selector.value==='*'}updateCodeControls();
+ button(box,'إغلاق البوابة',()=>dim.remove(),'f56-back');void refresh();
+}
+window.FINO99OpenDiscountPortal=ownerPortal;
+function mountOwner(){if(!owner())return;for(const root of [$('f55-owner-tools'),document.querySelector('#f49-admin-modal .f49-modal-body')]){if(!root||root.querySelector('[data-v56-open]'))continue;const b=button(root,'🎟️ بوابة أكواد الخصم',ownerPortal,'f56-owner-open');b.dataset.v56Open='1'}}
+setInterval(()=>{if(document.hidden)return;mountOwner();void sync();detailReminder()},2700);
+window.F99V56Test={tmpl,cleanCode,fmt,errorLabel,sync,mountOwner,detailReminder,applied};
+})();
+
+</script>
 </body>
 </html>
