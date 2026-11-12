@@ -18108,7 +18108,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
    const head=el('div','f99v17-library-head');const h=el('div');h.append(el('h2','','المتجر'),el('p','','جميع الباقات والمنتجات من شاشة واحدة: تعديل، رابط سلة، صور، خدمات، مخزون وتصدير Excel.'));head.append(h);
    const create=el('button','f99v17-primary','+ إضافة منتج جديد');create.onclick=()=>openOwner('__new__');head.append(create);root.append(head);
    const toolbar=el('div','f99v17-toolbar');const warehouse=el('button','f99v17-quiet','◫ مخزون الأكواد');warehouse.onclick=()=>window.F99V17OpenInventory?.('');toolbar.append(warehouse);
-   const reload=el('button','f99v17-quiet','↻ تحديث الباقات');reload.onclick=async()=>{await fetchStore();openOwner()};toolbar.append(reload);root.append(toolbar);const advanced=el('details','f37-advanced-home');advanced.append(el('summary','','تعديل إعلانات الصفحة الرئيسية (إعدادات اختيارية)'));window.F99V26BuildHeroEditor?.(advanced,cfg,async newHero=>{const expected=Number(cfg.version||0);const value={...cfg,hero:newHero,version:Math.max(Date.now(),expected+1)};const r=await window.finoCentralAdminCall('f99v39_admin_save_store_and_quota',{p_value:value,p_expected_version:expected});if(!r?.ok||r.data?.ok!==true)throw Error(r?.data?.reason||r?.error?.message||'رفضت المركزية التعديل');await fetchStore();if(JSON.stringify(cfg.hero)!==JSON.stringify(newHero))throw Error('تعذر التحقق من حفظ الإعلان');return {version:cfg.version}});
+   const reload=el('button','f99v17-quiet','↻ تحديث الباقات');reload.onclick=async()=>{await fetchStore();openOwner()};toolbar.append(reload);root.append(toolbar);const advanced=el('details','f37-advanced-home');advanced.append(el('summary','','صور أعلى التسوق (إعلانات الصفحة الرئيسية)'));window.F99V26BuildHeroEditor?.(advanced,cfg,async newHero=>{const expected=Number(cfg.version||0);const value={...cfg,hero:newHero,version:Math.max(Date.now(),expected+1)};const r=await window.finoCentralAdminCall('f99v39_admin_save_store_and_quota',{p_value:value,p_expected_version:expected});if(!r?.ok||r.data?.ok!==true)throw Error(r?.data?.reason||r?.error?.message||'رفضت المركزية التعديل');await fetchStore();if(JSON.stringify(cfg.hero)!==JSON.stringify(newHero))throw Error('تعذر التحقق من حفظ الإعلان');return {version:cfg.version}});
    const expectedKeys=['fino99-bronze-buyout-20261107','fino99-compare-offers-v33','fino99-mortgage-coming-v33'];
    const missing=expectedKeys.filter(k=>!cfg.products.some(p=>p.key===k));
    const readyBox=el('section','f37-ready');readyBox.id='f37-catalog-readiness';
@@ -21299,7 +21299,7 @@ function fullSlides(cfg){const h=cfg?.hero||{};const stored=Array.isArray(h.slid
 let lastConfig=null,lastVersion='',current=0,lastPaint=0;
 const original=window.F99V26ApplyPublicLanding;
 function showSlide(){const card=$('f26-home-hero');if(!card||card.hidden)return;const slides=fullSlides(lastConfig);if(!slides.length)return;const slide=slides[current%slides.length];const firstImage=card.querySelector('img');
- const img=firstImage;if(img){const fallback=(current%slides.length===1?BRONZE_IMAGE:current%slides.length===2?window.F99V28AdImages?.[0]:current%slides.length===3?window.F99V28AdImages?.[1]:window.F99V27HeroFallback);img.src=safeURL(slide.image_url)||fallback||BRONZE_IMAGE;}
+ const img=firstImage;if(img){const fallback=(current%slides.length===1?BRONZE_IMAGE:current%slides.length===2?window.F99V28AdImages?.[0]:current%slides.length===3?window.F99V28AdImages?.[1]:window.F99V27HeroFallback);img.src=window.F99V69ResolveBanner?.(slide,fallback||BRONZE_IMAGE,img)||safeURL(slide.image_url)||fallback||BRONZE_IMAGE;}
  const title=card.querySelector('.f26-hero-copy h2');if(title)title.textContent=clean(slide.title,85);
  const subtitle=card.querySelector('.f26-hero-copy p');if(subtitle)subtitle.textContent=clean(slide.subtitle,220);
  const button=card.querySelector('.f26-hero-cta');if(button)button.textContent=clean(slide.button,50)||'التسوق';
@@ -26151,7 +26151,7 @@ function getApp(){return {...{app_message_enabled:false,app_message:'أضف من
 async function adminCall(fn,args){if(!own())throw Error('ادخل بجلسة المالك أولًا.');const r=await window.finoCentralAdminCall(fn,args);if(r?.ok!==true||r?.data?.ok!==true)throw Error(r?.data?.reason||r?.error?.message||'المركزية لم تؤكد العملية');return r.data}
 async function clientCall(fn,args){const r=await window.finoRpc(fn,args,25000);if(r?.ok!==true||r?.data?.ok!==true)throw Error(r?.data?.reason||r?.error?.message||'لم تؤكد المركزية العملية');return r.data}
 async function refresh(){const r=await clientCall('f99v68_public_configs',{});const map=r.items||{};const next={},revs={};for(const [k,v] of Object.entries(map)){next[k]=v.payload||{};revs[k]=Number(v.version||0)}configs=next;versions=revs;ready=true;updateShop();applyApp();applyFeeMode();return r}
-async function saveConfig(key,payload){const r=await adminCall('f99v68_owner_config_save',{p_package_key:key,p_payload:payload,p_expected_version:versions[key]||0});if(r.saved!==true)throw Error('لم يتأكد الحفظ');await refresh();if(versions[key]!==Number(r.version)||Object.entries(payload).some(([k,v])=>JSON.stringify(configs[key]?.[k])!==JSON.stringify(v)))throw Error('لم تتطابق قراءة الإعدادات بعد الحفظ');return r}
+async function saveConfig(key,payload){let r;try{r=await adminCall('f99v68_owner_config_save',{p_package_key:key,p_payload:payload,p_expected_version:versions[key]||0})}catch(e){if(String(e.message||'').includes('VERSION_CONFLICT_RELOAD')){await refresh();throw Error('تغيرت إعدادات الباقة في جلسة أخرى؛ أعد فتحها ثم احفظ مجددًا.')}throw e}if(r.saved!==true)throw Error('لم يتأكد الحفظ');await refresh();if(versions[key]!==Number(r.version)||Object.entries(payload).some(([k,v])=>JSON.stringify(configs[key]?.[k])!==JSON.stringify(v)))throw Error('لم تتطابق قراءة الإعدادات بعد الحفظ');return r}
 function lay(title){q('#f68-layer')?.remove();const cover=tag('div','','f68-layer');cover.id='f68-layer';cover.setAttribute('role','dialog');cover.setAttribute('aria-modal','true');const body=tag('section','','f68-panel');const header=tag('header','','f68-head');header.append(tag('h2',title));const close=tag('button','إغلاق');close.type='button';close.onclick=()=>cover.remove();header.append(close);body.append(header);cover.append(body);document.body.append(cover);cover.addEventListener('click',e=>{if(e.target===cover)cover.remove()});return body}
 function addInput(parent,label,value='',kind='text'){const box=tag('label','','f68-field');box.append(tag('span',label));const el=tag(kind==='textarea'?'textarea':kind==='select'?'select':'input');if(kind!=='textarea'&&kind!=='select')el.type=kind;if(kind!=='select')el.value=value;box.append(el);parent.append(box);return el}
 function addSelect(parent,label,opts,value){const el=addInput(parent,label,'','select');for(const [k,v] of opts)el.add(new Option(v,k));if(value!=null)el.value=String(value);return el}
@@ -26159,24 +26159,53 @@ function toggle(parent,text,checked=false){const l=tag('label','','f68-toggle'),
 function action(parent,label,fn,primary=false){const b=tag('button',label,primary?'f68-primary':'f68-secondary');b.type='button';b.addEventListener('click',fn);parent.append(b);return b}
 function message(parent){const out=tag('p','','f68-message');out.setAttribute('role','status');parent.append(out);return (txt,bad=false)=>{out.textContent=txt;out.dataset.bad=bad?'true':'false'}}
 const money=n=>Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-function ownerPackage(initial){if(!own()){alert('هذه الإعدادات خاصة بالمالك.');return}const all=products();if(!all.length)return alert('لا توجد باقات محفوظة');const b=lay('تطوير الباقة من مكان واحد');b.append(tag('p','كل تغيير هنا يُحفظ في المركزية لهذه الباقة وحدها، دون المساس بالحاسبات أو أكواد الخصم.','f68-note'));
+function ownerPackage(initial){if(!own()){alert('هذه الإعدادات خاصة بالمالك.');return}const all=products();if(!all.length)return alert('لا توجد باقات محفوظة');const b=lay('إعدادات الباقة');b.append(tag('p','كل تغيير هنا يُحفظ في المركزية لهذه الباقة وحدها، دون المساس بالحاسبات أو أكواد الخصم.','f68-note'));
  const sel=addSelect(b,'اختر الباقة',all.map(p=>[p.key,p.name||p.key]),initial||all[0].key);
  const box=tag('div');b.append(box);const notify=message(b);let saving=false;
  function draw(){box.replaceChildren();const p=all.find(x=>x.key===sel.value),d=get(sel.value);
  const sold=toggle(box,'عرض حالة نفاد الأكواد وإيقاف شراء الباقة مؤقتًا',d.soldout);const soldText=addInput(box,'نص نفاد الأكواد — قابل للتعديل',d.soldout_text);soldText.maxLength=180;
  const fee=addSelect(box,'متى يظهر عرض أتعاب المتابعة؟',[['exit','عند الضغط على خروج، مرة واحدة'],['none','إخفاء عرض الأتعاب'],['each','عند كل عرض بنك كما كان سابقًا'],['reentry','عند دخول العميل بكوده مجددًا']],d.fee_mode);
- const nat=toggle(box,'اسأل عن الجنسية أثناء الدخول إلى الباقة',d.nationality_enabled);const natText=addInput(box,'صيغة سؤال الجنسية',d.nationality_text);natText.maxLength=130;
- const sec=addSelect(box,'مكان سؤال القطاع / جهة العمل',[['first','الأول'],['second','الثاني'],['last','الأخير قبل عرض الجهات']],d.sector_position);const secText=addInput(box,'صيغة سؤال القطاع / جهة العمل',d.sector_text);secText.maxLength=130;
  box.append(tag('p','إدخال الالتزامات الخارجية بالمحادثة يحتاج ربطًا دقيقًا مع محرك الحاسبة؛ لم أُفعّله هنا حتى لا تظهر حسبة لا تحتسبها فعليًا.','f68-note'));
  const cm=addInput(box,'ملاحظة المقارنات للعميل (اختيارية)',d.compare_note,'textarea');cm.maxLength=450;
  const row=tag('div','','f68-actions');box.append(row);
+ action(row,'أسئلة هذه الباقة',()=>ownerQuestions(sel.value),false);
  action(row,'إدارة البنوك والخدمات والتمويل العقاري',()=>{q('#f68-layer')?.remove();window.F99SOpenOwner?.(sel.value)},false);
  action(row,'محرك التمويل العقاري والنسب',()=>{q('#f68-layer')?.remove();window.F99V31OpenDesk?.('settings')},false);
  action(row,'تحرير الأتعاب وقيمة الخصم',()=>{q('#f68-layer')?.remove();window.F99V65OpenFeeEditor?.(sel.value)},false);
- const save=action(row,'حفظ واعتماد هذه الباقة',async()=>{if(saving)return;saving=true;save.disabled=true;notify('جارٍ الحفظ والتحقق...');try{const payload={soldout:sold.checked,soldout_text:soldText.value.trim()||'نفدت كمية الأكواد لهذه الباقة',fee_mode:fee.value,nationality_enabled:nat.checked,nationality_text:natText.value.trim()||'جنسيتك؟',sector_position:sec.value,sector_text:secText.value.trim()||'اختر قطاعك أو جهة عملك',obligation_chat_enabled:false,compare_note:cm.value.trim()};await saveConfig(sel.value,payload);notify('✓ تم الحفظ والتحقق من إعدادات الباقة في المركزية.')}catch(e){notify('تعذر الاعتماد: '+e.message,true)}finally{saving=false;save.disabled=false}},true);
+ const save=action(row,'حفظ واعتماد هذه الباقة',async()=>{if(saving)return;saving=true;save.disabled=true;notify('جارٍ الحفظ والتحقق...');try{const payload={...get(sel.value),soldout:sold.checked,soldout_text:soldText.value.trim()||'نفدت كمية الأكواد لهذه الباقة',fee_mode:fee.value,compare_note:cm.value.trim()};await saveConfig(sel.value,payload);notify('✓ تم الحفظ والتحقق من إعدادات الباقة في المركزية.')}catch(e){notify('تعذر الاعتماد: '+e.message,true)}finally{saving=false;save.disabled=false}},true);
  }
  sel.onchange=()=>{notify('');draw()};draw();
 }
+function ownerQuestions(packageKey){
+ if(!own())return alert('هذه الإعدادات خاصة بالمالك.');
+ const p=products().find(x=>x.key===packageKey);if(!p)return alert('اختر باقة صحيحة.');
+ const d=get(packageKey),box=lay('أسئلة الباقة: '+(p.name||packageKey));
+ box.append(tag('p','هذه الأسئلة جزء من تسلسل أسئلة العميل داخل الباقة، وليست سؤالًا إضافيًا خارجها.','f68-note'));
+ const sequence=tag('div','','f69-question-sequence');box.append(sequence);
+ const nat=toggle(box,'إظهار سؤال الجنسية للعميل',d.nationality_enabled);
+ const natText=addInput(box,'السؤال الأول: الجنسية',d.nationality_text);natText.maxLength=130;
+ const sec=addSelect(box,'ترتيب سؤال جهة العمل / القطاع',[['second','الثاني بعد الجنسية'],['first','الأول'],['last','الأخير قبل الجهات']],d.sector_position);
+ const secText=addInput(box,'نص سؤال القطاع أو جهة العمل',d.sector_text);secText.maxLength=130;
+ function preview(){sequence.replaceChildren();const order=[];
+  if(isBuyout(p)&&nat.checked)order.push(natText.value.trim()||'جنسيتك؟');
+  const sectorText=secText.value.trim()||'اختر قطاعك أو جهة عملك';
+  if(sec.value==='first')order.unshift(sectorText);else if(sec.value==='second')order.splice(Math.min(1,order.length),0,sectorText);
+  order.forEach((t,i)=>sequence.append(tag('div',(i+1)+'. '+t,'f69-question-item')));
+  if(sec.value==='last')sequence.append(tag('div','ثم أسئلة الباقة الأخرى، وفي النهاية: '+sectorText,'f69-question-item'));
+ }
+ [nat,natText,sec,secText].forEach(el=>{el.addEventListener('input',preview);el.addEventListener('change',preview)});preview();
+ const status=message(box),actions=tag('div','','f68-actions');box.append(actions);
+ action(actions,'العودة إلى إعدادات الباقة',()=>ownerPackage(packageKey));
+ const save=action(actions,'حفظ أسئلة هذه الباقة',async()=>{
+  if(!natText.value.trim()||!secText.value.trim())return status('أدخل صيغة السؤالين قبل الحفظ.',true);
+  save.disabled=true;status('جارٍ حفظ ترتيب الأسئلة...');
+  try{const payload={...get(packageKey),nationality_enabled:nat.checked,nationality_text:natText.value.trim().slice(0,130),sector_position:sec.value,sector_text:secText.value.trim().slice(0,130)};
+   await saveConfig(packageKey,payload);status('✓ تم حفظ الأسئلة. سيظهر ترتيبها للعميل عند فتح الباقة.');
+  }catch(e){status('تعذر الحفظ: '+e.message,true)}finally{save.disabled=false}
+ },true);
+}
+window.F99V69PackageQuestions=ownerQuestions;
+
 window.F99V68PackageEditor=ownerPackage;
 function updateShop(){for(const tile of qa('#f99s-modal .f99v6-tile')){const title=q('h3',tile)?.textContent?.trim(),p=products().find(x=>x.name===title);if(!p)continue;const d=get(p.key);let ribbon=q('.f68-stock',tile);if(d.soldout){if(!ribbon){ribbon=tag('div','','f68-stock');tile.prepend(ribbon);tile.dataset.f68Soldout='true';tile.addEventListener('click',e=>{if(get(p.key).soldout){e.preventDefault();e.stopImmediatePropagation();alert(get(p.key).soldout_text)}},true)}ribbon.textContent=d.soldout_text;}else{ribbon?.remove();delete tile.dataset.f68Soldout;}}}
 function activePackage(){try{const x=window.F99V32MainAccess?.();return x?.packageKey||window.fino99ActivePackage?.()?.key||''}catch{return ''}}
@@ -26193,11 +26222,10 @@ function photoToPng(file,size=192){return new Promise((resolve,reject)=>{if(!fil
 function ownerApp(){if(!own())return alert('المالك فقط');const box=lay('تحويل المنصة إلى تطبيق');const cfg=getApp();box.append(tag('p','تخصيص الأيقونة ورسالة إضافة المنصة إلى الرئيسية. بعد تحديث صورة التطبيق على الآيفون قد تحتاج إزالة الاختصار القديم وإضافته من جديد.','f68-note'));
  const enabled=toggle(box,'عرض رسالة تحويل المنصة إلى تطبيق',cfg.app_message_enabled),txt=addInput(box,'نص الرسالة',cfg.app_message,'textarea'),color=addInput(box,'لون الرسالة',cfg.app_color,'color');const delay=addInput(box,'ظهور الرسالة بعد (ثوانٍ)',cfg.app_message_delay,'number'),duration=addInput(box,'إخفاء الرسالة بعد (ثوانٍ)',cfg.app_message_seconds,'number');const hint=addInput(box,'تعليمات الإضافة للشاشة الرئيسية',cfg.app_install_hint,'textarea');
  const file=addInput(box,'صورة أيقونة التطبيق — PNG أو JPG','','file');file.accept='image/png,image/jpeg,image/webp';const preview=tag('img');preview.alt='معاينة أيقونة التطبيق';preview.style.cssText='height:100px;width:100px;border-radius:18px;object-fit:cover;background:#e4eef4';preview.src=cfg.app_icon||'./icon-192.png';box.append(preview);let newIcon=cfg.app_icon||'';
- const wallpaper=addInput(box,'صورة خلفية الصفحة الرئيسية المتحركة أو الثابتة (رابط HTTPS، اختياري)',cfg.app_wallpaper||'');wallpaper.placeholder='https://example.com/banner.gif';
- const wallpaperFile=addInput(box,'أو ارفع خلفية صغيرة ثابتة / GIF (حد 100 كيلوبايت)','','file');wallpaperFile.accept='image/png,image/gif,image/webp';
- const status=message(box);wallpaperFile.onchange=async()=>{try{const f=wallpaperFile.files?.[0];if(!f||f.size>102400||!['image/png','image/gif','image/webp'].includes(f.type))throw Error('اختر PNG أو WebP أو GIF بحد أقصى 100 كيلوبايت، أو استخدم رابط HTTPS للصورة الأكبر.');const r=new FileReader();r.onload=()=>{wallpaper.value=String(r.result||'');status('الخلفية جاهزة، اضغط حفظ.')}}catch(e){status(e.message,true)}};file.onchange=async()=>{try{newIcon=await photoToPng(file.files?.[0],192);preview.src=newIcon;status('الصورة جاهزة؛ اضغط حفظ واعتماد.')}catch(e){status(e.message,true)}};
- const row=tag('div','','f68-actions');box.append(row);action(row,'حذف خلفية الرئيسية',()=>{wallpaper.value='';status('تم تحديد إزالة الخلفية بعد الحفظ.')});action(row,'حذف الصورة المخصصة',()=>{newIcon='';preview.src='./icon-192.png';status('ستعود الأيقونة الافتراضية بعد الحفظ.');});
- const save=action(row,'حفظ إعدادات التطبيق',async()=>{save.disabled=true;status('جاري الحفظ...');try{const payload={app_message_enabled:enabled.checked,app_message:txt.value.trim().slice(0,450),app_color:color.value,app_message_delay:Math.max(0,Math.min(90,Number(delay.value)||0)),app_message_seconds:Math.max(4,Math.min(60,Number(duration.value)||12)),app_install_hint:hint.value.trim().slice(0,450),app_icon:newIcon,app_wallpaper:wallpaper.value.trim()};await saveConfig('*',payload);status('✓ تم حفظ إعدادات التطبيق. سيظهر التخصيص للزائر عند التحديث.')}catch(e){status(e.message,true)}finally{save.disabled=false}},true);
+ const status=message(box);file.onchange=async()=>{try{newIcon=await photoToPng(file.files?.[0],192);preview.src=newIcon;status('الصورة جاهزة؛ اضغط حفظ واعتماد.')}catch(e){status(e.message,true)}};
+ box.append(tag('p','صور الإعلانات المتحركة فوق زر «التسوق» تُدار من بوابة «صور أعلى التسوق»، وليس من صورة أيقونة التطبيق.','f68-note'));
+ const row=tag('div','','f68-actions');box.append(row);action(row,'صور أعلى التسوق',()=>window.F99V69OpenBanners?.());action(row,'حذف أيقونة التطبيق المخصصة',()=>{newIcon='';preview.src='./icon-192.png';status('ستعود الأيقونة الافتراضية بعد الحفظ.');});
+ const save=action(row,'حفظ إعدادات التطبيق',async()=>{save.disabled=true;status('جاري الحفظ...');try{const payload={app_message_enabled:enabled.checked,app_message:txt.value.trim().slice(0,450),app_color:color.value,app_message_delay:Math.max(0,Math.min(90,Number(delay.value)||0)),app_message_seconds:Math.max(4,Math.min(60,Number(duration.value)||12)),app_install_hint:hint.value.trim().slice(0,450),app_icon:newIcon,app_wallpaper:cfg.app_wallpaper||''};await saveConfig('*',payload);status('✓ تم حفظ إعدادات التطبيق. سيظهر التخصيص للزائر عند التحديث.')}catch(e){status(e.message,true)}finally{save.disabled=false}},true);
 }
 window.F99V68AppSettings=ownerApp;
 function installNotice(){let shown=false;try{shown=sessionStorage.getItem('f68-app-prompt')==='1'}catch{}if(own()||q('#f68-install')||shown)return;const d=getApp();if(!d.app_message_enabled)return;try{sessionStorage.setItem('f68-app-prompt','1')}catch{};setTimeout(()=>{const b=tag('section','','f68-install');b.id='f68-install';b.style.borderTopColor=d.app_color;b.append(tag('strong',d.app_message),tag('p',d.app_install_hint));const close=tag('button','إغلاق');close.onclick=()=>b.remove();b.append(close);document.body.append(b);setTimeout(()=>b.remove(),Math.max(4,Number(d.app_message_seconds)||12)*1000)},Math.max(0,Number(d.app_message_delay)||0)*1000)}
@@ -26227,11 +26255,11 @@ function hookContract(){const original=window.F99V60OpenClientContract;if(typeof
  action(choices,'نعم لدي كود',()=>{input.parentElement.hidden=false;input.focus()});action(choices,'لا، متابعة بدون كود',()=>{input.parentElement.hidden=true;input.value='';apply.click()});
  };run._f68=true;window.F99V60OpenClientContract=run}
 function mountOwner(){if(!own())return;const groups=window.F99V60Test?.groups;if(Array.isArray(groups)){
- const store=groups.find(x=>x.id==='store');if(store&&!store.items.some(x=>x[1]==='F99V68PackageEditor'))store.items.unshift(['تطوير الباقات: الأسئلة والمقارنات والنفاد','F99V68PackageEditor',[]]);
+ const store=groups.find(x=>x.id==='store');if(store){if(!store.items.some(x=>x[1]==='F99V68PackageEditor'))store.items.unshift(['إعدادات الباقات','F99V68PackageEditor',[]]);if(!store.items.some(x=>x[1]==='F99V69OpenBanners'))store.items.push(['صور أعلى التسوق','F99V69OpenBanners',[]]);}
  const con=groups.find(x=>x.id==='contracts');if(con&&!con.items.some(x=>x[1]==='F99V68FreeContract'))con.items.unshift(['إنشاء عقد حر أو PDF','F99V68FreeContract',[]]);
  const settings=groups.find(x=>x.id==='settings');if(settings&&!settings.items.some(x=>x[1]==='F99V68AppSettings'))settings.items.unshift(['تحويل المنصة إلى تطبيق','F99V68AppSettings',[]]);}
- const hub=q('#f60-owner-console .f60-head');if(hub&&!q('#f68-owner-links',hub)){const buttons=tag('div','','f68-actions');buttons.id='f68-owner-links';action(buttons,'تطوير الباقات',()=>ownerPackage());action(buttons,'عقد حر / PDF',()=>void freeContract());action(buttons,'تحويل المنصة إلى تطبيق',ownerApp);hub.append(buttons)}
- const grid=q('#f64-packages .f64-pack-grid');if(grid)for(const card of qa('.f64-pack',grid)){if(q('.f68-pack-edit',card))continue;const p=products().find(x=>card.textContent.includes(x.name));if(p)action(card,'تطوير هذه الباقة',()=>{q('#f64-packages')?.remove();ownerPackage(p.key)})}
+ const hub=q('#f60-owner-console .f60-head');if(hub&&!q('#f68-owner-links',hub)){const buttons=tag('div','','f68-actions');buttons.id='f68-owner-links';action(buttons,'إعدادات الباقات',()=>ownerPackage());action(buttons,'عقد حر / PDF',()=>void freeContract());action(buttons,'تحويل المنصة إلى تطبيق',ownerApp);hub.append(buttons)}
+ const grid=q('#f64-packages .f64-pack-grid');if(grid)for(const card of qa('.f64-pack',grid)){if(q('.f68-pack-edit',card))continue;const p=products().find(x=>card.textContent.includes(x.name));if(p)action(card,'إعدادات هذه الباقة',()=>{q('#f64-packages')?.remove();ownerPackage(p.key)})}
 }
 const reentrySeen=new Set();
 function checkReentry(){const pk=activePackage();if(!pk||feeMode()!=='reentry'||own())return;const e=window.finoCentralRestoreEntry?.();if(!e?.entryToken||reentrySeen.has(e.entryToken))return;reentrySeen.add(e.entryToken);let previously=false;try{previously=sessionStorage.getItem('f68-seen-'+pk)==='1';sessionStorage.setItem('f68-seen-'+pk,'1')}catch{};if(previously)setTimeout(()=>{if(feeMode()==='reentry'&&typeof window.F99V25OpenOffer==='function')window.F99V25OpenOffer(0)},800)}
@@ -26241,6 +26269,144 @@ hookContract();
 async function start(){try{await refresh()}catch(e){console.info('V68 not installed or not reachable; original V67 remains usable',e?.message)}applyApp();installNotice();tick()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>void start(),{once:true});else void start();
 setInterval(()=>{if(!document.hidden)tick()},3000);
+})();
+
+</script>
+<style id="fino-v69-style">
+/* Small owner-only photo editor. No styling changes to storefront, finance or customer flows. */
+.f69-layer{position:fixed;inset:0;z-index:2147483200;background:#0b2635c4;display:flex;align-items:center;justify-content:center;padding:12px;direction:rtl;font-family:system-ui,Tahoma,sans-serif}
+.f69-panel{background:white;color:#173e58;border-radius:18px;width:min(780px,100%);max-height:94dvh;overflow:auto;padding:16px;box-shadow:0 15px 65px #07192d50}
+.f69-head{display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:-16px;background:white;z-index:2;padding:12px 0;border-bottom:1px solid #dae5ef}
+.f69-head h2,.f69-editor h3{margin:0;font-size:20px}
+.f69-head button,.f69-editor button{font:inherit;border-radius:12px;padding:10px 16px;cursor:pointer;border:1px solid #b6cedd;background:#f2f8fc;color:#174260;font-weight:700}
+.f69-note,.f69-inline{color:#526b7d;font-size:14px;line-height:1.8}
+.f69-slides{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:12px;margin:14px 0}
+.f69-slide{border:1px solid #cbdde8;background:#fcfdff;border-radius:13px;padding:14px;display:grid;align-content:start;gap:9px;min-width:0}
+.f69-slide h4{margin:0;color:#174260;font-size:17px}
+.f69-field{display:flex;flex-direction:column;gap:4px;font-weight:700;color:#164361;font-size:14px}
+.f69-field input:not([type=file]),.f69-field textarea,.f69-field select{width:100%;max-width:100%;background:#fff;color:#143d53;padding:10px;border:1px solid #b4cedd;border-radius:9px;font:inherit;direction:rtl;min-height:43px}
+.f69-field textarea{min-height:70px;resize:vertical}
+.f69-field input[type=file]{width:100%;font-size:12px;padding:9px;border:1px dashed #a5c6d6;border-radius:9px;background:#eff8fc}
+.f69-preview{display:block;width:100%;height:136px;object-fit:contain;border:1px solid #d4e2e8;border-radius:11px;background:#eaf2f7}
+.f69-check{display:flex;align-items:center;gap:9px;font-weight:700;font-size:14px;color:#1a445e}
+.f69-check input{width:20px;height:20px}
+.f69-actions{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0}
+.f69-actions button{flex:1 1 200px}
+.f69-primary{background:#155277!important;color:white!important;border-color:#155277!important}
+.f69-status{padding:10px;color:#255772;white-space:pre-wrap}
+.f69-inline{font-weight:600;min-height:20px}
+.f69-question-sequence{display:grid;gap:6px;margin:12px 0}
+.f69-question-item{border:1px solid #bcd3e0;background:#f3f9fc;border-radius:10px;padding:10px 12px;color:#164361;font-weight:700}
+
+</style>
+<script id="fino-v69-banners">
+/* FINO99 V69 - homepage rotating banners ONLY; uses the existing storefront writer. */
+(()=>{'use strict';
+const $=(s,r=document)=>r.querySelector(s), E=(name,text,cls)=>{const x=document.createElement(name);if(text!=null)x.textContent=text;if(cls)x.className=cls;return x};
+const validUrl=u=>{try{const x=new URL(u);return x.protocol==='https:'&&!x.username&&!x.password?x.href:''}catch{return''}};
+const presets=()=>[window.F99V27HeroFallback||'',window.F99V27BronzeImage||'',...(window.F99V28AdImages||[]).slice(0,2)];
+const captions=['صورة الرئيسية الحالية','صورة الباقة البرونزية','الصورة الثالثة الحالية','الصورة الرابعة الحالية'];
+const defaultItems=[
+ {title:'كل خيارات التمويل في مكان واحد',subtitle:'استكشف الباقات وقارن العروض في خطوات واضحة.',button:'التسوق'},
+ {title:'ريح بالك من مشاوير البنوك',subtitle:'قارن خيارات شراء مديونيتك واحسب الصافي والقسط قبل اتخاذ القرار.',button:'التسوق'},
+ {title:'قارن الخيارات بوضوح',subtitle:'نتائج إرشادية تساعدك على رؤية الفرق بين عروض البنوك.',button:'التسوق'},
+ {title:'اختيار أفضل بخطوات أسهل',subtitle:'استعرض الخدمات الرقمية واختر ما يناسب احتياجك.',button:'التسوق'}
+ ];
+const dataCache=new Map(),pending=new Map();
+function imageDataFromFile(file){return new Promise(async(resolve,reject)=>{
+ try{
+  if(!file||!['image/png','image/jpeg','image/webp','image/gif'].includes(file.type))throw Error('الصورة يجب أن تكون PNG أو JPG أو WebP أو GIF.');
+  if(file.size>6000000)throw Error('الصورة أكبر من 6 ميجابايت.');
+  let uploadFile=file;
+  if(file.size>262144&&file.type==='image/gif')throw Error('الـ GIF المتحرك كبير. اختر ملفًا أقل من 256 كيلوبايت أو رابط HTTPS.');
+  if(file.size>262144){
+   const url=URL.createObjectURL(file);
+   try{const image=new Image();image.src=url;await image.decode();const c=document.createElement('canvas'),scale=Math.min(1,960/Math.max(image.width,image.height));c.width=Math.max(1,Math.round(image.width*scale));c.height=Math.max(1,Math.round(image.height*scale));c.getContext('2d').drawImage(image,0,0,c.width,c.height);
+    let blob;for(const quality of [.81,.70,.58,.46]){blob=await new Promise(r=>c.toBlob(r,'image/jpeg',quality));if(blob&&blob.size<=262144)break}
+    if(!blob||blob.size>262144)throw Error('تعذر تصغير الصورة إلى 256 كيلوبايت؛ استخدم رابط HTTPS.');
+    uploadFile=new File([blob],'fino-banner.jpg',{type:'image/jpeg'});
+   }finally{URL.revokeObjectURL(url)}
+  }
+  const reader=new FileReader();reader.onload=()=>resolve({url:String(reader.result||''),file:uploadFile});reader.onerror=()=>reject(Error('تعذر قراءة الصورة'));
+  reader.readAsDataURL(uploadFile);
+ }catch(e){reject(e)}
+ })}
+async function admin(fn,payload){if(typeof window.finoCentralAdminCall!=='function')throw Error('خدمة المالك غير متاحة');const r=await window.finoCentralAdminCall(fn,payload);if(!r?.ok||r.data?.ok!==true)throw Error(r?.data?.reason||r?.error?.message||'لم تؤكد المركزية الحفظ');return r.data}
+async function publicImage(id){if(dataCache.has(id))return dataCache.get(id);if(pending.has(id))return pending.get(id);
+ const promise=(async()=>{try{const r=await window.finoRpc('f99v69_public_banner_image',{p_image_id:id},25000);if(!r?.ok||r.data?.ok!==true||!r.data?.found)throw Error('لم يتم العثور على الصورة');const type=String(r.data.mime||'');if(!['image/png','image/jpeg','image/webp','image/gif'].includes(type))throw Error('نوع الصورة غير مسموح');const url=`data:${type};base64,${r.data.content_base64}`;dataCache.set(id,url);return url}finally{pending.delete(id)}})();pending.set(id,promise);return promise
+}
+window.F99V69ResolveBanner=function(slide,fallback,img){
+ const ch=String(slide?.image_choice||'');const url=validUrl(slide?.image_url||'');
+ if(ch.startsWith('preset:')){delete img.dataset.f69BannerId;const idx=Number(ch.split(':')[1]);const p=presets()[idx];if(p)return p}
+ if(ch.startsWith('upload:')){const id=ch.slice(7);if(!/^[0-9a-f-]{36}$/i.test(id))return fallback;img.dataset.f69BannerId=id;if(dataCache.has(id))return dataCache.get(id);
+  void publicImage(id).then(src=>{if(img.isConnected&&img.dataset.f69BannerId===id)img.src=src}).catch(()=>{});
+  return fallback;
+ }
+ delete img.dataset.f69BannerId;
+ return url||fallback;
+};
+function label(parent,title,kind='text',value='',max=300){const line=E('label',null,'f69-field'),caption=E('span',title);const el=E(kind==='textarea'?'textarea':'input');if(kind!=='textarea')el.type=kind;el.value=value;el.maxLength=max;line.append(caption,el);parent.append(line);return el}
+function ownerEditor(root,stored,onSave,withInstructions=true){
+ const config=stored||{};const hero=config.hero||{};let slides=Array.isArray(hero.slides)&&hero.slides.length?hero.slides.map(x=>({...x})):defaultItems.map(x=>({...x,enabled:true,image_url:''}));
+ if(!hero.v28_slides_edited&&slides.length<4)slides.push(...defaultItems.slice(slides.length).map(x=>({...x,enabled:true,image_url:''})));
+ const area=E('section',null,'f69-editor');root.append(area);area.append(E('h3','صور أعلى زر «التسوق»'));area.append(E('p','الصور الأربع الحالية متاحة للاختيار. تقدر تبدّل الصورة أو النص أو توقف الإعلان أو تحذفه، بدون تغيير الباقات والأكواد.','f69-note'));
+ const anim=E('label',null,'f69-check'),motion=E('input');motion.type='checkbox';motion.checked=hero.motion!==false;anim.append(motion,E('span','تحريك الإعلانات تلقائيًا'));area.append(anim);
+ const collection=E('div',null,'f69-slides');area.append(collection);const notice=E('p','','f69-status');notice.setAttribute('role','status');
+ function draw(){collection.replaceChildren();slides.forEach((item,i)=>{
+  const card=E('div',null,'f69-slide');card.append(E('h4','الإعلان '+(i+1)));
+  const heading=label(card,'عنوان الإعلان','text',item.title||'',85),sub=label(card,'الوصف','textarea',item.subtitle||'',220),cta=label(card,'نص زر التسوق','text',item.button||'التسوق',50);
+  const choiceLine=E('label',null,'f69-field');choiceLine.append(E('span','صورة الإعلان'));const select=E('select');choiceLine.append(select);card.append(choiceLine);
+  for(const [v,text] of [['auto','الصورة الحالية لهذا الإعلان'],...captions.map((t,j)=>['preset:'+j,t]),['remote','رابط صورة HTTPS'],['upload','صورة رفعتها سابقًا']])select.add(new Option(text,v));
+  if(String(item.image_choice||'').startsWith('upload:')){select.options[select.options.length-1].text='الصورة المرفوعة لهذا الإعلان';select.value='upload'}
+  else if(String(item.image_choice||'').startsWith('preset:'))select.value=item.image_choice;
+  else if(item.image_url)select.value='remote';else select.value='auto';
+  const url=label(card,'رابط HTTPS للصورة المتحركة أو الثابتة','url',item.image_url||'',1000);
+  const uploadLine=E('label',null,'f69-field');uploadLine.append(E('span','أو اختر صورة من جهازك (JPG أو PNG أو WebP أو GIF)'));const file=E('input');file.type='file';file.accept='image/png,image/jpeg,image/webp,image/gif';uploadLine.append(file);card.append(uploadLine);
+  const img=E('img',null,'f69-preview');img.alt='معاينة الإعلان';card.append(img);
+  const info=E('p','','f69-inline');info.setAttribute('role','status');card.append(info);
+  const on=E('label',null,'f69-check'),enabled=E('input');enabled.type='checkbox';enabled.checked=item.enabled!==false;on.append(enabled,E('span','عرض هذا الإعلان'));card.append(on);
+  const rem=E('button','حذف الإعلان','f69-muted');rem.type='button';rem.onclick=()=>{if(slides.length===1){info.textContent='يجب إبقاء إعلان واحد على الأقل، ويمكنك إخفاؤه.';return}slides.splice(i,1);draw()};card.append(rem);
+  function preview(){url.parentElement.hidden=select.value!=='remote';
+   const presetsList=presets();const chosen=select.value==='auto'?presetsList[i%4]:select.value.startsWith('preset:')?presetsList[Number(select.value.split(':')[1])]:select.value==='remote'?validUrl(url.value):dataCache.get(String(item.image_choice||'').slice(7));
+   img.src=chosen||presetsList[i%4]||'';
+  }
+  [heading,sub,cta].forEach(input=>input.addEventListener('input',()=>{item.title=heading.value;item.subtitle=sub.value;item.button=cta.value}));
+  url.addEventListener('input',()=>{item.image_url=url.value.trim();if(select.value!=='remote')select.value='remote';item.image_choice='';preview()});
+  select.onchange=()=>{if(select.value==='upload'){if(!String(item.image_choice||'').startsWith('upload:')){select.value='auto';info.textContent='ارفع الصورة أولًا من الحقل أدناه.';return}}
+   else {item.image_choice=select.value==='auto'||select.value==='remote'?'':select.value;if(select.value!=='remote')item.image_url=''}
+   preview()};enabled.onchange=()=>item.enabled=enabled.checked;
+  file.onchange=async()=>{const f=file.files?.[0];if(!f)return;file.disabled=true;info.textContent='جارٍ تجهيز الصورة وحفظها في المركزية...';
+   try{const normalized=await imageDataFromFile(f);const mime=normalized.file.type;const res=await admin('f99v69_owner_banner_save',{p_filename:normalized.file.name,p_mime:mime,p_image_base64:normalized.url.split(',')[1]});if(!res?.id||!/^[0-9a-f-]{36}$/i.test(res.id))throw Error('لم تؤكد المركزية معرف الصورة');item.image_choice='upload:'+res.id;item.image_url='';dataCache.set(res.id,normalized.url);select.value='upload';info.textContent='✓ حُفظت الصورة في مكتبة الإعلانات. اضغط «اعتماد الإعلانات» لنشرها.';preview();}
+   catch(e){info.textContent='تعذر حفظ الصورة: '+e.message}finally{file.disabled=false}};
+  preview();collection.append(card);
+ })}
+ draw();const commands=E('div',null,'f69-actions');const add=E('button','إضافة إعلان','f69-muted');add.type='button';add.onclick=()=>{if(slides.length>=12)return void(notice.textContent='الحد الأقصى 12 إعلانًا.');slides.push({enabled:true,title:'عنوان جديد',subtitle:'وصف مختصر للعرض',button:'التسوق',image_url:'',image_choice:''});draw()};commands.append(add);
+ const save=E('button','حفظ واعتماد الإعلانات','f69-primary');save.type='button';save.onclick=async()=>{
+  const clean=slides.map(s=>({enabled:s.enabled!==false,title:String(s.title||'').trim().slice(0,85),subtitle:String(s.subtitle||'').trim().slice(0,220),button:String(s.button||'').trim().slice(0,50),image_url:String(s.image_url||'').trim().slice(0,1000),image_choice:String(s.image_choice||'').trim().slice(0,90)}));
+  if(clean.some(s=>!s.title||!s.button||(s.image_url&&!validUrl(s.image_url))||(!/^(|preset:[0-3]|upload:[0-9a-f-]{36})$/i.test(s.image_choice))))return void(notice.textContent='راجع نصوص الإعلانات والصور قبل الاعتماد.');
+  if(!clean.some(s=>s.enabled))return void(notice.textContent='أظهر إعلانًا واحدًا على الأقل.');
+  save.disabled=true;notice.textContent='جارٍ حفظ الإعلانات والتحقق من نشرها...';
+  try{const fresh=window.FINO99ReadStorefront?.();const nextHero={...(fresh?.hero||hero),enabled:true,motion:motion.checked,v28_slides_edited:true,slides:clean};await onSave(nextHero);notice.textContent='✓ تم اعتماد الصور والإعلانات؛ ستظهر بعد مزامنة إعدادات المتجر.'}
+  catch(e){notice.textContent='تعذر الاعتماد: '+e.message}finally{save.disabled=false}
+ };commands.append(save);area.append(commands,notice);
+ if(withInstructions&&typeof window.F99V69LegacyBannerEditor==='function'){
+  const temp=E('div');window.F99V69LegacyBannerEditor(temp,stored,onSave);const instruction=[...temp.querySelectorAll('.f27-owner-studio')].slice(1);for(const elem of instruction)root.append(elem)
+ }
+}
+const legacy=window.F99V26BuildHeroEditor;if(typeof legacy==='function')window.F99V69LegacyBannerEditor=legacy;
+window.F99V26BuildHeroEditor=(root,stored,save)=>ownerEditor(root,stored,save,true);
+window.F99V69OpenBanners=async function(){
+ if(window.F99V60Test?.owner?.()!==true || typeof finoCentralAdminToken==='undefined' || !finoCentralAdminToken || typeof window.finoCentralAdminCall!=='function')return alert('ادخل بحساب المالك أولًا');
+ $('#f69-banner-layer')?.remove();$('#f68-layer')?.remove();const bg=E('div',null,'f69-layer');bg.id='f69-banner-layer';const shell=E('section',null,'f69-panel');const h=E('header',null,'f69-head');h.append(E('h2','صور أعلى التسوق'));const close=E('button','إغلاق');close.type='button';close.onclick=()=>bg.remove();h.append(close);shell.append(h);bg.append(shell);document.body.append(bg);bg.onclick=e=>{if(e.target===bg)bg.remove()};
+ const store=window.FINO99ReadStorefront?.();if(!store)return shell.append(E('p','تعذرت قراءة إعدادات المتجر؛ حدّثها أولًا.'));
+ ownerEditor(shell,store,async hero=>{
+  const fresh=window.FINO99ReadStorefront?.();if(!fresh)throw Error('إعدادات المتجر غير متاحة');const version=Number(fresh.version||0),value={...fresh,hero,version:Math.max(Date.now(),version+1)};
+  const r=await admin('f99v39_admin_save_store_and_quota',{p_value:value,p_expected_version:version});
+  if(!r)return;await window.F99V33RefreshStorefront?.();const check=window.FINO99ReadStorefront?.();
+  if(JSON.stringify(check?.hero?.slides)!==JSON.stringify(hero.slides)||check?.hero?.motion!==hero.motion)throw Error('لم تُؤكد إعادة قراءة المتجر ظهور الصور الجديدة؛ لا تعِد الحفظ قبل تحديث البيانات.');
+  return r;
+ },false);
+};
 })();
 
 </script>
