@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- FINO99 V71 | GitHub Pages index.html | 2026-11-12.
+<!-- FINO99 V75 QA | GitHub Pages index.html | 2026-11-13.
      Current site is configured for its existing Supabase project.
      The HTML file does not install database functions or create an independent backend.
      Do not change Supabase URL or publishable key when updating this same site.
@@ -12,7 +12,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" name="viewport"/>
 <meta content="#ffffff" name="theme-color"/>
-<title>FINO99 — الحلول التمويلية الذكية | V72 QA</title><meta name="fino99-site-version" content="V72-QA-2026-11-13">
+<title>FINO99 — الحلول التمويلية الذكية | V75 QA</title><meta name="fino99-site-version" content="V72-QA-2026-11-13">
 <meta content="2026-11-06-v3" name="fino99-code-fix-release"/><meta content="FINO99" name="description"/><meta content="website" property="og:type"/><meta content="FINO99" property="og:title"/><meta content="FINO99" property="og:description"/>
 <meta content="image-rates-audit-2026-11-03" name="fino99-release"/>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
@@ -11848,7 +11848,7 @@ function smartResultAdvice(r){
 }
 
 function smartLegalNoticeText(){
-  return 'هذه الحسبة تقديرية والاعتماد النهائي حسب سياسة الجهة الممولة ووقت التقديم والتنفيذ، نحن لسنا جهة تمويلية ودورنا يقتصر على الوساطة وترشيح العروض والمتابعة والإنجاز بأسرع وقت وبدون تعقيدات عبر البنوك وشركات التمويل المرخصة.';
+  return 'هذه الحسبة تقديرية والاعتماد النهائي حسب سياسة الجهة الممولة ووقت التقديم والتنفيذ، نحن لسنا جهة تمويلية. النتائج للمقارنة والإرشاد، ويمكن متابعة الطلب وفق الخدمة المتاحة وشروط الجهة المختصة.';
 }
 
 
@@ -15242,7 +15242,7 @@ ${lowSurplus?'⚠️ معليش تنبيه: الصافي منخفض وقد يت�
 ${best.commodityEnabled?`• رسوم فرق السلعة: ${englishMoneyExact(best.commodityFee)} (قد لا توجد في بعض البنوك أو بعض السلع)
 `:''}
 ${externalObligations>0?`• الالتزامات الشهرية الأخرى: ${englishMoney(externalObligations)}\n`:''}${includeObligationImpactForClient()&&best.obligationImpact?.affected?`🔴 أثر الالتزامات: ${obligationImpactText(best.obligationImpact,currentClientName())}\n`:''}${getClientCustomNote()?`🔴 ملاحظة: ${getClientCustomNote()}\n`:''}
-⚠️ هذه الحسبة تقديرية والاعتماد النهائي حسب سياسة الجهة الممولة ووقت التقديم والتنفيذ، نحن لسنا جهة تمويلية ودورنا يقتصر على الوساطة وترشيح العروض والمتابعة والإنجاز بأسرع وقت وبدون تعقيدات عبر البنوك وشركات التمويل المرخصة.
+⚠️ هذه الحسبة تقديرية والاعتماد النهائي حسب سياسة الجهة الممولة ووقت التقديم والتنفيذ، نحن لسنا جهة تمويلية. النتائج للمقارنة والإرشاد، ويمكن متابعة الطلب وفق الخدمة المتاحة وشروط الجهة المختصة.
 
 ${serviceFeesWhatsappBlock()}
 
@@ -15505,7 +15505,7 @@ canvasRoundRect(ctx,70,470,940,105,16,'#fffafa','#efcaca');
   ctx.font='900 15px Cairo, Arial, sans-serif';
   drawWrappedArabic(
     ctx,
-    'هذه الحسبة تقديرية والاعتماد النهائي حسب سياسة الجهة الممولة ووقت التقديم والتنفيذ، نحن لسنا جهة تمويلية ودورنا يقتصر على الوساطة وترشيح العروض والمتابعة والإنجاز بأسرع وقت وبدون تعقيدات عبر البنوك وشركات التمويل المرخصة.',
+    'هذه الحسبة تقديرية والاعتماد النهائي حسب سياسة الجهة الممولة ووقت التقديم والتنفيذ، نحن لسنا جهة تمويلية. النتائج للمقارنة والإرشاد، ويمكن متابعة الطلب وفق الخدمة المتاحة وشروط الجهة المختصة.',
     980,y+28,850,24,4
   );
   y+=134;
@@ -23996,7 +23996,7 @@ async function buildCard(raw,opts={}){
  lineValue('رسوم السلعة',fmt(r.commodityFee)+' ريال')];
  const rowsCount=Math.ceil(rows.length/2),top=(custom||requestedScenario?830:790),step=126,detailsEnd=top+rowsCount*step;
  const legalY=detailsEnd+40;
- const legalText=cardText('legal','هذه الحسبة تقديرية والاعتماد النهائي حسب سياسة الجهة الممولة ووقت التقديم والتنفيذ، نحن لسنا جهة تمويلية ودورنا يقتصر على الوساطة وترشيح العروض والمتابعة والإنجاز بأسرع وقت وبدون تعقيدات عبر البنوك وشركات التمويل المرخصة.');
+ const legalText=cardText('legal','هذه الحسبة تقديرية والاعتماد النهائي حسب سياسة الجهة الممولة ووقت التقديم والتنفيذ، نحن لسنا جهة تمويلية. النتائج للمقارنة والإرشاد، ويمكن متابعة الطلب وفق الخدمة المتاحة وشروط الجهة المختصة.');
  const noticeFontSize=cp('legal',1368,legalY+35,20,'#9a3640').size;
  const noticeLineHeight=Math.max(32,Math.ceil(noticeFontSize*1.45));
  // Measure Arabic using the actual canvas font, so even a longer owner-written notice is never painted into the phone/footer.
@@ -24321,7 +24321,7 @@ if(typeof priorOwner==='function')window.F99V49OwnerPanel=function(...a){const r
 </style>
 <script id="f99v54-patch" type="text/javascript">
 (()=>{'use strict';
-const D={title:'بطاقة حسبة مبدئية وفق النسبة المعلنة من الجهة المختارة',custom_title:'بطاقة حسبة مبدئية بناءً على النسبة التي أدخلها العميل',contact:'للاستفسار عن الحسبة ومتابعتها وإنجازها، تواصلوا معنا',legal:'هذه الحسبة تقديرية والاعتماد النهائي حسب سياسة الجهة الممولة ووقت التقديم والتنفيذ، نحن لسنا جهة تمويلية ودورنا يقتصر على الوساطة وترشيح العروض والمتابعة والإنجاز بأسرع وقت وبدون تعقيدات عبر البنوك وشركات التمويل المرخصة.',positions:{title:{x:1390,y:191,size:30,color:'#173e57'},contact:{x:1360,y:1665,size:22,color:'#2c607d'},phone:{x:1360,y:1736,size:32,color:'#102e40'},legal:{x:1368,y:1495,size:20,color:'#9a3640'}},extra:[]};
+const D={title:'بطاقة حسبة مبدئية وفق النسبة المعلنة من الجهة المختارة',custom_title:'بطاقة حسبة مبدئية بناءً على النسبة التي أدخلها العميل',contact:'للاستفسار عن الحسبة ومتابعتها وإنجازها، تواصلوا معنا',legal:'هذه الحسبة تقديرية والاعتماد النهائي حسب سياسة الجهة الممولة ووقت التقديم والتنفيذ، نحن لسنا جهة تمويلية. النتائج للمقارنة والإرشاد، ويمكن متابعة الطلب وفق الخدمة المتاحة وشروط الجهة المختصة.',positions:{title:{x:1390,y:191,size:30,color:'#173e57'},contact:{x:1360,y:1665,size:22,color:'#2c607d'},phone:{x:1360,y:1736,size:32,color:'#102e40'},legal:{x:1368,y:1495,size:20,color:'#9a3640'}},extra:[]};
 D.contact_override=D.contact; D.legal_override=D.legal; // Compatible with central V54: legacy text remains valid, these are optional overrides.
 const clone=x=>JSON.parse(JSON.stringify(x));
 const $=id=>document.getElementById(id), E=(t,s)=>{const e=document.createElement(t);if(s!==undefined)e.textContent=String(s);return e};
@@ -26714,6 +26714,299 @@ function openDesk(initial='all',searchCode=''){
 }
 window.F99V72CouponDesk=openDesk;
 window.F99V72CouponTest={calc,windowText,products};
+})();
+</script>
+<style id="fino-v73-ui">
+/* FINO99 V73: isolated responsive contract studio; existing calculator styles untouched */
+.f73-shade{position:fixed;inset:0;z-index:2147483647;overflow:auto;background:#061f33d9;padding:10px 7px;direction:rtl;font-family:Cairo,Tahoma,Arial,sans-serif;color:#123a51}
+.f73-panel{box-sizing:border-box;max-width:850px;margin:6px auto;background:#fff;border-radius:19px;padding:15px;display:grid;gap:12px;box-shadow:0 20px 50px #001a3455;font-size:15px;line-height:1.75}
+.f73-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.f73-head h2{font-size:19px;margin:0;font-weight:900}
+.f73-panel button{background:#eef6fa;color:#115578;border:1px solid #bcd5e5;border-radius:11px;min-height:42px;padding:9px 13px;font:800 13px Cairo,Tahoma,Arial,sans-serif;cursor:pointer}
+.f73-panel button.f73-primary{background:#145d83;color:#fff;border-color:#145d83}.f73-panel button:disabled{opacity:.45;cursor:wait}
+.f73-actions{display:flex;gap:8px;flex-wrap:wrap}.f73-actions button{flex:1 1 130px}
+.f73-card{display:grid;gap:9px;border:1px solid #d6e5ec;border-radius:15px;background:#fafdff;padding:14px}.f73-card h3{font-size:16px;margin:0;font-weight:900}
+.f73-muted{font-size:12px;color:#597588;line-height:1.8;margin:0}
+.f73-field{display:grid;gap:5px;font-size:13px;font-weight:800}.f73-field input,.f73-field textarea,.f73-field select{box-sizing:border-box;width:100%;min-height:45px;padding:10px;border:1px solid #b9d4e3;border-radius:10px;background:#fff;font:700 14px Cairo,Tahoma,Arial,sans-serif;color:#18384b}
+.f73-field textarea{resize:vertical;min-height:100px}.f73-check{display:flex;gap:8px;align-items:center;font-weight:750;font-size:13px}.f73-check input{width:20px;height:20px}
+.f73-status{background:#ecf7fc;color:#14557e;border:1px solid #d2e5ed;padding:10px;border-radius:10px;min-height:22px;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}.f73-status[data-bad="1"]{background:#fff0f0;border-color:#edc9c9;color:#a32536}
+.f73-block{border:1px solid #cbdfe8;border-radius:12px;background:#fff;padding:11px;display:grid;gap:8px;margin:8px 0}
+.f73-block h3{font-size:15px;margin:0}.f73-block p{margin:0}.f73-document-text{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:2;color:#223e51;max-height:50vh;overflow:auto}
+.f73-preview-image{max-height:240px;width:100%;object-fit:contain;border-radius:10px}.f73-owner-reply{background:#fff9e8;border:1px solid #ead9af;border-radius:10px;padding:11px}
+.f73-card pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#eaf4f9;padding:10px;border-radius:8px;direction:ltr;text-align:left;max-height:350px;overflow:auto}
+@media(max-width:550px){.f73-panel{padding:12px;font-size:14px}.f73-head h2{font-size:17px}.f73-card{padding:10px}.f73-actions button{flex:1 1 125px}}
+
+.f73-owner-shortcuts{display:grid;gap:8px;background:#eff8fb;border:1px solid #d0e4ed;padding:13px;border-radius:16px;margin:9px 0 13px;color:#13415e}.f73-owner-shortcuts button{padding:9px 11px;border:1px solid #b6d4e2;border-radius:10px;background:#fff;color:#165477;font:800 13px Cairo,Tahoma,Arial,sans-serif;min-height:43px}.f73-owner-shortcuts button.f73-primary{background:#145d83;color:#fff}.f73-owner-quick{display:flex;flex-wrap:wrap;gap:7px}.f73-owner-quick button{flex:1 1 170px}.f73-owner-shortcuts input,.f73-owner-shortcuts select{background:#fff;border:1px solid #c5dce8;border-radius:10px;min-height:43px;padding:9px;font:700 13px Cairo,Tahoma,Arial,sans-serif;flex:1 1 200px;min-width:100px}.f73-hidden-owner-tile{display:none!important}
+#f50-salla-entry,#f50-home-renew{display:none!important}
+
+</style>
+<script id="fino-v73-new-contract-studio">
+/* FINO99 V73 — isolated new contract studio; never deletes legacy contracts. */
+(()=>{'use strict';
+const $=(s,r=document)=>r.querySelector(s), EL=(t,txt,cls)=>{const e=document.createElement(t);if(txt!==undefined&&txt!==null)e.textContent=String(txt);if(cls)e.className=cls;return e};
+const nowId=()=>crypto.randomUUID?.()||'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,x=>(Math.random()*16|0).toString(16));
+const owner=()=>{try{return window.F99V60Test?.owner?.()===true&&typeof finoCentralAdminToken!=='undefined'&&!!finoCentralAdminToken}catch{return false}};
+const rup=x=>x?.data?.reason||x?.error?.message||'تعذر التأكيد من المركزية';
+async function admin(fn,args={}){if(!owner())throw Error('ادخل كمالك أولًا');const r=await window.finoCentralAdminCall(fn,args);if(r?.ok!==true||r.data?.ok!==true)throw Error(rup(r));return r.data}
+function access(){try{const e=window.finoCentralRestoreEntry?.();return e?.entryToken?{token:e.entryToken,device:e.deviceId||window.finoCentralDeviceId?.()}:null}catch{return null}}
+async function client(fn,args={}){const a=access();if(!a)throw Error('أدخل كود عقد صالحًا من الصفحة الأولى');const r=await window.finoRpc(fn,{p_entry_token:a.token,p_device_id:a.device,...args},17000);if(r?.ok!==true||r.data?.ok!==true)throw Error(rup(r));return r.data}
+const money=v=>Number(v||0).toLocaleString('ar-SA',{minimumFractionDigits:2,maximumFractionDigits:2});
+const terminal=new Set(['accepted','declined','cancelled','completed']);
+const statuses={offered:'عرض العقد',profile:'البيانات المطلوبة',pending_owner:'بانتظار مراجعة المالك',review:'مراجعة العقد والقبول',accepted:'تم تسجيل الموافقة',sale_pending_transfer:'بانتظار توثيق نقل الملكية',resale_choice:'خيارات التصرف في السلعة',holding:'الاحتفاظ بالسلعة',agency_requested:'بانتظار إجراء الوكالة الرسمية إن لزم',settlement_details:'حساب تسوية المبلغ',pending_settlement:'بانتظار التحقق من التسوية',completed:'أُغلقت المعاملة',declined:'تم تسجيل عدم الرغبة',cancelled:'ألغيت المعاملة'};
+function modal(title){$('#f73-shade')?.remove();const s=EL('div',null,'f73-shade');s.id='f73-shade';s.setAttribute('role','dialog');s.setAttribute('aria-modal','true');s.setAttribute('aria-label',title);const p=EL('section',null,'f73-panel');s.append(p);const h=EL('header',null,'f73-head');h.append(EL('h2',title));button(h,'إغلاق',()=>s.remove());p.append(h);document.body.append(s);s.addEventListener('click',e=>{if(e.target===s)s.remove()});return p}
+function button(p,title,act,prime=false){const b=EL('button',title,prime?'f73-primary':'');b.type='button';b.addEventListener('click',act);p.append(b);return b}
+function actions(p){const d=EL('div',null,'f73-actions');p.append(d);return d}
+function field(p,title,value='',type='text'){const l=EL('label',null,'f73-field');l.append(EL('span',title));const i=EL(type==='textarea'?'textarea':type==='select'?'select':'input');if(type!=='textarea'&&type!=='select')i.type=type;if(type!=='select')i.value=String(value??'');l.append(i);p.append(l);return i}
+function select(p,title,items,active){const i=field(p,title,'','select');for(const [v,t] of items)i.add(new Option(t,v));if(active!==undefined)i.value=String(active);return i}
+function check(p,caption,on=false){const l=EL('label',null,'f73-check');const a=EL('input');a.type='checkbox';a.checked=!!on;l.append(a,EL('span',caption));p.append(l);return a}
+function status(p){const e=EL('p','','f73-status');e.setAttribute('role','status');p.append(e);return (txt,error=false)=>{e.textContent=String(txt);e.dataset.bad=error?'1':'0'}}
+function panel(p,heading,sub){const c=EL('section',null,'f73-card');c.append(EL('h3',heading));if(sub)c.append(EL('p',sub,'f73-muted'));p.append(c);return c}
+function keep(a){return String(a??'').trim()}
+function lines(text){const d=EL('div',text,'f73-document-text');return d}
+const dateOpts=[['','بلا تاريخ محدد'],['1','يوم'],['3','3 أيام'],['7','أسبوع'],['14','أسبوعان'],['30','30 يومًا']];
+function quickDatetime(p,title){const box=panel(p,title);const d=select(box,'مدة اختيارية سريعة',dateOpts,'');const i=field(box,'أو التاريخ والوقت (اختياري)','','datetime-local');d.addEventListener('change',()=>{if(!d.value)return;i.value=new Date(Date.now()+Number(d.value)*86400000-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16)});return ()=>i.value?new Date(i.value).toISOString():null}
+
+let cache=[],currentTpl=null,ownerView='templates',lastCase=null;
+async function openOwner(page='templates'){if(!owner())return alert('ادخل بكود المالك المعتمد');const root=modal('العقود الذكية الجديدة • FINO99');const a=actions(root);button(a,'العقود والقوالب',()=>void openOwner('templates'));button(a,'إصدار وربط كود',()=>void openOwner('issue'));button(a,'الطلبات والاستفسارات',()=>void openOwner('inbox'));button(a,'خصومات العقود',()=>void openOwner('coupons'));const note=status(root);ownerView=page;try{if(page==='templates')await templates(root,note);else if(page==='issue')await issue(root,note);else if(page==='inbox')await inbox(root,note);else if(page==='coupons')await coupons(root,note)}catch(e){note(e.message,true)}}
+async function templates(root,note){const r=await admin('f99v73_owner_templates');cache=r.items||[];
+const c=panel(root,'عقد حر أو قالب جديد','ابدأ بنص حر، أو عدّل أحد القالبين الاسترشاديين. يمكنك إضافة صور ومقاطع وتغيير ترتيبها. تعديل القالب لا يغيّر النسخ التي سبق إصدارها للعميل.');
+const pick=select(c,'اختر عقدًا للتعديل أو جديدًا',[['','إنشاء عقد حر جديد'],...cache.map(t=>[t.id,`${t.title} • ${t.enabled?'مفعّل':'غير مفعّل'}`])],'');
+const title=field(c,'عنوان العقد','اتفاقية خدمات');const kind=select(c,'نوع المسار',[['followup','متابعة خدمات'],['goods','عرض سلعة وطلب شراء'],['custom','عقد حر / اتفاقية مخصصة']],'followup');
+const body=field(c,'نص العقد كاملًا','بسم الله الرحمن الرحيم\nهذه اتفاقية خدمات أولية...','textarea');body.rows=12;
+const feeLabel=field(c,'مسمى الأتعاب','أتعاب المتابعة');const feeMode=select(c,'طريقة الأتعاب',[['fixed','مبلغ محدد بالريال'],['percent','نسبة من المبلغ المرجعي']],'fixed');
+const ref=field(c,'المبلغ المرجعي / سعر التمويل أو السلعة (مستقل عن الأتعاب)',0,'number');ref.min=0;ref.step='.01';const fee=field(c,'قيمة الأتعاب أو نسبتها',0,'number');fee.min=0;fee.step='.01';
+const enabled=check(c,'تفعيل العقد للإصدار بعد مراجعة بنوده',false);const names=select(c,'عدد أجزاء الاسم المطلوبة',[['3','ثلاثي'],['4','رباعي'],['5','خماسي']],String(currentTpl?.details?.required_name_parts||4));const privacy=field(c,'نص إشعار الخصوصية','تُستخدم المعلومات المطلوبة لهذا العقد ولحفظ سجل الموافقة فقط.','textarea');
+const blocks=panel(root,'مقاطع العقد الاختيارية','أضف عنوانًا أو نصًا أو صورة HTTPS. لا تُحذف المقاطع من العقود الصادرة سابقًا.');let segments=[];const area=EL('div');blocks.append(area);
+function draw(){area.replaceChildren();segments.forEach((b,i)=>{const row=EL('article',null,'f73-block');area.append(row);const ty=select(row,'نوع المقطع',[['text','نص إضافي'],['heading','عنوان'],['image','صورة برابط HTTPS']],b.type||'text');const val=field(row,'المحتوى أو رابط الصورة',b.value||'','textarea');const ar=actions(row);button(ar,'↑',()=>{if(i){const t=segments[i-1];segments[i-1]=segments[i];segments[i]=t;draw()}});button(ar,'↓',()=>{if(i<segments.length-1){const x=segments[i];segments[i]=segments[i+1];segments[i+1]=x;draw()}});button(ar,'حذف',()=>{segments.splice(i,1);draw()});ty.onchange=()=>b.type=ty.value;val.oninput=()=>b.value=val.value})}
+const ar=actions(blocks);button(ar,'إضافة مقطع',()=>{if(segments.length>=30)return alert('الحد الأقصى 30 مقطعًا');segments.push({type:'text',value:''});draw()});
+function fill(t){currentTpl=t||null;title.value=t?.title||'اتفاقية خدمات';kind.value=t?.kind||'followup';body.value=t?.body||'بسم الله الرحمن الرحيم\nهذه اتفاقية خدمات أولية...';feeLabel.value=t?.fee_label||'أتعاب المتابعة';feeMode.value=t?.fee_mode||'fixed';fee.value=t?.fee_value??0;ref.value=t?.reference_amount??0;enabled.checked=t?.enabled===true;names.value=String(t?.details?.required_name_parts||4);privacy.value=t?.details?.privacy_notice||'تُستخدم المعلومات المطلوبة لهذا العقد ولحفظ سجل الموافقة فقط.';segments=Array.isArray(t?.blocks)?JSON.parse(JSON.stringify(t.blocks)):[];draw()}
+pick.addEventListener('change',()=>{fill(cache.find(x=>x.id===pick.value))});fill(null);
+const opts=actions(c);const save=button(opts,'حفظ واعتماد العقد',async()=>{save.disabled=true;try{if(!body.value.trim()||body.value.length<15)throw Error('اكتب نص عقد لا يقل عن 15 حرفًا');const clean=segments.map(x=>({type:x.type,value:String(x.value||'').slice(0,2500)})).filter(x=>x.value.trim());if(clean.some(x=>x.type==='image'&&!/^https:\/\//i.test(x.value)))throw Error('روابط الصور يجب أن تبدأ HTTPS');const r=await admin('f99v73_owner_save_template',{p_id:currentTpl?.id||null,p_title:keep(title.value),p_kind:kind.value,p_body:body.value,p_fee_label:feeLabel.value,p_fee_mode:feeMode.value,p_fee_value:Number(fee.value),p_reference_amount:Number(ref.value),p_details:{privacy_notice:privacy.value,required_name_parts:Number(names.value)},p_blocks:clean,p_enabled:enabled.checked,p_expected_version:currentTpl?.version??null});note('✓ تم حفظ الإصدار '+r.version+' على المركزية.');await openOwner('templates')}catch(e){note('لم يحفظ العقد: '+e.message,true)}finally{save.disabled=false}},true);
+button(opts,'إخفاء هذا القالب من الإصدار (أرشفة)',async()=>{if(!currentTpl?.id)return note('اختر قالبًا محفوظًا أولًا',true);if(!confirm('الأرشفة تمنع إصدار عقود جديدة منه، ولا تمس العقود التي سبق إصدارها. هل تعتمد؟'))return;try{await admin('f99v73_owner_archive_template',{p_id:currentTpl.id});await openOwner('templates')}catch(e){note(e.message,true)}});
+button(opts,'معاينة كعميل',()=>{const m=modal('معاينة العقد قبل الإصدار');m.append(EL('h3',title.value));m.append(lines(body.value));for(const b of segments){if(b.type==='image'&&/^https:\/\//i.test(b.value)){const img=EL('img');img.src=b.value;img.className='f73-preview-image';m.append(img)}else m.append(EL(b.type==='heading'?'h3':'p',b.value))}m.append(EL('p',feeLabel.value+': '+money(feeMode.value==='percent'?Number(fee.value)*Number(ref.value)/100:Number(fee.value))+' ريال','f73-muted'))});
+{const pdf=panel(root,'مرفق PDF اختياري — خاص بهذا العقد','ملف PDF بحد أقصى 1.4 ميجابايت. يُقرأ للعميل المخوّل بكود العقد فقط. لا يُستبدل بعد إصدار العقد.');const input=EL('input');input.type='file';input.accept='application/pdf,.pdf';pdf.append(input);const act=actions(pdf);button(act,'حفظ PDF في المركزية',async()=>{try{if(!currentTpl?.id)throw Error('احفظ العقد أولًا، ثم اختره من القائمة وأرفق PDF');const f=input.files?.[0];if(!f||f.size>1400000)throw Error('اختر PDF أصغر من 1.4MB');const ab=await f.arrayBuffer(),bytes=new Uint8Array(ab);if(String.fromCharCode(...bytes.slice(0,4))!=='%PDF')throw Error('الملف ليس PDF');let str='';for(let i=0;i<bytes.length;i+=16384)str+=String.fromCharCode(...bytes.subarray(i,i+16384));const b64=btoa(str);const r=await admin('f99v73_owner_document_save',{p_template_id:currentTpl.id,p_filename:f.name,p_pdf_base64:b64});note('✓ PDF محفوظ ببصمة '+r.sha256.slice(0,12)+'…')}catch(e){note(e.message,true)}})}
+}
+async function issue(root,note){const r=await admin('f99v73_owner_templates');const avail=(r.items||[]).filter(x=>x.enabled);const p=panel(root,'إصدار عقد للعميل','يمكن ربط العقد بكود حسبة قائم دون المساس برصيد الحسبات، أو إصدار كود منفصل مخصص للعقد.');if(!avail.length){p.append(EL('p','فعّل قالبًا أولًا بعد مراجعته.','f73-muted'));return}
+const pick=select(p,'العقد الذي سيُعرض',avail.map(x=>[x.id,x.title]));const mode=select(p,'طريقة الكود',[['existing','استخدام نفس كود العميل الحالي'],['new','توليد كود عقد جديد تلقائيًا'],['manual','كتابة كود جديد من المالك']],'existing');const code=field(p,'كود العميل الحالي أو الكود الجديد','');const entry=select(p,'بعد الدخول',[['both','عرض العقد والحسبة معًا عند السماح'],['contract_only','عرض العقد فقط']],'both');const mins=field(p,'الدقائق المسموحة للكود الجديد',1440,'number');mins.min=1;const entries=field(p,'عدد الدخولات للكود الجديد',3,'number');entries.min=1;function toggle(){code.disabled=mode.value==='new';entry.disabled=true;entry.value=mode.value==='existing'?'both':'contract_only'}mode.onchange=toggle;toggle();const out=EL('div');p.append(out);const btn=button(actions(p),'إنشاء واعتماد الكود',async()=>{btn.disabled=true;try{const x=await admin('f99v73_owner_issue',{p_template_id:pick.value,p_mode:mode.value,p_code:code.value,p_duration_minutes:Number(mins.value),p_max_entries:Number(entries.value),p_entry_mode:entry.value});out.replaceChildren();out.append(EL('p','✓ صدر العقد. كود العميل:','f73-muted'));const k=field(out,'الكود المعتمد',x.code);k.readOnly=true;button(actions(out),'نسخ الرمز وحده',()=>navigator.clipboard?.writeText(x.code));note('✓ تمت المطابقة مع سجل العقد بالمركزية. العميل يفتح FINO99 بنفس الكود ويختار العقد.')}catch(e){note(e.message,true)}finally{btn.disabled=false}},true)}
+async function inbox(root,note){const r=await admin('f99v73_owner_inbox');const list=r.items||[];const p=panel(root,`الطلبات والاستفسارات (${list.length})`,'الاستفسارات والأرشيف لا تختلط بكود الخصم ولا تحذف حالات الموافقة القديمة.');if(!list.length)return p.append(EL('p','لا توجد معاملات صادرة من النظام الجديد.'));
+for(const x of list){const row=EL('article',null,'f73-block');row.append(EL('h3',x.title||'عقد'));row.append(EL('p',(x.name||'لم يدخل العميل بياناته بعد')+' • '+(statuses[x.status]||x.status)+' • الاستفسارات: '+x.inquiries,'f73-muted'));row.append(EL('p','آخر تحديث: '+new Date(x.updated_at).toLocaleString('ar-SA'),'f73-muted'));const a=actions(row);button(a,'فتح سجل العقد',()=>void caseDetail(x.case_id));p.append(row)}
+}
+async function caseDetail(id){const root=modal('سجل العقد وطلب العميل');const set=status(root);try{const r=await admin('f99v73_owner_case_detail',{p_case_id:id}),c=r.case;root.append(EL('h3',c.snapshot.title||'عقد'));root.append(EL('p','حالة العقد: '+(statuses[c.status]||c.status)));const card=panel(root,'بيانات العميل وأتعابه','بيانات حساسة — لا تشارك هذه الشاشة ولا تطبعها إلا لغرض مشروع');card.append(EL('pre',JSON.stringify({profile:c.profile,quote:c.quote},null,2)));const ev=panel(root,'تسلسل الإجراءات');for(const x of r.events||[]){ev.append(EL('p',new Date(x.created_at).toLocaleString('ar-SA')+' — '+(x.actor==='owner'?'المالك':'العميل')+' — '+x.action+(x.note?' — '+x.note:''),'f73-muted'))}
+const ctrl=panel(root,'قرار المالك / الرد على الاستفسار');const note=field(ctrl,'نص الرد أو رقم إثبات النقل / الوكالة / التسوية','','textarea');const acts=actions(ctrl);const options=[['reply','رد على الاستفسار'],['approve_interest','الموافقة على طلب الشراء'],['reject_interest','رفض الطلب'],['confirm_transfer','تأكيد نقل الملكية بمستند رسمي'],['confirm_official_agency','تأكيد التحقق من الوكالة الرسمية'],['mark_settled','تأكيد التسوية بمرجع'],['cancel','إلغاء الطلب غير المنجز']];for(const [value,label] of options)button(acts,label,async()=>{if(value!=='reply'&&!confirm('تأكيد الإجراء '+label+'؟ سيحفظ في سجل العقد.'))return;try{const out=await admin('f99v73_owner_action',{p_case_id:id,p_action:value,p_note:note.value});set('✓ حُفظ الإجراء وحالة العقد الآن: '+(statuses[out.status]||out.status));await caseDetail(id)}catch(e){set(e.message,true)}})}catch(e){set(e.message,true)}}
+async function coupons(root,note){const r=await admin('f99v73_owner_templates');const templates=r.items||[];const p=panel(root,'خصم أتعاب عقد محدد','كود الخصم لا يغيّر سعر السلعة. يطبَّق عند اعتماد الأتعاب داخل العقد، وتظل القيمة المؤرشفة محفوظة.');if(!templates.length)return;
+const pick=select(p,'العقد',templates.map(x=>[x.id,x.title]));const code=field(p,'رمز الخصم','');const method=select(p,'طريقة الخصم',[['percent','نسبة %'],['fixed','مبلغ بالريال']]);const amount=field(p,'قيمة الخصم','10','number');amount.step='.01';const enabled=check(p,'تفعيل الكود بعد الحفظ',true);const start=quickDatetime(p,'بداية الكود (اختياري)');const end=quickDatetime(p,'نهاية الكود (اختياري)');const btn=button(actions(p),'حفظ كود خصم العقد',async()=>{btn.disabled=true;try{const x=await admin('f99v73_owner_coupon_save',{p_template_id:pick.value,p_code:code.value.trim().toUpperCase(),p_method:method.value,p_amount:Number(amount.value),p_enabled:enabled.checked,p_start:start(),p_end:end()});note('✓ تم حفظ كود العقد في المركزية. لا يعني هذا إنشاء كوبون دفع خارجي.')}catch(e){note(e.message,true)}finally{btn.disabled=false}},true)}
+
+let clientCases=[],clientSeen='';
+async function loadCases(){const r=await client('f99v73_client_dashboard');return (r.items||[]).filter(x=>!terminal.has(x.status))}
+async function popupClient(){try{clientCases=await loadCases();if(!clientCases.length)return;const a=access();const container=modal('مرحبًا بك في FINO99');const hour=Number(new Intl.DateTimeFormat('en-US',{hour:'2-digit',hour12:false,timeZone:'Asia/Riyadh'}).format(new Date()));
+  const welcome=hour>=5&&hour<12?'صباح الخير':'مساء الخير';
+  const person=clientCases[0]?.client_name;
+  container.append(EL('p',welcome+(person?' يا '+person:'')+'، حياك الله. اختر خدمتك المتاحة.','f73-muted'));const ar=actions(container);for(const c of clientCases)button(ar,'عقد: '+c.title,()=>void caseClient(c.case_id),true);if(clientCases.some(x=>x.mode==='both'))button(ar,'العودة إلى الحاسبة',()=>$('#f73-shade')?.remove())}catch(e){if(!String(e.message).includes('INVALID_SESSION'))console.warn('V73 contract dashboard',e.message)}}
+async function caseClient(id){const root=modal('عرض عقد العميل');const info=status(root);try{const r=await client('f99v73_client_dashboard');const c=(r.items||[]).find(x=>x.case_id===id);if(!c)throw Error('العقد غير متاح لهذا الكود أو الجهاز');root.append(EL('h3',c.title));root.append(EL('p',statuses[c.status]||c.status,'f73-muted'));const blocks=panel(root,'نص الاتفاقية');blocks.append(lines(c.body));for(const b of c.blocks||[]){if(b.type==='image'&&/^https:\/\//.test(b.value)){const image=EL('img');image.className='f73-preview-image';image.src=b.value;image.loading='lazy';blocks.append(image)}else blocks.append(EL(b.type==='heading'?'h3':'p',b.value))}
+if(c.has_pdf)button(actions(blocks),'فتح PDF الخاص بالعقد',async()=>{try{const d=await client('f99v73_client_pdf',{p_case_id:id});const bin=atob(d.content);const bytes=Uint8Array.from(bin,x=>x.charCodeAt(0));const url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));window.open(url,'_blank','noopener,noreferrer');setTimeout(()=>URL.revokeObjectURL(url),60000)}catch(e){info(e.message,true)}});
+const base=c.fee_mode==='percent'?Number(c.reference_amount||0)*Number(c.fee_value||0)/100:Number(c.fee_value||0);const footer=panel(root,'تفاصيل المبلغ','قيمة السلعة مستقلة عن أتعاب الخدمة؛ العرض نهائي فقط وفق الاتفاق والمستند المعتمد');footer.append(EL('p',(c.fee_label||'الأتعاب')+': '+money(base)+' ريال'));if(c.kind==='goods')footer.append(EL('p','ثمن السلعة المعلن: '+money(c.reference_amount)+' ريال'));if(c.quote?.final_fee!==undefined)footer.append(EL('p','الأتعاب المعتمدة بعد الخصم: '+money(c.quote.final_fee)+' ريال'));
+const controls=panel(root,'الخطوة الحالية');const act=actions(controls);const send=async(action,data={})=>{try{const result=await client('f99v73_client_action',{p_case_id:id,p_action:action,p_payload:data,p_request_id:nowId()});info('✓ تم تسجيل الإجراء: '+(statuses[result.status]||result.status));await caseClient(id)}catch(e){info(e.message,true)}};
+function question(){const q=field(controls,'اكتب استفسارك للمالك','','textarea');button(act,'إرسال الاستفسار',()=>void send('question',{note:q.value}))}
+if(c.status==='offered'){button(act,c.kind==='goods'?'أرغب في شراء السلعة':'أرغب في المتابعة',()=>void send('interest'),true);button(act,'لا أرغب',()=>void send('decline'));question()}
+if(c.status==='profile'){const name=field(controls,'الاسم الكامل ('+(c.required_name_parts==='3'?'ثلاثي':c.required_name_parts==='5'?'خماسي':'رباعي')+')');const nid=field(controls,'رقم الهوية / الإقامة (10 أرقام)');nid.inputMode='numeric';nid.maxLength=10;const dob=field(controls,'تاريخ الميلاد (ميلادي)','', 'date');const phone=field(controls,'رقم جوالك (05xxxxxxxx)');phone.inputMode='tel';phone.maxLength=10;const cities=select(controls,'المدينة',[['','اختر المدينة'],['الرياض','الرياض'],['جدة','جدة'],['مكة المكرمة','مكة المكرمة'],['المدينة المنورة','المدينة المنورة'],['الدمام','الدمام'],['الخبر','الخبر'],['بريدة','بريدة'],['عنيزة','عنيزة'],['أبها','أبها'],['حائل','حائل'],['تبوك','تبوك'],['أخرى','مدينة أخرى']]);
+  const city=field(controls,'اسم المدينة إذا اخترت (أخرى)');city.hidden=true;cities.onchange=()=>{city.hidden=cities.value!=='أخرى'};controls.append(EL('p',c.privacy_notice||'تُستخدم البيانات لتنفيذ هذا العقد فقط وفق إشعار الخصوصية.','f73-muted'));const consent=check(controls,'أوافق على استخدام بياناتي لهذا العقد وفق إشعار الخصوصية',false);button(act,'حفظ بياناتي ومتابعة العقد',()=>void send('identify',{name:name.value,national_id:nid.value,birthday:dob.value,phone:phone.value,city:cities.value==='أخرى'?city.value:cities.value,privacy_consent:consent.checked}),true);question()}
+if(c.status==='review'){
+  const code=field(controls,'هل لديك كود خصم خاص بهذا العقد؟ (اختياري)');
+  const preview=EL('p','تحقق من الأتعاب النهائية قبل تسجيل الموافقة.','f73-status');controls.append(preview);
+  let quoted=null;
+  const qbtn=button(act,'احسب الأتعاب بعد الخصم',async()=>{qbtn.disabled=true;try{
+   quoted=await client('f99v73_client_quote',{p_case_id:id,p_code:code.value.trim().toUpperCase()});
+   preview.textContent='المبلغ الأساسي: '+money(quoted.base_fee)+' ريال، الخصم: '+money(quoted.discount)+' ريال، الإجمالي: '+money(quoted.final_fee)+' ريال';
+   agree.disabled=false;
+  }catch(e){quoted=null;agree.disabled=true;preview.textContent='تعذر التحقق: '+e.message}finally{qbtn.disabled=false}});
+  const agree=button(act,'أوافق على المبلغ والعقد المعروض',()=>{if(!quoted)return;void send('accept',{coupon_code:quoted.coupon_code,expected_final_fee:quoted.final_fee})},true);
+  agree.disabled=true;
+  code.addEventListener('input',()=>{quoted=null;agree.disabled=true;preview.textContent='راجع مبلغ الخصم مرة أخرى بعد تغيير الكود.'});
+  button(act,'لا أوافق',()=>void send('decline'));question();
+}
+
+if(c.status==='resale_choice'||c.status==='holding'){button(act,'أرغب في الاحتفاظ بالسلعة الآن',()=>void send('hold'));button(act,'أطلب إعادة البيع وفق الإجراءات الرسمية',()=>void send('request_resale'),true);question()}
+if(c.status==='agency_requested'){const link=EL('a','الانتقال لخدمة إصدار وكالة في ناجز (إذا كانت وكالة رسمية مطلوبة)');link.href='https://www.moj.gov.sa/ar/eServices/pages/3472d517-7cb4-4cd5-a6bc-2abc9751eea3.aspx';link.target='_blank';link.rel='noopener noreferrer';controls.append(link)}
+if(c.status==='settlement_details'){const iban=field(controls,'رقم الحساب الدولي IBAN سعودي (SA + 22 رقمًا)');iban.inputMode='text';const consent=check(controls,'أوافق على استخدام رقم الحساب لتسوية هذه المعاملة فقط',false);button(act,'إرسال بيانات التسوية للمالك',()=>void send('settlement_iban',{iban:iban.value.toUpperCase().replace(/\s/g,''),privacy_consent:consent.checked}),true)}
+if(['pending_owner','sale_pending_transfer','agency_requested','pending_settlement'].includes(c.status)){controls.append(EL('p','تم تسجيل طلبك، وهو الآن بانتظار مراجعة الجهة المختصة. لا تعتبر عملية البيع أو التوكيل أو التحويل منجزة تلقائيًا.','f73-muted'));question()}
+for(const reply of c.owner_replies||[])root.append(EL('p','رد المالك: '+reply.note,'f73-owner-reply'));
+}catch(e){info(e.message,true)}}
+function boot(){const o=owner();const grid=$('#ownerHub .owner-grid');if(grid&&!$('#f73-owner-tile')){const t=EL('button',null,'owner-tile primary');t.id='f73-owner-tile';t.type='button';t.append(EL('span','§','owner-icon'),EL('b','العقود الذكية الجديدة'),EL('small','قوالب حرة، عروض، أكواد، استفسارات وأرشيف'));t.onclick=()=>void openOwner();grid.prepend(t)}if(o)return;const a=access();if(!a){clientSeen='';return}const fp=a.token;if(fp===clientSeen)return;clientSeen=fp;void popupClient()}
+/* Owner shell: daily actions first; existing tools remain behind "باقي الأدوات". */
+let ownerMore=false,ownerFilter='';
+function compactHub(){if(!owner())return;const hub=$('#ownerHub'),grid=$('#ownerHub .owner-grid');if(!hub||!grid)return;
+ let bar=$('#f73-owner-shortcuts');if(!bar){bar=EL('section',null,'f73-owner-shortcuts');bar.id='f73-owner-shortcuts';hub.querySelector('.owner-hero')?.after(bar);
+  const title=EL('b','التحكم المباشر');bar.append(title);const btns=EL('div',null,'f73-owner-quick');bar.append(btns);
+  button(btns,'↔ تحويل المديونية',()=>window.ownerOpenBuyout?.(),true);
+  button(btns,'▣ العقود الجديدة',()=>void openOwner('templates'));
+  button(btns,'٪ أكواد الخصم',()=>window.F99V72CouponDesk?.());
+  button(btns,'▤ قلب المنصة: نسب البنوك',()=>window.F99COpenOwner?.());
+  button(btns,'⌕ فحص كود عميل',()=>window.F99V19OpenCode?.());
+  const pack=EL('div',null,'f73-owner-quick');bar.append(pack);const choices=EL('select');choices.setAttribute('aria-label','تعديل باقة واحدة');pack.append(choices);
+  const go=button(pack,'تعديل الباقة المختارة',()=>{if(choices.value)window.F99SOpenOwner?.(choices.value)});
+  function packages(){const prods=window.FINO99ReadStorefront?.()?.products||[];const old=choices.value;choices.replaceChildren(new Option('اختر الباقة لتعديلها',''));for(const x of prods)if(x.key)choices.append(new Option(x.name||x.key,x.key));if([...choices.options].some(x=>x.value===old))choices.value=old}packages();bar._updatePackages=packages;
+  const search=EL('input');search.type='search';search.placeholder='ابحث عن خدمة: أكواد، خصم، بنوك، الأرشيف...';search.setAttribute('aria-label','بحث في أدوات المالك');bar.append(search);search.oninput=()=>{ownerFilter=search.value.trim().toLocaleLowerCase('ar');toggleTools()};
+  button(bar,'باقي الأدوات — إظهار/إخفاء',()=>{ownerMore=!ownerMore;toggleTools()});
+ }
+ if(typeof bar._updatePackages==='function'&&!bar._lastRefresh||Date.now()-(bar._lastRefresh||0)>7000){bar._updatePackages?.();bar._lastRefresh=Date.now()}
+ toggleTools();
+}
+function toggleTools(){const grid=$('#ownerHub .owner-grid');if(!grid)return;
+ const quick=['f73-owner-tile'];for(const b of grid.querySelectorAll('button')){
+  const on=(b.getAttribute('onclick')||'');const main=quick.includes(b.id)||/ownerOpenBuyout|f99fixOpenCodes|ownerOpenSmartCalculator/.test(on);
+  const match=ownerFilter&&b.textContent?.toLocaleLowerCase('ar').includes(ownerFilter);
+  b.classList.toggle('f73-hidden-owner-tile',!!(ownerFilter?!match:(!main&&!ownerMore)));
+ }
+}
+
+window.FINO99V73OpenOwner=openOwner;window.FINO99V73OpenClient=popupClient;window.FINO99V73Test={money,statuses,terminal};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+setInterval(()=>{if(!document.hidden){boot();compactHub()}},2500);
+})();
+
+</script>
+<style id="fino-v74-renewal-style">
+#v74-dialog{position:fixed;inset:0;background:rgba(9,29,44,.70);z-index:2147483600;display:flex;justify-content:center;align-items:center;padding:14px;direction:rtl;color:#1d4059;font-family:Cairo,Tahoma,Arial,sans-serif}
+#v74-dialog .v74-sheet{background:#fff;width:min(760px,100%);max-height:94vh;overflow:auto;border-radius:19px;padding:20px;box-shadow:0 18px 70px #071d2c88}
+#v74-dialog h2{font-size:21px;margin:0 auto 8px 0}#v74-dialog h3{font-size:17px;margin:0 0 8px}
+#v74-dialog button,.v74-client-actions button{cursor:pointer;border:1px solid #bed5e2;background:#eef7fb;color:#164562;padding:10px 13px;border-radius:11px;font-weight:700;min-height:42px;font-family:inherit}
+#v74-dialog button.v74-primary,.v74-client-actions button.v74-primary{background:#165980;color:white;border-color:#165980}
+#v74-dialog button:disabled{opacity:.55;cursor:wait}#v74-dialog .v74-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
+#v74-dialog .v74-card{background:#fafcfe;border:1px solid #e0eaf1;border-radius:14px;padding:13px;margin:13px 0}
+#v74-dialog .v74-muted{font-size:13px;line-height:1.8;color:#5a7386}
+#v74-dialog .v74-field{display:block;margin:9px 0;font-size:14px;font-weight:700}
+#v74-dialog .v74-field span{display:block;margin-bottom:5px}
+#v74-dialog input:not([type=checkbox]),#v74-dialog select,#v74-dialog textarea{width:100%;min-height:43px;padding:10px;border:1px solid #aac8d9;border-radius:10px;background:#fff;color:#143c56;font:inherit;box-sizing:border-box}
+#v74-dialog textarea{min-height:95px;resize:vertical}#v74-dialog .v74-toggle{display:flex;align-items:center;gap:10px;margin:10px 0;font-size:14px;font-weight:700}
+#v74-dialog .v74-message{padding:11px;border-radius:9px;background:#e9f6f0;color:#155c48;line-height:1.6}#v74-dialog .v74-message[data-bad=true]{background:#fff0ed;color:#9d2c20}
+.v74-client-actions{margin:12px 5px;padding:12px;background:#f0f8fb;border:1px solid #bed2df;border-radius:13px;direction:rtl;font:700 13px Cairo,Tahoma,Arial,sans-serif}
+.v74-reviews{margin:20px auto;padding:16px;max-width:920px;border:1px solid #d4e2ea;background:#fafcfe;border-radius:18px;text-align:right;direction:rtl;font-family:Cairo,Tahoma,Arial,sans-serif}.v74-reviews blockquote{border-radius:10px;background:white;padding:12px;margin:10px 0;border:1px solid #e1eaf1}
+@media(max-width:560px){#v74-dialog .v74-sheet{padding:13px}#v74-dialog h2{font-size:17px}#v74-dialog .v74-row button{flex:1 1 120px}}
+
+</style>
+<script id="fino-v74-renewal-js">
+/* FINO99 V74: renewal offer subpackages and opt-in feedback; V73 finance untouched. */
+(()=>{'use strict';
+const $=(s,r=document)=>r.querySelector(s), E=(tag,txt,cl)=>{let n=document.createElement(tag);if(txt!=null)n.textContent=String(txt);if(cl)n.className=cl;return n};
+const products=()=>{try{return (window.FINO99ReadStorefront?.()?.products||[]).filter(p=>p?.key&&p.enabled!==false)}catch{return []}};
+const owner=()=>{try{return window.F99V60Test?.owner?.()===true&&typeof finoCentralAdminToken!=='undefined'&&!!finoCentralAdminToken}catch{return false}};
+const access=()=>{try{const e=window.finoCentralRestoreEntry?.();return e?.entryToken?{token:e.entryToken,device:e.deviceId||window.finoCentralDeviceId?.()}:null}catch{return null}};
+const pkgKey=()=>{try{return window.F99V32MainAccess?.()?.packageKey||window.fino99ActivePackage?.()?.key||''}catch{return ''}};
+const reason=x=>String(x?.data?.reason||x?.error?.message||'تعذر تأكيد العملية من المركزية');
+async function admin(fn,args={}){if(!owner())throw Error('سجل الدخول بصلاحية المالك أولًا');const r=await window.finoCentralAdminCall(fn,args);if(r?.ok!==true||r.data?.ok!==true)throw Error(reason(r));return r.data}
+async function rpc(fn,args={}){if(typeof window.finoRpc!=='function')throw Error('المركزية غير متصلة');const r=await window.finoRpc(fn,args,19000);if(r?.ok!==true||r.data?.ok!==true)throw Error(reason(r));return r.data}
+const SAR=n=>Number(n||0).toLocaleString('ar-SA',{minimumFractionDigits:2,maximumFractionDigits:2});
+function button(parent,title,on,primary=false){const b=E('button',title,primary?'v74-primary':'');b.type='button';b.onclick=on;parent.append(b);return b}
+function row(parent){const d=E('div',null,'v74-row');parent.append(d);return d}
+function input(parent,label,value='',type='text'){const l=E('label',null,'v74-field');l.append(E('span',label));const e=E(type==='textarea'?'textarea':'input');if(type!=='textarea')e.type=type;e.value=String(value??'');l.append(e);parent.append(l);return e}
+function select(parent,label,items,chosen){const l=E('label',null,'v74-field');l.append(E('span',label));const e=E('select');for(const [v,t] of items)e.append(new Option(t,v));if(chosen!==undefined)e.value=String(chosen);l.append(e);parent.append(l);return e}
+function toggle(parent,label,checked=false){const l=E('label',null,'v74-toggle'),e=E('input');e.type='checkbox';e.checked=checked;l.append(e,E('span',label));parent.append(l);return e}
+function card(parent,title,hint=''){const d=E('section',null,'v74-card');d.append(E('h3',title));if(hint)d.append(E('p',hint,'v74-muted'));parent.append(d);return d}
+function dialog(title){$('#v74-dialog')?.remove();const scr=E('div',null,'v74-mask');scr.id='v74-dialog';scr.setAttribute('role','dialog');scr.setAttribute('aria-modal','true');scr.setAttribute('aria-label',title);const body=E('div',null,'v74-sheet');scr.append(body);const h=row(body);h.append(E('h2',title));button(h,'إغلاق',()=>scr.remove());document.body.append(scr);return body}
+function notice(root,msg,bad=false){let el=$('.v74-message',root);if(!el){el=E('p',null,'v74-message');root.prepend(el)}el.textContent=msg;el.dataset.bad=bad?'true':'false'}
+function safeDate(e){if(!e.value)return null;const d=new Date(e.value);if(!Number.isFinite(+d))throw Error('تاريخ غير صحيح');return d.toISOString()}
+function refreshOption(s,items,defaultText){const v=s.value;s.replaceChildren(new Option(defaultText,''));for(const [x,t] of items)s.append(new Option(t,x));if([...s.options].some(x=>x.value===v))s.value=v}
+const READY_PRESETS=[
+ {title:'الباقة البرونزية الكلاسيكية',price:22,calcs:3,minutes:1440,window:10,
+  description:'يا هلا بك من جديد! اختصر مشاويرك بثلاث حسبات مبدئية خلال يوم واحد من أول تفعيل ناجح، واستلم كودًا جديدًا واحسب بنفسك فورًا.',
+  url:'https://salla.sa/HloolTamwilia/payment/p1625425789'},
+ {title:'الباقة الفضية',price:39.99,calcs:5,minutes:7200,window:2880,
+  description:'مساحة أوسع للمقارنة! خمس حسبات خلال خمسة أيام تبدأ من أول تفعيل ناجح؛ اختَر ما يناسبك وتابع عروضك براحة.',
+  url:'https://salla.sa/HloolTamwilia/payment/p1590263995'},
+ {title:'باقة شويرك',price:89.99,calcs:7,minutes:20160,window:2880,
+  description:'خلك مع شويرك أسبوعين! سبع حسبات مبدئية لمتابعة الخيارات التمويلية كل فترة؛ احرص على استخدام حسباتك قبل انتهاء المدة.',
+  url:'https://salla.sa/HloolTamwilia/payment/p2126073636'}
+];
+let ownerOffers=[],ownerBatches=[];
+async function openRenewOwner(initialKey=''){const root=dialog('عروض تجديد الأكواد • داخل الباقة');const v=row(root);button(v,'عروض الباقات',()=>void openRenewOwner(initialKey),true);button(v,'آراء العملاء',()=>void openFeedbackOwner());
+const list=products();if(!list.length)return notice(root,'لا توجد باقات مفعلة بالمركزية',true);
+const pack=select(root,'الباقة التي ستنشئ بداخلها عرض التجديد',list.map(p=>[p.key,p.name||p.key]),initialKey||list[0].key);
+const presets=card(root,'العروض الثلاثة المعتمدة لباقة اختصر مشاويرك','اضغط مرة واحدة لتهيئة أسماء العروض وروابط الدفع. تُحفظ مخفية حتى تعتمد أكوادها وتتأكد من تسليمها في منصة الدفع. لن تُكرر العروض الموجودة.');
+const presetBtn=button(row(presets),'تجهيز العروض الثلاثة بلا تكرار',async()=>{if(!/اختصر\s*مشاويرك|مديونية/i.test(list.find(x=>x.key===pack.value)?.name||''))return notice(root,'اختر باقة اختصر مشاويرك أولًا',true);if(!confirm('سيُنشئ العروض الناقصة مخفية أولًا، ولن يغيّر العروض الموجودة. هل تعتمد؟'))return;presetBtn.disabled=true;try{const p=list.find(x=>x.key===pack.value);let added=0;const used=new Set(ownerOffers.map(o=>o.title));for(const z of READY_PRESETS){if(used.has(z.title))continue;const x=await admin('f99v74_owner_offer_save',{p_id:null,p_package_key:p.key,p_title:z.title,p_description:z.description,p_price_sar:z.price,p_max_calculations:z.calcs,p_max_entries:0,p_duration_minutes:z.minutes,p_services:(p.services||[]).filter(s=>!['contract','bot_contract'].includes(s)),p_checkout_url:z.url,p_visible:false,p_parent_offer_id:null,p_starts_at:null,p_ends_at:null,p_expected_version:null});if(x?.id){await admin('f99v75_owner_window_save',{p_offer_id:x.id,p_window_minutes:z.window});added++}}notice(root,`✓ جُهّز ${added} عرض جديد؛ العروض محفوظة مخفية حتى مطابقة الأكواد مع الدفع.`);await load()}catch(e){notice(root,'توقف تجهيز العروض عند: '+e.message,true)}finally{presetBtn.disabled=false}},true);
+const work=E('section');root.append(work);pack.onchange=()=>void load();
+async function load(){work.replaceChildren();const p=list.find(x=>x.key===pack.value);if(!p)return;
+const data=await admin('f99v74_owner_offers',{p_package_key:p.key});ownerOffers=data.items||[];ownerBatches=data.batches||[];
+const form=card(work,'إنشاء عرض تجديد أو تعديله','العرض الفرعي يتبع هذه الباقة فقط. يمكن إنشاء عروض كثيرة دون تغيير الباقة الأساسية.');
+const selectOffer=select(form,'عرض موجود أو عرض جديد',[['','إنشاء عرض جديد'],...ownerOffers.map(o=>[o.id,o.title+(o.visible?' • مفعّل':' • مخفي')])],'');
+const title=input(form,'اسم عرض التجديد','3 حسبات ليوم واحد');const detail=input(form,'وصف العرض','كود جديد خاص بالباقة — المدة تبدأ من أول تفعيل','textarea');
+const price=input(form,'السعر بالريال','17','number'),calc=input(form,'عدد الحسبات','3','number');
+const duration=select(form,'مدة الاستخدام',[['1440','يوم واحد'],['2880','يومان'],['4320','3 أيام'],['10080','7 أيام'],['20160','14 يومًا'],['43200','30 يومًا']],'1440');
+const entries=input(form,'عدد الدخولات • 0 حسب سياسة الباقة','0','number');const viewWindow=select(form,'فرصة العرض من أول مشاهدة',[['0','حتى إيقاف العرض'],['10','10 دقائق'],['30','30 دقيقة'],['60','ساعة'],['1440','يوم واحد'],['2880','يومان'],['4320','3 أيام'],['10080','7 أيام']],'10');
+const link=input(form,'رابط الدفع الخاص بهذا العرض (HTTPS)','','url');
+const pOffers=[['','بدون عرض سابق • تجديد أول'],...ownerOffers.map(x=>[x.id,'بعد عرض: '+x.title])];const parent=select(form,'تجديد متسلسل (اختياري)',pOffers,'');
+const enabled=toggle(form,'العرض مفعّل ويظهر للعميل عند انتهاء الحسبات',false);
+const when=card(form,'موعد العرض (اختياري)');const start=input(when,'يبدأ من','','datetime-local'),end=input(when,'ينتهي في','','datetime-local');
+const sr=card(form,'الخدمات المشمولة بهذا العرض','تُختار من خدمات الباقة الأساسية؛ لا يتيح التجديد خدمة لم تكن مفعلة فيها.');
+const checks=[];for(const name of p.services||[]){checks.push([name,toggle(sr,name,true)])}
+let editing=null;function fill(o){editing=o||null;title.value=o?.title||'3 حسبات ليوم واحد';detail.value=o?.description||'كود جديد خاص بالباقة — المدة تبدأ من أول تفعيل';price.value=o?.price_sar??17;calc.value=o?.max_calculations??3;entries.value=o?.max_entries??0;viewWindow.value=String(o?.view_window_minutes??10);duration.value=String(o?.duration_minutes||1440);if(![...duration.options].some(x=>x.value===duration.value))duration.add(new Option(Math.round(Number(o.duration_minutes)/1440*100)/100+' يوم',o.duration_minutes));link.value=o?.checkout_url||'';enabled.checked=o?.visible===true;parent.value=o?.parent_offer_id||'';start.value=o?.starts_at?localDate(o.starts_at):'';end.value=o?.ends_at?localDate(o.ends_at):'';for(const [s,ch] of checks)ch.checked=!o||o.services?.includes(s)}
+function localDate(date){const d=new Date(date);return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16)}
+selectOffer.onchange=()=>fill(ownerOffers.find(x=>x.id===selectOffer.value));fill(null);
+const act=row(form);const save=button(act,'حفظ واعتماد العرض',async()=>{save.disabled=true;try{const services=checks.filter(x=>x[1].checked).map(x=>x[0]),a=Number(calc.value),n=Number(entries.value),m=Number(duration.value),pr=Number(price.value);if(!services.length||!Number.isInteger(a)||a<1||a>300||!Number.isInteger(n)||n<0||n>500||!Number.isInteger(m)||m<1||!Number.isFinite(pr)||pr<0)throw Error('راجع عدد الحسبات والمدة والخدمات والسعر');if(enabled.checked&&!/^https:\/\//.test(link.value.trim()))throw Error('لتفعيل العرض ضع رابط الدفع الصحيح أولًا');const out=await admin('f99v74_owner_offer_save',{p_id:editing?.id||null,p_package_key:pack.value,p_title:title.value,p_description:detail.value,p_price_sar:pr,p_max_calculations:a,p_max_entries:n,p_duration_minutes:m,p_services:services,p_checkout_url:link.value.trim(),p_visible:enabled.checked,p_parent_offer_id:parent.value||null,p_starts_at:safeDate(start),p_ends_at:safeDate(end),p_expected_version:editing?.version||null});if(out?.id){await admin('f99v75_owner_window_save',{p_offer_id:out.id,p_window_minutes:Number(viewWindow.value)});}notice(root,'✓ حفظت المركزية العرض، رقم النسخة '+out.version);await load()}catch(e){notice(root,'تعذر الاعتماد: '+e.message,true)}finally{save.disabled=false}},true);
+const batch=card(work,'تخصيص مخزون لهذا العرض','يستخدم مخزون أكواد الباقة الأساسي ولا ينشئ مخزونًا موازيًا. تُصدَّر الأكواد في ملف Excel باسم خاص بالعرض.');
+const chosen=select(batch,'اختر العرض لتخصيص أكواده',ownerOffers.map(x=>[x.id,x.title]));const count=input(batch,'عدد الأكواد في الدفعة (1 إلى 500)','50','number');
+const gr=row(batch);for(const n of [20,25,50,100,300,500])button(gr,n+' كود',()=>{count.value=String(n)});
+const make=button(batch,'تخصيص الأكواد وتصديرها',async()=>{make.disabled=true;try{
+ const o=ownerOffers.find(x=>x.id===chosen.value),n=Number(count.value);if(!o||!Number.isInteger(n)||n<1||n>500)throw Error('اختر العرض وعددًا من 1 إلى 500');if(!confirm('تخصيص '+n+' كود للعرض «'+o.title+'»؟ الأكواد ستصبح ضمن مخزون الباقة، ولا تكرر الطلب إذا انقطع الاتصال.'))return;
+ const r=await admin('f99v19_admin_allocate_custom',{p_package_key:o.package_key,p_count:n,p_duration_minutes:o.duration_minutes,p_services:o.services,p_max_calculations:o.max_calculations,p_last_day:null,p_max_entries:o.max_entries});
+ if(!r.allocation_id)throw Error('لم تُرجع المركزية رقم دفعة. تحقق من سجل الدفعات قبل إعادة العملية');
+ const exp=await admin('f99v17_admin_export_batch',{p_allocation_id:r.allocation_id});if(exp.count!==n||!Array.isArray(exp.codes)||exp.codes.length!==n||exp.state!=='published'||exp.published!==true||new Set(exp.codes).size!==n)throw Error('فشل التحقق من تصدير الدفعة. تحقق من المخزون ولا تكرر التخصيص');
+ const generator=window.F99V17BuildSallaXlsx;if(typeof generator!=='function')throw Error('منشئ Excel الأساسي غير متاح؛ الدفعة موجودة بالمركزية ويمكن تصديرها من المخزون');
+ const file=generator(exp.codes,exp.last_day||null);const blob=new Blob([file],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});const u=URL.createObjectURL(blob);const a=E('a');a.href=u;a.download='FINO99_RENEW_'+o.id.slice(0,8)+'_'+String(r.allocation_id).slice(0,8)+'_'+n+'.xlsx';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),15000);
+ const rec=await admin('f99v74_owner_batch_record',{p_offer_id:o.id,p_allocation_id:r.allocation_id,p_quantity:n,p_exported:false});if(rec?.ok!==true)throw Error('تم التخصيص والتصدير، لكن فشل تسجيل مرجع الدفعة. لا تكرر تخصيص الأكواد');
+ notice(root,'✓ تم التخصيص وتنزيل الملف. استورد الملف في منصة الدفع قبل نشر رابط العرض؛ لم يتم التحقق من الاستيراد آليًا.');await load();
+ }catch(e){notice(root,'العملية غير مكتملة: '+e.message,true)}finally{make.disabled=false}},true);
+const stats=card(work,'إحصاء الباقة (اختياري)','غير مفعّل افتراضيًا. العدد الذي تكتبه يدويًا يظهر للعميل بوصفه تقديرًا، وليس مبيعات موثّقة.');
+const visibleStats=toggle(stats,'إظهار العدد التقديري في المتجر',false);
+const quantityStats=input(stats,'عدد تقديري أدخله المالك','0','number');
+try{const st=await rpc('f99v74_public_stats',{p_package_key:p.key});visibleStats.checked=st.visible===true;quantityStats.value=Number(st.estimate||0)}catch{}
+button(stats,'حفظ إعداد العدد',async()=>{try{const n=Number(quantityStats.value);if(!Number.isSafeInteger(n)||n<0)throw Error('أدخل عددًا صحيحًا');await admin('f99v74_owner_stats',{p_package_key:p.key,p_visible:visibleStats.checked,p_manual_count:n});notice(root,'✓ حفظت المركزية عددًا تقديريًا مع بيان مصدره')}catch(e){notice(root,e.message,true)}});
+const history=card(work,'الدفعات المحفوظة','مرجعيات التصدير؛ لا يعني ظهور الدفعة أن العميل دفع أو استلم الكود.');for(const b of ownerBatches){const item=E('p','دفعة '+String(b.allocation_id).slice(0,8)+' — '+b.quantity+' كود — '+b.status,'v74-muted');history.append(item)}
+}
+try{await load()}catch(e){notice(root,e.message,true)}
+}
+function usedRawCode(){try{if(typeof f99LastAttemptedCode==='string'&&f99LastAttemptedCode.trim())return f99LastAttemptedCode.trim().toUpperCase()}catch{};try{return String(window.F99V75LastCode||'').trim().toUpperCase()}catch{return ''}}
+function remainingLabel(seconds){const s=Math.max(0,Math.floor(seconds));if(!s)return 'انتهت مهلة العرض';const d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60),r=s%60;return (d?d+' يوم، ':'')+(h?h+' ساعة، ':'')+(m?m+' دقيقة، ':'')+r+' ثانية'}
+function openRenewCustomer(key,forcedCode=''){let k=key||pkgKey();if(k&&!products().some(p=>p.key===k)&&/^[A-Z0-9-]{8,32}$/i.test(k)){forcedCode=k;k=''}const root=dialog('عروض تجديد الأكواد');const intro=E('p','ياهلا بك مجددًا! إذا انتهت حسباتك، اختر عرضًا يناسبك، واستلم كودًا جديدًا واحسب بنفسك فورًا. تبدأ مدة الكود الجديد عند أول تفعيل ناجح.','v74-muted');root.append(intro);
+const codeInput=input(root,'كود الاشتراك السابق لعرض الفرص المتاحة',forcedCode||usedRawCode());codeInput.autocomplete='off';
+const offersArea=E('section');root.append(offersArea);
+let tick=null,updaters=[];const startBtn=button(root,'عرض فرص التجديد',async()=>{offersArea.replaceChildren();if(tick){clearInterval(tick);tick=null;}updaters=[];const code=String(codeInput.value||'').trim().toUpperCase();if(!/^[A-Z0-9-]{8,32}$/.test(code))return notice(root,'أدخل الكود السابق نفسه، دون أي إضافات',true);startBtn.disabled=true;try{
+ const d=await rpc('f99v75_customer_offer_window',{p_code:code,p_package_key:k||null});const offers=d.items||[];if(!offers.length)return notice(root,'لا يوجد عرض تجديد ساري لهذا الكود حاليًا. يمكنك العودة إلى المتجر.',true);
+ for(const o of offers){const c=card(offersArea,o.title,o.description||'');c.append(E('strong',SAR(o.price_sar)+' ريال • '+o.max_calculations+' حسبات • '+(o.duration_minutes/1440)+' يوم'));const time=E('p','','v74-muted');c.append(time);const exp=o.offer_expires_at?new Date(o.offer_expires_at).getTime():0;
+ const buy=button(row(c),'اشتر الآن',()=>{if(!/^https:\/\//i.test(o.checkout_url))return notice(root,'رابط الدفع غير متاح حاليًا',true);window.location.assign(o.checkout_url)},true);
+ function update(){const seconds=exp?Math.max(0,Math.floor((exp-Date.now())/1000)):null;time.textContent=seconds===null?'العرض متاح حاليًا وفق إعدادات الباقة':('لا يفوتك العرض! باقي '+remainingLabel(seconds));if(seconds===0){buy.disabled=true;buy.textContent='انتهت مهلة هذا العرض'}}update();updaters.push(update);
+ c.append(E('p','بعد الدفع: استلم الرمز الجديد، انسخه وحده، ثم ارجع إلى FINO99 والصقه في «أدخل الكود».','v74-muted'));
+ }tick=setInterval(()=>{if(!offersArea.isConnected){clearInterval(tick);return}updaters.forEach(f=>f())},1000);
+ notice(root,'هذه العروض مرتبطة بكودك السابق؛ تأكد من السعر النهائي قبل الدفع.');
+ }catch(e){notice(root,'تعذر التحقق من العروض: '+e.message,true)}finally{startBtn.disabled=false}},true);
+if(codeInput.value)startBtn.click();}
+async function openFeedbackCustomer(){const a=access();const root=dialog('يهمنا رأيك في FINO99');if(!a)return notice(root,'تتاح الملاحظات بعد الدخول بكود صحيح',true);const kind=select(root,'ماذا ترغب بإرساله؟',[['review','تقييم الخدمة'],['suggestion','ملاحظة أو اقتراح']]);const stars=select(root,'التقييم',[['5','5 نجوم'],['4','4 نجوم'],['3','3 نجوم'],['2','نجمتان'],['1','نجمة']]);const msg=input(root,'اكتب رأيك كما هو','','textarea');const name=input(root,'الاسم الأول للنشر (اختياري)');const consent=toggle(root,'أسمح بعرض تقييمي علنًا بعد مراجعة الإدارة (بدون بيانات التواصل)',false);kind.onchange=()=>{stars.parentElement.hidden=kind.value!=='review';consent.parentElement.hidden=kind.value!=='review'};
+const btn=button(root,'إرسال داخل المنصة',async()=>{btn.disabled=true;try{const d=await rpc('f99v74_client_feedback',{p_entry_token:a.token,p_device_id:a.device,p_kind:kind.value,p_rating:kind.value==='review'?Number(stars.value):null,p_message:msg.value,p_public_name:name.value,p_publication_consent:consent.checked&&kind.value==='review',p_package_key:pkgKey()});if(d.received!==true)throw Error('تعذر إثبات الاستلام');notice(root,'✓ وصل رأيك للإدارة داخل المنصة، شكرًا لك');}catch(e){notice(root,'تعذر الإرسال: '+e.message,true)}finally{btn.disabled=false}},true)}
+async function openFeedbackOwner(){const root=dialog('ملاحظات العملاء والتقييمات');const head=row(root);button(head,'عروض التجديد',()=>void openRenewOwner());const data=await admin('f99v74_owner_feedback',{p_limit:150}).catch(e=>{notice(root,e.message,true);return null});if(!data)return;
+const global=card(root,'النشر في الصفحة الرئيسية','مغلق افتراضيًا. لا ننشر تقييمًا إلا بعد موافقة صاحبه.');const enabled=toggle(global,'إظهار التقييمات المنشورة على الصفحة الرئيسية',false);
+try{const x=await rpc('f99v74_public_review_display');enabled.checked=x.show_reviews===true}catch{}
+button(global,'حفظ إعداد النشر',async()=>{try{await admin('f99v74_owner_review_display',{p_show_reviews:enabled.checked});notice(root,'✓ حفظ إعداد النشر')}catch(e){notice(root,e.message,true)}});
+for(const f of data.items||[]){const c=card(root,(f.kind==='review'?'تقييم':'ملاحظة')+' • '+new Date(f.created_at).toLocaleDateString('ar-SA'),f.package_key);c.append(E('p',f.message));if(f.kind==='review')c.append(E('strong','النجوم: '+f.rating+' • موافقة النشر: '+(f.publication_consent?'نعم':'لا')));const r=row(c);if(f.kind==='review'&&f.publication_consent&&!f.archived)button(r,'اعتماد للنشر',()=>void change('publish'));button(r,'إخفاء',()=>void change('hide'));button(r,'أرشفة',()=>void change('archive'));async function change(action){try{await admin('f99v74_owner_feedback_moderate',{p_id:f.id,p_action:action});notice(root,'✓ اعتمد التغيير');await openFeedbackOwner()}catch(e){notice(root,e.message,true)}}}
+}
+let homeReviewsShown=false;async function renderHomeReviews(){if(homeReviewsShown)return;const d=await rpc('f99v74_public_review_display').catch(()=>null);if(!d?.show_reviews)return;const host=$('#page1')||document.body;const keys=products().map(x=>x.key);if(!keys.length)return;const all=[];for(const k of keys.slice(0,12)){const r=await rpc('f99v74_public_reviews',{p_package_key:k,p_limit:5}).catch(()=>null);for(const x of r?.items||[])all.push(x)}if(!all.length)return;const section=E('section',null,'v74-reviews');section.append(E('h3','تقييمات العملاء'));for(const v of all.slice(0,8)){const c=E('blockquote');c.append(E('b','★'.repeat(v.rating||0)+' • '+(v.public_name||'عميل')));c.append(E('p',v.message));section.append(c)}host.append(section);homeReviewsShown=true;}
+function boot(){const hub=$('#ownerHub .owner-grid');if(hub&&!$('#v74-owner-entry')){const b=E('button','عروض تجديد الأكواد','owner-tile primary');b.id='v74-owner-entry';b.type='button';b.onclick=()=>void openRenewOwner();hub.prepend(b);const f=E('button','التقييمات والملاحظات','owner-tile');f.type='button';f.id='v74-feedback-entry';f.onclick=()=>void openFeedbackOwner();hub.prepend(f)}
+const bar=$('#f73-owner-shortcuts .f73-owner-quick');if(bar&&!$('#v74-quick-entry')){const b=button(bar,'↻ عروض التجديد',()=>void openRenewOwner(),true);b.id='v74-quick-entry';const f=button(bar,'★ التقييمات',()=>void openFeedbackOwner());f.id='v74-quick-feedback'}
+const editor=$('#f99s-owner');if(owner()&&editor&&!$('#v74-inline-package-renew')){
+ const heading=$('.f99v17-page-title',editor)?.textContent||'';
+ const p=products().find(x=>heading.includes(x.name||'~~~~'));
+ if(p){const b=E('button','↻ عروض تجديد الأكواد لهذه الباقة','f99v17-quiet');b.id='v74-inline-package-renew';b.type='button';b.onclick=()=>void openRenewOwner(p.key);(editor.querySelector('.f99v17-editor-actions')||editor).append(b)}
+}
+const shop=$('#f99s-modal');if(shop&&!shop.hidden&&!shop.dataset.v74CountChecked){
+ const tiles=shop.querySelectorAll('.f99v6-tile');const ps=products();if(tiles.length){shop.dataset.v74CountChecked='yes';for(const t of tiles){const title=t.querySelector('h3')?.textContent||'';const p=ps.find(x=>x.name===title);if(!p)continue;
+ void rpc('f99v74_public_stats',{p_package_key:p.key}).then(d=>{if(d.visible!==true||!t.isConnected||!Number.isFinite(Number(d.estimate)))return;const n=E('small','عدد تقديري أدخله المالك: '+Number(d.estimate).toLocaleString('ar-SA'),'v74-muted-count');t.append(n)}).catch(()=>{})}
+ }
+}
+if(shop?.hidden)shop.dataset.v74CountChecked='';
+const entry=access();if(entry&&!owner()&&!$('#v74-client-feedback')){const wrap=$('#finoBotChat')||$('#page2')||document.body;const n=E('div',null,'v74-client-actions');n.id='v74-client-feedback';button(n,'★ يهمنا رأيك',()=>void openFeedbackCustomer());wrap.append(n)}
+const used=window.__F99V43QuotaExhausted===true||window.__F99V43LastPending===true;
+if(used&&entry&&!owner()&&!$('#v74-client-renew')&&!document.querySelector('#subscriptionRenewBtn.show')){const wrap=$('#finoBotChat')||$('#page2')||document.body;const n=E('div',null,'v74-client-actions');n.id='v74-client-renew';n.append(E('p','انتهت الحسبات المتاحة؟ عندك فرصة للاستفادة من عروض تجديد خاصة بهذه الباقة.'));button(n,'عرض تجديد الأكواد',()=>openRenewCustomer(),true);wrap.append(n)}
+}
+window.FINO99V74OwnerRenewal=openRenewOwner;window.FINO99V74CustomerRenewal=openRenewCustomer;window.F99V8OpenRenewal=(oldCode)=>openRenewCustomer('',String(oldCode||''));window.FINO99V74CustomerFeedback=openFeedbackCustomer;window.FINO99V74OwnerFeedback=openFeedbackOwner;
+window.FINO99V74_TEST={SAR,pkgKey,products};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();let tick=0;setInterval(()=>{if(document.hidden)return;boot();if(++tick%6===0)void renderHomeReviews()},3500);
 })();
 </script>
 </body>
