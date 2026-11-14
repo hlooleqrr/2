@@ -1,5 +1,6 @@
+<!-- FINO99 O2: original reference two. Source compatible with existing database V84; requires O2 additive SQL. -->
 <!DOCTYPE html>
-<!-- FINO99 ORIGINAL ONE V87-O1 | GitHub Pages index.html | 2026-11-14.
+<!-- FINO99 V86 | GitHub Pages index.html | 2026-11-14.
      Current site is configured for its existing Supabase project.
      The HTML file does not install database functions or create an independent backend.
      Do not change Supabase URL or publishable key when updating this same site.
@@ -5863,7 +5864,7 @@ window.F99V45DefaultCover=function(p){const k=String(p?.key||'').toLowerCase(),n
 <div class="owner-shell">
 <div class="owner-top"><div class="owner-title"><b><span data-platform-code="">FINO99</span> • التحكم في كامل المنصة</b><small>كود المالك • إدارة الخدمات والأكواد والعقود والمطبوعات والتصميم</small></div><button class="owner-exit" onclick="ownerLogout()" type="button">خروج</button></div>
 <div class="owner-hero"><h1>حياك الله</h1></div>
-<div class="owner-grid">
+<div class="owner-grid"> <button class="owner-tile" type="button" onclick="window.F99O2OpenAdmin?.()"><span class="owner-icon">📅</span><b>الإرشادات والمواعيد</b><small>المواعيد، الباقات الجديدة، رموز سلة، التجديد والتصدير من مكان واحد.</small></button> 
 <button class="owner-tile primary" onclick="ownerOpenSmartPortal()"><span class="owner-icon">✦</span><b>المنصة الذكية</b><small>فتح واجهة المحادثة الذكية والوصول لخدمات المنصة.</small></button>
 <button class="owner-tile" onclick="ownerOpenBuyout()"><span class="owner-icon">↔</span><b>تحويل المديونية</b><small>الدخول المباشر لحاسبة وترشيح شراء المديونية.</small></button>
 <button class="owner-tile" onclick="ownerOpenSmartCalculator()"><span class="owner-icon">∑</span><b>الحاسبة الذكية</b><small>حساب شخصي، استهلاكي، شركات وعقاري وفق إعدادات المالك.</small></button>
@@ -13107,7 +13108,10 @@ function finishIdentityAndEnter(){
       showPage('page1');return;
     }
     const pkg=fino99PackageFromCode(activeAccess.record.centralData);
-    if(services.length===1 && ['bot_buyout','bot_smart','bot_compare','bot_mortgage_quote','bot_contract','mortgage_quote','mortgage_compare'].includes(only) && typeof window.F99V13RunService==='function'){
+    if(services.length===1 && ['guidance_mortgage','guidance_personal'].includes(only)){
+      if(typeof window.F99O2OpenForEntry==='function')window.F99O2OpenForEntry();
+      else {showPage('page1');alert('تعذر تحميل وحدة المواعيد؛ راجع إصدار الموقع.');}
+    }else if(services.length===1 && ['bot_buyout','bot_smart','bot_compare','bot_mortgage_quote','bot_contract','mortgage_quote','mortgage_compare'].includes(only) && typeof window.F99V13RunService==='function'){
       window.F99V13RunService(only);
     }else if(services.length>1 && typeof window.F99V6OpenServices==='function'){
       window.F99V6OpenServices(services);
@@ -17572,7 +17576,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 (()=>{'use strict';
  const KEY='f99x_storefront', SALLA_SCRIPT='https://cdn.assets.salla.network/prod/@salla.sa/fast-checkout-widget/v0.0.25/widget.esm.js';
  const DEFAULT={enabled:false,catalog_preview:false,store_id:'1525498116',store_home_url:'',hero:{enabled:true,title:'كل خيارات التمويل في مكان واحد',subtitle:'قارن العروض التمويلية واستكشف الباقة المناسبة لك. احتساب مبدئي واضح قبل اتخاذ قرارك.',button:'التسوق',motion:true,image_url:''},title:'المتجر',checkout_instructions:'1. أكمل الدفع واستلم رمز التفعيل.\n2. انسخ الرمز وحده كما يظهر لك.\n3. ارجع إلى موقع FINO99 واختر «أدخل الكود» ثم اضغط «دخول».',terms:'الخدمات إرشادية ولا تمثل موافقة تمويلية، ويخضع الترشيح للشروط والعروض المتاحة. تسري سياسة استخدام الأكواد والاسترجاع المبينة بمتجر سلة.',products:[],version:0};
- const SERVICES=[['buyout','شراء مديونية التمويل الشخصي'],['smart','الحاسبة الذكية'],['compare','مقارنات عروض البنوك'],['mortgage_quote','التمويل العقاري'],['mortgage_compare','مقارنات العقاري'],['contract','العقود والاتفاقيات'],['bot_buyout','محادثة تحويل المديونية'],['bot_smart','المساعد الذكي للحاسبة'],['bot_compare','مساعد مقارنة العروض'],['bot_mortgage_quote','المساعد العقاري'],['bot_contract','مساعد العقود']];
+ const SERVICES=[['buyout','شراء مديونية التمويل الشخصي'],['smart','الحاسبة الذكية'],['compare','مقارنات عروض البنوك'],['mortgage_quote','التمويل العقاري'],['mortgage_compare','مقارنات العقاري'],['contract','العقود والاتفاقيات'],['bot_buyout','محادثة تحويل المديونية'],['bot_smart','المساعد الذكي للحاسبة'],['bot_compare','مساعد مقارنة العروض'],['bot_mortgage_quote','المساعد العقاري'],['bot_contract','مساعد العقود'],['guidance_mortgage','إرشادات عامة للتمويل العقاري'],['guidance_personal','إرشادات عامة للتمويل الشخصي']];
  const CATEGORIES=[['finance','باقات التمويل'],['contracts','العقود'],['digital','الخدمات الرقمية'],['other','خدمات أخرى']];
  const SECTORS=[['government','حكومي'],['military','عسكري'],['semiGovernment','شبه حكومي'],['private','قطاع خاص'],['retired','متقاعد']];
  let cfg={...DEFAULT},scriptPromise=null,lastExport=[],loaded=false;
@@ -17700,7 +17704,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   for(const p of products){
    const tile=el('article','f99v6-tile');if(p.launch_status==='coming_soon')tile.classList.add('f36-coming-card');tile.dataset.category=p.category||'finance';tile.dataset.search=(p.name+' '+serviceNames(p)+' '+(p.tagline||'')+' '+(CATEGORIES.find(z=>z[0]===p.category)?.[1]||'')).toLowerCase();
    if(p.launch_status==='coming_soon'){tile.append(el('h3','f36-coming-title',p.name||'حاسبة التمويل العقاري'),el('strong','f36-coming-tag','ستطلق قريبًا'));}
-   {const cover=p.hide_default_image===true?'':productImageOK(p.image_url)?p.image_url:(window.F99V45DefaultCover?.(p)||window.F99V33Images?.[p.key]||((p.services||[]).includes('buyout')?window.F99V27BronzeImage:''));if(cover){const img=el('img');img.src=cover;img.alt='صورة '+p.name;img.loading='lazy';tile.append(img)}else{const placeholder=el('div','f28-product-placeholder');placeholder.append(el('strong','','FINO99'),el('small','','منتج رقمي'));tile.append(placeholder)}}
+   {const cover=p.hide_default_image===true?'':productImageOK(p.image_url)?p.image_url:(((p.key||'').startsWith('f99o2-mortgage-')?new URL('guidance_mortgage.jpg',location.href).href:(p.key||'').startsWith('f99o2-personal-')?new URL('guidance_personal.jpg',location.href).href:'')||window.F99V45DefaultCover?.(p)||(window.F99V33Images?.[p.key]||(p.key==='f99o2-mortgage-guidance'||p.key==='f99o2-mortgage-renew'?new URL('guidance_mortgage.jpg',location.href).href:p.key==='f99o2-personal-template'?new URL('guidance_personal.jpg',location.href).href:''))||((p.services||[]).includes('buyout')?window.F99V27BronzeImage:''));if(cover){const img=el('img');img.src=cover;img.alt='صورة '+p.name;img.loading='lazy';tile.append(img)}else{const placeholder=el('div','f28-product-placeholder');placeholder.append(el('strong','','FINO99'),el('small','','منتج رقمي'));tile.append(placeholder)}}
    // FINO99 V36: do not overlay bubbles or long text on the photo.
    if(p.launch_status==='coming_soon'){list.append(tile);continue;}
    const contents=el('div');
@@ -17732,6 +17736,21 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   const caution=String(p.warning_text||'').trim();
   if(caution){const warning=el('div','f99v10-warning',publicCopy(caution));warning.style.color=/^#[0-9a-fA-F]{6}$/.test(p.warning_color)?p.warning_color:'#B42335';warning.style.fontSize=Math.max(10,Math.min(28,Number(p.warning_size)||17))+'px';b.append(warning)}
   const services=Array.isArray(p.services)?p.services:[];
+  if(services.includes('guidance_mortgage')||services.includes('guidance_personal')){
+    const holder=el('section','f99v10-flow');b.append(holder);
+    holder.append(info('جاري التحقق من شروط الخدمة والمخزون المركزي...'));
+    window.finoRpc('f99o2_public_offer',{p_product_key:p.key},12000).then(r=>{
+      holder.replaceChildren();
+      if(!r?.ok||r.data?.ok!==true){holder.append(info('هذا العرض غير متاح للشراء الآن. تحقق من توفر الأكواد ورابط سلة لدى المالك.'));return;}
+      const x=r.data,term=el('div','f99v10-warning',String(x.terms||''));holder.append(term);
+      const h=el('div','f99v10-msg','مدة الجلسة: '+Number(x.duration_minutes)+' دقيقة • السعر: '+Number(x.price)+' ريال. لا تمثل هذه الخدمة موافقة تمويلية.');holder.append(h);
+      const label=el('label','f99v10-field');const chk=el('input');chk.type='checkbox';label.append(chk,document.createTextNode(' أوافق على الشروط والإقرار الموضحين أعلاه.'));holder.append(label);
+      const buy=el('button','f99v6-primary','الموافقة والمتابعة إلى دفع سلة');buy.disabled=true;chk.onchange=()=>buy.disabled=!chk.checked;
+      buy.onclick=()=>{if(!chk.checked)return;const url=String(x.checkout_url||'');if(!/^https:\/\/[^\s]+$/.test(url))return alert('رابط الدفع غير صالح');location.assign(url)};
+      holder.append(buy);
+    }).catch(()=>{holder.replaceChildren();holder.append(info('تعذر التأكد من شروط البيع الآن؛ لم يتم فتح رابط الدفع.'))});
+    return;
+  }
   const requiresSector=services.some(k=>['buyout','smart','compare','mortgage_quote','mortgage_compare','mortgage_buyout'].includes(k))||(p.allowed_sectors||[]).length>0;
   const eligible=Array.isArray(p.allowed_sectors)?p.allowed_sectors:[];
   const banksRequired=services.some(k=>['buyout','mortgage_buyout','bot_buyout'].includes(k));
@@ -18157,7 +18176,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
    const auditBtn=el('button','','فحص المخزون الفعلي');const auditOut=el('p','');auditOut.setAttribute('role','status');auditBtn.onclick=async()=>{auditBtn.disabled=true;auditOut.textContent='جار قراءة الجرد المركزي...';try{const r=await window.finoCentralAdminCall('f99v33_admin_stock_audit',{});if(!r?.ok||r.data?.ok!==true)throw Error(r?.data?.reason||'الجرد غير جاهز');const d=r.data;auditOut.textContent='الأكواد المسجلة: '+d.registered_total+' • المتاح: '+d.available+' • محجوز: '+d.reserved+' • منشور: '+d.published+' • قديم: '+d.legacy+' • متقاعد: '+d.retired+' • مستخدم/مفعل: '+d.used_or_activated+' • اختلافات: '+d.integrity_errors+'. الرقم 5,000 لا يعني أن كلها قابلة لإعادة البيع.';}catch(e){auditOut.textContent='تعذر فحص المخزون: '+e.message}finally{auditBtn.disabled=false}};readyBox.append(auditBtn,auditOut);root.append(readyBox);
    const cards=el('div','f99v17-library-grid');root.append(cards);
    for(const p of cfg.products){const card=el('article','f99v17-library-card');
-    if(productImageOK(p.image_url||'')||window.F99V33Images?.[p.key]){const img=el('img');img.src=productImageOK(p.image_url||'')?p.image_url:window.F99V33Images[p.key];img.alt='صورة باقة '+p.name;img.loading='lazy';card.append(img)}else card.append(el('div','f99v17-fallback','✦'));
+    if(productImageOK(p.image_url||'')||(window.F99V33Images?.[p.key]||(p.key==='f99o2-mortgage-guidance'||p.key==='f99o2-mortgage-renew'?new URL('guidance_mortgage.jpg',location.href).href:p.key==='f99o2-personal-template'?new URL('guidance_personal.jpg',location.href).href:''))){const img=el('img');img.src=productImageOK(p.image_url||'')?p.image_url:window.F99V33Images[p.key];img.alt='صورة باقة '+p.name;img.loading='lazy';card.append(img)}else card.append(el('div','f99v17-fallback','✦'));
     const content=el('div','f99v17-card-content');content.append(el('small','',p.launch_status==='coming_soon'?'ستطلق قريبًا':'منتج محفوظ'),el('h3','',p.name),el('p','',serviceNames(p)||'خدمات الباقة'));
     const stats=el('div','f99v17-card-stats','جار فحص الأكواد...');content.append(stats);
     window.finoCentralAdminCall('f99v17_admin_package_overview',{p_package_key:p.key}).then(r=>{if(!stats.isConnected)return;const d=r.data||{};stats.textContent=r.ok&&d.ok?('المعتمدة: '+d.published+' • المستخدمة: '+d.used+' • غير المستخدمة: '+d.not_used):'تعذر قراءة إحصاءات الباقة'}).catch(()=>{if(stats.isConnected)stats.textContent='تعذر قراءة المركزية'});
@@ -27963,104 +27982,197 @@ window.F99V86UsageText=()=>{
 <style id="fino99-v86-usage-style">
 #finoBotChat .f86-usage-hint{border-radius:11px;border:1px solid #bad4e3;background:#edf6fb;color:#214b67;padding:12px;margin:13px 0;font-size:13px;font-weight:700;line-height:1.8}
 </style>
+<style id="f99o2-css">
+/* FINO99 Original Two — appointment module. Scoped to avoid changing financial engines. */
+#f99o2-overlay[hidden]{display:none!important}
+#f99o2-overlay{position:fixed;inset:0;z-index:2147483625;background:rgba(9,31,48,.75);backdrop-filter:blur(7px);padding:env(safe-area-inset-top) 10px env(safe-area-inset-bottom);overflow:auto;direction:rtl;color:#15344a;font-family:Cairo,"Segoe UI",system-ui,sans-serif;box-sizing:border-box}
+#f99o2-overlay *{box-sizing:border-box}
+#f99o2-overlay .o2-wrap{max-width:1050px;margin:12px auto 32px;background:#fbfdff;min-height:75vh;border-radius:24px;padding:clamp(14px,3vw,27px);box-shadow:0 24px 80px #0005}
+#f99o2-overlay .o2-header{display:flex;gap:15px;align-items:center;justify-content:space-between;border-bottom:1px solid #deeaee;padding-bottom:14px;margin-bottom:18px}
+#f99o2-overlay h2{font:900 clamp(21px,3.8vw,29px) Cairo,system-ui;color:#11374e;margin:0}
+#f99o2-overlay h3{font:900 clamp(17px,3vw,22px) Cairo,system-ui;color:#11374e;margin:0 0 7px}
+#f99o2-overlay p{font:600 14px/1.9 Cairo,system-ui;margin:4px 0;color:#496579}
+#f99o2-overlay .o2-muted{color:#658095;font-size:13px}
+#f99o2-overlay .o2-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}
+#f99o2-overlay button,#f99o2-overlay select,#f99o2-overlay input,#f99o2-overlay textarea{font:700 14px Cairo,system-ui;border-radius:12px}
+#f99o2-overlay button{border:1px solid #bfd3df;background:#fff;color:#16405c;cursor:pointer;padding:11px 15px;min-height:44px;white-space:normal}
+#f99o2-overlay button:hover{border-color:#417c9b}
+#f99o2-overlay button:disabled{opacity:.5;cursor:not-allowed}
+#f99o2-overlay button.o2-primary{background:#165678;color:#fff;border-color:#165678}
+#f99o2-overlay button.o2-gold{background:#aa8248;color:white;border-color:#aa8248}
+#f99o2-overlay button.o2-outline-danger{color:#a33326;border-color:#edc8bc}
+#f99o2-overlay .o2-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,245px),1fr));gap:12px}
+#f99o2-overlay .o2-card{border:1px solid #dbe6ed;border-radius:18px;background:white;padding:18px;min-width:0;margin-bottom:13px;box-shadow:0 3px 10px #12364a05}
+#f99o2-overlay .o2-card.o2-focused{border-color:#9fbbd0;background:#f5fafc}
+#f99o2-overlay .o2-label{display:block;font-size:13px;font-weight:800;color:#234f6a;margin:12px 0 6px}
+#f99o2-overlay input:not([type=checkbox]),#f99o2-overlay select,#f99o2-overlay textarea{display:block;border:1px solid #b8cddb;background:#fff;padding:12px;color:#15344a;width:100%;min-width:0;max-width:100%;direction:rtl}
+#f99o2-overlay input[type=checkbox]{width:19px;height:19px;accent-color:#165678;vertical-align:middle}
+#f99o2-overlay .o2-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));column-gap:13px}
+#f99o2-overlay .o2-pill{border-radius:50px;background:#e8f1f6;color:#245775;padding:6px 10px;font-size:12px;font-weight:800;display:inline-block}
+#f99o2-overlay .o2-status{border:1px solid #bfd7e5;background:#edf6fb;border-radius:13px;padding:11px 13px;line-height:1.75;margin:10px 0;font-size:13px;word-break:break-word}
+#f99o2-overlay .o2-status.o2-error{border-color:#f2beb5;background:#fff0ec;color:#9d3026}
+#f99o2-overlay .o2-slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:9px}
+#f99o2-overlay .o2-slots button.o2-selected{background:#165678;color:#fff;border-color:#165678}
+#f99o2-overlay .o2-day{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid #e5edf1}
+#f99o2-overlay .o2-day input{width:100%;min-width:0}
+#f99o2-overlay .o2-day label{font-size:12px;line-height:1.8}
+#f99o2-overlay a.o2-wa{display:inline-block;background:#16845e;color:white;padding:11px 15px;border-radius:13px;text-decoration:none;font-weight:900}
+#f99o2-overlay .o2-booking{border-right:4px solid #23738d;padding-right:12px;margin-top:14px}
+#f99o2-overlay .o2-preview{width:100%;height:170px;object-fit:cover;border-radius:15px;background:#e4e9ea;margin-bottom:8px}
+@media(max-width:520px){#f99o2-overlay{padding:env(safe-area-inset-top) 6px env(safe-area-inset-bottom)}#f99o2-overlay .o2-wrap{margin:5px auto;padding:14px;border-radius:20px}#f99o2-overlay .o2-card{padding:13px}#f99o2-overlay .o2-day{grid-template-columns:1fr 1fr;row-gap:4px}#f99o2-overlay .o2-day label{grid-column:1/-1}#f99o2-overlay .o2-grid{grid-template-columns:1fr}#f99o2-overlay button{font-size:13px}}
+@media print{body>*:not(#f99o2-overlay){display:none!important}#f99o2-overlay{position:static;background:white;padding:0}#f99o2-overlay .o2-wrap{box-shadow:none}#f99o2-overlay button{display:none!important}}
 
-<!-- FINO99 ORIGINAL ONE: owner health and release guidance -->
-<style id="fino99-original-1-style">
-/* FINO99 Original One — scoped 2026 owner refresh, no financial engine edits. */
-#ownerHub.f81-unified .owner-shell{max-width:1240px;margin-inline:auto}
-#ownerHub.f81-unified #f81-owner-panel{background:linear-gradient(150deg,#f8fbff,#eef5fa);border:1px solid #cddfec;border-radius:22px;padding:clamp(14px,2vw,28px);box-shadow:0 14px 35px rgba(18,56,85,.09)}
-#ownerHub.f81-unified .f81-head h2{font-size:clamp(21px,3vw,29px);line-height:1.45;letter-spacing:-.2px;color:#17354d}
-#ownerHub.f81-unified .f81-owner-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-#ownerHub.f81-unified .f81-tile{min-width:0;border:1px solid #d4e3ed;background:#fff;border-radius:17px;padding:18px 14px;min-height:110px;text-align:right;box-shadow:0 3px 12px rgba(14,55,84,.04);transition:transform .15s,box-shadow .15s}
-#ownerHub.f81-unified .f81-tile:hover,#ownerHub.f81-unified .f81-tile:focus-visible{transform:translateY(-2px);box-shadow:0 9px 22px rgba(15,58,89,.12);outline:2px solid #82afc8;outline-offset:2px}
-#ownerHub.f81-unified .f81-tile strong{font-size:16px;color:#18364e}
-#ownerHub.f81-unified .f81-tile small{line-height:1.8}
-#ownerHub.f81-unified .f81-utilities{display:flex;flex-wrap:wrap;gap:9px}
-#ownerHub.f81-unified .f81-utilities button{min-height:42px}
-#ownerHub.f81-unified .f87-ops{background:#fff;border:1px solid #bed4e3;border-radius:16px;padding:14px;margin:16px 0;direction:rtl;text-align:right;color:#18364c}
-#ownerHub.f81-unified .f87-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px}
-#ownerHub.f81-unified .f87-heading>div{display:flex;flex-direction:column;gap:5px}
-#ownerHub.f81-unified .f87-heading small{font-size:12px;color:#647d8e}
-#ownerHub.f81-unified .f87-heading strong{font-size:18px;color:#173954}
-#ownerHub.f81-unified .f87-heading span{font-size:12px;color:#647d8e}
-#ownerHub.f81-unified .f87-ops button{cursor:pointer;border-radius:10px;padding:9px 13px;border:1px solid #9cbdd2;background:#f8fcff;color:#15415a;font-weight:700;min-height:42px}
-#ownerHub.f81-unified .f87-ops .f87-primary{background:#205675;color:#fff;border-color:#205675}
-#ownerHub.f81-unified .f87-detail{padding:14px 0 0;line-height:1.9}
-#ownerHub.f81-unified .f87-detail[hidden]{display:none!important}
-#ownerHub.f81-unified .f87-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
-#ownerHub.f81-unified .f87-detail h3{font-size:16px;margin:16px 0 5px}
-#ownerHub.f81-unified .f87-check{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:9px 8px;border-bottom:1px solid #e3eef4}
-#ownerHub.f81-unified .f87-check-name{font-size:14px}
-#ownerHub.f81-unified .f87-check-value{font-size:13px;text-align:left;overflow-wrap:anywhere}
-#ownerHub.f81-unified .f87-pass{color:#13775c}
-#ownerHub.f81-unified .f87-fail{color:#9b3232}
-#ownerHub.f81-unified .f87-warn{color:#916221}
-#ownerHub.f81-unified .f87-caution{font-size:12px;color:#5d7485;border-top:1px solid #dce9f0;padding-top:9px}
-@media(max-width:750px){#ownerHub.f81-unified .f81-owner-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}#ownerHub.f81-unified .f81-tile{min-height:120px;padding:12px 9px}#ownerHub.f81-unified .f81-tile strong{font-size:14px}#ownerHub.f81-unified .f87-check{align-items:flex-start;flex-direction:column;gap:3px}}
-@media(max-width:360px){#ownerHub.f81-unified .f81-owner-tiles{grid-template-columns:1fr}}
-@media(prefers-reduced-motion:reduce){#ownerHub.f81-unified .f81-tile{transition:none!important}}
 </style>
-<script id="fino99-original-1-logic">
-(()=>{'use strict';
-// FINO99 ORIGINAL ONE — owner-only diagnostics and release recovery surface.
-// Never grants entitlements, confirms payments, or edits core calculator rules.
-const RELEASE='النسخة الأصلية واحد',BUILD='V87-O1';
-const el=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!=null)n.textContent=text;return n};
-const $=(s,root=document)=>root.querySelector(s);
-function badge(container,title,value,state){const row=el('div','f87-check');row.append(el('span','f87-check-name',title),el('strong','f87-check-value '+(state||''),value));container.append(row)}
-function present(k){return typeof window[k]==='function'}
-function ownerVisible(){const hub=$('#ownerHub');return !!(hub&&hub.classList.contains('f81-unified')&&$('#f81-owner-panel',hub));}
-function localChecks(){
- const products=window.FINO99ReadStorefront?.()?.products;
- const storeIsReadable=Array.isArray(products);
- const enabled=storeIsReadable?products.filter(p=>p&&p.enabled!==false):[];
- const checks=[
- ['بوابة المتجر',present('F99SOpenOwner')],['تحرير البنوك الأساسي',present('FINO99OpenCoreBanks')],
- ['الخزنة والأكواد',present('f99fixOpenCodes')],['التجديد الموحد',present('FINO99V83OpenRenewal')],
- ['خدمات العقود',present('F99V60OpenContracts')],['المطبوعات',present('openFINOPrintStudio')],
- ['إعداد الحاسبة العقارية',present('F99MOpenControl')],['مراجعة الحسب داخل المحادثة',present('F99V85ReviewConversation')],
- ];
- return {checks,storeIsReadable,products:storeIsReadable?products.length:null,enabled:storeIsReadable?enabled.length:null};
+<script id="f99o2-appointments">
+/* FINO99 O2 — service appointments. All authorizations and slot collisions checked by Supabase RPC. */
+(function(){
+'use strict';
+function f99o2Xlsx(codes,lastDay){
+  // Salla's official codes-sample.xlsx uses these four column names and order.
+  const headers=['الاكواد','الرقم التسلسلي','كلمة المرور','تاريخ الانتهاء'];
+  const escXml=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+  const strCell=(col,row,val)=>`<c r="${col}${row}" t="inlineStr"><is><t>${escXml(val)}</t></is></c>`;
+  const rowXml=['<row r="1">'+headers.map((x,i)=>strCell('ABCD'[i],1,x)).join('')+'</row>'];
+  for(let i=0;i<codes.length;i++){
+    const row=i+2;
+    const code=String(codes[i]);
+    if(!/^[A-Z0-9-]{8,32}$/.test(code))throw Error('كود غير صالح في ملف سلة، صف '+row);
+    rowXml.push(`<row r="${row}">${strCell('A',row,code)}${lastDay?strCell('D',row,lastDay):''}</row>`);
+  }
+  const sheet=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><dimension ref="A1:D${codes.length+1}"/><sheetViews><sheetView workbookViewId="0" rightToLeft="1"/></sheetViews><sheetFormatPr defaultRowHeight="16"/><cols><col min="1" max="1" width="26" customWidth="1"/><col min="2" max="3" width="20" customWidth="1"/><col min="4" max="4" width="19" customWidth="1"/></cols><sheetData>${rowXml.join('')}</sheetData></worksheet>`;
+  const files=[
+    ['[Content_Types].xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'],
+    ['_rels/.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+    ['xl/workbook.xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView/></bookViews><sheets><sheet name="الاكواد" sheetId="1" r:id="rId1"/></sheets></workbook>'],
+    ['xl/_rels/workbook.xml.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
+    ['xl/styles.xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="1"><font><sz val="11"/><name val="Arial"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'],
+    ['xl/worksheets/sheet1.xml',sheet]
+  ];
+  const enc=new TextEncoder(),pieces=[],central=[];
+  const table=new Uint32Array(256);
+  for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?0xEDB88320^(c>>>1):(c>>>1);table[n]=c>>>0}
+  const crc32=bytes=>{let c=0xFFFFFFFF;for(const b of bytes)c=table[(c^b)&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0};
+  const u16=(v,pos,x)=>v.setUint16(pos,x,true),u32=(v,pos,x)=>v.setUint32(pos,x>>>0,true);
+  let offset=0;
+  for(const [path,xml] of files){
+    const name=enc.encode(path),data=enc.encode(xml),crc=crc32(data),local=new Uint8Array(30+name.length),lv=new DataView(local.buffer);
+    u32(lv,0,0x04034b50);u16(lv,4,20);u16(lv,6,0x0800);u16(lv,8,0);u32(lv,14,crc);u32(lv,18,data.length);u32(lv,22,data.length);u16(lv,26,name.length);local.set(name,30);
+    pieces.push(local,data);
+    const dir=new Uint8Array(46+name.length),dv=new DataView(dir.buffer);
+    u32(dv,0,0x02014b50);u16(dv,4,20);u16(dv,6,20);u16(dv,8,0x0800);u16(dv,10,0);u32(dv,16,crc);u32(dv,20,data.length);u32(dv,24,data.length);u16(dv,28,name.length);u32(dv,42,offset);dir.set(name,46);
+    central.push(dir);offset+=local.length+data.length;
+  }
+  const dirSize=central.reduce((s,p)=>s+p.length,0),end=new Uint8Array(22),ev=new DataView(end.buffer);
+  u32(ev,0,0x06054b50);u16(ev,8,files.length);u16(ev,10,files.length);u32(ev,12,dirSize);u32(ev,16,offset);
+  const all=new Uint8Array(offset+dirSize+end.length);let at=0;
+  for(const part of [...pieces,...central,end]){all.set(part,at);at+=part.length}
+  return all;
 }
-function download(name,text){const file=new Blob([text],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(file);const link=el('a');link.href=url;link.download=name;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),2000)}
-async function health(report){const out=$('[data-f87-results]',report),button=$('[data-f87-go]',report);out.replaceChildren();button.disabled=true;
- try{
-  out.append(el('h3',null,'أولًا: فحص الواجهة المحلية'));
-  const local=localChecks();for(const [name,ok] of local.checks)badge(out,name,ok?'موجود':'مفقود',ok?'f87-pass':'f87-fail');
-  badge(out,'قراءة إعدادات المتجر',local.storeIsReadable?`موجود • ${local.products} باقة`:'غير متاحة',local.storeIsReadable?'f87-pass':'f87-warn');
-  if(local.storeIsReadable&&local.enabled===0)badge(out,'منتجات قابلة للعرض','لا توجد باقات مفعلة','f87-warn');
-  out.append(el('h3',null,'ثانيًا: فحص المركزية (صلاحية المالك مطلوبة)'));
-  if(!present('finoCentralAdminCall')){badge(out,'الاتصال المركزي','غير متوفر','f87-fail');return}
-  const r=await window.finoCentralAdminCall('f99o1_admin_health',{});
-  const d=r?.data;
-  if(!r?.ok||d?.ok!==true){badge(out,'نتيجة الفحص المركزي','غير مثبت/تعذر الاتصال — شغّل فحص SQL قبل التثبيت','f87-warn');out.append(el('p',null,'لا تستنتج سلامة المخزون أو الدفع من هذا الاختبار.'));return}
-  badge(out,'اسم المرجعية في المركزية',d.release_name||'غير محدد',d.release_name===RELEASE?'f87-pass':'f87-warn');
-  badge(out,'مخزون متاح',String(d.stock?.available??'غير معروف'),'');
-  badge(out,'دفعات محجوزة',String(d.allocations?.reserved??'غير معروف'),'');
-  badge(out,'أكواد منشورة',String(d.stock?.published??'غير معروف'),'');
-  badge(out,'وجود اعتماد دفعات V84',d.functions?.approval_v84?'موجود':'مفقود',d.functions?.approval_v84?'f87-pass':'f87-fail');
-  badge(out,'مراقبة حركة المخزون',d.audit_enabled?'مفعلة':'غير مثبتة',d.audit_enabled?'f87-pass':'f87-warn');
-  badge(out,'تكامل سلة بعد الدفع','لم يُتحقق منه','f87-warn');
-  badge(out,'نسخة احتياطية حقيقية لقاعدة البيانات','يلزم التأكد من Supabase','f87-warn');
- }catch(e){badge(out,'الفحص','تعذر الفحص: '+String(e?.message||e).slice(0,100),'f87-warn')}finally{button.disabled=false}}
-function attach(){
- if(!ownerVisible())return;const panel=$('#f81-owner-panel');const top=$('.f81-head',panel);if(!top||$('#f87-ops',panel))return;
- // Keep the existing six services. Add one compact health strip, not a duplicate tile.
- const outer=el('section','f87-ops');outer.id='f87-ops';
- const intro=el('div','f87-heading');const info=el('div');info.append(el('small',null,'مرجع الواجهة قيد الاعتماد'),el('strong',null,RELEASE),el('span',null,'إصدار '+BUILD+' • الفحص قبل البيع والنشر'));intro.append(info);
- const toggle=el('button','f87-primary','فحص صحة المنصة');toggle.type='button';toggle.setAttribute('aria-expanded','false');intro.append(toggle);outer.append(intro);
- const details=el('div','f87-detail');details.hidden=true;details.innerHTML='<p>هذا الفحص لا يستهلك أكوادًا، ولا يغيّر النسب أو المبيعات. تأكد من نتائج المركزية وسلة على الإنتاج قبل إطلاق منتج مدفوع.</p><div class="f87-actions"><button type="button" data-f87-go>ابدأ الفحص من حساب المالك</button><button type="button" data-f87-export>تصدير تقرير الفحص</button><button type="button" data-f87-close>إغلاق</button></div><div data-f87-results aria-live="polite"></div><p class="f87-caution">استعادة الواجهة إلى «النسخة الأصلية واحد» تتم من ملف index.html المحفوظ في الحزمة. النسخة الاحتياطية لقاعدة البيانات منفصلة؛ لا تنفذ استعادة SQL على الإنتاج دون مراجعة الأثر على المبيعات.</p>';
- outer.append(details);top.after(outer);
- toggle.addEventListener('click',()=>{details.hidden=!details.hidden;toggle.setAttribute('aria-expanded',String(!details.hidden))});
- $('[data-f87-close]',outer).onclick=()=>{details.hidden=true;toggle.setAttribute('aria-expanded','false')};
- $('[data-f87-go]',outer).onclick=()=>health(outer);
- $('[data-f87-export]',outer).onclick=()=>{const lines=['FINO99 | فحص صحة المنصة','المرجع: '+RELEASE,'التاريخ المحلي: '+new Date().toLocaleString('ar-SA'),...Array.from(outer.querySelectorAll('.f87-check')).map(x=>x.innerText.replace(/\s+/g,' ').trim()),'فحص المتصفح ليس إثباتًا للدفع أو لتكامل سلة'];download('FINO99_HEALTH_REPORT.txt',lines.join('\n'))};
- }
- document.addEventListener('DOMContentLoaded',attach,{once:true});if(document.readyState!=='loading')attach();
- // Existing owner panel is rendered after logging in; observe only the owner hub.
- const hub=$('#ownerHub');if(hub){let pending=false;new MutationObserver(()=>{if(pending)return;pending=true;queueMicrotask(()=>{pending=false;attach()})}).observe(hub,{childList:true,subtree:true,attributes:true,attributeFilter:['class']})}
- window.FINO99OriginalOne={version:BUILD,name:RELEASE,localChecks};
+
+
+const MAIN='f99o2-mortgage-guidance',RENEW='f99o2-mortgage-renew',PERSONAL='f99o2-personal-template';
+const days=['الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت','الأحد'];
+const baseName='FINO99 | الإرشادات والمواعيد';
+let pane=null,main=null,notice=null;let ownerItems=[],batches=[],activeKey=MAIN,ownerDate='',clientKey='',clientCtx=null,clientDay='',clientSelected='';
+const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=v=>new Intl.DateTimeFormat('ar-SA',{timeZone:'Asia/Riyadh',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).format(new Date(v));
+const nowDay=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Riyadh',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+const money=v=>Number(v||0).toLocaleString('ar-SA',{maximumFractionDigits:2});
+function ensure(){if(pane)return;pane=document.createElement('div');pane.id='f99o2-overlay';pane.hidden=true;pane.innerHTML='<div class="o2-wrap" role="dialog" aria-modal="true" aria-label="مواعيد FINO99"><header class="o2-header"><div><small class="o2-muted">FINO99 | المركزية الذكية</small><h2>'+baseName+'</h2></div><button type="button" id="f99o2-close">إغلاق</button></header><div id="f99o2-msg" role="status" aria-live="polite"></div><div id="f99o2-main"></div></div>';document.body.append(pane);main=pane.querySelector('#f99o2-main');notice=pane.querySelector('#f99o2-msg');pane.querySelector('#f99o2-close').onclick=close;}
+function open(){ensure();pane.hidden=false;document.body.style.setProperty('--o2-open','1');}
+function close(){if(pane)pane.hidden=true;}
+function say(message,bad){if(!notice)return;notice.innerHTML='<div class="o2-status'+(bad?' o2-error':'')+'">'+e(message)+'</div>';}
+function busy(b){if(main)main.querySelectorAll('button').forEach(x=>x.disabled=!!b);}
+function problem(x){return typeof x==='string'?x:String(x?.message||x?.reason||x?.error?.message||x?.error||'تعذر الاتصال بالمركزية');}
+async function admin(fn,arg={}){if(typeof window.finoCentralAdminCall!=='function')throw Error('لم تكتمل جلسة المالك المركزية');const r=await window.finoCentralAdminCall(fn,arg);if(!r?.ok||r.data?.ok!==true)throw Error(problem(r?.data||r));return r.data;}
+async function rpc(fn,arg={}){if(typeof window.finoRpc!=='function')throw Error('المركزية غير متصلة');const r=await window.finoRpc(fn,arg,20000);if(!r?.ok||r.data?.ok!==true)throw Error(problem(r?.data||r));return r.data;}
+const findService=k=>ownerItems.find(x=>x.product_key===k);
+function downloadBlob(blob,name){const link=document.createElement('a');const url=URL.createObjectURL(blob);link.href=url;link.download=name;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);}
+function saveTxt(content,name){downloadBlob(new Blob([content],{type:'text/plain;charset=utf-8'}),name)}
+function getEntry(){const x=(typeof finoCentralRestoreEntry==='function'?finoCentralRestoreEntry():null);return {p_entry_token:x?.entryToken||x?.entry_token,p_device_id:x?.deviceId};}
+function card(text){return '<div class="o2-card">'+text+'</div>'}
+const dayMin=()=>nowDay();
+function isOwner(){return !!(typeof activeAccess!=='undefined'&&activeAccess?.record?.owner&&activeAccess?.record?.central);}
+function showOwner(){open();if(!isOwner())return say('يلزم تسجيل الدخول بكود المالك أولًا.',true);say('جاري قراءة إعدادات المواعيد من المركزية...');refreshOwner();}
+async function refreshOwner(){try{const v=await admin('f99o2_owner_catalog');ownerItems=v.products||[];batches=v.stock||[];notice.replaceChildren();renderOwner();}catch(ex){main.innerHTML=card('<h3>تعذر فتح المواعيد</h3><p>ثبت ملف CENTRAL.txt بعد فحص المركزية، ثم أعد تسجيل دخول المالك.</p>');say('تفاصيل العطل: '+problem(ex),true);}}
+function renderOwner(){const s=findService(activeKey)||ownerItems[0];if(!s)return main.innerHTML=card('لم تُنشأ بيانات باقات الإرشادات بعد.');activeKey=s.product_key;
+let menu='<div class="o2-card"><h3>المواعيد والإرشادات</h3><p>مكان واحد لإدارة الخدمات والمواعيد والتصدير، دون أي تأثير على الحاسبات الحالية.</p><div class="o2-actions"><button id="o2-reload">تحديث</button><button id="o2-calendar">مواعيد اليوم والغد</button></div></div>';
+menu+='<div class="o2-grid">'+ownerItems.map(x=>'<div class="o2-card'+(x.product_key===activeKey?' o2-focused':'')+'"><div class="o2-pill">'+(x.enabled?'مفعلة':'مخفية عن البيع')+'</div><h3>'+e(x.title)+'</h3><p>'+e(x.kind==='guidance_mortgage'?'إرشادات عقارية عامة':'إرشادات شخصية عامة')+' • '+x.appointment_minutes+' دقيقة • '+money(x.price)+' ريال</p><button data-service="'+e(x.product_key)+'" class="o2-primary">إدارة الباقة</button></div>').join('')+'</div>';
+const bs=batches.filter(x=>x.package_key===s.product_key);
+const schedules=Array.from({length:7},(_,i)=>{const row=s.hours?.[String(i+1)]?.[0]||{start:'19:00',end:'21:00'};return '<div class="o2-day"><label><input type="checkbox" data-daycheck="'+(i+1)+'" '+(Array.isArray(s.hours?.[String(i+1)])&&s.hours[String(i+1)].length?'checked':'')+'> '+days[i]+'</label><input type="time" data-start="'+(i+1)+'" value="'+e(row.start)+'"><input type="time" data-end="'+(i+1)+'" value="'+e(row.end)+'"></div>'}).join('');
+menu+=card('<h3>إعداد باقة: '+e(s.title)+'</h3><p>غيّر الإعدادات هنا ثم احفظها. الباقة لا تُنشر حتى يوجد رابط دفع ومخزون أكواد منشور.</p><div class="o2-fields">'+
+field('اسم الباقة','title',s.title)+field('السعر الحالي (ريال)','price',s.price,'number')+field('السعر السابق (ريال)','old_price',s.old_price,'number')+
+field('مدة الجلسة (بالدقائق)','appointment_minutes',s.appointment_minutes,'number')+field('الفاصل بين المواعيد (بالدقائق)','buffer_minutes',s.buffer_minutes,'number')+
+field('إغلاق تعديل الموعد قبل (دقيقة)','change_cutoff_minutes',s.change_cutoff_minutes,'number')+field('أقصى أيام للحجز مقدمًا','booking_horizon_days',s.booking_horizon_days,'number')+
+field('رقم واتساب الأعمال (9665...)','whatsapp',s.whatsapp)+field('رابط سلة للدفع المباشر','checkout_url',s.checkout_url)+'</div>'+
+'<div class="o2-grid"><div><label class="o2-label"><input type="checkbox" id="o2-enabled" '+(s.enabled?'checked':'')+'> تفعيل البيع للعميل</label></div><div><label class="o2-label"><input type="checkbox" id="o2-visible" '+(s.catalog_visible?'checked':'')+'> إظهار البطاقة في المتجر</label></div></div>'+
+'<label class="o2-label">أيام وأوقات استقبال المواعيد (بتوقيت الرياض)</label>'+schedules+
+'<label class="o2-label">تواريخ مغلقة (كل تاريخ في سطر YYYY-MM-DD)</label><textarea id="o2-blocked" rows="3">'+e((s.blocked_dates||[]).join('\n'))+'</textarea>'+
+'<label class="o2-label">الشروط والإقرار — يظهر قبل تأكيد الحجز</label><textarea id="o2-terms" rows="4">'+e(s.terms)+'</textarea>'+
+'<label class="o2-label">رسالة تأكيد الحجز</label><textarea id="o2-confirm" rows="2">'+e(s.confirmation_text)+'</textarea>'+
+'<label class="o2-label">خيارات الاستفسار (كل خيار في سطر)</label><textarea id="o2-options" rows="3">'+e((s.question_options||[]).join('\n'))+'</textarea>'+
+'<div class="o2-actions"><button class="o2-primary" id="o2-save">حفظ وربط المركزية</button><button id="o2-clone">نسخ الباقة بإعدادات جديدة وأكواد مستقلة</button></div>');
+menu+=card('<h3>مخزون وأكواد سلة — '+e(s.title)+'</h3><p>الترتيب الصحيح: احجز أكوادًا غير نشطة، نزّل Excel، استوردها في منتج سلة الصحيح، ثم اعتمد الدفعة. لا تُنشر أكواد لم يُؤكَّد استيرادها.</p><div class="o2-actions"><button id="o2-allocate" class="o2-gold">تخصيص 500 كود من الخزنة</button><button id="o2-addstock">إضافة 500 كود جديد للخزنة عند الحاجة</button></div>'+
+(bs.length?bs.map(b=>'<div class="o2-booking"><b>دفعة '+e(b.id?.slice(0,8))+'</b><p>'+Number(b.count)+' كود • '+e(b.state)+'</p><div class="o2-actions"><button data-export="'+e(b.id)+'">تنزيل Excel لسلة</button><button data-code-txt="'+e(b.id)+'">تنزيل TXT</button>'+(b.state!=='published'?'<button data-publish="'+e(b.id)+'" class="o2-primary">اعتماد بعد الاستيراد في سلة</button>':'')+'</div></div>').join(''):'<p>لا توجد دفعات لهذا العرض بعد.</p>'));
+main.innerHTML=menu;
+main.querySelector('#o2-reload').onclick=refreshOwner;
+main.querySelector('#o2-calendar').onclick=renderCalendar;
+main.querySelectorAll('[data-service]').forEach(btn=>btn.onclick=()=>{activeKey=btn.dataset.service;renderOwner();});
+main.querySelector('#o2-save').onclick=()=>saveOwnerService(s);
+main.querySelector('#o2-clone').onclick=()=>cloneOwner(s);
+main.querySelector('#o2-allocate').onclick=()=>allocateCodes(s);
+main.querySelector('#o2-addstock').onclick=()=>addStock();
+main.querySelectorAll('[data-export]').forEach(btn=>btn.onclick=()=>exportCodes(btn.dataset.export,'xlsx'));
+main.querySelectorAll('[data-code-txt]').forEach(btn=>btn.onclick=()=>exportCodes(btn.dataset.codeTxt,'txt'));
+main.querySelectorAll('[data-publish]').forEach(btn=>btn.onclick=()=>publishCodes(s,btn.dataset.publish));
+}
+function field(label,id,value,type='text'){return '<div><label class="o2-label" for="o2-'+e(id)+'">'+e(label)+'</label><input type="'+type+'" id="o2-'+e(id)+'" value="'+e(value)+'" '+(type==='number'?'min="0" step="0.01"':'')+'></div>'}
+function value(id){return main.querySelector('#o2-'+id)?.value?.trim()||''}
+async function saveOwnerService(s){try{const hours={};for(let i=1;i<=7;i++){if(main.querySelector('[data-daycheck="'+i+'"]').checked){const start=main.querySelector('[data-start="'+i+'"]').value,end=main.querySelector('[data-end="'+i+'"]').value;if(!start||!end||start>=end)throw Error('وقت غير صحيح في يوم '+days[i-1]);hours[String(i)]=[{start,end}];}}
+const data={...s,title:value('title'),price:Number(value('price')),old_price:Number(value('old_price')),appointment_minutes:Number(value('appointment_minutes')),buffer_minutes:Number(value('buffer_minutes')),change_cutoff_minutes:Number(value('change_cutoff_minutes')),booking_horizon_days:Number(value('booking_horizon_days')),min_notice_minutes:s.min_notice_minutes||30,whatsapp:value('whatsapp'),checkout_url:value('checkout_url'),terms:value('terms'),confirmation_text:value('confirm'),hours,blocked_dates:value('blocked').split(/\s+/).filter(Boolean),question_options:value('options').split(/\n/).map(x=>x.trim()).filter(Boolean).slice(0,20),enabled:main.querySelector('#o2-enabled').checked,catalog_visible:main.querySelector('#o2-visible').checked};
+if(data.enabled&&!confirm('هل تأكدت من رفع الأكواد الفعلية في سلة وربط منتج الدفع الصحيح؟'))return;
+busy(true);const r=await admin('f99o2_owner_save',{p_product_key:s.product_key,p_data:data,p_expected_revision:s.revision});await refreshOwner();say('تم حفظ إعدادات الباقة في المركزية والتحقق من صلاحيات المخزون. المراجعة: '+r.revision);}catch(ex){say('لم يُحفظ التعديل: '+problem(ex),true)}finally{busy(false)}}
+async function cloneOwner(s){const name=prompt('أدخل اسم الباقة المنسوخة (بأكواد جديدة):',s.title+' — نسخة جديدة');if(!name)return;const kind=confirm('هل الباقة المنسوخة خاصة بالتمويل الشخصي؟ اضغط موافق للشخصي، أو إلغاء للعقاري.')?'guidance_personal':'guidance_mortgage';try{busy(true);const r=await admin('f99o2_owner_clone',{p_source_key:s.product_key,p_new_name:name,p_kind:kind});activeKey=r.product_key;await refreshOwner();say('تم إنشاء باقة مسودة جديدة من دون نسخ أكواد الباقة الأصلية. أضف الأكواد من خزنتها الخاصة.')}catch(ex){say('تعذر النسخ: '+problem(ex),true)}finally{busy(false)}}
+async function addStock(){if(!confirm('إنشاء 500 رمز جديد في المخزون المركزي غير المخصص؟'))return;try{busy(true);const r=await admin('f99v9_admin_add_stock',{p_count:500});say('أضيف '+r.added+' رمز إلى المخزون المركزي. لم تُخصَّص لأي باقة بعد.')}catch(ex){say('تعذر توليد الأكواد: '+problem(ex),true)}finally{busy(false)}}
+async function allocateCodes(s){const amount=Number(value('amount'));if(!Number.isInteger(amount)||amount<1||amount>500)return say('اختر عددًا صحيحًا من 1 إلى 500. لعدد أكبر كرر تخصيص دفعات مستقلة.',true);if(!confirm('حجز '+amount+' كود جديد مستقل لهذه الباقة، دون نشره للعملاء حتى ترفعه إلى سلة؟'))return;try{busy(true);const r=await admin('f99v9_admin_allocate',{p_package_key:s.product_key,p_count:amount,p_duration_minutes:43200,p_services:[s.kind],p_max_calculations:1,p_last_day:null});await refreshOwner();say('تم حجز '+amount+' كود في المركزية، رقم الدفعة: '+r.allocation_id+'. نزّل Excel ثم استورده إلى منتج سلة الصحيح قبل الاعتماد.')}catch(ex){say('تعذر حجز الأكواد: '+problem(ex),true)}finally{busy(false)}}
+async function exportCodes(id,format){try{const d=await admin('f99v9_admin_allocation',{p_allocation_id:id});if(!Array.isArray(d.codes)||d.codes.length!==d.count||new Set(d.codes).size!==d.count||d.codes.some(c=>!/^[A-Z0-9-]{8,32}$/.test(c)))throw Error('دفعة غير مكتملة أو تحتوي أكواد مكررة');const name='FINO99_'+d.package_key+'_'+d.allocation_id.slice(0,8)+'_'+d.codes.length;
+if(format==='txt')saveTxt(d.codes.join('\n')+'\n',name+'.txt');else downloadBlob(new Blob([f99o2Xlsx(d.codes,'')],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),name+'.xlsx');say('تم تجهيز ملف '+d.codes.length+' كود للدفعة نفسها. حافظ عليه خاصًا بالمالك ولا ترفعه لمستودع الموقع.')}catch(ex){say('تعذر تصدير الدفعة: '+problem(ex),true)}}
+async function publishCodes(s,id){if(!s.checkout_url)return say('احفظ رابط الدفع المباشر لهذه الباقة أولًا قبل اعتماد الدفعة.',true);if(!confirm('هل رفعت هذه الدفعة بعينها (وليس دفعة أخرى) إلى منتج سلة الصحيح، وتأكدت من عدد رموزها؟'))return;try{busy(true);const r=await admin('f99o2_owner_publish',{p_product_key:s.product_key,p_allocation_id:id,p_owner_confirmed_salla:true});await refreshOwner();say('تم اعتماد الدفعة '+id.slice(0,8)+' في المركزية. لا يعني ذلك أن الطلبات مدفوعة؛ سلة تسلّم الرمز للعميل بعد شرائه.')}catch(ex){say('رفض اعتماد الأكواد: '+problem(ex),true)}finally{busy(false)}}
+function dateInputDefault(){return nowDay()}
+async function renderCalendar(){ownerDate=ownerDate||dateInputDefault();main.innerHTML=card('<h3>المواعيد المحجوزة — سجل المالك</h3><div class="o2-actions"><button id="o2-back">رجوع إلى الباقات</button></div>'+field('اختر يوم المواعيد','day',ownerDate,'date')+'<div class="o2-actions"><button id="o2-get-day" class="o2-primary">عرض مواعيد اليوم</button><button id="o2-nextday">مواعيد الغد</button><button id="o2-print">طباعة القائمة</button></div><div id="o2-day-results"></div>');main.querySelector('#o2-back').onclick=renderOwner;main.querySelector('#o2-get-day').onclick=()=>getOwnerDay(value('day'));main.querySelector('#o2-nextday').onclick=()=>{const dt=new Date(value('day')+'T12:00:00Z');dt.setUTCDate(dt.getUTCDate()+1);const nd=dt.toISOString().slice(0,10);main.querySelector('#o2-day').value=nd;getOwnerDay(nd)};main.querySelector('#o2-print').onclick=()=>window.print();await getOwnerDay(ownerDate);}
+async function getOwnerDay(day){try{const d=await admin('f99o2_owner_day',{p_day:day});ownerDate=day;const out=main.querySelector('#o2-day-results');const rows=d.bookings||[];out.innerHTML=rows.length?rows.map(b=>'<div class="o2-card"><h3>'+e(fmt(b.starts_at))+' — '+e(b.name)+'</h3><p>'+e(b.product)+' • '+e(b.phone)+' • '+e(b.status)+'</p><p>'+e(b.question)+'</p><div class="o2-actions">'+(b.status==='confirmed'?'<button data-complete="'+e(b.id)+'">تم الموعد</button><button data-no-show="'+e(b.id)+'">لم يحضر</button>':b.status==='completed'?'<button data-summary="'+e(b.id)+'">ملخص الإرشاد للعميل</button>':'')+'</div></div>').join(''):card('لا توجد مواعيد محجوزة لهذا اليوم.');out.querySelectorAll('[data-complete]').forEach(x=>x.onclick=()=>complete(x.dataset.complete,'completed'));out.querySelectorAll('[data-no-show]').forEach(x=>x.onclick=()=>complete(x.dataset.noShow,'no_show'));out.querySelectorAll('[data-summary]').forEach(x=>x.onclick=()=>saveSummary(x.dataset.summary));say('تم تحميل '+rows.length+' موعد من المركزية.');}catch(ex){say('تعذر قراءة المواعيد: '+problem(ex),true)}}
+async function saveSummary(id){const summary=prompt('اكتب ملخص إرشادات عامة يمكن للعميل قراءته (دون وعد بالموافقة أو توصية ملزمة):','');if(summary===null)return;try{await admin('f99o2_owner_save_summary',{p_booking_id:id,p_summary:summary});await getOwnerDay(ownerDate);say('تم حفظ الملخص للعميل في المركزية.')}catch(ex){say('تعذر حفظ الملخص: '+problem(ex),true)}}
+async function complete(id,status){const note=prompt('ملاحظة داخلية للسجل (اختياري):','')||'';if(!confirm('تأكيد تغيير حالة الموعد؟'))return;try{await admin('f99o2_owner_complete',{p_booking_id:id,p_status:status,p_note:note});await getOwnerDay(ownerDate)}catch(ex){say('تعذر حفظ حالة الموعد: '+problem(ex),true)}}
+function clientProductKey(){try{const z=activeAccess?.record?.centralData||{};const f=z?.config?.f99x||z?.code?.config?.f99x||{};return String(f.effective_package_key||f.store_package_key||z.store_package_key||'')}catch{return ''}}
+async function showClient(){open();const k=clientProductKey();if(!k)return say('لم نستطع قراءة هوية الباقة من الكود. لم يتم حجز أي موعد. راجع المركزية.',true);clientKey=k;main.innerHTML=card('جارٍ قراءة خدمة الإرشادات وصلاحية كودك...');try{const c=await rpc('f99o2_client_context',{...getEntry(),p_product_key:k});clientCtx=c;notice.replaceChildren();renderClient();}catch(ex){main.innerHTML=card('<h3>تعذر فتح الخدمة</h3><p>تأكد من تثبيت ملف المركزية الصحيح وأن كودك مخصص لهذه الباقة.</p>');say(problem(ex),true)}}
+function renderClient(){const s=clientCtx?.service||{},b=clientCtx?.booking;let out='';if(b){out+=card('<h3>موعدك المؤكد</h3><p>يا '+e(b.name)+'، موعدك: <b>'+fmt(b.starts_at)+'</b> بتوقيت الرياض.</p><p>الاستفسار: '+e(b.question)+'</p><p>الحالة: '+e(({confirmed:'مؤكد',completed:'مكتمل',cancelled:'ملغي',no_show:'لم يحضر'})[b.status]||b.status)+'</p>'+
+(b.client_summary?'<div class="o2-status"><b>ملخص الإرشادات:</b> '+e(b.client_summary)+'</div>':'')+'<div class="o2-actions"><button id="o2-change">تعديل الموعد إذا كانت المهلة تسمح</button></div>'+waLink(s,b));
+const ren=clientCtx.renewals||[];if(ren.length)out+=card('<h3>انتهى موعدك — عروض التجديد المتاحة</h3>'+ren.map(x=>'<p>'+e(x.title)+' • '+x.minutes+' دقيقة • '+money(x.price)+' ريال</p><a class="o2-wa" href="'+e(x.checkout_url)+'" target="_blank" rel="noopener">شراء كود تجديد جديد</a>').join(''));
+}else{out+=card('<h3>'+e(s.name||'خدمة الإرشادات العامة')+'</h3><p>مدة الجلسة: '+e(s.appointment_minutes)+' دقيقة. اختر الموعد المتاح، ثم وافق على الإقرار قبل تأكيد الحجز.</p><div class="o2-fields">'+field('اسمك الكريم','name',(typeof clientName!=='undefined'?clientName:''))+field('رقم جوالك (05...)','phone','')+'</div>'+
+'<label class="o2-label">موضوع الاستفسار</label>'+(s.question_options?.length?'<select id="o2-topic"><option value="">اختر موضوعًا أو اكتب استفسارك</option>'+s.question_options.map(x=>'<option value="'+e(x)+'">'+e(x)+'</option>').join('')+'</select>':'')+'<textarea id="o2-question" rows="3" placeholder="وش الموضوع اللي ودك نتكلم عنه؟"></textarea>'+
+field('يوم الموعد المتاح','date',clientDay||dayMin(),'date')+
+'<div class="o2-actions"><button id="o2-get-slots">اعرض الأوقات المتاحة</button></div><div id="o2-slots"></div><div class="o2-status">'+e(s.terms)+'</div><label class="o2-label"><input id="o2-accept" type="checkbox"> أقر بأنني اطلعت على الشروط وأوافق عليها وعلى استخدام بيانات الاتصال لتنظيم الموعد.</label><div class="o2-actions"><button id="o2-book" class="o2-primary" disabled>تأكيد حجز الموعد</button></div>');}
+main.innerHTML=out;
+if(b){main.querySelector('#o2-change').onclick=()=>editClient(b);return;}
+main.querySelector('#o2-get-slots').onclick=()=>getSlots(false);
+main.querySelector('#o2-accept').onchange=()=>{main.querySelector('#o2-book').disabled=!main.querySelector('#o2-accept').checked||!clientSelected};
+main.querySelector('#o2-date').onchange=()=>{clientSelected='';main.querySelector('#o2-book').disabled=true};
+main.querySelector('#o2-book').onclick=confirmBooking;
+if(main.querySelector('#o2-topic'))main.querySelector('#o2-topic').onchange=ev=>{if(ev.target.value)main.querySelector('#o2-question').value=ev.target.value;};
+}
+function waLink(s,b){let digits=String(s.whatsapp||'').replace(/\D/g,'');if(digits.startsWith('0'))digits='966'+digits.slice(1);if(!/^9665[0-9]{8}$/.test(digits))return '<p class="o2-muted">يمكنك إرسال تفاصيل الموعد بعد أن يحدد المالك رقم واتساب الأعمال.</p>';
+const msg='السلام عليكم، أرغب في متابعة موعد الإرشادات العامة.\nالاسم: '+b.name+'\nالموعد: '+fmt(b.starts_at)+'\nموضوع الاستفسار: '+b.question+'\nأقر بأن الخدمة إرشادات عامة وليست تمثيلًا لجهة تمويلية.';
+return '<a class="o2-wa" href="https://wa.me/'+digits+'?text='+encodeURIComponent(msg)+'" target="_blank" rel="noopener noreferrer">إرسال تفاصيل الموعد بواتساب</a><p class="o2-muted">يفتح واتساب برسالة جاهزة؛ العميل يضغط إرسال بنفسه.</p>';}
+async function getSlots(reschedule){clientDay=value('date');if(!clientDay)return say('اختر يوم الموعد أولًا.',true);try{const r=await rpc('f99o2_client_slots',{...getEntry(),p_product_key:clientKey,p_day:clientDay});const out=main.querySelector('#o2-slots');const slots=r.slots||[];clientSelected='';out.innerHTML=slots.length?'<p>اختر وقتًا متاحًا:</p><div class="o2-slots">'+slots.map(x=>'<button type="button" data-slot="'+e(x.start)+'">'+e(new Intl.DateTimeFormat('ar-SA',{timeZone:'Asia/Riyadh',hour:'2-digit',minute:'2-digit'}).format(new Date(x.start)))+'</button>').join('')+'</div>':'<p>لا توجد أوقات متاحة في هذا اليوم. جرّب يومًا آخر.</p>';
+out.querySelectorAll('[data-slot]').forEach(x=>x.onclick=()=>{clientSelected=x.dataset.slot;out.querySelectorAll('[data-slot]').forEach(z=>z.classList.remove('o2-selected'));x.classList.add('o2-selected');if(!reschedule){const btn=main.querySelector('#o2-book');btn.disabled=!main.querySelector('#o2-accept').checked}else main.querySelector('#o2-save-change').disabled=false;});}catch(ex){say('تعذر تحميل المواعيد: '+problem(ex),true)}}
+async function confirmBooking(){if(!clientSelected)return say('اختر وقتًا متاحًا.',true);if(!main.querySelector('#o2-accept').checked)return say('يلزم الموافقة على الشروط أولًا.',true);try{busy(true);await rpc('f99o2_client_book',{...getEntry(),p_product_key:clientKey,p_start:clientSelected,p_name:value('name'),p_phone:value('phone'),p_question:value('question'),p_accepted:true});say('تم تأكيد الحجز في المركزية؛ لا يوجد حجز آخر في الوقت نفسه.');await showClient();}catch(ex){say('لم يتأكد الحجز: '+problem(ex)+'. اختر وقتًا آخر.',true)}finally{busy(false)}}
+function editClient(b){if(new Date(b.starts_at).getTime()-Date.now()<Number(clientCtx.service.change_cutoff_minutes)*60000){return say('انتهت مهلة تعديل الموعد قبل '+clientCtx.service.change_cutoff_minutes+' دقيقة من بدايته.',true)}
+main.innerHTML=card('<h3>تعديل موعدك</h3><p>موعدك الحالي '+e(fmt(b.starts_at))+'</p>'+field('اختر اليوم الجديد','date',dayMin(),'date')+'<div class="o2-actions"><button id="o2-load-new">عرض الأوقات</button><button id="o2-return">رجوع</button></div><div id="o2-slots"></div><div class="o2-actions"><button id="o2-save-change" class="o2-primary" disabled>تأكيد التعديل</button></div>');main.querySelector('#o2-load-new').onclick=()=>getSlots(true);main.querySelector('#o2-return').onclick=renderClient;main.querySelector('#o2-save-change').onclick=async()=>{try{await rpc('f99o2_client_reschedule',{...getEntry(),p_product_key:clientKey,p_new_start:clientSelected});await showClient()}catch(ex){say('تعذر تعديل الموعد: '+problem(ex),true)}};}
+window.F99O2OpenAdmin=showOwner;
+window.F99O2OpenClient=showClient;
+window.F99O2OpenForEntry=()=>showClient();
 })();
+
 </script>
 </body>
 </html>
