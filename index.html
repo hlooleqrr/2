@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- FINO99 V83 | GitHub Pages index.html | 2026-11-14.
+<!-- FINO99 V86 | GitHub Pages index.html | 2026-11-14.
      Current site is configured for its existing Supabase project.
      The HTML file does not install database functions or create an independent backend.
      Do not change Supabase URL or publishable key when updating this same site.
@@ -9,7 +9,7 @@
 
 <html dir="rtl" lang="ar">
 <head>
-<meta charset="utf-8"/><meta name="fino99-build" content="V83-2026-11-14"/>
+<meta charset="utf-8"/><meta name="fino99-build" content="V86-2026-11-14"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" name="viewport"/>
 <meta content="#ffffff" name="theme-color"/>
 <title>FINO99 | الحلول التمويلية الذكية</title><meta name="fino99-site-version" content="V76-2026-11-13">
@@ -9207,7 +9207,26 @@ function resetFINOSmartPortal(){
   if(!finoCentralGuard())return;
   const scope=finoPortal.strictServiceScope||finoCentralServiceScope();
   const chat=document.getElementById('finoBotChat');
-  if(chat)chat.innerHTML='';
+  const preserve=window.__F99V85KeepConversation===true && scope==='buyout' && activeAccess?.record?.central===true && !activeAccess.record.owner;
+  if(chat && preserve){
+    // Buttons from older results must not act on a later calculation's latestResults.
+    chat.querySelector('#f85-review-nav')?.remove();
+    chat.querySelectorAll('button,input,select,textarea').forEach(x=>{
+      x.disabled=true;x.setAttribute('aria-disabled','true');
+      x.title='هذه خطوة من الحسبة السابقة؛ تستطيع قراءتها دون تنفيذ إجراء قديم';
+    });
+  }
+  if(chat && !preserve)chat.replaceChildren();
+  // Every new charged calculation has its own point in the SAME conversation, not a separate archive page.
+  if(chat && scope==='buyout' && activeAccess?.record?.central===true && !activeAccess.record.owner){
+    const index=chat.querySelectorAll('[data-f85-calc-index]').length+1;
+    const section=document.createElement('section');section.className='f85-calc-marker';section.dataset.f85CalcIndex=String(index);
+    section.id='f85-calc-'+index;section.setAttribute('aria-label','بداية الحسبة رقم '+index);
+    const title=document.createElement('strong');title.textContent='الحسبة '+index;
+    const subtitle=document.createElement('span');subtitle.textContent='يمكنك الرجوع لهذه الحسبة من المحادثة نفسها';
+    section.append(title,subtitle);chat.append(section);
+  }
+  window.__F99V85KeepConversation=false;
   finoPortal.mode=null;finoPortal.step=null;finoPortal.data={};
   finoPortal.adminBankId='';finoPortal.adminRateIndex=null;finoPortal.imageFile=null;finoPortal.imageRead=null;
   if(scope==='smart'){
@@ -9822,6 +9841,7 @@ function showFINOPortalRank(index){
     <div class="portal-chat-actions">
       ${window.F99V38BotStepsHtml?.(index)||window.F99V37BotControlsHtml?.(index)||''}
     </div>
+    <div class="f85-finish">${window.F99V86UsageText?.()||''}<button type="button" class="portal-option" onclick="F99V82FinishReview()">انتهيت من مراجعة هذه الحسبة — وش الخيارات بعدها؟</button></div>
   </div>`);
 
   if(activeAccess?.record?.central){
@@ -13975,6 +13995,7 @@ async function fino99BronzeAcceptCalculation(){
       return false;
     }
     window.F99V22RefreshStatus?.();
+    if(r.data.counted===true && Number.isFinite(Number(r.data.used))) window.__F99V86Usage={used:Number(r.data.used),remaining:Number(r.data.remaining),max:Number(r.data.max_calculations)};
     window.F99V49NewPaidCalculationUsed?.(Number(r.data.used),r.data.counted===true);
     if(r.data.max_calculations>0 && Number(r.data.remaining)===0){window.__F99V43QuotaExhausted=true;window.__F99V43LastPending=true;}
     if(r.data.tracked){
@@ -13985,6 +14006,7 @@ async function fino99BronzeAcceptCalculation(){
   }catch(err){alert('تعذر الاتصال بالمركزية لاعتماد الحسبة. لم تُعرض النتيجة.');return false;}
   finally{window.__f99v7BronzePending=false;}
 }
+let f85PaidBasis=null; // Ephemeral per-page proof of an accepted original calculation; never persisted to the client.
 async function calculate(v32Options={}){
   if(typeof window.F99V32BeforeFinance==='function' && !(await window.F99V32BeforeFinance('buyout',{recalculate:v32Options?.recalculate===true})))return false;
   const salary=Number(document.getElementById('salary').value);
@@ -14062,8 +14084,15 @@ async function calculate(v32Options={}){
   out.sort((a,b)=>(a.rate-b.rate)||(b.cashAfterDebt-a.cashAfterDebt));
 
   const v32Signature=window.F99V32GetSignature?.();
-  const v32Reuse=false; // Every completed NEW computation consumes one central allowance; viewing an existing card does not call calculate().
-  if(out.length && !v32Reuse && !(await fino99BronzeAcceptCalculation()))return false;
+  // Only installment, term, amount and obligation adjustments to an ALREADY PAID calculation are free.
+  // Changing salary, early settlement, originating salary bank or customer sector creates a NEW calculation.
+  const f85Entry=typeof finoCentralRestoreEntry==='function'?finoCentralRestoreEntry():null;
+  const f85Basis=[String(f85Entry?.entryToken||'owner-or-local'),salary,earlySettlement,selectedBank,customerType].join('|');
+  const f85Adjust=v32Options?.recalculate===true && f85PaidBasis===f85Basis &&
+    typeof finoPortal!=='undefined' && finoPortal?.mode==='buyout' &&
+    ['buyout_result','f37_installment','f37_cash','f37_principal'].includes(finoPortal?.step);
+  if(out.length && !f85Adjust && !(await fino99BronzeAcceptCalculation()))return false;
+  if(out.length && !f85Adjust)f85PaidBasis=f85Basis;
   if(out.length && v32Signature)window.F99V32LastAcceptedSignature=v32Signature;
   latestResults=out;
   selectedResultIndex=0;
@@ -21952,8 +21981,8 @@ function drawControls(){const panel=ensureBox();if(!lastBuyout)return;
  });
  ['f32-installment','f32-cash'].forEach(id=>Q(id)?.addEventListener('change',()=>Q('f32-apply')?.click()));
  Q('f32-reset')?.addEventListener('click',async()=>{desiredInstallment=null;desiredCash=null;simulated=false;await calculate({recalculate:true})});
- function obligations(){const el=Q('f32-obligation-rows');if(!el)return;el.replaceChildren();items.forEach((o,i)=>{const div=document.createElement('div');div.className='f32-item';div.innerHTML=`<input aria-label="نوع الالتزام" maxlength="60" value="${esc(o.label)}"><input aria-label="القسط الشهري" type="number" min="0" inputmode="decimal" value="${N(o.amount)}"><button type="button">هل تستطيع سداده؟</button>`;div.querySelector('button').onclick=async()=>{const label=div.querySelectorAll('input')[0].value.trim();const due=Number(div.querySelectorAll('input')[1].value);if(!(due>0))return alert('أدخل مبلغ الالتزام أولاً');if(!confirm(`هل يمكنك سداد التزام «${label}» البالغ قسطه ${amt(due)} ريال شهريًا؟\nهذه محاكاة فقط، وليست إثباتًا للسداد.`)){alert('قد يؤثر هذا الالتزام على قدرتك التمويلية وفق ضوابط كل بنك.');return}if(!confirm('تأكيد: هل تريد محاكاة إعادة الحسبة بافتراض سداد هذا الالتزام؟'))return;let old=items.map(x=>({...x}));let oldValue=Q('externalObligations')?.value;items.splice(i,1);const total=items.reduce((a,b)=>a+Number(b.amount||0),0);if(Q('externalObligations'))Q('externalObligations').value=String(total);simulated=true;desiredInstallment=null;desiredCash=null;const out=await calculate({recalculate:false});if(out===false){items=old;if(Q('externalObligations'))Q('externalObligations').value=oldValue}};el.append(div)})}
- if(Q('f32-obligation-rows')){obligations();Q('f32-add-obligation')?.addEventListener('click',()=>{items.push({label:'التزام شهري',amount:0});obligations()});Q('f32-update-obligations')?.addEventListener('click',()=>{const rows=[...Q('f32-obligation-rows').querySelectorAll('.f32-item')];const updated=rows.map(x=>({label:x.querySelectorAll('input')[0].value.trim().slice(0,60),amount:Number(x.querySelectorAll('input')[1].value)}));if(updated.some(x=>!Number.isFinite(x.amount)||x.amount<0))return alert('القيم غير صحيحة');items=updated;const total=items.reduce((a,b)=>a+b.amount,0);if(Q('externalObligations'))Q('externalObligations').value=String(total);desiredInstallment=null;desiredCash=null;simulated=true;calculate({recalculate:false})});}
+ function obligations(){const el=Q('f32-obligation-rows');if(!el)return;el.replaceChildren();items.forEach((o,i)=>{const div=document.createElement('div');div.className='f32-item';div.innerHTML=`<input aria-label="نوع الالتزام" maxlength="60" value="${esc(o.label)}"><input aria-label="القسط الشهري" type="number" min="0" inputmode="decimal" value="${N(o.amount)}"><button type="button">هل تستطيع سداده؟</button>`;div.querySelector('button').onclick=async()=>{const label=div.querySelectorAll('input')[0].value.trim();const due=Number(div.querySelectorAll('input')[1].value);if(!(due>0))return alert('أدخل مبلغ الالتزام أولاً');if(!confirm(`هل يمكنك سداد التزام «${label}» البالغ قسطه ${amt(due)} ريال شهريًا؟\nهذه محاكاة فقط، وليست إثباتًا للسداد.`)){alert('قد يؤثر هذا الالتزام على قدرتك التمويلية وفق ضوابط كل بنك.');return}if(!confirm('تأكيد: هل تريد محاكاة إعادة الحسبة بافتراض سداد هذا الالتزام؟'))return;let old=items.map(x=>({...x}));let oldValue=Q('externalObligations')?.value;items.splice(i,1);const total=items.reduce((a,b)=>a+Number(b.amount||0),0);if(Q('externalObligations'))Q('externalObligations').value=String(total);simulated=true;desiredInstallment=null;desiredCash=null;const out=await calculate({recalculate:true});if(out===false){items=old;if(Q('externalObligations'))Q('externalObligations').value=oldValue}};el.append(div)})}
+ if(Q('f32-obligation-rows')){obligations();Q('f32-add-obligation')?.addEventListener('click',()=>{items.push({label:'التزام شهري',amount:0});obligations()});Q('f32-update-obligations')?.addEventListener('click',()=>{const rows=[...Q('f32-obligation-rows').querySelectorAll('.f32-item')];const updated=rows.map(x=>({label:x.querySelectorAll('input')[0].value.trim().slice(0,60),amount:Number(x.querySelectorAll('input')[1].value)}));if(updated.some(x=>!Number.isFinite(x.amount)||x.amount<0))return alert('القيم غير صحيحة');items=updated;const total=items.reduce((a,b)=>a+b.amount,0);if(Q('externalObligations'))Q('externalObligations').value=String(total);desiredInstallment=null;desiredCash=null;simulated=true;calculate({recalculate:true})});}
 }
 window.F99V32AfterBuyout=r=>{lastBuyout=r;drawControls()};
 window.F99V32ClientControlsHtml=idx=>{
@@ -27089,7 +27118,7 @@ const el=(tag,content='',cls='')=>{const e=document.createElement(tag);if(cls)e.
 const item=(where,tag,content,cls='')=>{const e=el(tag,content,cls);where.append(e);return e};
 const isOwner=()=>{try{return !!(window.F99V60Test?.owner?.()===true && typeof finoCentralAdminToken!=='undefined'&&finoCentralAdminToken && typeof window.finoCentralAdminCall==='function')}catch{return false}};
 const packages=()=>{try{return (window.FINO99ReadStorefront?.()?.products||[]).filter(x=>x?.key)}catch{return []}};
-const admin=async (fn,args={})=>{if(!isOwner())throw Error('سجّل الدخول بكود المالك قبل الوصول إلى هذه البيانات.');const r=await window.finoCentralAdminCall(fn,args);if(r?.ok!==true||r?.data?.ok!==true)throw Error(String(r?.data?.reason||r?.error?.message||r?.error?.code||'لم تعتمد المركزية الطلب'));return r.data};
+const admin=async (fn,args={})=>{if(!isOwner())throw Error('سجّل الدخول بكود المالك قبل الوصول إلى هذه البيانات.');const r=await window.finoCentralAdminCall(fn,args);if(r?.ok!==true||r?.data?.ok!==true){const d=r?.data||{};const why=Array.isArray(d.reasons)?d.reasons.join(' • '):'';const labels={BATCH_OFFER_MISMATCH:'شروط العرض والدفعة مختلفة؛ اضغط تشخيص مفصل لمعرفة السبب.',APPROVAL_ROLLED_BACK:'فشل الاعتماد وألغيت هذه المحاولة دون إتمام نشر جزئي.',SALLA_IMPORT_CONFIRMATION_REQUIRED:'أكد استيراد هذه الدفعة داخل منتج سلة الصحيح أولًا.',PUBLISH_REQUIRES_LINK_AND_CONFIRMED_STOCK:'العرض بحاجة لرابط سلة ومخزون معتمد قبل ظهوره.'};const code=d.reason||r?.error?.message||r?.error?.code||'لم تعتمد المركزية الطلب';throw Error((labels[code]||code)+(why?' • '+why:'')+(d.technical_detail?' • تفاصيل: '+d.technical_detail:''));}return r.data};
 const rpc=async (fn,args={})=>{if(typeof window.finoRpc!=='function')throw Error('خدمة المركزية غير متاحة.');const r=await window.finoRpc(fn,args,20000);if(r?.ok!==true||r?.data?.ok!==true)throw Error(String(r?.data?.reason||r?.error?.message||r?.error?.code||'لم ترد المركزية'));return r.data};
 const rate=(x)=>Number(x||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 const date=(x)=>{if(!x)return 'غير مسجل';try{return new Date(x).toLocaleString('ar-SA',{timeZone:'Asia/Riyadh',dateStyle:'short',timeStyle:'medium'})}catch{return String(x)}};
@@ -27236,19 +27265,19 @@ async function ownerPackage(key,selectedId=''){
   createBtn(buttons,'TXT لسلة — كود في كل سطر',()=>downloadCodes(exp.codes.join('\n')+'\n','FINO99_'+aid.slice(0,8)+'.txt','text/plain;charset=utf-8'));
   createBtn(buttons,'Excel لسلة — عمود مستقل',()=>{try{const bytes=window.F99V17BuildSallaXlsx?.(exp.codes,exp.last_day||null);if(!bytes)throw Error('محرّك Excel غير متوفر');downloadCodes(bytes,'FINO99_'+aid.slice(0,8)+'.xlsx','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}catch(e){note(e.message,true)}});
   createBtn(buttons,'نسخ الأكواد وحدها',async()=>{try{await navigator.clipboard.writeText(exp.codes.join('\n'));note('نسخت الأكواد وحدها، دون أي عبارات إضافية')}catch{note('استخدم ملف TXT إذا منع Safari النسخ.',true)}});
-  const match=card(panel,'فحص مطابقة الدفعة قبل اعتمادها','لا يمكن ربط الدفعة بعرض آخر أو تغيير مدة كود سبق تخصيصه.');
+  const match=card(panel,'التحقق قبل اعتماد دفعة الأكواد','قبل الضغط على اعتماد: طابق اسم العرض، ومدة الكود، ومرات الحسبة، والخدمات، والرابط المحفوظ في سلة. عند ظهور خطأ، افتح تشخيص المركزية ولا تنشئ دفعة بديلة تلقائيًا.');
   const mismatches=()=>{
-   const problems=[];const norm=typeof f79NormalizeSalla==='function'?f79NormalizeSalla(link.value):String(link.value||'').trim();
+   const problems=[];let norm='';try{norm=f79NormalizeSalla(link.value)}catch(e){problems.push('رابط سلة غير صالح: '+String(e.message||e))}
    if(exp.package_key!==offer.package_key)problems.push('اسم/معرف الباقة الأصلية مختلف بين العرض والدفعة');
    const meta=(stock.allocations||[]).find(x=>x.id===aid);
-   if(!meta)problems.push('تفاصيل الدفعة غير موجودة في ملخص مخزون المركزية. افتح شاشة المخزون من جديد');
+   if(!meta){/* V84: دفعة جديدة لم تظهر في اللقطة القديمة؛ فحص المركزية الحي يقرر، لا نرفضها محليًا. */}
    else {
     if(Number(meta.duration_minutes)!==Number(offer.duration_minutes))problems.push('مدة الكود مختلفة: الدفعة '+meta.duration_minutes+' دقيقة، والعرض '+offer.duration_minutes+' دقيقة');
     if(Number(meta.max_calculations)!==Number(offer.max_calculations))problems.push('مرات الحسبة مختلفة: الدفعة '+meta.max_calculations+' والعرض '+offer.max_calculations);
    }
    // Stock summary does not expose the allocation's services; the server performs that final check.
    if(!norm||!/^https:\/\/salla[.]sa\//i.test(norm))problems.push('رابط سلة ليس من الصيغة المعتمدة');
-   if(offer.checkout_url!==norm)problems.push('رابط سلة في الحقل مختلف عن الرابط المحفوظ للعرض. احفظ الرابط أولًا ثم افتح نفس الدفعة مجددًا');
+   let stored='';try{stored=f79NormalizeSalla(offer.checkout_url)}catch{}if(stored!==norm)problems.push('الرابط الذي كتبته مختلف عن رابط الدفع المحفوظ في العرض. احفظ العرض ثم أعد فتح هذه الدفعة.');
    if(exp.state!=='reserved'&&exp.state!=='published')problems.push('حالة الدفعة ليست قابلة للنشر: '+exp.state);
    return problems;
   };
@@ -27257,14 +27286,21 @@ async function ownerPackage(key,selectedId=''){
   createBtn(actions(match),'تشخيص مفصل من المركزية قبل النشر',async()=>{try{
    const u=f79NormalizeSalla(link.value),p=await admin('f99v83_owner_allocation_precheck',{p_offer_id:offer.id,p_allocation_id:aid,p_checkout_url:u});
    const issues=Array.isArray(p.reasons)?p.reasons:[];
-   item(match,'p',p.ready===true?'✓ اجتاز فحص المركزية: الهوية والخدمات والمدة وعدد مرات الحسبة والرابط وحالة المخزون مطابقة.':'⚠️ اختلافات المركزية: '+issues.join(' • '),'f82-match');
-  }catch(e){item(match,'p','تعذر الفحص: '+String(e.message||e)+'؛ لا تنشر الدفعة قبل تثبيت فحص V83 في مركزية الاختبار والتأكد من نتيجته.','f82-match')}});
-  const confirmed=toggle(panel,'رفعت هذه الدفعة نفسها داخل منتج سلة الخاص بهذا العرض، وراجعت عددها وأكوادها.',false);
-  const pub=createBtn(actions(panel),'اعتماد استيراد الدفعة وربطها بالعرض',async()=>{if(!confirmed.checked)return note('أكّد مطابقة ملف سلة أولًا.',true);if(!showMatch())return note('لا يمكن ربط الدفعة حتى تتطابق شروطها مع العرض ورابط سلة المحفوظ.',true);if(!f79NormalizeSalla(link.value))return note('ضع رابط سلة الصحيح واحفظ العرض قبل النشر.',true);if(exp.state==='published'&&Number((stock.allocations||[]).find(a=>a.id===aid)?.already_bound||0)>0)return note('هذه الدفعة مرتبطة بالفعل. تحقق من المخزون قبل إعادة الاعتماد.',true);
+   const fixes=issues.map(z=>/رابط.*سلة|الرابط.*المحفوظ/.test(z)?'افتح العرض، صحح رابط سلة واحفظه، ثم أعد فتح الدفعة.':/مدة الكود|مرات الحسبة|خدمات الدفعة/.test(z)?'اختر عرضًا يطابق شروط الدفعة أو أنشئ عرضًا جديدًا بشروط صحيحة؛ لا تغيّر أكوادًا منشورة.':/الباقة الأصلية|معرف الباقة/.test(z)?'اختر الباقة الأصلية الصحيحة من المتجر، ولا تربط دفعة خدمة بأخرى.':/حالة الدفعة|سجلات الدفعة|رموز الدفعة/.test(z)?'راجع مخزون الدفعة وسجل استخدامها قبل أي تخصيص أو نشر جديد.':'راجع بيانات الدفعة في المركزية ثم أعد الفحص.');
+   match.querySelectorAll('.f84-server-check').forEach(e=>e.remove());
+   const detail=item(match,'p',p.ready===true?'✓ اجتاز فحص المركزية: العرض والدفعة ورابط الدفع متطابقة. يمكن الاعتماد بعد تأكيد الاستيراد إلى سلة.':'⚠️ نتيجة الفحص: '+(issues.join(' • ')||'لم يرجع الخادم تفاصيل كافية؛ أوقف الاعتماد.')+'\nالإجراء المقترح: '+[...new Set(fixes)].join(' • '),'f84-server-check');
+   detail.style.cssText='background:'+(p.ready===true?'#eaf8ef':'#fff1ec')+';padding:12px;border-radius:10px;line-height:1.9;border:1px solid #d4e2eb;color:#18384f;font-weight:700';
+  }catch(e){item(match,'p','تعذر الفحص: '+String(e.message||e)+'؛ تأكد من وجود V83 في المركزية أولًا.','f84-server-check')}});
+  const confirmed=toggle(panel,'أؤكد أنني رفعت أكواد هذه الدفعة في منتج سلة الصحيح وراجعت عددها. اعتماد المركزية لا يؤكد السداد تلقائيًا.',false);
+  const pub=createBtn(actions(panel),'اعتماد الدفعة — فحص وربط مركزي آمن',async()=>{if(!confirmed.checked)return note('أكّد مطابقة ملف سلة أولًا.',true);if(!showMatch())return note('لا يمكن ربط الدفعة حتى تتطابق شروطها مع العرض ورابط سلة المحفوظ.',true);if(!f79NormalizeSalla(link.value))return note('ضع رابط سلة الصحيح واحفظ العرض قبل النشر.',true);
     pub.disabled=true;try{
       const pre=await admin('f99v83_owner_allocation_precheck',{p_offer_id:offer.id,p_allocation_id:aid,p_checkout_url:f79NormalizeSalla(link.value)});
       if(pre.ready!==true){const explanations=Array.isArray(pre.reasons)?pre.reasons.join(' • '):'لم تتطابق شروط الدفعة';throw Error('فحص ما قبل النشر رفض الربط: '+explanations+' — لا تُغيّر أكواد دفعة سبق نشرها؛ راجع شروطها أو أنشئ عرضًا متوافقًا.');}
-      if(exp.state!=='published'){const x=await admin('f99v9_admin_publish',{p_allocation_id:aid});if(x.state!=='published'&&x.already_published!==true)throw Error('لم تؤكد المركزية نشر الدفعة');}const b=await admin('f99v77_owner_bind_allocation',{p_offer_id:offer.id,p_allocation_id:aid,p_confirmed_in_salla:true});note('تم ربط '+b.total_in_batch+' كود بهذا العرض، والمتاح '+b.ready+'. اعتمد إظهار العرض بعدها.');pub.disabled=true}catch(e){const msg=String(e.message||e);note(msg.includes('OFFER_ALLOCATION_POLICY_OR_SALLA_URL_MISMATCH')?'المركزية رفضت مطابقة العرض والدفعة. راجع مدة الكود ومرات الحسبة والخدمات ورابط سلة المحفوظ. لا تخصص أكواد جديدة قبل فحص الدفعة السابقة.':'تعذر اعتماد الدفعة: '+msg+(msg.includes('f99v83_owner_allocation_precheck')?' — يحتاج فحص المركزية V83 قبل نشر الأكواد':'') ,true);pub.disabled=false}
+      const b=await admin('f99v84_owner_approve_allocation',{p_offer_id:offer.id,p_allocation_id:aid,p_checkout_url:f79NormalizeSalla(link.value),p_confirmed_in_salla:true});note('تم اعتماد وربط '+b.count+' كود في المركزية بعملية واحدة. المتاح الآن: '+b.available+'؛ يمكنك بعدها تشغيل إظهار العرض.');pub.disabled=true}catch(e){const msg=String(e.message||e);note(msg.includes('OFFER_ALLOCATION_POLICY_OR_SALLA_URL_MISMATCH')?'لا يمكن اعتماد هذه الدفعة على العرض المختار. اضغط «تشخيص مفصل من المركزية» لمعرفة هل الاختلاف في المدة أو مرات الحسبة أو الخدمات أو رابط سلة. لا تُنشئ دفعة جديدة قبل مراجعة الدفعة القديمة.':'تعذر اعتماد الدفعة: '+msg+(msg.includes('f99v84_owner_approve_allocation')?' — افحص وجود دالة الاعتماد V84 في المركزية قبل محاولة التثبيت.':'') ,true);try{const check=await admin('f99v83_owner_allocation_precheck',{p_offer_id:offer.id,p_allocation_id:aid,p_checkout_url:f79NormalizeSalla(link.value)});
+        const detail=match.querySelector('[data-v86-failure]')||item(match,'p','','f84-server-check');
+        detail.dataset.v86Failure='1';
+        detail.textContent=check.ready===true?'مطابقة الدفعة صحيحة؛ تعذر التنفيذ بسبب صلاحية أو وظيفة الاعتماد V84. افحص دالة V84 ولا تعِد التخصيص.':'الدفعة لم تعتمد. سبب الرفض من المركزية: '+(Array.isArray(check.reasons)?check.reasons.join(' • '):'لم ترجع تفاصيل كافية');
+      }catch(checkErr){const detail=match.querySelector('[data-v86-failure]')||item(match,'p','','f84-server-check');detail.dataset.v86Failure='1';detail.textContent='تعذر تشخيص الدفعة: '+String(checkErr.message||checkErr)+'. تحقق من وجود فحص V83 ووظيفة الاعتماد V84.';}pub.disabled=false}
    },true);
  }
  const show=createBtn(actions(saveBox),'إظهار العرض للعملاء بعد اعتماد مخزونه',async()=>{if(!savedOffer)return note('احفظ عرض التجديد أولًا.',true);show.disabled=true;try{const x=await persist(true);if(!x.id)throw Error('لم يتأكد الحفظ');const y=await admin('f99v77_owner_package_save',{p_package_key:key,p_enabled:true,p_label:'أكواد التجديد'});note(y.live_for_customer?'تم نشر العرض للعملاء المؤهلين وله مخزون.':'تم حفظ العرض لكن لا توجد أكواد متاحة فعليًا؛ لن يفتح الدفع.');await ownerPackage(key,x.id)}catch(e){note('لم يتم نشر العرض: '+e.message,true)}finally{show.disabled=false}},true);
@@ -27275,7 +27311,7 @@ async function ownerPackage(key,selectedId=''){
  const past=card(r,'الدفعات السابقة القابلة لاسترداد ملفاتها','إذا أغلقت الشاشة بعد التخصيص، تقدر تستخرج الرموز الأصلية للدفعة نفسها دون تخصيص جديد.');
  for(const a of (stock.allocations||[]).slice(0,25)){
   const row=card(past,'دفعة '+a.id.slice(0,8),a.count+' كود • '+a.state+' • مربوط '+a.already_bound);
-  createBtn(actions(row),'فتح ملف هذه الدفعة',async()=>{try{const targetOffer=offers.find(o=>o.id===edit.value&&Number(o.duration_minutes)===Number(a.duration_minutes)&&Number(o.max_calculations)===Number(a.max_calculations));if(!targetOffer)throw Error('اختر العرض المطابق لهذه الدفعة من القائمة بالأعلى ثم افتح الملف.');await renderAllocation(allocations,a.id,targetOffer);allocations.scrollIntoView({block:'start'})}catch(e){note('تعذر استرجاع الدفعة: '+e.message,true)}})
+  createBtn(actions(row),'فتح ملف هذه الدفعة',async()=>{try{const targetOffer=offers.find(o=>o.id===edit.value);if(!targetOffer)throw Error('اختر العرض الذي تريد فحص هذه الدفعة معه أولًا، وسيعرض الفحص أي اختلاف دون ربط تلقائي.');await renderAllocation(allocations,a.id,targetOffer);allocations.scrollIntoView({block:'start'})}catch(e){note('تعذر استرجاع الدفعة: '+e.message,true)}})
  }
  const claims=card(r,'محاولات الدفع التي تحتاج مراجعة في سلة','حجز الكود لا يثبت سداد العميل؛ لا تؤكد بيعًا دون مراجعة الطلب في سلة.');
  if(!(stock.pending_claims||[]).length)item(claims,'p','لا توجد محاولات معلقة.');
@@ -27527,42 +27563,14 @@ const activeResult=()=>{try{return finoPortal?.mode==='buyout'&&finoPortal?.step
 function section(where,title){const box=E('section');box.append(E('h3',title));where.append(box);return box}
 function viewJson(where,value){const pre=E('pre',JSON.stringify(value,null,2));where.append(pre)}
 const listFrom=d=>{if(!d||typeof d!=='object')return [];for(const key of ['recommendations','rankings','topThree','top3','results','offers','banks','candidates'])if(Array.isArray(d[key])&&d[key].length)return d[key];return []};
-async function history(){
- $('f80-history-modal')?.remove();const shade=E('div');shade.id='f80-history-modal';shade.dir='rtl';const page=E('article');shade.append(page);const exit=E('button','إغلاق');exit.onclick=()=>shade.remove();page.append(E('h2','مراجعة الحسب السابقة'),exit);
- page.append(E('p','مراجعة النتائج المؤرشفة لا تخصم مرة جديدة للاحتساب. وتظهر النتائج الأصلية فقط إذا تم حفظها في المركزية لهذه الجلسة.'));
- document.body.append(shade);const s=token();if(!s){page.append(E('p','انتهت الجلسة أو لم يُحفظ رمز الدخول. راجع أرشيفك مع إدارة المنصة.'));return}
- try{
-  const r=await finoRpc('f99v80_customer_history',{...s,p_limit:50},18000);
-  if(!r?.ok||r.data?.ok!==true)throw Error(r?.data?.reason||'تعذر فتح السجل');
-  const items=(r.data.items||[]).slice().reverse();if(!items.length){page.append(E('p','لم يتم حفظ صورة نتائج سابقة لهذه الجلسة. لا يمكن تكوين نتيجة قديمة من الذاكرة.'));return}
-  page.append(E('p','عدد سجلات الحفظ المؤرشفة: '+r.data.total+'. قد تحتوي الحسبة الواحدة على أكثر من سجل نتيجة.'));
-  items.forEach((saved,i)=>{const x=section(page,'سجل نتيجة محفوظة رقم '+(i+1));const d=new Date(saved.recorded_at);x.append(E('p','وقت الحفظ: '+(!Number.isNaN(d.getTime())?d.toLocaleString('ar-SA',{timeZone:'Asia/Riyadh'}):'غير محفوظ')));
-   const see=E('button','مراجعة الترشيحات المحفوظة');x.append(see);see.onclick=()=>{
-    x.querySelector('.f80-record')?.remove();const area=E('div','','f80-record');x.append(area);
-    const offers=listFrom(saved.result_data);if(offers.length){offers.forEach((v,n)=>{
-      const name=v?.name||v?.bankName||v?.bank||v?.bank_name||'';
-      const card=section(area,'الترشيح '+ordinal(n+1)+(name?' — '+name:''));
-      const short=[['القسط',v?.installment??v?.monthly_installment],['صافي الكاش',v?.cashAfterDebt??v?.net_cash],['هامش الربح السنوي',v?.rate??v?.profit_rate]].filter(x=>x[1]!=null);
-      for(const [label,value] of short)card.append(E('p',label+': '+value));
-      const btn=E('button','مراجعة التفاصيل الأصلية لهذا الترشيح');card.append(btn);
-      btn.onclick=()=>{card.querySelector('.f80-offer-json')?.remove();const detail=E('div','','f80-offer-json');viewJson(detail,v);card.append(detail)}
-     })}else area.append(E('p','الترشيحات لم تُحفظ كقائمة مستقلة في هذا السجل.'));
-    if(saved.result_data) {area.append(E('h4','بيانات النتيجة الأصلية المحفوظة'));viewJson(area,saved.result_data)}
-    if(saved.input_data){area.append(E('h4','البيانات التي أدخلتها في هذه الحسبة'));viewJson(area,saved.input_data)}
-    const url=saved.detailed_image_url||saved.compact_image_url;
-    if(url&&(/^https:\/\/[^\s]+$/i.test(url)||/^data:image\/(png|jpeg|webp);base64,/i.test(url))){const img=E('img');img.src=url;img.alt='الصورة الأصلية المؤرشفة للنتيجة';img.onerror=()=>{img.remove();area.append(E('p','الصورة الأصلية محفوظة لكن تعذر فتحها.'))};area.append(img)}
-    else area.append(E('p','الصورة الأصلية لهذه النتيجة غير مؤرشفة، لذلك لن أعرض صورة بديلة.'));
-   }
-  });
- }catch(e){page.append(E('p','لا يمكن فتح أرشيف هذه الجلسة الآن: '+e.message))}
-}
+async function history(){return window.F99V85ReviewConversation?.()||false;}
 window.FINO99V80History=history;
 function renewal(){const key=current();if(key&&window.FINO99V76?.customerOffers)void window.FINO99V76.customerOffers(key);else alert('اختر باقتك من المتجر أولًا.');}
 function banner(data){if(window.__F99V82ExplicitQuotaView!==true)return;const chat=$('finoBotChat');if(!chat||!paid()||!activeResult())return;const max=Number(data?.max_calculations||0),remaining=Number(data?.calculations_remaining);
  if(!(max>0&&Number.isFinite(remaining)))return;
  let box=$('f80-status');if(!box){box=E('div');box.id='f80-status';box.setAttribute('role','status');chat.append(box)}box.replaceChildren();
  const used=Math.max(0,max-remaining);box.dataset.last=remaining<=1?'true':'false';
- const msg=remaining>1?'يا '+client()+'، استخدمت الحسبة '+ordinal(used)+'. باقي لك '+remaining+' مرات للاحتساب. تبي تبدأ بحسبة جديدة ولا تراجع الحسبة الحالية؟':remaining===1?'يا '+client()+'، هذي المرة الأخيرة للاحتساب في باقتك. تبي نبدأ ولا نراجع الحسب السابقة؟':'يا '+client()+'، تم استهلاك كامل مرات الحسبة في باقتك. تقدر تراجع النتائج المؤرشفة قبل الخروج، أو تشوف عروض تجديد باقتك إذا كانت متاحة.';
+ const msg=remaining>1?'يا '+client()+'، استخدمت الحسبة '+ordinal(used)+'. باقي لك '+remaining+' مرات للاحتساب. تبي تبدأ بحسبة جديدة ولا تراجع الحسبة الحالية؟':remaining===1?'يا '+client()+'، هذي المرة الأخيرة للاحتساب في باقتك. تبي نبدأ ولا نراجع الحسب السابقة؟':'يا '+client()+'، استهلكت مرات الحسبة. تقدر تراجع محادثتك السابقة قبل الخروج، أو تختار عرض التجديد إذا توفر.';
  box.append(E('strong',msg));const actions=E('div');box.append(actions);
  function b(t,fn){const x=E('button',t);x.type='button';x.onclick=fn;actions.append(x)}
  if(remaining>0)b(remaining===1?'ابدأ بالحسبة الأخيرة':'ابدأ بحسبة جديدة',()=>{box.remove();try{window.openFINOSmartPortal?.(false,'buyout')}catch{alert('تعذر بدء الحسبة من هذه الصفحة')}});
@@ -27773,7 +27781,7 @@ window.FINO99OpenCoreBanks=function(){
  function renderDashboard(){
   if(!own())return;const root=$('#ownerHub .owner-shell');if(!root)return;let panel=$('#f81-owner-panel',root);
   if(!panel){panel=E('section',null,'f81-owner-panel');panel.id='f81-owner-panel';
-   const top=E('div',null,'f81-head');top.append(E('h2','مركز إدارة FINO99'),E('p','مكان واحد لكل خدمة • المتجر أولًا • التعديلات المعتمدة تُحفظ في المركزية'));panel.append(top);
+   const top=E('div',null,'f81-head');top.append(E('h2','مركز إدارة FINO99'),E('p','مكان واحد لكل خدمة • المتجر أولًا • التعديلات المعتمدة تُحفظ في المركزية'),E('small','إصدار الواجهة V86 • تظهر التحديثات بعد رفع index.html وتحديث الصفحة'));panel.append(top);
    const buttons=E('div',null,'f81-owner-tiles');panel.append(buttons);
    for(const [emoji,title,subtitle,fn,args] of tiles){const b=button(buttons,'',()=>{},'f81-tile');const ico=E('span',emoji,'f81-ico');const content=E('span',null,'f81-tile-text');content.append(E('strong',title),E('small',subtitle));b.replaceChildren(ico,content);
     b.addEventListener('click',()=>{}); // Event handler below owns click action.
@@ -27836,12 +27844,12 @@ const note=t=>say('<p>'+escapeHTML(t)+'</p>');
 const entry=()=>{try{return window.finoCentralRestoreEntry?.()||{}}catch{return {}}};
 async function serverStatus(){const e=entry();if(!e.entryToken||!e.deviceId)throw Error('الكود غير مسجل في هذه الجلسة.');const r=await window.finoRpc('f99v23_client_status',{p_entry_token:e.entryToken,p_device_id:e.deviceId},14000);if(!r?.ok||r.data?.ok!==true)throw Error(r?.data?.reason||'تعذر التحقق من صلاحية الكود');return r.data}
 function openHistory(){if(typeof window.FINO99V80History==='function')return window.FINO99V80History();note('مراجعة الحسب السابقة غير متاحة الآن.')}
-function startNew(consentLast){window.__F99V82LastUseConsent=consentLast===true;try{if(typeof window.openFINOSmartPortal==='function')window.openFINOSmartPortal(false,'buyout');else {window.__F99V82LastUseConsent=false;note('تعذر فتح الحسبة الجديدة من هذه الجلسة.')}}catch(e){window.__F99V82LastUseConsent=false;note('تعذر البدء: '+String(e?.message||e))}}
+function startNew(consentLast){window.__F99V82LastUseConsent=consentLast===true;window.__F99V85KeepConversation=true;try{if(typeof window.openFINOSmartPortal==='function')window.openFINOSmartPortal(false,'buyout');else {window.__F99V82LastUseConsent=false;note('تعذر فتح الحسبة الجديدة من هذه الجلسة.')}}catch(e){window.__F99V82LastUseConsent=false;window.__F99V85KeepConversation=false;note('تعذر البدء: '+String(e?.message||e))}}
 window.F99V82RequestNewCalculation=async()=>{
  if(!current())return note('افتح نتائج الحسبة أولًا.');
  try{const s=await serverStatus(),max=Number(s.max_calculations||0),remaining=Number(s.calculations_remaining);if(max<=0||!Number.isFinite(remaining))return note('تعذر قراءة رصيد مرات الحسبة. لن نخصم استخدامًا دون التحقق من المركزية.');
  const used=Math.max(0,max-remaining);const d=say('',remaining===1),h=document.createElement('strong');d.append(h);const p=document.createElement('p');d.append(p);
- if(remaining===0){h.textContent='يا '+client()+'، استهلكت كامل مرات الحسبة في هذه الباقة.';p.textContent='تقدر تراجع نتائجك المؤرشفة داخل الجلسة، أو تجدد بكود جديد إذا توفر عرض.';}
+ if(remaining===0){h.textContent='يا '+client()+'، استهلكت كامل مرات الحسبة في هذه الباقة.';p.textContent='تقدر تطالع جميع رسائل الحسب السابقة هنا قبل الخروج، أو تجدد بكود جديد إذا توفر عرض.';}
  else if(remaining===1){h.textContent='يا '+client()+'، هذه المرة الأخيرة للاحتساب.';p.textContent='أنجزت '+used+' من '+max+' مرات. تبي نبدأ الحسبة الأخيرة أو تراجع الحسب السابقة؟';}
  else {h.textContent='يا '+client()+'، '+(used===1?'استخدمت الحسبة الأولى':used===2?'استخدمت الحسبة الثانية':'استخدمت '+used+' مرات للاحتساب')+'.';const remText=remaining===2?'مرتين':remaining===3?'3 مرات':remaining+' مرات';p.textContent='باقي لك '+remText+' للاحتساب. تبي تبدأ بحسبة جديدة أو تراجع الحسبة الحالية؟';}
  const actions=document.createElement('div');d.append(actions);const button=(title,cb)=>{const b=document.createElement('button');b.type='button';b.textContent=title;b.onclick=cb;actions.append(b)};
@@ -27864,8 +27872,13 @@ window.F99V82OpenOffer=async()=>{
 };
 window.F99V82FinishReview=()=>{
  if(!current())return;const d=say('<strong>يا '+escapeHTML(client())+'، انتهينا من مراجعة تفاصيل هذه الحسبة.</strong><p>ترشيحاتك ونتائجك ما زالت متاحة هنا. اختر الخطوة اللي تناسبك:</p>');
+ const quota=document.createElement('p');quota.className='f85-summary';quota.textContent='جاري التحقق من رصيد مرات الحسبة من المركزية...';d.append(quota);
+ void serverStatus().then(s=>{const max=Number(s.max_calculations),left=Number(s.calculations_remaining);
+   if(Number.isFinite(max)&&max>0&&Number.isFinite(left))quota.textContent='أنجزت '+Math.max(0,max-left)+' من '+max+' مرات للاحتساب، والباقي '+left+'. مراجعة هذه النتيجة وتعديل قسطها أو مدتها لا يخصمان مرة جديدة.';
+   else quota.textContent='لم يتوفر رصيد موثق لمرات الحسبة. يمكنك مواصلة مراجعة النتيجة الحالية.';
+ }).catch(()=>{quota.textContent='تعذر جلب الرصيد الآن؛ لا نبدأ حسبة جديدة دون موافقتك.';});
  const row=document.createElement('div');d.append(row);const btn=(label,fn)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=()=>{d.remove();fn()};row.append(b)};
- if(window.F99V38FeatureAllowed?.('show_completion')===true)btn('عندك عرض لمتابعة تمويلك',()=>window.F99V82OpenOffer());btn('أبدأ حسبة جديدة',()=>window.F99V82RequestNewCalculation());btn('أراجع النتائج',()=>{const node=chat()?.querySelector('.portal-result');if(node)node.scrollIntoView({behavior:'smooth',block:'start'});else note('نتائج الحسبة السابقة غير ظاهرة في المحادثة. افتح مراجعة الحسب السابقة عند الحاجة.')});
+ if(window.F99V38FeatureAllowed?.('show_completion')===true)btn('يا '+client()+'، عندك عرض للمتابعة',()=>window.F99V82OpenOffer());btn('أبدأ حسبة جديدة',()=>window.F99V82RequestNewCalculation());btn('أراجع النتائج',()=>{const node=chat()?.querySelector('.portal-result');if(node)node.scrollIntoView({behavior:'smooth',block:'start'});else window.F99V85ReviewConversation?.()});
 };
 })();
 </script>
@@ -27908,5 +27921,47 @@ window.FINO99V83OpenRenewal=()=>{
 };
 })();
 </script>
+
+<script id="fino99-v85-chat-review">
+/* FINO99 V85 | Review the original conversation, not synthetic JSON archive. No RPC/meter call. */
+(()=>{'use strict';
+ const getChat=()=>document.getElementById('finoBotChat');
+ const view=(el,chat)=>{if(!el)return false;try{chat.scrollTo({top:Math.max(0,el.offsetTop-chat.offsetTop-10),behavior:'smooth'});return true}catch{return false}};
+ window.F99V85ReviewConversation=function(){
+  const chat=getChat();if(!chat)return false;
+  chat.querySelector('#f85-review-nav')?.remove();
+  const markers=[...chat.querySelectorAll('[data-f85-calc-index]')];
+  const nav=document.createElement('nav');nav.id='f85-review-nav';nav.setAttribute('aria-label','التنقل بين الحسب داخل المحادثة');nav.dir='rtl';
+  const title=document.createElement('strong');title.textContent='مراجعة محادثتك السابقة — بدون احتساب جديد';nav.append(title);
+  const items=markers.length?markers:[chat.querySelector('.portal-row')||chat.firstElementChild].filter(Boolean);
+  items.forEach((mark,i)=>{const b=document.createElement('button');b.type='button';b.textContent='الحسبة '+(Number(mark.dataset.f85CalcIndex)||i+1);b.addEventListener('click',()=>view(mark,chat));nav.append(b)});
+  const last=document.createElement('button');last.type='button';last.textContent='العودة لآخر الرسائل';last.addEventListener('click',()=>chat.scrollTo({top:chat.scrollHeight,behavior:'smooth'}));nav.append(last);
+  chat.append(nav);view(items[0],chat);return true;
+ };
+ window.FINO99V80History=window.F99V85ReviewConversation;
+})();
+</script>
+<style id="fino99-v85-style">
+.f85-calc-marker{display:flex;justify-content:space-between;gap:10px;align-items:center;direction:rtl;padding:10px 14px;margin:14px 6px 5px;border-top:2px solid #b9d1e1;color:#21455c;font-weight:700;background:#f4f9fb;border-radius:10px}
+.f85-calc-marker span{font:400 12px/1.7 Tahoma,sans-serif;color:#546e7b}
+#f85-review-nav{display:flex;align-items:center;flex-wrap:wrap;gap:8px;background:#eff7ff;padding:12px;margin:12px 6px;border:1px solid #adc8df;border-radius:12px;direction:rtl}
+#f85-review-nav strong{width:100%;font-size:14px}
+#f85-review-nav button,.f85-finish button{padding:10px 12px;border-radius:9px;border:1px solid #7ca7c6;background:white;color:#173c55;font:700 14px/1.5 Tahoma,sans-serif;cursor:pointer}
+.f85-finish{margin-top:16px;padding-top:10px;border-top:1px solid #cbdde8}
+</style>
+<script id="fino99-v86-usage-label">
+(()=>{'use strict';
+const e=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+window.F99V86UsageText=()=>{
+ const a=window.__F99V86Usage;
+ if(!a||!Number.isFinite(a.used)||!Number.isFinite(a.max)||a.max<=0)return '';
+ const rem=Number.isFinite(a.remaining)?Math.max(0,a.remaining):'—';
+ return '<p class="f86-usage-hint" role="status">تم اعتماد '+e(a.used)+' من '+e(a.max)+' مرات للاحتساب. المتبقي '+e(rem)+'. مراجعة هذه النتيجة أو تعديل القسط أو المدة لا يستهلك مرة إضافية.</p>';
+};
+})();
+</script>
+<style id="fino99-v86-usage-style">
+#finoBotChat .f86-usage-hint{border-radius:11px;border:1px solid #bad4e3;background:#edf6fb;color:#214b67;padding:12px;margin:13px 0;font-size:13px;font-weight:700;line-height:1.8}
+</style>
 </body>
 </html>
