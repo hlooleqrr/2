@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- FINO99 V86 | GitHub Pages index.html | 2026-11-14.
+<!-- FINO99 ORIGINAL ONE V87-O1 | GitHub Pages index.html | 2026-11-14.
      Current site is configured for its existing Supabase project.
      The HTML file does not install database functions or create an independent backend.
      Do not change Supabase URL or publishable key when updating this same site.
@@ -27963,5 +27963,104 @@ window.F99V86UsageText=()=>{
 <style id="fino99-v86-usage-style">
 #finoBotChat .f86-usage-hint{border-radius:11px;border:1px solid #bad4e3;background:#edf6fb;color:#214b67;padding:12px;margin:13px 0;font-size:13px;font-weight:700;line-height:1.8}
 </style>
+
+<!-- FINO99 ORIGINAL ONE: owner health and release guidance -->
+<style id="fino99-original-1-style">
+/* FINO99 Original One — scoped 2026 owner refresh, no financial engine edits. */
+#ownerHub.f81-unified .owner-shell{max-width:1240px;margin-inline:auto}
+#ownerHub.f81-unified #f81-owner-panel{background:linear-gradient(150deg,#f8fbff,#eef5fa);border:1px solid #cddfec;border-radius:22px;padding:clamp(14px,2vw,28px);box-shadow:0 14px 35px rgba(18,56,85,.09)}
+#ownerHub.f81-unified .f81-head h2{font-size:clamp(21px,3vw,29px);line-height:1.45;letter-spacing:-.2px;color:#17354d}
+#ownerHub.f81-unified .f81-owner-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+#ownerHub.f81-unified .f81-tile{min-width:0;border:1px solid #d4e3ed;background:#fff;border-radius:17px;padding:18px 14px;min-height:110px;text-align:right;box-shadow:0 3px 12px rgba(14,55,84,.04);transition:transform .15s,box-shadow .15s}
+#ownerHub.f81-unified .f81-tile:hover,#ownerHub.f81-unified .f81-tile:focus-visible{transform:translateY(-2px);box-shadow:0 9px 22px rgba(15,58,89,.12);outline:2px solid #82afc8;outline-offset:2px}
+#ownerHub.f81-unified .f81-tile strong{font-size:16px;color:#18364e}
+#ownerHub.f81-unified .f81-tile small{line-height:1.8}
+#ownerHub.f81-unified .f81-utilities{display:flex;flex-wrap:wrap;gap:9px}
+#ownerHub.f81-unified .f81-utilities button{min-height:42px}
+#ownerHub.f81-unified .f87-ops{background:#fff;border:1px solid #bed4e3;border-radius:16px;padding:14px;margin:16px 0;direction:rtl;text-align:right;color:#18364c}
+#ownerHub.f81-unified .f87-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px}
+#ownerHub.f81-unified .f87-heading>div{display:flex;flex-direction:column;gap:5px}
+#ownerHub.f81-unified .f87-heading small{font-size:12px;color:#647d8e}
+#ownerHub.f81-unified .f87-heading strong{font-size:18px;color:#173954}
+#ownerHub.f81-unified .f87-heading span{font-size:12px;color:#647d8e}
+#ownerHub.f81-unified .f87-ops button{cursor:pointer;border-radius:10px;padding:9px 13px;border:1px solid #9cbdd2;background:#f8fcff;color:#15415a;font-weight:700;min-height:42px}
+#ownerHub.f81-unified .f87-ops .f87-primary{background:#205675;color:#fff;border-color:#205675}
+#ownerHub.f81-unified .f87-detail{padding:14px 0 0;line-height:1.9}
+#ownerHub.f81-unified .f87-detail[hidden]{display:none!important}
+#ownerHub.f81-unified .f87-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+#ownerHub.f81-unified .f87-detail h3{font-size:16px;margin:16px 0 5px}
+#ownerHub.f81-unified .f87-check{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:9px 8px;border-bottom:1px solid #e3eef4}
+#ownerHub.f81-unified .f87-check-name{font-size:14px}
+#ownerHub.f81-unified .f87-check-value{font-size:13px;text-align:left;overflow-wrap:anywhere}
+#ownerHub.f81-unified .f87-pass{color:#13775c}
+#ownerHub.f81-unified .f87-fail{color:#9b3232}
+#ownerHub.f81-unified .f87-warn{color:#916221}
+#ownerHub.f81-unified .f87-caution{font-size:12px;color:#5d7485;border-top:1px solid #dce9f0;padding-top:9px}
+@media(max-width:750px){#ownerHub.f81-unified .f81-owner-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}#ownerHub.f81-unified .f81-tile{min-height:120px;padding:12px 9px}#ownerHub.f81-unified .f81-tile strong{font-size:14px}#ownerHub.f81-unified .f87-check{align-items:flex-start;flex-direction:column;gap:3px}}
+@media(max-width:360px){#ownerHub.f81-unified .f81-owner-tiles{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){#ownerHub.f81-unified .f81-tile{transition:none!important}}
+</style>
+<script id="fino99-original-1-logic">
+(()=>{'use strict';
+// FINO99 ORIGINAL ONE — owner-only diagnostics and release recovery surface.
+// Never grants entitlements, confirms payments, or edits core calculator rules.
+const RELEASE='النسخة الأصلية واحد',BUILD='V87-O1';
+const el=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!=null)n.textContent=text;return n};
+const $=(s,root=document)=>root.querySelector(s);
+function badge(container,title,value,state){const row=el('div','f87-check');row.append(el('span','f87-check-name',title),el('strong','f87-check-value '+(state||''),value));container.append(row)}
+function present(k){return typeof window[k]==='function'}
+function ownerVisible(){const hub=$('#ownerHub');return !!(hub&&hub.classList.contains('f81-unified')&&$('#f81-owner-panel',hub));}
+function localChecks(){
+ const products=window.FINO99ReadStorefront?.()?.products;
+ const storeIsReadable=Array.isArray(products);
+ const enabled=storeIsReadable?products.filter(p=>p&&p.enabled!==false):[];
+ const checks=[
+ ['بوابة المتجر',present('F99SOpenOwner')],['تحرير البنوك الأساسي',present('FINO99OpenCoreBanks')],
+ ['الخزنة والأكواد',present('f99fixOpenCodes')],['التجديد الموحد',present('FINO99V83OpenRenewal')],
+ ['خدمات العقود',present('F99V60OpenContracts')],['المطبوعات',present('openFINOPrintStudio')],
+ ['إعداد الحاسبة العقارية',present('F99MOpenControl')],['مراجعة الحسب داخل المحادثة',present('F99V85ReviewConversation')],
+ ];
+ return {checks,storeIsReadable,products:storeIsReadable?products.length:null,enabled:storeIsReadable?enabled.length:null};
+}
+function download(name,text){const file=new Blob([text],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(file);const link=el('a');link.href=url;link.download=name;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),2000)}
+async function health(report){const out=$('[data-f87-results]',report),button=$('[data-f87-go]',report);out.replaceChildren();button.disabled=true;
+ try{
+  out.append(el('h3',null,'أولًا: فحص الواجهة المحلية'));
+  const local=localChecks();for(const [name,ok] of local.checks)badge(out,name,ok?'موجود':'مفقود',ok?'f87-pass':'f87-fail');
+  badge(out,'قراءة إعدادات المتجر',local.storeIsReadable?`موجود • ${local.products} باقة`:'غير متاحة',local.storeIsReadable?'f87-pass':'f87-warn');
+  if(local.storeIsReadable&&local.enabled===0)badge(out,'منتجات قابلة للعرض','لا توجد باقات مفعلة','f87-warn');
+  out.append(el('h3',null,'ثانيًا: فحص المركزية (صلاحية المالك مطلوبة)'));
+  if(!present('finoCentralAdminCall')){badge(out,'الاتصال المركزي','غير متوفر','f87-fail');return}
+  const r=await window.finoCentralAdminCall('f99o1_admin_health',{});
+  const d=r?.data;
+  if(!r?.ok||d?.ok!==true){badge(out,'نتيجة الفحص المركزي','غير مثبت/تعذر الاتصال — شغّل فحص SQL قبل التثبيت','f87-warn');out.append(el('p',null,'لا تستنتج سلامة المخزون أو الدفع من هذا الاختبار.'));return}
+  badge(out,'اسم المرجعية في المركزية',d.release_name||'غير محدد',d.release_name===RELEASE?'f87-pass':'f87-warn');
+  badge(out,'مخزون متاح',String(d.stock?.available??'غير معروف'),'');
+  badge(out,'دفعات محجوزة',String(d.allocations?.reserved??'غير معروف'),'');
+  badge(out,'أكواد منشورة',String(d.stock?.published??'غير معروف'),'');
+  badge(out,'وجود اعتماد دفعات V84',d.functions?.approval_v84?'موجود':'مفقود',d.functions?.approval_v84?'f87-pass':'f87-fail');
+  badge(out,'مراقبة حركة المخزون',d.audit_enabled?'مفعلة':'غير مثبتة',d.audit_enabled?'f87-pass':'f87-warn');
+  badge(out,'تكامل سلة بعد الدفع','لم يُتحقق منه','f87-warn');
+  badge(out,'نسخة احتياطية حقيقية لقاعدة البيانات','يلزم التأكد من Supabase','f87-warn');
+ }catch(e){badge(out,'الفحص','تعذر الفحص: '+String(e?.message||e).slice(0,100),'f87-warn')}finally{button.disabled=false}}
+function attach(){
+ if(!ownerVisible())return;const panel=$('#f81-owner-panel');const top=$('.f81-head',panel);if(!top||$('#f87-ops',panel))return;
+ // Keep the existing six services. Add one compact health strip, not a duplicate tile.
+ const outer=el('section','f87-ops');outer.id='f87-ops';
+ const intro=el('div','f87-heading');const info=el('div');info.append(el('small',null,'مرجع الواجهة قيد الاعتماد'),el('strong',null,RELEASE),el('span',null,'إصدار '+BUILD+' • الفحص قبل البيع والنشر'));intro.append(info);
+ const toggle=el('button','f87-primary','فحص صحة المنصة');toggle.type='button';toggle.setAttribute('aria-expanded','false');intro.append(toggle);outer.append(intro);
+ const details=el('div','f87-detail');details.hidden=true;details.innerHTML='<p>هذا الفحص لا يستهلك أكوادًا، ولا يغيّر النسب أو المبيعات. تأكد من نتائج المركزية وسلة على الإنتاج قبل إطلاق منتج مدفوع.</p><div class="f87-actions"><button type="button" data-f87-go>ابدأ الفحص من حساب المالك</button><button type="button" data-f87-export>تصدير تقرير الفحص</button><button type="button" data-f87-close>إغلاق</button></div><div data-f87-results aria-live="polite"></div><p class="f87-caution">استعادة الواجهة إلى «النسخة الأصلية واحد» تتم من ملف index.html المحفوظ في الحزمة. النسخة الاحتياطية لقاعدة البيانات منفصلة؛ لا تنفذ استعادة SQL على الإنتاج دون مراجعة الأثر على المبيعات.</p>';
+ outer.append(details);top.after(outer);
+ toggle.addEventListener('click',()=>{details.hidden=!details.hidden;toggle.setAttribute('aria-expanded',String(!details.hidden))});
+ $('[data-f87-close]',outer).onclick=()=>{details.hidden=true;toggle.setAttribute('aria-expanded','false')};
+ $('[data-f87-go]',outer).onclick=()=>health(outer);
+ $('[data-f87-export]',outer).onclick=()=>{const lines=['FINO99 | فحص صحة المنصة','المرجع: '+RELEASE,'التاريخ المحلي: '+new Date().toLocaleString('ar-SA'),...Array.from(outer.querySelectorAll('.f87-check')).map(x=>x.innerText.replace(/\s+/g,' ').trim()),'فحص المتصفح ليس إثباتًا للدفع أو لتكامل سلة'];download('FINO99_HEALTH_REPORT.txt',lines.join('\n'))};
+ }
+ document.addEventListener('DOMContentLoaded',attach,{once:true});if(document.readyState!=='loading')attach();
+ // Existing owner panel is rendered after logging in; observe only the owner hub.
+ const hub=$('#ownerHub');if(hub){let pending=false;new MutationObserver(()=>{if(pending)return;pending=true;queueMicrotask(()=>{pending=false;attach()})}).observe(hub,{childList:true,subtree:true,attributes:true,attributeFilter:['class']})}
+ window.FINO99OriginalOne={version:BUILD,name:RELEASE,localChecks};
+})();
+</script>
 </body>
 </html>
