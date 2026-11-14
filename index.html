@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- FINO99 V76 | GitHub Pages index.html | 2026-11-13.
+<!-- FINO99 V83 | GitHub Pages index.html | 2026-11-14.
      Current site is configured for its existing Supabase project.
      The HTML file does not install database functions or create an independent backend.
      Do not change Supabase URL or publishable key when updating this same site.
@@ -9,7 +9,7 @@
 
 <html dir="rtl" lang="ar">
 <head>
-<meta charset="utf-8"/>
+<meta charset="utf-8"/><meta name="fino99-build" content="V83-2026-11-14"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" name="viewport"/>
 <meta content="#ffffff" name="theme-color"/>
 <title>FINO99 | الحلول التمويلية الذكية</title><meta name="fino99-site-version" content="V76-2026-11-13">
@@ -22868,7 +22868,7 @@ async function f80FeeAllowed(){
 }
 async function offerPicker(source){const st=await status(true);if(!capOfferReady(st)||!results().length||!(await f80FeeAllowed()))return false;
  lastTrigger=source;
- say(`<div class="f41-offer"><b>يا ${esc(who())}، إذا تبي نساعدك في متابعة تمويلك</b><p>اختر الحسبة اللي تناسبك؛ بنعرض لك أتعاب المتابعة المعتمدة والخصم إن كان ساريًا.</p><div class="f41-offer-bank-list">${results().map(quoteRow).join('')}</div>${choices(source==='exit'?[['ليس الآن، نكمل المحادثة','F99V41LeaveOrStay()'],['الخروج الآن','F99V41LeaveNow()']]:[['ليس الآن','F99V41LeaveOrStay()']])}<small>الاختيار اختياري، والحسابات مبدئية ولا تمثل موافقة من البنك.</small></div>`);
+ say(`<div class="f41-offer"><b>يا ${esc(who())}، عندك عرض لمتابعة إجراءات تمويلك</b><p>تقدر تشوف أتعاب المتابعة والخصم الساري على الجهة اللي اخترتها بعد الانتهاء من مراجعة الحسبة.</p>${choices([['تفاصيل عرض المتابعة','F99V82OpenOffer()'],['ليس الآن','F99V41LeaveOrStay()'],...(source==='exit'?[['الخروج الآن','F99V41LeaveNow()']]:[])])}<small>العرض اختياري، والحسبة مبدئية وتخضع لشروط الجهة الممولة.</small></div>`);
  return true;
 }
 window.F99V41Pick=async i=>{if(!active())return;const r=results()[i];if(!r)return;
@@ -22880,17 +22880,15 @@ window.F99V41Pick=async i=>{if(!active())return;const r=results()[i];if(!r)retur
  ${choices([['أبي أشوف عرض المتابعة',`F99V37StartCompletion(${i})`],['ليس الآن','F99V41LeaveOrStay()']])}</div>`);
  }catch(e){error('تعذر تحميل عرض الإنجاز: '+(e?.message||e))}
 };
-window.F99V41LeaveOrStay=()=>{lastTrigger='';info('حياك، نكمل محادثتك والترشيحات متى ما رغبت.');const x=results()[findIndex()];if(x)say(listActions(findIndex()));};
+window.F99V41LeaveOrStay=()=>{lastTrigger='';info('على راحتك يا '+who()+'، أبشر.');};
 const previousBack=window.FINOPortalBack;
 window.F99V41LeaveNow=()=>{lastTrigger='';if(typeof previousBack==='function')previousBack()};
 if(typeof previousBack==='function')window.FINOPortalBack=async function(...args){if(!active()||busy)return previousBack.apply(this,args);
  busy=true;try{const shown=await offerPicker('exit');if(!shown)return previousBack.apply(this,args);return}
  catch{return previousBack.apply(this,args)}finally{busy=false}};
 const previousRank=window.showFINOPortalRank;
-if(typeof previousRank==='function')window.showFINOPortalRank=function(...args){const res=previousRank.apply(this,args);
- void(async()=>{if(!active())return;try{remember();const s=await status(true);if(!capOfferReady(s)||Number(s.calculations||0)<1)return;
- const key=String(window.F99V32GetSignature?.()||'')+'|'+String(s.calculations);
- if(key!==lastThird){lastThird=key;await offerPicker('third')}}catch{}})();return res};
+// V82: Do not interrupt a bank result with a marketing prompt. Client actions are explicit.
+if(typeof previousRank==='function')window.showFINOPortalRank=function(...args){return previousRank.apply(this,args)};
 
 // Owner one-screen editor: BASE offer + rules + discount period + package option saved atomically.
 const makeForm=(parent,label,value,type='text')=>{const w=el('label','f41-field');w.append(el('span','',label));const c=el(type==='textarea'?'textarea':type==='select'?'select':'input');if(type!=='textarea'&&type!=='select')c.type=type;c.value=value??'';w.append(c);parent.append(w);return c};
@@ -23277,7 +23275,7 @@ async function sync(i){
     }
     if(attempt<2)await new Promise(resolve=>setTimeout(resolve,500*(attempt+1)));
   }
-  if(auth?.enabled===true&&auth.has_whatsapp===true&&auth.has_first_calculation===true&&auth.package_key===access.packageKey&&options.show_completion!==false&&perCodeAllowed('show_completion')){
+  if(false&&auth?.enabled===true&&auth.has_whatsapp===true&&auth.has_first_calculation===true&&auth.package_key===access.packageKey&&options.show_completion!==false&&perCodeAllowed('show_completion')){
     const label=String(auth.button_text||window.F99V42OfferLabel?.()||'أبي نتابع معاملتي معكم').slice(0,90);
     makeButton(area,'F99V42RequestCompletion',label,()=>window.F99V42RequestCompletion?.(i));
   }else drop(area,'F99V42RequestCompletion');
@@ -23454,7 +23452,7 @@ const admin=async(method,params={})=>{if(!owner())throw Error('الصلاحية 
 let activeCase=null,consecutive=0,lastPaidUse=0;
 window.F99V49NewPaidCalculationUsed=(n,counted)=>{const value=Number(n);if(!Number.isInteger(value)||value<=0)return;
  consecutive=value;
- if(counted===true&&value>1&&lastPaidUse!==value)note('يا '+name()+'، بدأنا الحسبة رقم '+value+' من رصيد باقتك. مراجعة تفاصيل نفس الحسبة لا تخصم استخدامًا آخر.');
+ // V83: No unsolicited quota notice during results; the client chooses when to start another calculation.
  lastPaidUse=value;
 };
 function caseKey(){const d=finoPortal?.data||{},e=entry();return [e?.code_id||e?.codeId||'',e?.entryToken||'',d.customerType,d.bankId,Number(d.salary),Number(d.settlement),String(fino99CentralRevision||'')].join('|')}
@@ -23497,6 +23495,8 @@ function menu(i=activeIndex()){
  if(isAllowed('reduce_installment'))more.push(button('العودة لأعلى قسط مسموح','F99V47ResetInstallment()'));
  if(isAllowed('reduce_amount'))more.push(button('العودة لأعلى مبلغ تمويل','F99V47ResetFinance()'));
  if(isAllowed('summary_enabled'))more.push(button('عرض كل التفاصيل',`F99V38ShowSummary(${i})`));
+ more.push(button('أبدأ حسبة جديدة','F99V82RequestNewCalculation()'));
+ if(isAllowed('show_completion'))more.push(button('يا '+esc(name())+'، عندك عرض لمتابعة إجراءات تمويلك','F99V82OpenOffer()'));
  return `<div class="f41-options f47-main-options f49-menu">${main.join('')}<details class="f49-more"><summary>خيارات إضافية للحسبة</summary><div class="f49-more-actions">${more.join('')}</div></details></div>`;
 }
 window.F99V38BotStepsHtml=menu;
@@ -23505,7 +23505,7 @@ let menuObserver=null;
 function watchMenu(){const chat=$('finoBotChat');if(!chat||menuObserver)return;menuObserver=new MutationObserver(uniqueMenus);menuObserver.observe(chat,{childList:true,subtree:true});uniqueMenus()}
 
 // Whole-contract obligations; an amount entered is the monthly installment of an ENTIRE obligation.
-let obligation={count:0,amounts:[],preview:null};
+let obligation={count:0,amounts:[],index:0,preview:null};
 const obligationImpact=()=>{try{const r=bankResults()[activeIndex()],sal=Number(finoPortal.data.salary),ext=Number(finoPortal.data.external);
  if(!r||!sal||!ext)return null;
  const d=r.obligationImpact||obligationImpactInfo(sal,ext,finoPortal.data.customerType||'government',Number(r.rate),Number(r.actualPayments||60),false);
@@ -23517,10 +23517,10 @@ window.F99V41Impact=()=>{const r=bankResults()[activeIndex()],d=obligationImpact
 window.F99V41SettleChoice=()=>window.F99V49DebtStart();
 window.F99V41KeepDebts=()=>window.F99V49DebtCancel();
 window.F99V49DebtStart=()=>{if(!inBot()||!obligationImpact())return note('لا توجد التزامات مؤثرة تسمح هذه الحسبة بمراجعتها.');
- obligation={count:0,amounts:[],preview:null};finoPortal.step='f49_debt_count';say(`<div class="f49-message">يا ${esc(name())}، الأقساط الشهرية الأخرى مجموعها ${money(finoPortal.data.external)} ريال. كم عقدًا مستقلًا تتكون منها؟ اكتب 1 أو أكثر.</div>`);setPortalInput(true,'مثال: 2','number','اكتب عدد العقود، وليس مبلغ المديونية.');};
+ obligation={count:0,amounts:[],index:0,preview:null};finoPortal.step='f49_debt_count';say(`<div class="f49-message">يا ${esc(name())}، الأقساط الشهرية الأخرى مجموعها ${money(finoPortal.data.external)} ريال. كم عقدًا مستقلًا تتكون منها؟ اكتب 1 أو أكثر.</div>`);setPortalInput(true,'مثال: 2','number','اكتب عدد العقود، وليس مبلغ المديونية.');};
 function parseValue(str){return Number(String(str||'').replace(/[٠-٩]/g,c=>'٠١٢٣٤٥٦٧٨٩'.indexOf(c)).replace(/[٬\s]/g,'').replace(/٫/g,'.'))}
 const closeInput=()=>{finoPortal.step='buyout_result';setPortalInput(false)};
-window.F99V49DebtCancel=()=>{obligation={count:0,amounts:[],preview:null};closeInput();note('تمام، رجعنا إلى الحسبة الأساسية بدون تغيير التزاماتك أو استهلاك حسبة إضافية.');say(menu())};
+window.F99V49DebtCancel=()=>{obligation={count:0,amounts:[],index:0,preview:null};closeInput();note('تمام، رجعنا إلى الحسبة الأساسية بدون تغيير التزاماتك أو استهلاك حسبة إضافية.');say(menu())};
 function finishBreakdown(list){obligation.amounts=list;
  const excess=Number(obligationImpact()?.excess||0);
  const rows=list.map((n,i)=>`<label class="f49-debt-row"><input type="checkbox" class="f49-debt-check" value="${i}"><span>إغلاق العقد ${i+1} — توقف قسط شهري ${money(n)} ريال</span></label>`).join('');
@@ -23533,16 +23533,30 @@ if(typeof oldInput==='function')window.submitFINOPortalInput=function(...args){c
  if(step==='f49_debt_count'){
   const count=parseValue(raw);if(!Number.isInteger(count)||count<1||count>10)return note('اكتب عدد العقود من 1 إلى 10.');
   if($('finoBotInput'))$('finoBotInput').value='';if(typeof portalUser==='function')portalUser(raw);
-  obligation.count=count;
-  if(count===1){finishBreakdown([Number(finoPortal.data.external||0)]);return;}
-  finoPortal.step='f49_debt_amounts';say(`<div class="f49-message">اكتب قسط كل عقد شهري منفصلًا بفاصلة، مثل: 300، 600، 1000. لابد أن يساوي مجموعها ${money(finoPortal.data.external)} ريال. لا تدخل مبلغ السداد المبكر للعقود.</div>`);
-  return setPortalInput(true,'مثال: 300، 600، 1000','text','افصل قيمة القسط الشهري لكل عقد بفاصلة.');
+  obligation.count=count;obligation.amounts=[];obligation.index=0;
+  finoPortal.step='f49_debt_amounts';
+  say(`<div class="f49-message">أبشر يا ${esc(name())}، نبدأ بالعقد الأول. كم قسطه الشهري بالريال؟</div>`);
+  return setPortalInput(true,'قسط العقد الأول','number','اكتب قسط هذا العقد فقط، بدون فواصل أو مبالغ العقود الأخرى.');
  }
- const arr=raw.split(/[,،;+\n]+/).map(parseValue);
+ const amount=parseValue(raw);const idx=obligation.index;
+ if(!Number.isFinite(amount)||amount<=0)return note('اكتب قسط العقد '+(idx+1)+' الشهري فقط، رقمًا أكبر من صفر.');
  const total=Number(finoPortal.data.external||0);
- if(arr.length!==obligation.count||arr.some(v=>!Number.isFinite(v)||v<=0)||Math.abs(arr.reduce((a,b)=>a+b,0)-total)>.02)
- return note('قيمة كل عقد يجب أن تكون موجبة، ومجموع الأقساط يجب أن يطابق '+money(total)+' ريال. راجع الأرقام.');
- if($('finoBotInput'))$('finoBotInput').value='';if(typeof portalUser==='function')portalUser(raw);finishBreakdown(arr);
+ const previous=obligation.amounts.reduce((a,b)=>a+b,0);
+ if(previous+amount>total+.02)return note('مجموع أقساط العقود حتى الآن سيتجاوز '+money(total)+' ريال. راجع قسط العقد '+(idx+1)+'.');
+ if($('finoBotInput'))$('finoBotInput').value='';if(typeof portalUser==='function')portalUser(raw);
+ obligation.amounts.push(amount);obligation.index++;
+ if(obligation.index<obligation.count){
+  const n=obligation.index+1;const label=n===2?'الثاني':n===3?'الثالث':n===4?'الرابع':n===5?'الخامس':'رقم '+n;
+  say(`<div class="f49-message">تمام يا ${esc(name())}، سجّلنا قسط العقد السابق ${money(amount)} ريال. الآن كم قسط العقد ${label} شهريًا؟</div>`);
+  return setPortalInput(true,'قسط العقد '+label,'number','اكتب قسط العقد الحالي فقط.');
+ }
+ const actual=obligation.amounts.reduce((a,b)=>a+b,0);
+ if(Math.abs(actual-total)>.02){
+  say(`<div class="f49-message">يا ${esc(name())}، مجموع الأقساط اللي ذكرتها ${money(actual)} ريال، بينما الالتزامات السابقة ${money(total)} ريال. نراجعها من البداية للتأكد؛ كم قسط العقد الأول؟</div>`);
+  obligation.amounts=[];obligation.index=0;
+  return setPortalInput(true,'قسط العقد الأول','number','خلنا نراجع قسط كل عقد لحاله.');
+ }
+ finishBreakdown(obligation.amounts.slice());
 };
 window.F99V49DebtPreview=()=>{const card=[...document.querySelectorAll('#finoBotChat .f49-card')].at(-1);const checks=[...(card?.querySelectorAll('.f49-debt-check:checked')||[])].map(c=>Number(c.value));const list=obligation.amounts;
  if(!checks.length)return note('حدد عقدًا واحدًا على الأقل تستطيع إغلاقه بالكامل.');
@@ -23572,6 +23586,8 @@ const feeQuote=async r=>{const e=entry(),k=window.F99V32MainAccess?.()?.packageK
 const enabled=st=>st?.enabled===true&&st?.has_whatsapp===true&&st?.has_first_calculation===true;
 window.F99V49CompletionOpen=async()=>{if(!inBot())return note('أكمل الحسبة أولًا ثم اختر الجهة المرشحة.');
  try{const st=await completionStatus();if(!enabled(st))return note('خدمة المتابعة والإنجاز غير مفعّلة لهذا الكود حاليًا. تستطيع مراجعة الترشيحات، أو التواصل معنا لتفعيل الخدمة إن كانت مشمولة بباقة اشتراكك.');
+  const alreadySelected=Number(selectedResultIndex);
+  if(Number.isInteger(alreadySelected)&&alreadySelected>=0&&bankResults()[alreadySelected])return window.F99V49CompletionSelect(alreadySelected);
   const choices=bankResults().map((r,i)=>`<button type="button" onclick="F99V49CompletionSelect(${i})">${esc(r.name)} — قسط ${money(r.installment)} ريال</button>`).join('');
   say(`<div class="f49-card"><b>أبشر يا ${esc(name())}، أي جهة تبي نساعدك في إجراءاتها؟</b><p>اختر الحسبة المناسبة لك، وأعرض لك أتعاب المتابعة المعتمدة والخصم الساري قبل إرسال أي طلب.</p><div class="f49-actions">${choices}${button('ليس الآن','F99V49CompletionCancel()')}</div><small>العرض مبدئي ولا يضمن موافقة الجهة التمويلية.</small></div>`);
  }catch(e){note('تعذر التحقق من خدمة الإنجاز الآن؛ لم يتم إرسال أي طلب. '+String(e.message||e).replace(/COMPLETION_[A-Z_]+/g,''))}
@@ -23580,7 +23596,7 @@ window.F99V49CompletionSelect=async i=>{if(!inBot())return;const r=bankResults()
  try{const st=await completionStatus();if(!enabled(st))return note('خدمة الإنجاز غير مفعّلة حاليًا على هذا الكود.');
  const q=await feeQuote(r);if(!validPhone(q.whatsapp))throw Error('رقم استقبال الطلبات غير مكتمل في إعدادات المالك.');
  const old=Number(q.old_price),current=Number(q.new_price);if(!Number.isFinite(current)||current<0)throw Error('تعذر اعتماد مبلغ الأتعاب.');
- pendingCompletion={result:{...r},quote:q,index:Number(i),at:Date.now()};
+ pendingCompletion={result:{...r},quote:q,index:Number(i),at:Date.now(),message:''};
  const expires=q.valid_until&&Number.isFinite(Date.parse(q.valid_until))?new Intl.DateTimeFormat('ar-SA',{timeZone:'Asia/Riyadh',dateStyle:'medium',timeStyle:'short'}).format(new Date(q.valid_until)):'';
  const message=['السلام عليكم ورحمة الله وبركاته','أنا '+name()+'، وأرغب في إنجاز إجراءات معاملتي عن طريقكم.',
  'الجهة التي اخترتها: '+r.name,'القسط الشهري التقديري: '+money(r.installment)+' ريال',
@@ -23590,17 +23606,26 @@ window.F99V49CompletionSelect=async i=>{if(!inBot())return;const r=bankResults()
  'أرغب بمعرفة المتطلبات والخطوات التالية. أفهم أن الحسبة مبدئية وتخضع لشروط الجهة الممولة.',
  'المنصة الذكية للحلول التمويلية: www.fino99.com'].filter(Boolean).join('\n');
  const last=document.createElement('section');last.className='f49-card f49-completion-request';
- last.append(element('strong','يا '+name()+'، هذا عرض المتابعة على '+r.name));
- last.append(element('p','أتعاب المتابعة: '+money(current)+' ريال'+(q.discount_active&&old>current?' بدلًا من '+money(old)+' ريال — خصم '+money(old-current)+' ريال':'')));
- if(expires)last.append(element('p','ينتهي العرض بتاريخ: '+expires+' (بتوقيت الرياض)'));
- 
- const label=element('label','راجع نص طلبك وعدّله كما تريد');const edit=document.createElement('textarea');edit.className='f49-edit-message';edit.maxLength=2000;edit.value=message;edit.setAttribute('aria-label','نص طلب الإنجاز القابل للتعديل');label.append(edit);last.append(label);
+ last.append(element('strong','يا '+name()+'، هذا عرض المتابعة الخاص بك على '+r.name));
+ const discounted=Boolean(q.discount_active&&Number.isFinite(old)&&old>current),saved=discounted?old-current:0;
+ const header=element('div');header.className='f82-fee-hero';
+ const title=element('strong',discounted?'🎉 مبروك يا '+name()+'، تم تطبيق خصم على أتعاب متابعتك!':'يا '+name()+'، عرض متابعة إجراءات تمويلك');header.append(title);
+ if(discounted){const before=element('p','السعر السابق: ');before.append(element('s',money(old)+' ريال'));header.append(before);
+ const benefit=element('div','وفّرت '+money(saved)+' ريال على أتعاب المتابعة');benefit.className='f82-fee-saving';header.append(benefit);
+ const percent=old>0?Math.round(saved/old*100):0;if(percent>0)header.append(element('small','نسبة الخصم: '+percent+'٪'));}
+ const finalPrice=element('div',(discounted?'أتعاب المتابعة بعد الخصم: ':'أتعاب المتابعة: ')+money(current)+' ريال');finalPrice.className='f82-fee-price';header.append(finalPrice);
+ last.append(header);
+ last.append(element('p','تقدر تطلب متابعة الإجراءات الآن، والحسبة مبدئية والقرار النهائي لدى الجهة التمويلية.'));
+ if(expires)last.append(element('p','صلاحية العرض حتى: '+expires+' (بتوقيت الرياض)'));
+ pendingCompletion.message=message;
+ const preview=element('pre',message);preview.className='f49-message-preview';preview.setAttribute('aria-label','معاينة رسالة الواتساب المعتمدة للقراءة فقط');
+ const details=element('details');details.append(element('summary','تفاصيل الطلب الذي سينفتح في واتساب'));details.append(preview);last.append(details);
  const actions=element('div');actions.className='f49-actions';const send=element('button','أبي تنجزون معاملتي — إرسال عبر واتساب');send.type='button';send.onclick=()=>window.F99V49CompletionSend();const cancel=element('button','ليس الآن');cancel.type='button';cancel.onclick=()=>window.F99V49CompletionCancel();actions.append(send,cancel);last.append(actions);
  const output=element('p','');output.setAttribute('role','status');last.append(output);
  const chat=$('finoBotChat');if(!chat)return;const wrap=element('div');wrap.className='portal-assistant f49-request-shell';wrap.append(last);chat.append(wrap);last.scrollIntoView?.({block:'nearest',behavior:'smooth'});
  }catch(e){note('ما قدرت أجيب عرضًا معتمدًا لهذا الكود الآن. '+String(e.message||e).replace(/COMPLETION_[A-Z_]+/g,''))}
 };
-window.F99V49CompletionSend=async()=>{if(!pendingCompletion)return note('اختر جهة التمويل أولًا.');const edit=[...($('finoBotChat')?.querySelectorAll('.f49-completion-request .f49-edit-message')||[])].at(-1);const msg=String(edit?.value||'').trim();if(msg.length<20)return note('اكتب رسالة واضحة للمتابعة.');
+window.F99V49CompletionSend=async()=>{if(!pendingCompletion)return note('اختر جهة التمويل أولًا.');const msg=String(pendingCompletion.message||'').trim();if(msg.length<20)return note('نص الطلب المعتمد غير مكتمل، أعد فتح عرض المتابعة.');
  try{const st=await completionStatus();if(!enabled(st))throw Error('خدمة الإنجاز توقفت على هذا الرمز.');
  const live=await feeQuote(pendingCompletion.result);if(Number(live.new_price)!==Number(pendingCompletion.quote.new_price)||live.whatsapp!==pendingCompletion.quote.whatsapp)
  throw Error('تغيّر العرض في المركزية. افتح عرض الإنجاز من جديد لمراجعة السعر.');
@@ -23609,7 +23634,8 @@ window.F99V49CompletionSend=async()=>{if(!pendingCompletion)return note('اخت�
  note('جهّزنا رسالتك في واتساب. راجعها وأرسلها بنفسك؛ لا يتم اعتماد أي طلب تلقائيًا.');
  }catch(e){note('لم يُفتح طلب الإنجاز: '+String(e.message||e))}
 };
-window.F99V49CompletionCancel=()=>{pendingCompletion=null;note('على راحتك يا '+name()+'، أبشر، تقدر تكمل من نفس الترشيحات متى ما حبيت.');say(menu());queueMicrotask(()=>window.F99V46SyncClientActions?.(activeIndex()))};
+window.F99V49CompletionCancel=()=>{pendingCompletion=null;note('على راحتك يا '+name()+'، أبشر.');say(menu());queueMicrotask(()=>window.F99V46SyncClientActions?.(activeIndex()))};
+window.F99V49SetCompletionText=(msg)=>{if(pendingCompletion&&typeof msg==='string'&&msg.trim().length>=20){pendingCompletion.message=msg.trim();return true}return false};
 window.F99V42RequestCompletion=()=>window.F99V49CompletionOpen();
 window.F99V41Pick=i=>window.F99V49CompletionSelect(i);
 window.F99V37StartCompletion=i=>window.F99V49CompletionSelect(i);
@@ -23930,17 +23956,17 @@ function detailLines(r,fee,offerExpiry){const d=finoPortal?.data||{},name=who(),
 window.F99V50DetailedText=detailLines;
 const oldCompletionSelect=window.F99V49CompletionSelect;
 if(typeof oldCompletionSelect==='function')window.F99V49CompletionSelect=async function(index){const out=await oldCompletionSelect.apply(this,arguments);try{
- const last=[...document.querySelectorAll('#finoBotChat .f49-completion-request')].at(-1);const area=last?.querySelector('textarea');const r=(latestResults||[])[Number(index)];const e=entry();
+ const last=[...document.querySelectorAll('#finoBotChat .f49-completion-request')].at(-1);const area=last?.querySelector('.f49-message-preview');const r=(latestResults||[])[Number(index)];const e=entry();
  if(!area||!r||!e?.entryToken)return out;
  const k=window.F99V32MainAccess?.()?.packageKey||window.fino99ActivePackage?.()?.key;
  if(!k)return out;
  const q=await rpc('f99v41_client_completion_quote',{p_entry_token:e.entryToken,p_device_id:e.deviceId,p_package_key:k,p_cash:Number(r.cashAfterDebt||0),p_principal:Number(r.principalBeforeFees||0)});
  let end='';if(q.valid_until&&!Number.isNaN(Date.parse(q.valid_until)))end=new Intl.DateTimeFormat('ar-SA',{timeZone:'Asia/Riyadh',dateStyle:'medium',timeStyle:'short'}).format(new Date(q.valid_until));
- area.maxLength=4600;area.value=detailLines(r,q,end);
+ area.textContent=detailLines(r,q,end);window.F99V49SetCompletionText?.(area.textContent);
  const b=last.querySelector('.f49-actions button');if(b)b.textContent='أبي تتابعون إجراءات تمويلي — فتح واتساب';
  }catch(e){console.warn('V50 full text fallback',e?.message||e)}return out};
 const oldShowRank=window.showFINOPortalRank;
-if(typeof oldShowRank==='function')window.showFINOPortalRank=function(...args){const out=oldShowRank.apply(this,args);Promise.resolve(out).then(()=>{void showEndOffer()});return out};
+if(typeof oldShowRank==='function')window.showFINOPortalRank=function(...args){const out=oldShowRank.apply(this,args);return out};
 const oldCancel=window.F99V49CompletionCancel;
 if(typeof oldCancel==='function')window.F99V49CompletionCancel=function(...a){currentCompletionPrompt=false;return oldCancel.apply(this,a)};
 async function showEndOffer(){if(!inResult()||currentCompletionPrompt)return;const e=entry();if(!e?.entryToken||!e?.deviceId)return;
@@ -23950,7 +23976,7 @@ async function showEndOffer(){if(!inResult()||currentCompletionPrompt)return;con
  const chat=$('finoBotChat');if(chat)chat.append(panel)
  }catch(_){/* A missing entitlement must never display an invented price. */}}
 const oldPortalBack=window.FINOPortalBack;
-if(typeof oldPortalBack==='function')window.FINOPortalBack=function(...a){if(!inResult()||!currentCompletionPrompt)return oldPortalBack.apply(this,a);
+if(typeof oldPortalBack==='function')window.FINOPortalBack=function(...a){if(true)return oldPortalBack.apply(this,a);
  const p=modal('قبل ما ترجع');p.append(E('p','يا '+who()+'، عرض المتابعة اختياري. تبي تشوف تفاصيل الأتعاب قبل الخروج؟'));
  action(p,experience?.completion_button||'عرض المتابعة',()=>{p.closest('.f50-overlay')?.remove();window.F99V49CompletionOpen?.()});
  action(p,'لا، ارجع للصفحة السابقة',()=>{p.closest('.f50-overlay')?.remove();currentCompletionPrompt=false;oldPortalBack.apply(this,a)});return;
@@ -26517,9 +26543,9 @@ async function bankEditor(key){try{await ensured()}catch(e){return alert(e.messa
 }
 window.F99V70BankEditor=bankEditor;
 async function feeEditor(key){try{await ensured()}catch(e){return alert(e.message)}const c=cfg(key),box=modal('طريقة ظهور أتعاب المتابعة'),pk=pkgSelect(box,key);pk.onchange=()=>void feeEditor(pk.value);
- note(box,'حدد أكثر من توقيت عند الحاجة. يمكنك إيقافها كلها. لا يظهر سعر أتعاب إلا إذا كانت الأتعاب مفعّلة ومؤكدة من نظام الباقة الأصلي.');const labels=[['exit','عند الضغط على خروج'],['start','عند بدء جلسة العميل'],['bank','عند مشاهدة نتيجة بنك'],['reentry','عند الرجوع بالكود مرة أخرى']];const toggles={};for(const [v,l] of labels)toggles[v]=check(box,l,Array.isArray(c.fee_triggers)&&c.fee_triggers.includes(v));const once=check(box,'اعرض الرسالة مرة واحدة فقط في الجلسة',c.fee_once),messageText=field(box,'نص الرسالة (يمكن كتابة {name})',c.fee_message,'textarea'),btnText=field(box,'عبارة زر عرض الأتعاب',c.fee_button);
+ note(box,'حدد أكثر من توقيت عند الحاجة. يمكنك إيقافها كلها. لا يظهر سعر أتعاب إلا إذا كانت الأتعاب مفعّلة ومؤكدة من نظام الباقة الأصلي.');const labels=[['exit','عند الضغط على خروج'],['start','عند بدء جلسة العميل'],['bank','عند مشاهدة نتيجة بنك'],['reentry','عند الرجوع بالكود مرة أخرى']];const toggles={};for(const [v,l] of labels)toggles[v]=check(box,l,Array.isArray(c.fee_triggers)&&c.fee_triggers.includes(v));const early=check(box,'السماح بظهور أتعاب المتابعة مبكرًا أثناء الحسبة (الافتراضي: لا)',c.fee_show_early_optin===true);const once=check(box,'اعرض الرسالة مرة واحدة فقط في الجلسة',c.fee_once),messageText=field(box,'نص الرسالة (يمكن كتابة {name})',c.fee_message,'textarea'),btnText=field(box,'عبارة زر عرض الأتعاب',c.fee_button);
  const st=status(box),row=actions(box);button(row,'تعديل مبلغ الأتعاب وخصمها',()=>{close();window.F99V65OpenFeeEditor?.(key)});
- const submit=button(row,'حفظ مواعيد ظهور الأتعاب',async()=>{submit.disabled=true;try{await save(key,{fee_triggers:labels.filter(([v])=>toggles[v].checked).map(x=>x[0]),fee_once:once.checked,fee_message:messageText.value.trim().slice(0,350),fee_button:btnText.value.trim().slice(0,70)||'عرض المتابعة'});st('✓ حُفظت تفضيلات الظهور. تحقق من تشغيل الأتعاب الأصلية لهذه الباقة قبل العرض للعملاء.')}catch(e){st('تعذر الحفظ: '+e.message,true)}finally{submit.disabled=false}},true);
+ const submit=button(row,'حفظ مواعيد ظهور الأتعاب',async()=>{submit.disabled=true;try{await save(key,{fee_triggers:labels.filter(([v])=>toggles[v].checked).map(x=>x[0]),fee_once:once.checked,fee_show_early_optin:early.checked,fee_message:messageText.value.trim().slice(0,350),fee_button:btnText.value.trim().slice(0,70)||'عرض المتابعة'});st('✓ حُفظت تفضيلات الظهور. تحقق من تشغيل الأتعاب الأصلية لهذه الباقة قبل العرض للعملاء.')}catch(e){st('تعذر الحفظ: '+e.message,true)}finally{submit.disabled=false}},true);
  button(row,'محاكاة الرسالة فقط',()=>{st('معاينة: '+(messageText.value||defaults.fee_message).replace('{name}','عميل تجريبي')+' — الزر: '+btnText.value)});
 }
 window.F99V70FeeEditor=feeEditor;
@@ -26553,7 +26579,7 @@ function activeShopPackage(){const root=$('#f99s-modal');if(!root||root.hidden)r
 function decorateBanks(){const root=$('#f99s-modal'),p=activeShopPackage();if(!root||!p)return;const grid=$('.f99v10-banks',root),head=$('.f99v10-bank-title',root);if(!grid||!head)return;const c=cfg(p.key);head.textContent=c.bank_title||defaults.bank_title;head.style.fontSize=(Math.max(12,Math.min(24,Number(c.bank_title_size)||16)))+'px';let wrap=$('.f70-bank-meta',root);if(!wrap){wrap=N('div',null,'f70-bank-meta');grid.insertAdjacentElement('afterend',wrap)}const value=[p.key,c.bank_intro,c.bank_asof,c.bank_date_visible,c.bank_note,c.bank_note_visible,c.bank_note_size].join('|');if(wrap.dataset.value===value)return;wrap.dataset.value=value;wrap.replaceChildren();if(c.bank_intro)wrap.append(N('p',c.bank_intro));if(c.bank_date_visible&&c.bank_asof){const a=N('p','تاريخ إدخال المعلومات المرجعية: '+c.bank_asof,'f70-asof');wrap.append(a)}if(c.bank_note_visible&&c.bank_note){const n=N('p','* '+c.bank_note,'f70-bank-note');n.style.fontSize=Math.max(10,Math.min(20,Number(c.bank_note_size)||12))+'px';wrap.append(n)}}
 const shown=new Set();function sessionKey(){const e=window.finoCentralRestoreEntry?.();return e?.entryToken||''}
 function nameForClient(){let n='';try{n=String(window.finoPortal?.data?.name||window.finoPortal?.data?.clientName||'')}catch{}return n||'عميلنا'}
-function offerPopup(trigger){if(isOwner())return;const k=window.F99V32MainAccess?.()?.packageKey||window.fino99ActivePackage?.()?.key;if(!k||!Object.prototype.hasOwnProperty.call(scopeData(k),'fee_triggers'))return;const c=cfg(k),triggers=Array.isArray(c.fee_triggers)?c.fee_triggers:[];if(!triggers.includes(trigger))return;const e=sessionKey();if(!e)return;const id=e+'|'+k+(c.fee_once?'':'|'+trigger);if(shown.has(id))return;shown.add(id);const m=modal('عرض متابعة اختياري');m.append(N('p',(c.fee_message||defaults.fee_message).replaceAll('{name}',nameForClient())));const row=actions(m);button(row,c.fee_button||'عرض المتابعة',()=>{close();if(typeof window.F99V25OpenOffer==='function')window.F99V25OpenOffer(0);else alert('عرض الأتعاب غير متاح حاليًا لهذه الباقة.')},true);button(row,'المتابعة بدون عرض',close)}
+function offerPopup(trigger){if(isOwner())return;const k=window.F99V32MainAccess?.()?.packageKey||window.fino99ActivePackage?.()?.key;if(!k||!Object.prototype.hasOwnProperty.call(scopeData(k),'fee_triggers'))return;const c=cfg(k),triggers=Array.isArray(c.fee_triggers)?c.fee_triggers:[];if(!triggers.includes(trigger))return; if(trigger!=='exit' && c.fee_show_early_optin!==true)return;const e=sessionKey();if(!e)return;const id=e+'|'+k+(c.fee_once?'':'|'+trigger);if(shown.has(id))return;shown.add(id);const m=modal('عرض متابعة اختياري');m.append(N('p',(c.fee_message||defaults.fee_message).replaceAll('{name}',nameForClient())));const row=actions(m);button(row,c.fee_button||'عرض المتابعة',()=>{close();if(typeof window.F99V25OpenOffer==='function')window.F99V25OpenOffer(0);else alert('عرض الأتعاب غير متاح حاليًا لهذه الباقة.')},true);button(row,'المتابعة بدون عرض',close)}
 function overrideExit(k){return !!k&&Object.prototype.hasOwnProperty.call(scopeData(k),'fee_triggers')}
 window.F99V70OverridesFee=overrideExit;
 window.F99V70Exit=()=>{const k=window.F99V32MainAccess?.()?.packageKey||window.fino99ActivePackage?.()?.key;const c=cfg(k),list=c.fee_triggers||[];if(Array.isArray(list)&&list.includes('exit')){const e=sessionKey(),id=e+'|'+k+(c.fee_once?'':'|exit');if(!shown.has(id)){shown.add(id);const box=modal('قبل خروجك');box.append(N('p',(c.fee_message||defaults.fee_message).replaceAll('{name}',nameForClient())));const row=actions(box);button(row,c.fee_button||'عرض المتابعة',()=>{close();window.F99V25OpenOffer?.(0)},true);button(row,'خروج الآن',()=>{window.finoCentralClearEntry?.();location.reload()});return}}window.finoCentralClearEntry?.();location.reload()};
@@ -27210,9 +27236,35 @@ async function ownerPackage(key,selectedId=''){
   createBtn(buttons,'TXT لسلة — كود في كل سطر',()=>downloadCodes(exp.codes.join('\n')+'\n','FINO99_'+aid.slice(0,8)+'.txt','text/plain;charset=utf-8'));
   createBtn(buttons,'Excel لسلة — عمود مستقل',()=>{try{const bytes=window.F99V17BuildSallaXlsx?.(exp.codes,exp.last_day||null);if(!bytes)throw Error('محرّك Excel غير متوفر');downloadCodes(bytes,'FINO99_'+aid.slice(0,8)+'.xlsx','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}catch(e){note(e.message,true)}});
   createBtn(buttons,'نسخ الأكواد وحدها',async()=>{try{await navigator.clipboard.writeText(exp.codes.join('\n'));note('نسخت الأكواد وحدها، دون أي عبارات إضافية')}catch{note('استخدم ملف TXT إذا منع Safari النسخ.',true)}});
+  const match=card(panel,'فحص مطابقة الدفعة قبل اعتمادها','لا يمكن ربط الدفعة بعرض آخر أو تغيير مدة كود سبق تخصيصه.');
+  const mismatches=()=>{
+   const problems=[];const norm=typeof f79NormalizeSalla==='function'?f79NormalizeSalla(link.value):String(link.value||'').trim();
+   if(exp.package_key!==offer.package_key)problems.push('اسم/معرف الباقة الأصلية مختلف بين العرض والدفعة');
+   const meta=(stock.allocations||[]).find(x=>x.id===aid);
+   if(!meta)problems.push('تفاصيل الدفعة غير موجودة في ملخص مخزون المركزية. افتح شاشة المخزون من جديد');
+   else {
+    if(Number(meta.duration_minutes)!==Number(offer.duration_minutes))problems.push('مدة الكود مختلفة: الدفعة '+meta.duration_minutes+' دقيقة، والعرض '+offer.duration_minutes+' دقيقة');
+    if(Number(meta.max_calculations)!==Number(offer.max_calculations))problems.push('مرات الحسبة مختلفة: الدفعة '+meta.max_calculations+' والعرض '+offer.max_calculations);
+   }
+   // Stock summary does not expose the allocation's services; the server performs that final check.
+   if(!norm||!/^https:\/\/salla[.]sa\//i.test(norm))problems.push('رابط سلة ليس من الصيغة المعتمدة');
+   if(offer.checkout_url!==norm)problems.push('رابط سلة في الحقل مختلف عن الرابط المحفوظ للعرض. احفظ الرابط أولًا ثم افتح نفس الدفعة مجددًا');
+   if(exp.state!=='reserved'&&exp.state!=='published')problems.push('حالة الدفعة ليست قابلة للنشر: '+exp.state);
+   return problems;
+  };
+  function showMatch(){const problems=mismatches();match.querySelectorAll('p.f82-match').forEach(x=>x.remove());item(match,'p',problems.length?'⚠️ لا يمكن اعتماد الدفعة قبل معالجة التالي: '+problems.join(' • '):'✓ شروط العرض والدفعة والرابط المحفوظ متطابقة في الواجهة. يبقى التحقق الخادمي من المخزون وأكواد سلة.','f82-match');return problems.length===0}
+  showMatch();createBtn(actions(match),'إعادة فحص مطابقة الدفعة',showMatch);
+  createBtn(actions(match),'تشخيص مفصل من المركزية قبل النشر',async()=>{try{
+   const u=f79NormalizeSalla(link.value),p=await admin('f99v83_owner_allocation_precheck',{p_offer_id:offer.id,p_allocation_id:aid,p_checkout_url:u});
+   const issues=Array.isArray(p.reasons)?p.reasons:[];
+   item(match,'p',p.ready===true?'✓ اجتاز فحص المركزية: الهوية والخدمات والمدة وعدد مرات الحسبة والرابط وحالة المخزون مطابقة.':'⚠️ اختلافات المركزية: '+issues.join(' • '),'f82-match');
+  }catch(e){item(match,'p','تعذر الفحص: '+String(e.message||e)+'؛ لا تنشر الدفعة قبل تثبيت فحص V83 في مركزية الاختبار والتأكد من نتيجته.','f82-match')}});
   const confirmed=toggle(panel,'رفعت هذه الدفعة نفسها داخل منتج سلة الخاص بهذا العرض، وراجعت عددها وأكوادها.',false);
-  const pub=createBtn(actions(panel),'اعتماد استيراد الدفعة وربطها بالعرض',async()=>{if(!confirmed.checked)return note('أكّد مطابقة ملف سلة أولًا.',true);if(!f79NormalizeSalla(link.value))return note('ضع رابط سلة الصحيح واحفظ العرض قبل النشر.',true);if(exp.state==='published'&&Number((stock.allocations||[]).find(a=>a.id===aid)?.already_bound||0)>0)return note('هذه الدفعة مرتبطة بالفعل. تحقق من المخزون قبل إعادة الاعتماد.',true);
-    pub.disabled=true;try{if(exp.state!=='published'){const x=await admin('f99v9_admin_publish',{p_allocation_id:aid});if(x.state!=='published'&&x.already_published!==true)throw Error('لم تؤكد المركزية نشر الدفعة');}const b=await admin('f99v77_owner_bind_allocation',{p_offer_id:offer.id,p_allocation_id:aid,p_confirmed_in_salla:true});note('تم ربط '+b.total_in_batch+' كود بهذا العرض، والمتاح '+b.ready+'. اعتمد إظهار العرض بعدها.');pub.disabled=true}catch(e){note('تعذر اعتماد الدفعة: '+e.message,true);pub.disabled=false}
+  const pub=createBtn(actions(panel),'اعتماد استيراد الدفعة وربطها بالعرض',async()=>{if(!confirmed.checked)return note('أكّد مطابقة ملف سلة أولًا.',true);if(!showMatch())return note('لا يمكن ربط الدفعة حتى تتطابق شروطها مع العرض ورابط سلة المحفوظ.',true);if(!f79NormalizeSalla(link.value))return note('ضع رابط سلة الصحيح واحفظ العرض قبل النشر.',true);if(exp.state==='published'&&Number((stock.allocations||[]).find(a=>a.id===aid)?.already_bound||0)>0)return note('هذه الدفعة مرتبطة بالفعل. تحقق من المخزون قبل إعادة الاعتماد.',true);
+    pub.disabled=true;try{
+      const pre=await admin('f99v83_owner_allocation_precheck',{p_offer_id:offer.id,p_allocation_id:aid,p_checkout_url:f79NormalizeSalla(link.value)});
+      if(pre.ready!==true){const explanations=Array.isArray(pre.reasons)?pre.reasons.join(' • '):'لم تتطابق شروط الدفعة';throw Error('فحص ما قبل النشر رفض الربط: '+explanations+' — لا تُغيّر أكواد دفعة سبق نشرها؛ راجع شروطها أو أنشئ عرضًا متوافقًا.');}
+      if(exp.state!=='published'){const x=await admin('f99v9_admin_publish',{p_allocation_id:aid});if(x.state!=='published'&&x.already_published!==true)throw Error('لم تؤكد المركزية نشر الدفعة');}const b=await admin('f99v77_owner_bind_allocation',{p_offer_id:offer.id,p_allocation_id:aid,p_confirmed_in_salla:true});note('تم ربط '+b.total_in_batch+' كود بهذا العرض، والمتاح '+b.ready+'. اعتمد إظهار العرض بعدها.');pub.disabled=true}catch(e){const msg=String(e.message||e);note(msg.includes('OFFER_ALLOCATION_POLICY_OR_SALLA_URL_MISMATCH')?'المركزية رفضت مطابقة العرض والدفعة. راجع مدة الكود ومرات الحسبة والخدمات ورابط سلة المحفوظ. لا تخصص أكواد جديدة قبل فحص الدفعة السابقة.':'تعذر اعتماد الدفعة: '+msg+(msg.includes('f99v83_owner_allocation_precheck')?' — يحتاج فحص المركزية V83 قبل نشر الأكواد':'') ,true);pub.disabled=false}
    },true);
  }
  const show=createBtn(actions(saveBox),'إظهار العرض للعملاء بعد اعتماد مخزونه',async()=>{if(!savedOffer)return note('احفظ عرض التجديد أولًا.',true);show.disabled=true;try{const x=await persist(true);if(!x.id)throw Error('لم يتأكد الحفظ');const y=await admin('f99v77_owner_package_save',{p_package_key:key,p_enabled:true,p_label:'أكواد التجديد'});note(y.live_for_customer?'تم نشر العرض للعملاء المؤهلين وله مخزون.':'تم حفظ العرض لكن لا توجد أكواد متاحة فعليًا؛ لن يفتح الدفع.');await ownerPackage(key,x.id)}catch(e){note('لم يتم نشر العرض: '+e.message,true)}finally{show.disabled=false}},true);
@@ -27506,7 +27558,7 @@ async function history(){
 }
 window.FINO99V80History=history;
 function renewal(){const key=current();if(key&&window.FINO99V76?.customerOffers)void window.FINO99V76.customerOffers(key);else alert('اختر باقتك من المتجر أولًا.');}
-function banner(data){const chat=$('finoBotChat');if(!chat||!paid()||!activeResult())return;const max=Number(data?.max_calculations||0),remaining=Number(data?.calculations_remaining);
+function banner(data){if(window.__F99V82ExplicitQuotaView!==true)return;const chat=$('finoBotChat');if(!chat||!paid()||!activeResult())return;const max=Number(data?.max_calculations||0),remaining=Number(data?.calculations_remaining);
  if(!(max>0&&Number.isFinite(remaining)))return;
  let box=$('f80-status');if(!box){box=E('div');box.id='f80-status';box.setAttribute('role','status');chat.append(box)}box.replaceChildren();
  const used=Math.max(0,max-remaining);box.dataset.last=remaining<=1?'true':'false';
@@ -27524,13 +27576,14 @@ if(typeof oldRun==='function')window.runFINOPortalBuyout=async function(...args)
 // Last-use preflight: no new charge if the client chooses to review instead.
 const oldMeter=window.F99V21ConsumeCalculation;
 if(typeof oldMeter==='function')window.F99V21ConsumeCalculation=async function(service){if(!paid()||!String(service).includes('buyout'))return oldMeter.apply(this,arguments);
- const s=await status();if(s&&Number(s.max_calculations)>0&&Number(s.calculations_remaining)===1){
+ const s=await status();if(s&&Number(s.max_calculations)>0&&Number(s.calculations_remaining)===1&&window.__F99V82LastUseConsent!==true){
   const proceed=await new Promise(resolve=>{const old=$('f80-last-confirm');old?.remove();const overlay=E('div');overlay.id='f80-last-confirm';overlay.style.cssText='position:fixed;inset:0;background:#001b2fbb;z-index:2147483646;display:flex;align-items:center;justify-content:center;direction:rtl;padding:20px';const card=E('div');card.style.cssText='max-width:480px;background:#fff;border:2px solid #b72f36;border-radius:16px;padding:20px;color:#8c1721;text-align:center;font:900 17px/2 Cairo,Tahoma';card.append(E('h3','يا '+client()+'، هذه المرة الأخيرة للاحتساب. نبدأ ولا نراجع الحسب السابقة؟'));
   const yes=E('button','أبشر، نبدأ بالحسبة الأخيرة');const no=E('button','أراجع الحسب السابقة');for(const x of [yes,no]){x.style.cssText='padding:12px;background:#b72f36;color:#fff;border:0;border-radius:9px;margin:8px';card.append(x)};
   yes.onclick=()=>{overlay.remove();resolve(true)};no.onclick=()=>{overlay.remove();void history();resolve(false)};overlay.append(card);document.body.append(overlay)});
   if(!proceed)return false;
  }
  const result=await oldMeter.apply(this,arguments);
+ window.__F99V82LastUseConsent=false;
  if(result&&s&&Number(s.max_calculations)>0){const number=Number(s.max_calculations)-Number(s.calculations_remaining)+1;
   const chat=$('finoBotChat');if(chat){const message=E('p','أبشر يا '+client()+'، بسم الله نبدأ بالحسبة '+ordinal(number)+'.');message.className='f49-message';chat.append(message)}}
  return result;
@@ -27713,7 +27766,7 @@ window.FINO99OpenCoreBanks=function(){
   ['🛍️','المتجر والباقات','عرض منتجاتك وإنشاء وتعديل الباقات والصور والأسعار والخدمات','F99SOpenOwner',[]],
   ['🏦','قلب المنصة','محرر البنوك والنسب والشعارات الأساسي المعتمد','FINO99OpenCoreBanks',[]],
   ['🔑','الخزنة والأكواد','المخزون والتخصيص وحالات الاستخدام','f99fixOpenCodes',[]],
-  ['🔄','أكواد التجديد','إنشاء عروض التجديد واختيار الباقة والدفعات','FINO99V74OwnerRenewal',[]],
+  ['🔄','أكواد التجديد','إنشاء عروض التجديد واختيار الباقة والدفعات','FINO99V83OpenRenewal',[]],
   ['📝','العقود والمتابعة','قوالب العقود والمراحل والأكواد المرتبطة بها','F99V60OpenContracts',[]],
   ['🖨️','السجلات والبرنت','الدخول والموقع وبيانات العميل والحسب المؤرشفة',null,[]]
  ];
@@ -27730,7 +27783,7 @@ window.FINO99OpenCoreBanks=function(){
    const utilities=E('div',null,'f81-utilities');panel.append(utilities);
    button(utilities,'معاينة المتجر للعميل',()=>run('FINO99OpenStorefront'));
    button(utilities,'تشغيل / إعداد التمويل العقاري',()=>run('F99MOpenControl'));
-   button(utilities,'إعدادات المنصة التفصيلية',()=>{const ownerHub=$('#ownerHub');ownerHub?.classList.toggle('f81-show-advanced');const info=$('#f81-advanced-help');if(info)info.hidden=!ownerHub?.classList.contains('f81-show-advanced');});
+   button(utilities,'فتح / إغلاق الأدوات التفصيلية',()=>window.FINO99V83ToggleAdvanced?.());
    // Original central alert bell remains next to the owner header.
    const hint=E('p','أدوات الإدارة القديمة لا تُحذف؛ تُفتح من «الإعدادات التفصيلية» عند الحاجة فقط. لا توجد عروض أو أكواد تُنشأ لمجرد فتح الشاشة.','f81-muted');hint.id='f81-advanced-help';hint.hidden=true;panel.append(hint);
    const anchor=root.querySelector('.owner-hero');anchor?anchor.after(panel):root.prepend(panel);
@@ -27750,6 +27803,109 @@ window.FINO99OpenCoreBanks=function(){
  const hub=$('#ownerHub');if(hub){const observer=new MutationObserver(()=>{const now=Date.now();if(now-last<350)return;last=now;queueMicrotask(boot)});observer.observe(hub,{childList:true,subtree:false});}
  setInterval(()=>{if(!document.hidden)boot()},1400);
  window.FINO99V81={organize,renderDashboard,boot,version:'81-ui-safe'};
+})();
+</script>
+
+<style id="fino99-v82-conversation-css">
+/* Client-led post-result flow, with premium discount card and no interrupting quota banner. */
+#finoBotChat .f82-fee-hero{background:linear-gradient(130deg,#123b57,#215f80);color:#fff;border-radius:16px;padding:18px;margin:12px 0;text-align:center;border:2px solid #a6c8df}
+#finoBotChat .f82-fee-hero strong{display:block;color:white;font-size:clamp(17px,4vw,22px);line-height:1.7}
+#finoBotChat .f82-fee-hero p{color:#f0f7ff;font-size:14px;margin:9px auto}
+#finoBotChat .f82-fee-hero s{color:#ffdbd8;font-size:17px;text-decoration-thickness:2px}
+#finoBotChat .f82-fee-saving{background:#eaf8e9;border-radius:12px;color:#155c2b;padding:10px;margin:9px auto;font-size:clamp(18px,4.5vw,24px);font-weight:900}
+#finoBotChat .f82-fee-hero small{display:block;color:#e7f3ff}
+#finoBotChat .f82-fee-price{color:#fff;font-size:clamp(20px,5.2vw,29px);font-weight:900;margin-top:14px}
+#finoBotChat .f49-message-preview{direction:rtl;white-space:pre-wrap;overflow-wrap:anywhere;background:#f5f9fd;padding:13px;border-radius:12px;border:1px solid #d1e3ec;font:600 13px/1.8 Cairo,Tahoma,sans-serif}
+#finoBotChat .f49-completion-request>strong{display:block;font-size:17px;color:#163b54;margin-bottom:10px}
+#finoBotChat .f82-end-actions{border:1px solid #c2d8e4;border-radius:15px;padding:13px;margin:9px 0;background:#f5faff}
+#finoBotChat .f82-end-actions button{margin:5px;padding:10px;border:1px solid #99bed1;border-radius:10px}
+#finoBotChat .f82-last-card{background:#fff1f1!important;color:#8e1821!important;border:2px solid #be303b!important}
+#finoBotChat .f82-last-card strong{font-size:21px}
+#f80-status{display:none!important} /* V82: never interrupt the bank result with a quota banner. */
+#f76-modal .f82-match{white-space:pre-wrap;color:#334f68;font-weight:700}
+</style>
+<script id="fino99-v82-conversation">
+/* FINO99 V82: client-initiated calculation/offer flow. Does not modify finance algorithms or central-code stock. */
+(()=>{'use strict';
+const by=id=>document.getElementById(id), escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const client=()=>{try{return cleanClientName(clientName)||'عميلنا'}catch{return 'عميلنا'}};
+const current=()=>{try{return finoPortal?.mode==='buyout'&&finoPortal?.step==='buyout_result'}catch{return false}};
+const chat=()=>by('finoBotChat');
+const say=(t,red=false)=>{const e=document.createElement('div');e.className='f49-message f82-end-actions'+(red?' f82-last-card':'');e.setAttribute('role','status');e.innerHTML=t;chat()?.append(e);e.scrollIntoView?.({block:'nearest',behavior:'smooth'});return e};
+const note=t=>say('<p>'+escapeHTML(t)+'</p>');
+const entry=()=>{try{return window.finoCentralRestoreEntry?.()||{}}catch{return {}}};
+async function serverStatus(){const e=entry();if(!e.entryToken||!e.deviceId)throw Error('الكود غير مسجل في هذه الجلسة.');const r=await window.finoRpc('f99v23_client_status',{p_entry_token:e.entryToken,p_device_id:e.deviceId},14000);if(!r?.ok||r.data?.ok!==true)throw Error(r?.data?.reason||'تعذر التحقق من صلاحية الكود');return r.data}
+function openHistory(){if(typeof window.FINO99V80History==='function')return window.FINO99V80History();note('مراجعة الحسب السابقة غير متاحة الآن.')}
+function startNew(consentLast){window.__F99V82LastUseConsent=consentLast===true;try{if(typeof window.openFINOSmartPortal==='function')window.openFINOSmartPortal(false,'buyout');else {window.__F99V82LastUseConsent=false;note('تعذر فتح الحسبة الجديدة من هذه الجلسة.')}}catch(e){window.__F99V82LastUseConsent=false;note('تعذر البدء: '+String(e?.message||e))}}
+window.F99V82RequestNewCalculation=async()=>{
+ if(!current())return note('افتح نتائج الحسبة أولًا.');
+ try{const s=await serverStatus(),max=Number(s.max_calculations||0),remaining=Number(s.calculations_remaining);if(max<=0||!Number.isFinite(remaining))return note('تعذر قراءة رصيد مرات الحسبة. لن نخصم استخدامًا دون التحقق من المركزية.');
+ const used=Math.max(0,max-remaining);const d=say('',remaining===1),h=document.createElement('strong');d.append(h);const p=document.createElement('p');d.append(p);
+ if(remaining===0){h.textContent='يا '+client()+'، استهلكت كامل مرات الحسبة في هذه الباقة.';p.textContent='تقدر تراجع نتائجك المؤرشفة داخل الجلسة، أو تجدد بكود جديد إذا توفر عرض.';}
+ else if(remaining===1){h.textContent='يا '+client()+'، هذه المرة الأخيرة للاحتساب.';p.textContent='أنجزت '+used+' من '+max+' مرات. تبي نبدأ الحسبة الأخيرة أو تراجع الحسب السابقة؟';}
+ else {h.textContent='يا '+client()+'، '+(used===1?'استخدمت الحسبة الأولى':used===2?'استخدمت الحسبة الثانية':'استخدمت '+used+' مرات للاحتساب')+'.';const remText=remaining===2?'مرتين':remaining===3?'3 مرات':remaining+' مرات';p.textContent='باقي لك '+remText+' للاحتساب. تبي تبدأ بحسبة جديدة أو تراجع الحسبة الحالية؟';}
+ const actions=document.createElement('div');d.append(actions);const button=(title,cb)=>{const b=document.createElement('button');b.type='button';b.textContent=title;b.onclick=cb;actions.append(b)};
+ if(remaining>0)button(remaining===1?'أبشر، نبدأ الحسبة الأخيرة':'أبشر، أبدأ بحسبة جديدة',()=>{d.remove();startNew(remaining===1)});
+ button('أراجع الحسب السابقة',openHistory);
+ if(remaining===0)button('تجديد باقتي',()=>{if(window.F99V50OpenRenewalShop)window.F99V50OpenRenewalShop();else note('التجديد غير متاح في هذا الوقت.')});
+ button('أكمل مراجعة الحسبة الحالية',()=>d.remove());
+ }catch(e){note('تعذر قراءة رصيد مرات الحسبة: '+String(e?.message||e))}
+};
+window.F99V82OpenOffer=async()=>{
+ if(!current())return note('أكمل عرض الحسبة أولًا.');
+ const key=window.F99V32MainAccess?.()?.packageKey||window.fino99ActivePackage?.()?.key;
+ try{if(!key)throw Error('لا توجد باقة مرتبطة بالجلسة');
+ const cfg=await window.finoRpc('f99v80_public_fee_display',{p_package_key:key},11000);
+ if(!cfg?.ok||cfg.data?.ok!==true)throw Error('تعذر التحقق من موعد عرض الأتعاب');
+ if(cfg.data.display_mode==='last'){const s=await serverStatus();if(Number(s.max_calculations)<=0||Number(s.calculations_remaining)>0)return note('يا '+client()+'، عرض المتابعة سيظهر بعد آخر مرة للاحتساب وفق إعداد مالك الباقة.');}
+ if(typeof window.F99V49CompletionOpen!=='function'&&typeof window.F99V49CompletionSelect!=='function')throw Error('خدمة المتابعة غير متوفرة');
+ const chosen=typeof selectedResultIndex!=='undefined'?Number(selectedResultIndex):0; if(typeof window.F99V49CompletionSelect==='function'&&Array.isArray(latestResults)&&latestResults[chosen])return window.F99V49CompletionSelect(chosen);return window.F99V49CompletionOpen();
+ }catch(e){note('عرض المتابعة غير متاح الآن: '+String(e?.message||e))}
+};
+window.F99V82FinishReview=()=>{
+ if(!current())return;const d=say('<strong>يا '+escapeHTML(client())+'، انتهينا من مراجعة تفاصيل هذه الحسبة.</strong><p>ترشيحاتك ونتائجك ما زالت متاحة هنا. اختر الخطوة اللي تناسبك:</p>');
+ const row=document.createElement('div');d.append(row);const btn=(label,fn)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=()=>{d.remove();fn()};row.append(b)};
+ if(window.F99V38FeatureAllowed?.('show_completion')===true)btn('عندك عرض لمتابعة تمويلك',()=>window.F99V82OpenOffer());btn('أبدأ حسبة جديدة',()=>window.F99V82RequestNewCalculation());btn('أراجع النتائج',()=>{const node=chat()?.querySelector('.portal-result');if(node)node.scrollIntoView({behavior:'smooth',block:'start'});else note('نتائج الحسبة السابقة غير ظاهرة في المحادثة. افتح مراجعة الحسب السابقة عند الحاجة.')});
+};
+})();
+</script>
+
+<style id="fino99-v83-owner-old-tools-fix">
+/* Old owner menus were hidden even after the advanced toggle. Only the owner-open state restores them. */
+#ownerHub.f81-unified.f81-show-advanced #f60-legacy-settings .owner-platform-card,
+#ownerHub.f81-unified.f81-show-advanced #f60-legacy-settings .owner-section-title,
+#ownerHub.f81-unified.f81-show-advanced #f60-legacy-settings #f99v8-owner-search{display:block!important;visibility:visible!important}
+#ownerHub.f81-unified.f81-show-advanced #f60-legacy-settings{display:block!important;max-width:100%;overflow-wrap:anywhere}
+#ownerHub.f81-unified.f81-show-advanced #f22-owner-advanced{display:block!important;visibility:visible!important}
+#ownerHub.f81-unified.f81-show-advanced #f60-owner-console{display:block!important}
+#ownerHub .f81-legacy-alert{padding:10px;margin:10px 0;border:1px solid #b9d8e4;border-radius:12px;background:#f0f8fc;color:#164f6b;font:700 13px/1.8 Cairo,Tahoma,sans-serif}
+@media(max-width:600px){#ownerHub.f81-unified.f81-show-advanced #f60-legacy-settings{width:100%;box-sizing:border-box}}
+</style>
+<script id="fino99-v83-owner-routing">
+(()=>{'use strict';
+const h=()=>document.getElementById('ownerHub');
+const authorized=()=>{try{return activeAccess?.record?.owner===true&&activeAccess?.record?.central===true&&!!finoCentralAdminToken}catch{return false}};
+function advanced(open=true){
+ if(!authorized())return alert('هذه الصفحة خاصة بالمالك');
+ const root=h();if(!root)return alert('صفحة إدارة المالك غير مفتوحة.');
+ root.classList.toggle('f81-show-advanced',open);
+ const old=document.getElementById('f60-legacy-settings');
+ if(old){old.hidden=false;old.style.removeProperty('display');old.open=open;
+  old.querySelectorAll('.owner-platform-card,.owner-section-title').forEach(e=>{e.hidden=false;e.style.removeProperty('display')});}
+ const detail=document.getElementById('f22-owner-advanced');if(detail){detail.hidden=false;detail.open=open;}
+ const hidden=document.getElementById('f22-owner-operations');if(hidden&&open)hidden.hidden=false;
+ const help=document.getElementById('f81-advanced-help');if(help)help.hidden=!open;
+ if(open){const target=old||detail||document.getElementById('f60-owner-console');if(target){target.scrollIntoView({behavior:'smooth',block:'start'});
+ if(!target.querySelector('.f81-legacy-alert')){const info=document.createElement('p');info.className='f81-legacy-alert';info.textContent='الأدوات القديمة للمراجعة فقط. خدماتها محفوظة، وأي خيار يحتاج وظيفة مركزية غير موجودة سيظهر تنبيه بدل حفظ غير مؤكد.';target.prepend(info)}}}
+}
+window.FINO99V83ShowAdvanced=()=>advanced(true);
+window.FINO99V83ToggleAdvanced=()=>advanced(!h()?.classList.contains('f81-show-advanced'));
+window.F99V60ShowLegacy=window.FINO99V83ShowAdvanced;
+window.FINO99V83OpenRenewal=()=>{
+ if(!authorized())return alert('يلزم دخول المالك المعتمد.');
+ if(typeof window.FINO99V76?.ownerHome==='function')return window.FINO99V76.ownerHome();
+ alert('تعذر فتح إدارة أكواد التجديد الموحدة. افحص وظائف المركزية والتحديثات المطلوبة.');
+};
 })();
 </script>
 </body>
