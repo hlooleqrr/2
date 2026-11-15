@@ -51,6 +51,54 @@
   }
   const allNumbers = text => (norm(text).match(/\d+(?:\.\d+)?/g) || []).map(Number);
 
+  /* Pure: "سوّ لي باقة ..." detection and slot parsing (draft only; the owner edits every field before saving). */
+  const PKG_SERVICES = [['buyout', 'شراء مديونية التمويل الشخصي'], ['smart', 'الحاسبة الذكية'], ['compare', 'مقارنات عروض البنوك'], ['mortgage_quote', 'التمويل العقاري'],
+    ['mortgage_compare', 'مقارنات العقاري'], ['contract', 'العقود والاتفاقيات'], ['guidance_mortgage', 'إرشادات عامة للتمويل العقاري'], ['guidance_personal', 'إرشادات عامة للتمويل الشخصي']];
+  function isPkgCreate(input) {
+    const n = norm(input);
+    if (!/(^| )(ال|ل|و)?باق(ه|ات)( |$)/.test(n)) return false;
+    if (has(input, ['خصص', 'تخصيص', 'وزع', 'توزيع'])) return false;
+    return /باقه جديده/.test(n) || /(^| )(سو|سوي|سوو|اسوي|سويلي|اعمل|جهز|انشئ|انشي|ابي|ابغى|ابغي|نبي|نبغى|ضيف|اضف|ابا)( لي| لنا)? باقه/.test(n);
+  }
+  function parsePackageSpec(input) {
+    const n = norm(input); const spec = {services: []};
+    const nm = n.match(/باقه (?:جديده )?(?:اسمها |باسم |اسم )?(.+?)(?= بسعر| سعرها| السعر| ب ?\d| فيها| تشمل| مدتها| لمده| مده| بمده| وتجديد| تجديد| مع | و?عدد| \d|$)/);
+    if (nm) { const t = nm[1].replace(/ و$/, '').trim(); if (t && t.length <= 60 && !/^(فيها|تشمل|جديده)$/.test(t) && !/^(لل|ل)/.test(t)) spec.name = t; }
+    const ren = n.match(/تجديد\D{0,20}?(\d+(?:\.\d+)?)/); if (ren) spec.renewalPrice = Number(ren[1]);
+    const priceRx = /(?:بسعر|سعرها|السعر|ب)\s?(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\s?(?:ريال|رس)/g; let m;
+    while ((m = priceRx.exec(n))) { const v = Number(m[1] || m[2]); const before = n.slice(Math.max(0, m.index - 22), m.index); if (/تجديد/.test(before) || (spec.renewalPrice === v && /تجديد/.test(n.slice(Math.max(0, m.index - 30), m.index + 4)))) continue; spec.price = v; break; }
+    const days = n.match(/(\d+)\s?(يوم|ايام)/), hours = n.match(/(\d+)\s?(ساعه|ساعات)/), weeks = n.match(/(\d+)\s?(اسبوع|اسابيع)/), months = n.match(/(\d+)\s?(شهر|شهور|اشهر)/);
+    if (days) spec.days = Number(days[1]); else if (weeks) spec.days = Number(weeks[1]) * 7; else if (months) spec.days = Number(months[1]) * 30; else if (hours) spec.hours = Number(hours[1]);
+    else if (/يومين/.test(n)) spec.days = 2; else if (/اسبوعين/.test(n)) spec.days = 14; else if (/(^| )اسبوع( |$)/.test(n)) spec.days = 7; else if (/شهرين/.test(n)) spec.days = 60; else if (/(^| )شهر( |$)/.test(n)) spec.days = 30; else if (/(^| )(يوم|يوم واحد)( |$)/.test(n)) spec.days = 1;
+    const calcs = n.match(/(\d+)\s?(حسبه|حسبات|عمليه|عمليات|مرات|مره)/); if (calcs) spec.calcs = Number(calcs[1]);
+    const codes = n.match(/(\d+)\s?(كود|اكواد)/); if (codes) spec.codes = Number(codes[1]);
+    const add = k => { if (!spec.services.includes(k)) spec.services.push(k); };
+    n.split(/ و| مع |،| \+ /).forEach(c => {
+      const g = /ارشاد/.test(c);
+      if (g && /عقار/.test(c)) add('guidance_mortgage'); else if (g) add('guidance_personal');
+      else if (/عقار/.test(c) && /مقارن/.test(c)) add('mortgage_compare'); else if (/عقار/.test(c)) add('mortgage_quote');
+      if (!g && /مديوني|تحويل|شراء دين/.test(c)) add('buyout');
+      if (!g && !/عقار/.test(c) && /مقارن/.test(c)) add('compare');
+      if (!g && /(^| )(ال)?(حاسبه|ذكي|ذكيه|شخصي)( |$)/.test(c) && !/عقار/.test(c)) add('smart');
+      if (/(^| )(ال)?عقود?( |$)|اتفاقي/.test(c)) add('contract');
+    });
+    return spec;
+  }
+  /* Pure: early-settlement policy changes from a colloquial sentence (months). */
+  function parseEarlyPolicy(input) {
+    const n = norm(input); const out = {};
+    const months = (num, unit) => (/سن/.test(unit || '') ? num * 12 : num);
+    const grab = rx => { const m = n.match(rx); return m ? months(Number(m[1]), m[2]) : undefined; };
+    if (/سنتين/.test(n) && /تحذير|نبه|انذار/.test(n) && !/تحذير\D{0,25}\d/.test(n)) out.warnPaidMonths = 24;
+    const w = grab(/(?:تحذير|نبه|انذار)\D{0,30}?(\d+)\s?(شهر|اشهر|شهور|سنه|سنوات)?/); if (w !== undefined) out.warnPaidMonths = w;
+    const mp = grab(/(?:حد ادنى|الحد الادنى|ادنى ربح|لا يقل)\D{0,30}?(\d+)\s?(شهر|اشهر|شهور|سنه|سنوات)?/); if (mp !== undefined) out.minProfitMonths = mp;
+    if (/ربح سنتين/.test(n) && out.minProfitMonths === undefined) out.minProfitMonths = 24;
+    const cp = grab(/(?:تعويض|رسوم اداريه|رسوم الاداريه|غرامه)\D{0,25}?(\d+)\s?(شهر|اشهر|شهور)/); if (cp !== undefined) out.compensationProfitMonths = cp;
+    const ff = n.match(/(?:رسوم ثابته|رسم ثابت|مبلغ ثابت)\D{0,15}?(\d+(?:\.\d+)?)/); if (ff) out.fixedFee = Number(ff[1]);
+    if (/(^| )(فعل|شغل|اظهر|افتح)/.test(n)) out.enabled = true; if (/(^| )(اوقف|عطل|اخف|اخفي|سكر|قفل)/.test(n)) out.enabled = false;
+    return out;
+  }
+
   const CREATE = ['سو', 'سوي', 'سوو', 'اسوي', 'سويلي', 'اعمل', 'جهز', 'انشئ', 'انشي', 'ابي', 'ابغى', 'ابغي', 'ودي', 'اكتب', 'حضر', 'طلع', 'افتح', 'ابدا', 'نبي', 'نبغى', 'عطني'];
   const CHANGE = ['غير', 'عدل', 'بدل', 'حدث', 'حط', 'خل', 'خلي', 'ارفع', 'نزل', 'زود', 'قلل'];
   const SHOW = ['ورني', 'وريني', 'ورنا', 'اعرض', 'عطني', 'ابي اشوف', 'ابغى اشوف', 'وش', 'ايش', 'كم', 'كيف', 'تقرير', 'ملخص', 'وضع', 'حاله', 'شف', 'شوف', 'اشوف', 'فين', 'وين'];
@@ -93,6 +141,7 @@
     }
     if ((has(input, ['خزنه']) || (has(input, ['اكواد', 'كود']) && isContract)) && has(input, ['اصدر', 'ولد', 'زود', 'ضيف', 'اضف', 'طلع', 'جهز', 'سو', 'سوي'])) return {intent: 'vault_issue', count};
     if (isContract && has(input, CREATE.concat(['جديد']))) return {intent: 'contract_free'};
+    if (isPkgCreate(input)) return {intent: 'package_create', spec: parsePackageSpec(input), query: input};
     // codes, renewal, packages
     if (has(input, ['تجديد']) && (has(input, ['عرض', 'سعر', 'ريال']) || count)) return {intent: 'renewal_offer', price: count, query: input};
     if (has(input, ['خصص', 'تخصيص', 'وزع', 'توزع', 'توزيع', 'خصصلي', 'خصص لي']) || (count && has(input, ['كود', 'اكواد']) && has(input, ['باقه', 'لباقه', 'للباقه']) && has(input, CREATE))) return {intent: 'allocate', count, query: input};
@@ -108,6 +157,8 @@
       }
       return {intent: 'bank_rates'};
     }
+    if ((has(input, ['سياسه', 'سياسات']) && has(input, ['عقاري', 'العقاري', 'العقاريه', 'سداد مبكر', 'السداد المبكر'])) || (has(input, ['سداد مبكر', 'السداد المبكر']) && (has(input, CHANGE) || /\d/.test(text) || has(input, ['فعل', 'شغل', 'اوقف', 'عطل', 'سنتين']))))
+      return {intent: 'mortgage_policy', changes: parseEarlyPolicy(input)};
     // navigation
     if (has(input, ['سداد مبكر', 'السداد المبكر'])) return {intent: 'open', route: 'early'};
     if (has(input, ['بناء ذاتي', 'البناء الذاتي', 'على الخارطه', 'الخارطه', 'نقل التمويل العقاري', 'نقل المديونيه العقاريه', 'ترشيح البنوك', 'منتجات العقاري'])) return {intent: 'open', route: 'advanced'};
@@ -209,7 +260,7 @@
     inventory: ['المخزون والدفعات وملفات سلة', (w, k) => w.F99V9OpenInventory?.(k || '')],
     package: ['محرر الباقة', (w, k) => w.F99SOpenOwner?.(k || '')]
   };
-  const HELP = ['ورني المبيعات والمخزون والعقود المعلقة', 'سوّ لي عقد', 'أبي عقد بيع بالأجل', 'عقد متابعة بعربون', 'خصص 100 كود لباقة ...', 'أنشئ عرض تجديد للباقة بـ17 ريال', 'حدث نسب البنوك', 'افتح العقاري وعدل سياسته', 'اصدر 50 كود عقود'];
+  const HELP = ['ورني المبيعات والمخزون والعقود المعلقة', 'سوّ لي باقة جديدة', 'عدّل سياسة الحاسبة العقارية', 'سوّ لي عقد', 'أبي عقد بيع بالأجل', 'عقد متابعة بعربون', 'خصص 100 كود لباقة ...', 'أنشئ عرض تجديد للباقة بـ17 ريال', 'حدث نسب البنوك', 'افتح العقاري وعدل سياسته', 'اصدر 50 كود عقود'];
 
   /* ---------------- UI + executor ---------------- */
   function install(w) {
@@ -251,6 +302,7 @@
       const dl = el('dl'); rows.forEach(([k, v]) => dl.append(el('dt', '', k), el('dd', '', v))); c.append(dl);
       const fields = {};
       (inputs || []).forEach(f => { const l = el('label', 'f99xc-field'); let i;
+        if (f.type === 'checks') { const box = el('div', 'f99xc-checks'); const sel = new Set(f.value || []); (f.options || []).forEach(([v, t]) => { const lb = el('label', 'f99xc-check'); const cb = el('input'); cb.type = 'checkbox'; cb.value = v; cb.checked = sel.has(v); lb.append(cb, d.createTextNode(' ' + t)); box.append(lb); }); fields[f.key] = {get value() { return [...box.querySelectorAll('input:checked')].map(x => x.value); }}; l.append(el('span', '', f.label), box); c.append(l); return; }
         if (f.type === 'textarea') { i = el('textarea'); i.rows = 5; } else if (f.type === 'select') { i = el('select'); (f.options || []).forEach(([v, t]) => i.append(new Option(t, v))); } else { i = el('input'); i.type = 'text'; if (f.numeric) i.inputMode = 'decimal'; }
         i.value = f.value ?? ''; i.setAttribute('aria-label', f.label); fields[f.key] = i; l.append(el('span', '', f.label), i); c.append(l); });
       if (opts.warn) c.append(el('p', 'f99xc-warn', opts.warn));
@@ -259,7 +311,7 @@
       const status = el('p', 'f99xc-status'); status.setAttribute('role', 'status');
       const ok = btn(acts, opts.okLabel || 'اعتمد ونفّذ', async () => {
         ok.disabled = true; no.disabled = true; status.textContent = 'جاري التنفيذ في المركزية...';
-        const vals = {}; Object.entries(fields).forEach(([k, i]) => { vals[k] = i.value.trim(); });
+        const vals = {}; Object.entries(fields).forEach(([k, i]) => { vals[k] = typeof i.value === 'string' ? i.value.trim() : i.value; });
         let res; try { res = await onConfirm(vals, status); } catch (e) { res = {ok: false, reason: e.message || 'ERROR'}; }
         if (pending && pending.card === c) pending = null; ctx.pending = !!pending;
         if (res && res.ok === false) { status.textContent = 'ما تم: ' + res.reason; ok.disabled = !!res.final; no.disabled = false; if (!res.final) pending = {card: c, run: () => ok.click()}; ctx.pending = !!pending; return; }
@@ -345,7 +397,26 @@
     const human = mins => { const m = Number(mins) || 0; return m % 1440 === 0 ? (m / 1440) + ' يوم' : m % 60 === 0 ? (m / 60) + ' ساعة' : m + ' دقيقة'; };
     async function doAllocate(count, query) {
       const n = Math.round(count || 0); if (!n) return say('كم كود تبي أخصص؟ مثال: «خصص 100 كود لباقة ...».');
-      packagePick(query, async p => {
+      packagePick(query, p => allocateFor(p, n));
+    }
+    function downloadSalla(batch) {
+      const codes = Array.isArray(batch?.codes) ? batch.codes : []; const n = Number(batch?.count);
+      if (batch?.state !== 'published' || (batch?.published !== undefined && batch.published !== true)) throw Error('الدفعة غير معتمدة في المركزية بعد.');
+      if (!Number.isInteger(n) || n < 1 || n > 500 || codes.length !== n || new Set(codes).size !== n || codes.some(c => !/^[A-Z0-9-]{8,32}$/.test(c))) throw Error('عدد الأكواد غير مطابق؛ أُلغي التنزيل.');
+      if (typeof w.F99V17BuildSallaXlsx !== 'function') throw Error('مُنشئ ملف سلة غير موجود.');
+      const file = w.F99V17BuildSallaXlsx(codes, batch.last_day || null);
+      const name = 'FINO99_' + String(batch.package_key || 'PACKAGE').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40) + '_' + String(batch.allocation_id).slice(0, 8) + '_' + n + '.xlsx';
+      const url = URL.createObjectURL(new Blob([file], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+      const a = d.createElement('a'); a.href = url; a.download = name; d.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 30000); return name;
+    }
+    async function sallaFile(allocationId, status) {
+      const r = await call('f99v17_admin_export_batch', {p_allocation_id: allocationId}); if (!r.ok) throw Error('رفضت المركزية التصدير: ' + r.reason);
+      const name = downloadSalla(r); if (status) status.textContent = 'نزل الملف: ' + name; return name;
+    }
+    async function allocateFor(p, count) {
+      let n = Math.round(count || 0); const over = n > 500; if (over) n = 500;
+      {
+        if (over) say('الحد لكل دفعة 500 كود (حماية المركزية وملف سلة). أجهز لك دفعة 500 الآن، وبعدها اطلب الباقي في دفعة ثانية.');
         const pre = await call('f99v16_owner_preflight');
         const available = pre.ok ? Number(pre.available || 0) : null; const services = Array.isArray(p.services) ? p.services : [];
         const mins = Number(p.duration_minutes || 4320), cap = Number(p.max_calculations || 3), last = String(p.key || '').includes('bronze') ? (p.redeem_last_day || null) : null;
@@ -356,11 +427,18 @@
             const r = await call('f99v19_admin_allocate_custom', {p_package_key: p.key, p_count: n, p_duration_minutes: mins, p_services: services, p_max_calculations: cap, p_last_day: last});
             if (!r.ok) return {ok: false, reason: r.reason + ' — لا تعيد المحاولة قبل فتح قائمة الدفعات؛ ربما نجح الحجز.', final: true};
             const chk = r.allocation_id ? await call('f99v13_admin_allocation_date', {p_allocation_id: r.allocation_id}) : {ok: false};
-            const b = say('تم ✓ خُصصت ' + n + ' كود لباقة ' + (p.name || p.key) + (chk.ok ? ' (الحالة: ' + (chk.state === 'published' ? 'معتمدة' : chk.state) + ')' : '') + '.\nملف سلة: نزّله من «الدفعات السابقة» ثم ارفعه في منتج سلة وطابق العدد قبل فتح البيع.');
-            const acts = el('div', 'f99xc-actions'); openBtn(acts, 'inventory', p.key, 'افتح الدفعات وتنزيل ملف سلة'); b.parentElement.append(acts); readAt = 0; return {ok: true};
+            let fileNote = 'ملف سلة: نزّله من «الدفعات السابقة».';
+            if (chk.ok && chk.state === 'published' && Number(chk.count) === n && chk.package_key === p.key) {
+              try { const name = downloadSalla({...r, state: chk.state, count: n, last_day: chk.last_day || null, package_key: p.key}); fileNote = 'نزّلت لك ملف سلة: ' + name + ' (كل كود في صف مستقل).'; }
+              catch (e) { try { const name = await sallaFile(r.allocation_id); fileNote = 'نزّلت لك ملف سلة: ' + name + '.'; } catch (e2) { fileNote = 'الدفعة محفوظة، لكن الملف ما نزل: ' + e2.message + ' — استخدم زر التنزيل تحت ولا تخصص دفعة بديلة.'; } }
+            }
+            const b = say('تم ✓ خُصصت ' + n + ' كود لباقة ' + (p.name || p.key) + (chk.ok ? ' (الحالة: ' + (chk.state === 'published' ? 'معتمدة' : chk.state) + ')' : '') + '.\n' + fileNote + '\nالتنزيل ليس رفعًا لسلة ولا بيعًا: ارفع الملف في منتج سلة نفسه وطابق العدد قبل فتح البيع.');
+            const acts = el('div', 'f99xc-actions'); const st2 = el('p', 'f99xc-status');
+            if (r.allocation_id) btn(acts, 'نزّل ملف سلة مرة ثانية', async () => { try { await sallaFile(r.allocation_id, st2); } catch (e) { st2.textContent = e.message; } }, 'f99xc-chip primary');
+            openBtn(acts, 'inventory', p.key, 'افتح الدفعات والمخزون'); b.parentElement.append(acts, st2); readAt = 0; return {ok: true};
           }, {disabled: short, warn: short ? 'المخزون غير المخصص لا يكفي. زوّد المخزون أولًا من شاشة المخزون.' : null, okLabel: 'اعتمد التخصيص'});
         if (short) { const acts = el('div', 'f99xc-actions'); openBtn(acts, 'inventory', p.key); list.lastChild.querySelector('.f99xc-card').append(acts); }
-      });
+      }
     }
     async function doRenewal(price, query) {
       packagePick(query, async p => {
@@ -412,6 +490,88 @@
         }, {okLabel: 'اعتمد النسبة', note: 'تغيير النسب يحتاج موافقتك. الحاسبة تستخدم النسبة الجديدة فور الاعتماد.'});
     }
 
+    /* ---- «سوّ لي باقة»: saved as a hidden draft (enabled:false) through the original V39 save; codes/renewal follow with their own approval ---- */
+    const STORE_FALLBACK = '1525498116';
+    async function storefront() { const r = await w.finoRpc('fino_public_settings', {}, 12000); const st = r?.ok ? r.data?.settings?.f99x_storefront : null; return st && Array.isArray(st.products) ? st : null; }
+    async function doPackageCreate(spec) {
+      const st = await storefront(); if (!st) return say('ما قدرت أقرأ المتجر من المركزية الحين. ما تغير شيء.');
+      const cap = Number(w.F99CalcPolicy?.cap?.()) || 300; spec = spec || {};
+      const days = spec.hours ? null : (spec.days || 3), calcs = Math.min(spec.calcs || 3, cap);
+      const plan = ['1) حفظ الباقة كمسودة مخفية (لا تظهر ولا تُباع).'];
+      if (spec.codes) plan.push('2) تخصيص ' + spec.codes + ' كود + ملف سلة — ببطاقة موافقة مستقلة بعد الحفظ.');
+      if (spec.renewalPrice) plan.push((spec.codes ? '3' : '2') + ') عرض تجديد بـ' + spec.renewalPrice + ' ريال — يفتح محرر التجديد لإضافة رابط سلة.');
+      plan.push('التصميم والصورة والأسئلة والظهور: من محرر الباقة الأصلي مع المعاينة.');
+      card('مسودة باقة جديدة', [['الحالة بعد الحفظ', 'مسودة مخفية'], ['عدد الباقات الحالية', String(st.products.length)], ['الخطة', plan.join('\n')]],
+        [{key: 'name', label: 'اسم الباقة', value: spec.name || ''}, {key: 'tagline', label: 'وصف مختصر (اختياري)', value: ''},
+          {key: 'price', label: 'السعر (ريال)', value: spec.price ?? '', numeric: true}, {key: 'days', label: spec.hours ? 'المدة بالساعات' : 'مدة الكود بالأيام', value: spec.hours || days, numeric: true},
+          {key: 'calcs', label: 'الحسبات لكل كود (الحد ' + cap + ')', value: calcs, numeric: true},
+          {key: 'services', label: 'الخدمات', type: 'checks', options: PKG_SERVICES, value: spec.services && spec.services.length ? spec.services : []},
+          {key: 'category', label: 'التصنيف', type: 'select', options: [['finance', 'باقات التمويل'], ['contracts', 'العقود'], ['digital', 'الخدمات الرقمية'], ['other', 'خدمات أخرى']]}],
+        async v => {
+          const name = String(v.name || '').trim(), price = Number(v.price), dur = Number(v.days), cl = Number(v.calcs), services = Array.isArray(v.services) ? v.services : [];
+          if (name.length < 2 || name.length > 80) return {ok: false, reason: 'اكتب اسم الباقة (2 إلى 80 حرف).'};
+          if (!/^\d+(\.\d{1,2})?$/.test(String(v.price)) || price > 100000) return {ok: false, reason: 'السعر غير صحيح.'};
+          const minutes = spec.hours ? Math.round(dur * 60) : Math.round(dur * 1440);
+          if (!Number.isFinite(minutes) || minutes < 60 || minutes > 3650 * 1440) return {ok: false, reason: 'المدة غير صحيحة.'};
+          if (!Number.isInteger(cl) || cl < 1 || cl > cap) return {ok: false, reason: 'الحسبات لازم تكون بين 1 و' + cap + '.'};
+          if (!services.length) return {ok: false, reason: 'اختر خدمة وحدة على الأقل.'};
+          const cur = await storefront(); if (!cur) return {ok: false, reason: 'تعذرت قراءة المتجر؛ ما تغير شيء.'};
+          if (cur.products.length >= 60) return {ok: false, reason: 'وصلت الحد الأقصى 60 باقة.', final: true};
+          if (cur.products.some(x => norm(x.name) === norm(name))) return {ok: false, reason: 'فيه باقة بنفس الاسم. غيّر الاسم.'};
+          const key = 'pkg-' + (w.crypto?.randomUUID ? w.crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2));
+          const prod = {key, name, tagline: String(v.tagline || '').slice(0, 160), price, duration_minutes: minutes, max_calculations: cl, services, category: v.category || 'finance',
+            enabled: false, catalog_visible: false, checkout_mode: 'link', url: '', salla_product_id: '', allowed_sectors: [], banks: [], restarts: 3};
+          const expected = Number(cur.version || 0);
+          const value = {...cur, store_id: /^[0-9]{5,20}$/.test(String(cur.store_id || '')) ? cur.store_id : STORE_FALLBACK, products: [...cur.products, prod], version: Math.max(Date.now(), expected + 1)};
+          const r = await call('f99v39_admin_save_store_and_quota', {p_value: value, p_expected_version: expected});
+          if (!r.ok) return {ok: false, reason: 'رفضت المركزية الحفظ: ' + r.reason};
+          const chk = await storefront(); if (!chk || Number(chk.version) !== value.version || !chk.products.some(x => x.key === key)) return {ok: false, reason: 'الحفظ ما تأكد من المركزية؛ لا تعيد الإنشاء قبل فتح محرر الباقات.', final: true};
+          const b = say('تم ✓ حفظت «' + name + '» كمسودة مخفية في المركزية. ما تظهر للعملاء ولا تنباع إلا لما تضيف رابط سلة وتفعّل الظهور من محرر الباقة.');
+          const acts = el('div', 'f99xc-actions'); btn(acts, 'افتح محرر الباقة (التصميم والمعاينة)', () => go('package', key), 'f99xc-chip primary');
+          if (!spec.codes) btn(acts, 'خصص أكواد لها', () => say('اكتب: «خصص 100 كود لباقة ' + name + '»'), 'f99xc-chip');
+          b.parentElement.append(acts); readAt = 0;
+          if (spec.codes) setTimeout(() => allocateFor(prod, spec.codes), 200);
+          if (spec.renewalPrice) { const a2 = el('div', 'f99xc-actions'); btn(a2, 'جهّز عرض التجديد بـ' + spec.renewalPrice + ' ريال', () => { closeChat(true); w.FINO99V74OwnerRenewal?.(key); setTimeout(() => prefillPrice(spec.renewalPrice), 1500); }, 'f99xc-chip'); b.parentElement.append(a2); }
+          return {ok: true};
+        }, {okLabel: 'اعتمد واحفظ كمسودة', note: 'ما نفذت شيء للحين. عدّل الحقول ثم اضغط «اعتمد». الأسعار والأكواد الحالية ما تتأثر.'});
+    }
+
+    /* ---- «عدّل سياسة الحاسبة العقارية»: early-settlement policy with a worked impact example before approval ---- */
+    function impactExample(s, policy) {
+      const E = w.F99MEarly; if (!E?.estimate) return null;
+      const bank = (Array.isArray(s.banks) ? s.banks : []).find(b => b.enabled !== false && Number(b.baseRate) > 0); if (!bank) return null;
+      try {
+        const months = 300, finance = 500000, rate = Number(bank.baseRate), rm = rate / 1200, pay = finance * rm / (1 - Math.pow(1 + rm, -months));
+        const result = {months, finance, rate, method: 'reducing', bankPaymentPhases: [{start: 1, end: months, value: pay}]};
+        return {bank: bank.name, rate, rows: [12, 24, 36, 60].map(k => [k, E.estimate(result, k, policy)])};
+      } catch (e) { return null; }
+    }
+    const SAR = x => Math.round(Number(x) || 0).toLocaleString('ar-SA') + ' ريال';
+    async function doMortgagePolicy(changes) {
+      const E = w.F99MEarly; if (!E?.normalizePolicy) return say('وحدة السداد المبكر غير محملة. افتحها من «التحكم المباشر».');
+      const s = await mortgageState(); if (!s) return say('ما قدرت أقرأ إعدادات العقاري من المركزية.');
+      const cur = E.normalizePolicy(s.earlySettlement || {}); const next = E.normalizePolicy({...cur, ...(changes || {})});
+      const L = {enabled: 'إظهار السداد المبكر للعميل', warnPaidMonths: 'التحذير قبل (شهر مدفوع)', minProfitMonths: 'حد أدنى للأرباح (شهر)', compensationProfitMonths: 'تعويض/رسوم إدارية (شهر أرباح)', fixedFee: 'رسوم ثابتة (ريال)'};
+      const diff = Object.keys(L).filter(k => cur[k] !== next[k]);
+      const rows = Object.keys(L).map(k => [L[k], (k === 'enabled' ? (cur[k] ? 'ظاهر' : 'مخفي') : cur[k]) + (diff.includes(k) ? ' ← ' + (k === 'enabled' ? (next[k] ? 'ظاهر' : 'مخفي') : next[k]) : '')]);
+      const ex = impactExample(s, next), exOld = impactExample(s, cur);
+      if (ex) rows.push(['الأثر (مثال: 500 ألف، 25 سنة، ' + ex.bank + ' ' + ex.rate + '%)', ex.rows.map(([k, r], i) => 'بعد ' + k + ' شهر: ' + SAR(r.settlementAmount) + (exOld && diff.length ? ' (كان ' + SAR(exOld.rows[i][1].settlementAmount) + ')' : '')).join('\n')]);
+      card('مسودة تعديل سياسة الحاسبة العقارية (السداد المبكر)', rows,
+        [{key: 'enabled', label: 'إظهار السداد المبكر للعميل', type: 'select', options: next.enabled ? [['1', 'ظاهر'], ['0', 'مخفي']] : [['0', 'مخفي'], ['1', 'ظاهر']]},
+          {key: 'warnPaidMonths', label: L.warnPaidMonths, value: next.warnPaidMonths, numeric: true}, {key: 'minProfitMonths', label: L.minProfitMonths, value: next.minProfitMonths, numeric: true},
+          {key: 'compensationProfitMonths', label: L.compensationProfitMonths, value: next.compensationProfitMonths, numeric: true}, {key: 'fixedFee', label: L.fixedFee, value: next.fixedFee, numeric: true}],
+        async v => {
+          const pol = E.normalizePolicy({...next, enabled: v.enabled === '1', warnPaidMonths: Number(v.warnPaidMonths), minProfitMonths: Number(v.minProfitMonths), compensationProfitMonths: Number(v.compensationProfitMonths), fixedFee: Number(v.fixedFee)});
+          const fresh = await mortgageState(); if (!fresh || fresh.version !== s.version) return {ok: false, reason: 'تغيرت الإعدادات من مكان آخر؛ أعد الطلب.', final: true};
+          const val = {...fresh, earlySettlement: pol, version: Date.now()};
+          const r = await call('fino_admin_upsert_setting', {p_setting_key: 'f99m_mortgage', p_value: val}); if (!r.ok) return {ok: false, reason: 'فشل الحفظ: ' + r.reason};
+          const chk = await mortgageState(); if (!chk || chk.version !== val.version) return {ok: false, reason: 'الحفظ لم يتأكد من المركزية.', final: true};
+          say('تم ✓ حُدثت سياسة السداد المبكر في الحاسبة العقارية' + (pol.enabled ? ' وهي ظاهرة للعملاء.' : ' وهي مخفية عن العملاء.') + ' معادلات البنك نفسها ما تغيرت؛ هذا تقدير فوق جدول البنك.');
+          return {ok: true};
+        }, {okLabel: 'اعتمد السياسة', note: 'الأثر محسوب على مثال توضيحي من نسبة بنك مسجل. ما نفذت شيء قبل «اعتمد».'});
+      const acts = el('div', 'f99xc-actions'); openBtn(acts, 'early', null, 'افتح محرر السداد المبكر الكامل'); openBtn(acts, 'advanced', null, 'سياسات المنتجات المتقدمة لكل بنك'); list.lastChild.querySelector('.f99xc-card')?.append(acts);
+    }
+
     async function brain(text) {
       if (brainOff) return null;
       // The AI brain exists only on the private preview server; on the static official site it is skipped
@@ -441,6 +601,8 @@
         case 'allocate': return doAllocate(u.count, u.query || text);
         case 'renewal_offer': return doRenewal(u.price, u.query || text);
         case 'package_edit': return doPackageEdit(u.fields, u.query || text);
+        case 'package_create': return doPackageCreate(u.spec || parsePackageSpec(text));
+        case 'mortgage_policy': return doMortgagePolicy(u.changes || parseEarlyPolicy(text));
         case 'bank_rates': return doBankRates();
         case 'bank_rate_set': return doBankRateSet(u.rate, u.source, u.query || text);
         case 'open': return go(u.route);
@@ -525,7 +687,7 @@
     return {open, close: () => closeChat(true), send};
   }
 
-  const api = {understand, parseNumber, matchPackage, priorities, report, norm, install: null};
+  const api = {understand, parseNumber, matchPackage, priorities, report, norm, parsePackageSpec, parseEarlyPolicy, isPkgCreate, install: null};
   api.install = w => { const ui = install(w); api.open = ui.open; api.close = ui.close; api.send = ui.send; };
   return api;
 });

@@ -23,9 +23,10 @@
   if(ownerHub()&&hub&&!ownerButton){ownerButton=node('button','إعداد المساعد الصوتي الاختياري');ownerButton.type='button';ownerButton.className='btn secondary';ownerButton.id='f99d1-owner-voice';ownerButton.addEventListener('click',event=>{if(event.isTrusted&&ownerHub())openSettings();});hub.appendChild(ownerButton);}
   if(ownerButton)ownerButton.hidden=!ownerHub();
  }
+ let voiceFails=0;
  async function refresh(){
   if(stopped||busy)return;busy=true;
-  try{settings=normalized(await call('f99d1_voice_public'));}catch{settings=null;}finally{busy=false;reconcile();}
+  try{settings=normalized(await call('f99d1_voice_public'));voiceFails=0;}catch{settings=null;voiceFails++;if(voiceFails>=2&&timer){window.clearInterval(timer);timer=null;}}finally{busy=false;reconcile();}
  }
  async function openSettings(){
   if(!ownerHub()||document.getElementById('f99d1-voice-dialog'))return;
