@@ -57,7 +57,6 @@
     const id = identity();
     const m = B.mountCustomerAction(host,{api:{want:b=>{assertIdentity(id);return api.want(b);}},
       selectedBank:()=>bank(options.selectedBank()), onAvailable:async (...args)=>{assertIdentity(id);return options.onAvailable?.(...args);}});
-    const button = host.querySelector('button'); if (button) button.textContent = 'طلب متابعة';
     return {destroy(){m.destroy();host.removeEventListener('click',stopSynthetic,true);}};
   }
   function registerPreview(mount, current) {

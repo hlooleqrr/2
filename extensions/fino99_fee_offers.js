@@ -140,7 +140,7 @@
           } catch (_) { if (!destroyed) { status.textContent = 'تعذر تأكيد الاتصال؛ أعد المحاولة بنفس الطلب.'; accept.disabled = false; } }
           finally { busy = false; }
         });
-        button(doc, root, 'ليس الآن', () => { if (busy) return; root.hidden = true; o.onDecline?.(); });
+        button(doc, root, 'إغلاق العرض', () => { if (busy) return; root.hidden = true; o.onDecline?.(); });
         return r;
       } catch (_) { if (!destroyed && gen === generation) { root.hidden = false; root.replaceChildren(status); status.textContent = 'تعذر تحميل العرض؛ لا يوجد مبلغ مؤكد محليًا.'; } return { ok: false }; }
     }

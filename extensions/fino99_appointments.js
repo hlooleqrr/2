@@ -934,12 +934,9 @@
       void openOffer(tile.dataset.productKey);
     }, true);
     function mountEntry() {
-      const host = d.querySelector('#f99l-root .f99l-main') || d.querySelector('#page1 .finium-entry');
-      if (host && !d.getElementById('f99a9-catalog-entry')) {
-        const box = el('section', 'f99a9-entry'); box.id = 'f99a9-catalog-entry';
-        box.append(el('h3', '', 'الإرشادات والخدمات البشرية'), el('p', '', 'اسم الخدمة وصورتها وسعرها ومدتها والشروط قبل الشراء. لديك كود؟ فعّله من دخول المنصة أعلاه.'));
-        button(box, 'عرض كتالوج الخدمات والمواعيد', openCatalog, true); host.append(box);
-      }
+      // Attachment 19: no human-services section on the public home page. Services remain
+      // reachable only through their own approved storefront product and the owner panel.
+      d.getElementById('f99a9-catalog-entry')?.remove();
       const ownerButton = d.querySelector('#ownerHub .owner-grid [onclick*="F99O2OpenAdmin"]');
       if (ownerButton) {
         const small = ownerButton.querySelector('small');

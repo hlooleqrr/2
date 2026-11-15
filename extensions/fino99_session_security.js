@@ -195,7 +195,6 @@
     function button(host, label, run) { const b = element('button', label, 'f99s12-button'); b.type = 'button'; b.onclick = ev => { if (ev.isTrusted !== true) return; Promise.resolve(run(ev)).catch(() => notice('تعذر التحقق من المركزية. لم نعتمد نجاحًا محليًا.')); }; host.append(b); return b; }
     function field(host, label, tag = 'input') { const wrap = element('label', null, 'f99s12-field'), n = element(tag); wrap.append(element('span', label), n); host.append(wrap); return n; }
     function notice(text) { if (!panel) return; let n = panel.querySelector('[data-s12-status]'); if (!n) {n = element('p'); n.dataset.s12Status = '1'; n.setAttribute('role', 'status'); panel.append(n);} n.textContent = text; }
-    function declineOnce() { const reply = ctrl.flow.decline(); if (reply && panel?.isConnected) { const n = element('p', reply, 'f99s12-ack'); n.setAttribute('role','status'); panel.before(n); } }
     function sheet(title, host, variant = '') {
       panel?.remove(); panel = element('section', null, 'f99s12-panel ' + variant); panel.dir = 'rtl'; panel.setAttribute('aria-label', title); panel.append(element('h3', title));
       (host || d.getElementById('finoBotChat') || d.getElementById('page1') || d.body).append(panel); return panel;
@@ -329,47 +328,28 @@
       }
       button(host, 'تخطي وإنهاء الجلسة', () => still(snap) && ctrl.end());
     }
-    async function renewalStage(snap, host) {
-      if (!still(snap)) return;
-      feeMount?.destroy(); feeMount = null;
-      host.replaceChildren(element('h3', 'عرض تجديد — اختياري'));
-      let ctx; try { ctx = await renewalContext(renewalCode, snap); } catch (_) {}
-      if (!still(snap) || !host.isConnected) return;
-      if (!validOffers(ctx, ctrl.now()).length) { feedback(snap, host); return; }
-      renderOffers(host, ctx, snap);
-      button(host, 'ليس الآن', () => { declineOnce(); feedback(snap, host); });
-      button(host, 'متابعة إلى رأيي وإنهاء الجلسة', () => feedback(snap, host));
-    }
-    async function feesStage(snap, host) {
-      const s = ctrl.context().state;
-      const next = () => renewalStage(snap, host);
-      if (w.F99FeeOffers?.createApi && w.F99FeeOffers?.mountClientOffer) {
-        /* B17_FRONTEND_INTEGRATION_V1 */
-        const api = w.F99FeeOffers.createApi({rpc: w.F99B17Integration.guardedF13Rpc((fn, args, ...rest) => w.finoRpc(fn, args, ...rest.length ? rest : [20000])), entryContext: () => still(snap) ? {entryToken: snap.token, deviceId: snap.device} : null});
-        feeMount = w.F99FeeOffers.mountClientOffer(host, {api, onDecline: () => { declineOnce(); void next(); }, onAccepted: () => { if (still(snap)) notice('سُجل الاهتمام بالشروط فقط؛ لا توقيع أو دفع. اختر المتابعة بعد مراجعة العرض.'); }});
-        w.F99B17Integration.registerPreview(feeMount, () => still(snap));
-        const result = await feeMount.ready;
-        if (!still(snap)) return;
-        if (result?.ok && result.offer) { button(host, 'متابعة دون إجراء إضافي', next); return; }
-        // Keep the existing hidden preview mounted until next()/destroyFlow; explicit intent refreshes it.
-      }
-      // No passive financial amount: chosen-bank request/intent must precede a quote.
-      if (typeof w.F99V49CompletionOpen === 'function') {
-        button(host, 'طلب متابعة', () => { if (still(snap)) w.F99V49CompletionOpen(); });
-        button(host, 'متابعة دون طلب', next);
-        button(host, 'ليس الآن', () => { declineOnce(); void next(); });
-      } else await next();
-    }
-    function complete(serviceComplete = false) {
+    // Owner order (attachment 19): no automatic completion sheet, no forced fee/renewal
+    // stage and no invented wording after a calculation. The calculator keeps its original
+    // V82 review/new-calculation/follow-up choices. This sheet is only an explicit,
+    // optional feedback step before ending the conversation or a finished human service.
+    function complete(serviceComplete = false, mountHost = null) {
       const snap = ctrl.context();
-      if (runtime?.owner?.() || snap.scope !== 'entry' || !ctrl.active() || !ctrl.flow.start(serviceComplete === true || runtime.snapshot().resultReady)) return false;
+      if (runtime?.owner?.() || snap.scope !== 'entry' || !ctrl.active()) return false;
+      if (serviceComplete === true && !ctrl.flow.start(true)) return false;
       const visiblePage = d.querySelector('.page.active'), services = d.getElementById('f99a10-overlay');
-      const mount = serviceComplete === true && services && !services.hidden ? d.getElementById('f99a10-content') :
-        visiblePage?.id === 'specialistBotPage' ? d.getElementById('finoBotChat') : visiblePage?.querySelector('.viewport') || visiblePage;
-      const host = sheet('اكتملت الخدمة', mount, 'f99s12-completion');
-      host.append(element('p', 'نتيجتك متاحة للمراجعة والحفظ والمشاركة. أكمل الخطوات الاختيارية حين تنتهي.'));
-      button(host, 'انتهيت من مراجعة النتيجة وحفظها — متابعة', async () => { if (still(snap)) { host.replaceChildren(); await feesStage(snap, host); } });
+      const mount = mountHost || (serviceComplete === true && services && !services.hidden ? d.getElementById('f99a10-content') :
+        visiblePage?.id === 'specialistBotPage' ? d.getElementById('finoBotChat') : visiblePage?.querySelector('.viewport') || visiblePage);
+      const host = sheet('يهمّنا رأيك', mount, 'f99s12-completion');
+      feedback(snap, host);
       return true;
+    }
+    function endConversation() {
+      if (!ctrl.active()) { ctrl.replace(null); clearLocal(true); w.location.reload(); return; }
+      if (feedbackEnabled() && complete(false, d.getElementById('finoBotChat'))) {
+        button(panel, 'رجوع للمحادثة', () => { panel?.remove(); panel = null; });
+        panel?.scrollIntoView?.({block: 'nearest', behavior: 'smooth'}); return;
+      }
+      void ctrl.end();
     }
     function tick() {
       if (!runtime || !ctrl.context().token || runtime.owner()) return;
@@ -406,8 +386,9 @@
     function boot() {
       if (!runtime) return;
       hookLogin();
+      // Attachment 19: the receipt-only gateway is removed from the public home page.
       const host = d.getElementById('f99l-codes') || d.querySelector('#page1 .finium-entry');
-      if (host && !d.getElementById('f99s12-receipt-login')) { const b = button(host, 'إدارة موعدي بكودي — إيصال فقط', receiptLogin); b.id = 'f99s12-receipt-login'; }
+      d.getElementById('f99s12-receipt-login')?.remove();
       try {
         if (host && w.sessionStorage?.getItem('f99s12_logout_notice') === 'UNCONFIRMED') { w.sessionStorage.removeItem('f99s12_logout_notice'); const n = element('p','مُسحت جلسة هذا الجهاز، لكن تعذر تأكيد اكتمال الإغلاق في الخادم.'); n.setAttribute('role','status'); host.append(n); }
       } catch (_) {}
@@ -436,24 +417,34 @@
       const oldFeedback = w.FINO99V74CustomerFeedback;
       if (typeof oldFeedback === 'function') w.FINO99V74CustomerFeedback = function () { return runtime.owner() ? oldFeedback.apply(this, arguments) : false; };
       const oldFinish = w.F99V82FinishReview;
-      if (typeof oldFinish === 'function') w.F99V82FinishReview = function () { if (runtime.owner()) return oldFinish.apply(this, arguments); if (ctrl.active() && runtime.snapshot().resultReady) { if (!panel) complete(); panel?.querySelector('button')?.focus(); } };
+      // Keep the ORIGINAL V82 review message and choices; only add an explicit end action
+      // that returns the customer to the main page.
+      if (typeof oldFinish === 'function') w.F99V82FinishReview = function () {
+        const before = d.querySelectorAll('#finoBotChat .f82-end-actions').length;
+        const value = oldFinish.apply(this, arguments);
+        if (runtime.owner() || !ctrl.active()) return value;
+        const all = d.querySelectorAll('#finoBotChat .f82-end-actions'), card = all.length > before ? all[all.length - 1] : null;
+        const row = card?.querySelector(':scope > div');
+        if (row && !row.querySelector('[data-f99s12-end]')) {
+          const b = d.createElement('button'); b.type = 'button'; b.dataset.f99s12End = '1'; b.textContent = 'إنهاء المحادثة والعودة للرئيسية';
+          b.onclick = ev => { if (ev.isTrusted !== true) return; card.remove(); endConversation(); };
+          row.append(b);
+        }
+        return value;
+      };
       const oldNew = w.F99V82RequestNewCalculation;
       if (typeof oldNew === 'function') w.F99V82RequestNewCalculation = async function () {
         if (runtime.owner()) return oldNew.apply(this, arguments);
         if (!await ctrl.verify()) return;
-        if (ctrl.context().state?.calculator_allowed !== true) { if (!panel) complete(); return; }
+        // The original V82 reads the authoritative balance and offers renewal at zero;
+        // the server still refuses any calculation that is not allowed.
         return oldNew.apply(this, arguments);
       };
       // Only observe completion phase and original result presence; never mutate result/image/export functions.
       const ready = () => {
         if (runtime.owner()) return;
-        // The public landing mounts after S12 boot; move the existing receipt button
-        // out of the permanently hidden legacy login host, without recreating handlers.
-        const receiptButton = d.getElementById('f99s12-receipt-login'), receiptHost = d.getElementById('f99l-codes');
-        if (receiptButton && receiptHost && receiptButton.parentElement !== receiptHost) receiptHost.append(receiptButton);
         for (const node of d.querySelectorAll('#v74-client-feedback,#v74-client-renew,#f99v23-end')) if (!node.hidden) node.hidden = true;
         const page = d.querySelector('.page.active'); if (page && !allowPage(page.id, browserContext())) w.showPage?.('page1');
-        if (runtime.snapshot().resultReady) complete();
       };
       observer = new w.MutationObserver(ready); observer.observe(d.body, {childList:true, subtree:true, attributes:true, attributeFilter:['class','hidden']});
       try { if (w.sessionStorage.getItem(MARKER)) {ctrl.replace(null); clearLocal(false);} else {const e = runtime.entry(); if (e?.entryToken) {ctrl.replace({scope:'entry', token:e.entryToken, device:e.deviceId || runtime.device(), owner:false}); void ctrl.verify();} else conceal(false);} } catch (_) {ctrl.replace(null); clearLocal(false);}
@@ -465,7 +456,7 @@
     w.addEventListener('pageshow', ev => { if (!ev.persisted || !runtime) return; conceal(true); if (runtime.owner()) {conceal(false); return;} ctrl.suspend(); if (ctrl.context().token) void ctrl.verify(); else clearLocal(false); });
     w.addEventListener('popstate', () => { if (!runtime?.owner?.()) {ctrl.suspend(); if (ctrl.context().token) void ctrl.verify(); else clearLocal(false);} });
     w.addEventListener('hashchange', () => { const page = d.querySelector('.page.active'); if (page && !allowPage(page.id, browserContext())) w.showPage?.('page1'); });
-    w.addEventListener('f99s12:service-complete', ev => complete(ev.detail?.serviceComplete === true));
+    w.addEventListener('f99s12:service-complete', ev => { if (ev.detail?.serviceComplete === true) complete(true); });
     api.bindRuntime = bindRuntime;
     api.allowPage = page => allowPage(page, browserContext());
     api.guard = () => runtime?.owner?.() === true || ctrl.active() && ctrl.context().scope === 'entry';

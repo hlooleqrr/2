@@ -245,8 +245,10 @@
       const s = serviceOf(x), box = card(host, s.title || x.name || 'الباقة');
       text(box, s.description || x.description || '');
       const p = x.presentation || s.presentation || x, original = storeProducts().find(p => p.key === productKey(x)), state = original?.launch_status === 'coming_soon' ? 'soon' : p.status || x.status;
-      const tag = text(box, state === 'available' && current?.role === 'public' && !canPurchase(x) ? 'غير متاحة للشراء حاليًا' : state === 'custom' ? p.status_text || STATES.custom : STATES[state] || 'الحالة تحتاج تحققًا مركزيًا', 'f99a10-badge'); tag.dataset.state = state || 'unknown';
-      if (state !== 'soon' && s.price != null) text(box, Number(s.price).toLocaleString('ar-SA') + ' ريال — السعر المحفوظ للباقة');
+      const ownerLaunchText = String(original?.launch_text || '').trim().slice(0, 300);
+      const tag = text(box, ownerLaunchText || (state === 'available' && current?.role === 'public' && !canPurchase(x) ? 'غير متاحة للشراء حاليًا' : state === 'custom' ? p.status_text || STATES.custom : STATES[state] || 'الحالة تحتاج تحققًا مركزيًا'), 'f99a10-badge'); tag.dataset.state = state || 'unknown';
+      if (ownerLaunchText && current?.role === 'public' && !canPurchase(x)) text(box, 'الشراء غير متاح حاليًا', 'f99a9-muted');
+      if (state !== 'soon' && s.price != null && (current?.role !== 'public' || canPurchase(x))) text(box, Number(s.price).toLocaleString('ar-SA') + ' ريال — السعر المحفوظ للباقة');
       if (x.reason || x.reasons?.length) text(box, x.reason || x.reasons.join(' • '), 'f99a9-muted');
       return box;
     }
@@ -780,7 +782,9 @@
         let badge = tile.querySelector('.f99a10-store-state');
         if (!badge) { badge = el('p', 'f99a10-badge f99a10-store-state'); tile.append(badge); }
         const allowed = canPurchase(x), label = state === 'custom' ? p.status_text || STATES.custom : STATES[state] || 'الحالة غير معلومة';
-        const message = x ? (state === 'available' ? (allowed ? label : 'غير متاحة للشراء حاليًا') : label + (state === 'custom' && !allowed ? ' — الشراء غير متاح' : '')) : 'الحالة تحتاج تحققًا مركزيًا — لا نؤكد توفر الشراء';
+        const ownerLaunchText = String(original?.launch_text || '').trim().slice(0, 300);
+        const message = x ? (ownerLaunchText ? (allowed ? '' : 'الشراء غير متاح حاليًا') : state === 'available' ? (allowed ? label : 'غير متاحة للشراء حاليًا') : label + (state === 'custom' && !allowed ? ' — الشراء غير متاح' : '')) : 'الحالة تحتاج تحققًا مركزيًا — لا نؤكد توفر الشراء';
+        const price = tile.querySelector('.f99v6-price'); if (price) { if (!allowed) price.style.setProperty('display', 'none', 'important'); else price.style.removeProperty('display'); }
         if (badge.textContent !== message) badge.textContent = message;
         if (badge.dataset.state !== state) badge.dataset.state = state;
       }
