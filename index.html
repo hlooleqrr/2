@@ -1670,7 +1670,7 @@
   font-weight:900!important;
 }
 .finance-detail.commodity-fee small::after{
-  content:" • قد تختلف حسب البنك والسلعة وقد لا توجد";
+  content:" • محسوبة 1% وقد تختلف حسب البنك والسلعة وقد لا توجد";
   color:#a12626;
   font-weight:900;
 }
@@ -6360,7 +6360,7 @@ window.F99V45DefaultCover=function(p){const k=String(p?.key||'').toLowerCase(),n
 <script src="./extensions/bank_followup17.js?v=20261115r18"></script>
 <script src="./extensions/bank_followup17_bootstrap.js?v=20261115r18"></script>
 <script src="./extensions/fino99_session_security.js?v=20261115r18"></script>
-<script src="./extensions/fino99_performance.js?v=20261115r18"></script>
+<script src="./extensions/fino99_performance.js?v=20261115r19b"></script>
 <script>
 window.F99Performance && window.F99Performance.install(window);
 
@@ -11927,7 +11927,7 @@ function updateSmartCommodityText(){
   const desc=document.getElementById('smartCommodityDesc');
   if(text)text.textContent=enabled?'مفعّلة':'مطفأة';
   if(desc)desc.textContent=enabled
-    ? `مفعّلة — يتم احتساب رسوم فرق السلعة بنسبة ${fmt(getFINOAdminConfig()?.banks?.[smartSelectedBank]?.commodityFeePercent??1)}% من أصل التمويل قبل الرسوم والسداد.`
+    ? 'مفعّلة — يتم احتساب رسوم فرق السلعة بنسبة 1% من صافي التمويل قبل الرسوم والسداد.'
     : 'مطفأة — الحسبة بدون رسوم فرق السلعة.';
   const requested=Number(document.getElementById('smartRequestedAmount')?.value||0);
   if(requested>0 && document.getElementById('smartResultPage')?.classList.contains('active')){
@@ -12348,7 +12348,7 @@ function smartConsumerCompanyEligibility(data={}){
   const mortgageCurrent=Math.max(0,Number(data.mortgageCurrent||0));
   const mortgageMax=Math.max(0,Number(data.mortgageMax||0));
   const mortgageUsed=hasMortgage?Math.max(mortgageCurrent,mortgageMax):0;
-  const overallPct=Math.max(0,Math.min(80,Number(data.deductionPercent??smartAutoDeductionPercent(salary))));
+  const overallPct=Math.max(0,Math.min(80,Number(data.deductionPercent||smartAutoDeductionPercent(salary))));
   const nonMortgageCap=salary*(activeAccess?.record?.central&&!activeAccess?.record?.owner?fino99ActivePackage().consumerLimit:45)/100;
   const nonMortgageUsed=personal+other;
   const availableBy45=nonMortgageCap-nonMortgageUsed;
@@ -12472,7 +12472,7 @@ function updateSmartEligibilityPreview(){
 }
 function smartEligibilityForData(data={}){
   const salary=Number(data.salary||0);
-  const pct=Math.max(0,Math.min(80,Number(data.deductionPercent??smartAutoDeductionPercent(salary))));
+  const pct=Math.max(0,Math.min(80,Number(data.deductionPercent||smartAutoDeductionPercent(salary))));
   const mortgage=!!data.hasMortgage;
   const mortgageCurrent=Math.max(0,Number(data.mortgageCurrent||0));
   const mortgageMax=Math.max(0,Number(data.mortgageMax||0));
@@ -12576,15 +12576,11 @@ async function calculateSmartPersonal(fromResult=false){
   const factor=1+(years*rate/100);
   const maxPrincipal=maxGross/factor;
 
-  // Use the already selected bank record; preserve the existing toggle and fee policy.
-  const selectedBankPolicy=getFINOAdminConfig()?.banks?.[smartSelectedBank]||{};
-  const commodityFeePercent=Math.max(0,Math.min(5,Number(selectedBankPolicy.commodityFeePercent??1)||0));
-  const additionalFee=selectedBankPolicy.additionalFeeEnabled?Math.max(0,Number(selectedBankPolicy.additionalFeeAmount)||0):0;
-  const feeRates=feeRatesForCommodity(commodityEnabled,commodityFeePercent);
+  const feeRates=feeRatesForCommodity(commodityEnabled);
   const maxAdminFee=maxPrincipal*feeRates.adminRate;
   const maxAdminVat=maxPrincipal*feeRates.adminVatRate;
   const maxCommodityFee=maxPrincipal*feeRates.commodityRate;
-  const maxNetBeforeDebt=maxPrincipal-maxAdminFee-maxAdminVat-maxCommodityFee-additionalFee;
+  const maxNetBeforeDebt=maxPrincipal-maxAdminFee-maxAdminVat-maxCommodityFee;
 
   const requestedInput=document.getElementById('smartRequestedAmount');
   const requestedNetMode=!!document.getElementById('smartRequestedNetMode')?.checked;
@@ -12630,14 +12626,14 @@ async function calculateSmartPersonal(fromResult=false){
   let principal=maxPrincipal;
   if(requested>0){
     principal=requestedNetMode
-      ? (requested+additionalFee)/(1-feeRates.totalRate)
+      ? requested/(1-feeRates.totalRate)
       : requested;
   }
 
   const adminFee=principal*feeRates.adminRate;
   const adminVat=principal*feeRates.adminVatRate;
   const commodityFee=principal*feeRates.commodityRate;
-  const netBeforeDebt=principal-adminFee-adminVat-commodityFee-additionalFee;
+  const netBeforeDebt=principal-adminFee-adminVat-commodityFee;
   const cashAfterDebt=netBeforeDebt-earlySettlement;
   const gross=principal*factor;
   const finalInstallment=gross/months;
@@ -12666,7 +12662,7 @@ async function calculateSmartPersonal(fromResult=false){
     if(!accepted||!f99QuotaIsCurrent(quotaContext))return false;
   }
   smartLastResult={
-    salary,rate,earlySettlement,external,commodityEnabled,commodityFeePercent,additionalFee,
+    salary,rate,earlySettlement,external,commodityEnabled,
     hasMortgage:smartHasMortgage,deductionPercent,
     financeKind:smartFinanceKind,financeKindName:smartFinanceKindName(),
     personalInstallment:smartPersonalInstallment,
@@ -12748,8 +12744,7 @@ async function calculateSmartPersonal(fromResult=false){
 
       <div class="finance-detail"><small>الرسوم الإدارية 0.5%</small><b>${moneyExact(adminFee)}</b></div>
       <div class="finance-detail"><small>ضريبة الرسوم الإدارية 15%</small><b>${moneyExact(adminVat)}</b></div>
-      ${commodityEnabled?`<div class="finance-detail commodity-fee"><small>رسوم فرق السلعة ${fmt(smartLastResult.commodityFeePercent)}%</small><b>${moneyExact(commodityFee)}</b></div>`:''}
-      ${additionalFee>0?`<div class="finance-detail"><small>رسوم بنكية إضافية</small><b>${moneyExact(smartLastResult.additionalFee)}</b></div>`:''}
+      ${commodityEnabled?`<div class="finance-detail commodity-fee"><small>رسوم فرق السلعة</small><b>${moneyExact(commodityFee)}</b></div>`:''}
 
       <div class="finance-detail"><small>صافي التمويل بعد الرسوم</small><b>${money(netBeforeDebt)}</b></div>
       ${earlySettlement>0?`<div class="finance-detail debt"><small>السداد المبكر للمديونية السابقة</small><b>${money(earlySettlement)}</b></div>`:''}
@@ -12758,7 +12753,7 @@ async function calculateSmartPersonal(fromResult=false){
 
     ${commodityEnabled?`
     <div class="commodity-note">
-      <b>رسوم فرق السلعة:</b> محسوبة في هذه الحسبة بنسبة ${fmt(smartLastResult.commodityFeePercent)}% من أصل التمويل قبل الرسوم، وقد تختلف حسب البنك ونوع السلعة، وقد لا توجد في بعض البنوك أو بعض السلع.
+      <b>رسوم فرق السلعة:</b> محسوبة في هذه الحسبة بنسبة 1%، وقد تختلف حسب البنك ونوع السلعة، وقد لا توجد في بعض البنوك أو بعض السلع.
     </div>
     `:''}
 
@@ -12795,7 +12790,7 @@ async function calculateSmartPersonal(fromResult=false){
         <div class="commodity-control-top">
           <div class="commodity-control-copy">
             <b>رسوم فرق السلعة</b>
-            <small>${commodityEnabled?`مفعّلة: الحسبة تخصم ${fmt(smartLastResult.commodityFeePercent)}% من أصل التمويل قبل الرسوم.`:'مطفأة: الحسبة بدون رسوم فرق السلعة.'}</small>
+            <small>${commodityEnabled?'مفعّلة: الحسبة تخصم 1% من صافي التمويل.':'مطفأة: الحسبة بدون رسوم فرق السلعة.'}</small>
           </div>
           <label class="commodity-toggle">
             <input id="smartResultCommodityToggle" type="checkbox" ${commodityEnabled?'checked':''} onchange="setSmartCommodityFromResult(this.checked)">
@@ -15309,8 +15304,7 @@ ${smartOwnerShowsDeduction()?`• نسبة الاستقطاع المستخدمة
 • إجمالي الأرباح: ${englishMoney(r.profit)}
 • الرسوم الإدارية: ${englishMoneyExact(r.adminFee)}
 • ضريبة الرسوم الإدارية: ${englishMoneyExact(r.adminVat)}
-${r.commodityEnabled?`• رسوم فرق السلعة ${englishNumber(r.commodityFeePercent??1,2)}%: ${englishMoneyExact(r.commodityFee)} (قد لا توجد في بعض البنوك أو بعض السلع)
-`:''}${r.additionalFee>0?`• رسوم بنكية إضافية: ${englishMoneyExact(r.additionalFee)}
+${r.commodityEnabled?`• رسوم فرق السلعة: ${englishMoneyExact(r.commodityFee)} (قد لا توجد في بعض البنوك أو بعض السلع)
 `:''}${r.earlySettlement>0?`• السداد المبكر للمديونية السابقة: ${englishMoney(r.earlySettlement)}
 `:''}${r.external>0?`• الالتزامات الشهرية الأخرى: ${englishMoney(r.external)}
 `:''}${includeSmartObligationImpactForClient()&&r.obligationImpact?.affected?`🔴 أثر الالتزامات: ${obligationImpactText(r.obligationImpact,n)}
@@ -16156,10 +16150,10 @@ async function createSmartDetailedPngBlob(){
   const note=getSmartClientNote();
   const canvas=document.createElement('canvas');
   canvas.width=1080;
-  canvas.height=2070+(r.additionalFee>0?100:0);
+  canvas.height=2070;
   const ctx=canvas.getContext('2d');
   ctx.fillStyle='#ffffff';
-  ctx.fillRect(0,0,1080,canvas.height);
+  ctx.fillRect(0,0,1080,2070);
   ctx.direction='rtl';
   ctx.textAlign='right';
   ctx.textBaseline='alphabetic';
@@ -16250,8 +16244,7 @@ async function createSmartDetailedPngBlob(){
     ['إجمالي الأرباح',englishMoney(r.profit),false],
     ['الرسوم الإدارية',englishMoneyExact(r.adminFee),false],
     ['ضريبة الرسوم الإدارية',englishMoneyExact(r.adminVat),false],
-    ...(r.commodityEnabled?[[`رسوم فرق السلعة ${englishNumber(r.commodityFeePercent??1,2)}%`,englishMoneyExact(r.commodityFee),true]]:[]),
-    ...(r.additionalFee>0?[['رسوم بنكية إضافية',englishMoneyExact(r.additionalFee),false]]:[]),
+    ...(r.commodityEnabled?[['رسوم فرق السلعة 1%',englishMoneyExact(r.commodityFee),true]]:[]),
     ['مدة الحسبة',`${r.months} شهر`,false],
     ...(smartOwnerShowsDeduction()?[['نسبة الاستقطاع',`${englishNumber(r.deductionPercent,2)}%`,false]]:[]),
     ['قسط الشخصي القائم',englishMoney(r.personalInstallment||0),false]
@@ -16362,7 +16355,7 @@ async function createSmartDetailedPngBlob(){
     This removes the unnecessary white space at the bottom while keeping
     the exact same content, colors, typography, and proportions.
   */
-  const contentBottom=Math.min(canvas.height-30,Math.max(1180,y+205));
+  const contentBottom=Math.min(2040,Math.max(1180,y+205));
   const outputWidth=720;
   const scale=outputWidth/1080;
   const outputHeight=Math.ceil(contentBottom*scale);
@@ -17925,6 +17918,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  async function fetchStore(){try{const r=await window.finoRpc('fino_public_settings',{},12000);const st=r?.data?.settings?.[KEY];if(r?.ok&&st&&typeof st==='object'){cfg={...DEFAULT,...st,products:Array.isArray(st.products)?st.products.map(normalizeProduct):[]};if(r.data?.settings?.f99c_finance?.bank_offers){window.F99CFinanceSettings={...(window.F99CFinanceSettings||{}),...r.data.settings.f99c_finance}}loaded=true;renderButton();window.F99V26ApplyPublicLanding?.(cfg)}}catch(e){console.warn('Storefront refresh failed',e)}}
  function openShop(){
   const b=body('المتجر');
+  // Store17: the default config is not a central decision. Load first; fail with retry, never 'unpublished'.
+  if(!loaded){const wait=info('جارٍ تحميل الباقات...');b.append(wait);void fetchStore().then(()=>{if(!b.isConnected)return;if(loaded)return openShop();wait.textContent='تعذر تحميل الباقات الآن. حاول مرة أخرى بعد لحظات.';const retry=el('button','f99v6-primary','إعادة المحاولة');retry.type='button';retry.onclick=openShop;b.append(retry)});return}
   if(!cfg.enabled&&!cfg.catalog_preview&&!owner()){b.append(info('المتجر غير منشور للعملاء حالياً.'));return}
   if(owner()&&!cfg.enabled)b.append(info('معاينة المالك: المتجر مغلق للزوار حاليًا.'))
   const list=el('div','f99v6-tiles');
@@ -17942,10 +17937,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
    contents.append(el('h3','',p.name||'منتج'));
    if(p.tagline)contents.append(info(publicTagline(p)));
    if(p.launch_status==='coming_soon'){contents.append(el('div','f99v6-price f33-soon-label','ستطلق قريبًا'));}
-   else {const price=el('div','f99v6-price',money(effectivePrice(p))+' ريال');if(offerVisible(p)&&Number(p.old_price)>Number(p.price))price.prepend(el('s','',money(p.old_price)+' ريال'));contents.append(price);if(promoNode(p))contents.append(promoNode(p));}
+   else if(p.enabled===true||Number(effectivePrice(p))>0){const price=el('div','f99v6-price',money(effectivePrice(p))+' ريال');if(offerVisible(p)&&Number(p.old_price)>Number(p.price))price.prepend(el('s','',money(p.old_price)+' ريال'));contents.append(price);if(p.enabled===true&&promoNode(p))contents.append(promoNode(p));}
    contents.append(el('small','f99v6-features',serviceNames(p)));
    if(p.show_duration_note!==false){const n=el('small','f99v6-features',p.duration_note||(''+(Number(p.max_calculations)>0?Number(p.max_calculations)+' مرات للاحتساب • ':'')+'المدة: '+publicDuration(p.duration_minutes)+' من أول تفعيل؛ أيهما ينتهي أولًا'));n.style.fontSize=Math.max(10,Math.min(16,Number(p.duration_font_size)||11))+'px';contents.append(n)}
-   if(p.enabled!==true&&p.launch_status!=='coming_soon')contents.append(el('small','f29-soon','تفاصيل المنتج متاحة — التفعيل حسب سياسة هذه الباقة'));
+   // Store17: one truthful state from the saved product (enabled=false => not on sale), no "available" wording.
+   if(p.enabled!==true&&p.launch_status!=='coming_soon')contents.append(el('small','f29-soon','غير متاحة للشراء حاليًا'));
    const choose=el('button','f99v6-primary',p.launch_status==='coming_soon'?'تعرف على الباقة':'تفاصيل المنتج');choose.type='button';choose.onclick=()=>openDetail(p);
    contents.append(choose);tile.append(contents);list.append(tile);
   }
@@ -17956,11 +17952,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   const back=el('button','f99v6-text','العودة إلى المتجر');back.type='button';back.onclick=openShop;b.append(back);
   if(p.tagline)b.append(info(publicTagline(p)));if(p.purchase_qr_url&&urlOK(p.purchase_qr_url)&&p.launch_status!=='coming_soon'){const qr=el('img');qr.src=p.purchase_qr_url;qr.alt='رمز QR للشراء عبر سلة';qr.style.cssText='display:block;width:128px;height:128px;object-fit:contain;margin:10px auto';b.append(qr)}
   const summary=el('div','f99v6-summary');
-  if(p.launch_status==='coming_soon'){summary.append(el('strong','','ستطلق قريبًا — بدون تسعيرة حاليًا'));}else summary.append(el('strong','',money(effectivePrice(p))+' ريال'));
-  if(p.launch_status!=='coming_soon'&&offerVisible(p)&&Number(p.old_price)>Number(p.price))summary.append(el('s','',money(p.old_price)+' ريال'));
+  // Store17: a disabled product with no saved price shows its state, never "0.00 ريال".
+  const f17NoPrice=p.enabled!==true&&!(Number(effectivePrice(p))>0);
+  if(p.launch_status==='coming_soon'){summary.append(el('strong','','ستطلق قريبًا — بدون تسعيرة حاليًا'));}else if(f17NoPrice)summary.append(el('strong','','غير متاحة للشراء حاليًا'));else summary.append(el('strong','',money(effectivePrice(p))+' ريال'));
+  if(p.launch_status!=='coming_soon'&&!f17NoPrice&&offerVisible(p)&&Number(p.old_price)>Number(p.price))summary.append(el('s','',money(p.old_price)+' ريال'));
   const bronze=p.key==='fino99-bronze-buyout-20261107';
   if(p.show_duration_note!==false)summary.append(info(p.duration_note||('عدد مرات الحسبة: '+(Number(p.max_calculations)||3)+' • المدة: '+publicDuration(p.duration_minutes)+' من أول تفعيل. تنتهي الباقة عند نفاد مرات الحسبة أو انتهاء المدة، أيهما يسبق أولًا. وقد يتضمن الرمز آخر موعد للتفعيل. الدخول والخروج دون حسبة لا يخصمان من رصيد الحسابات.')));
-  b.append(summary);if(p.launch_status!=='coming_soon'&&promoNode(p))b.append(promoNode(p));
+  b.append(summary);if(p.launch_status!=='coming_soon'&&p.enabled===true&&promoNode(p))b.append(promoNode(p));
   if(p.launch_status==='coming_soon'){b.append(info('ها حصلت لك بيت؟ كم يعطونك للتمويل العقاري؟ — والله خبطوني، كل جهة تمويلية وكل موظف يعطيني حسبة! قريبًا حاسبة موحدة تساعدك تقارن.'));return}
   if(p.enabled!==true){b.append(info('هذه الباقة غير متاحة للشراء حاليًا. يمكنك الاطلاع على شروطها.'));return}
   const caution=String(p.warning_text||'').trim();
@@ -28665,7 +28663,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <link rel="stylesheet" href="./extensions/fino99_fee_offers.css?v=20261115r18">
 <script src="./extensions/fino99_fee_offers.js?v=20261115r18"></script>
 <link rel="stylesheet" href="./extensions/fino99_service_tools.css?v=20261115r18">
-<script src="./extensions/fino99_service_tools.js?v=20261115r18"></script>
+<script src="./extensions/fino99_service_tools.js?v=20261115r19"></script>
 <!-- F99 owner desktop 13: owner-only, device-local visual approval; load after fee/service modules. -->
 <link rel="stylesheet" href="./extensions/fino99_owner_desktop.css?v=20261115r18">
 <script src="./extensions/fino99_owner_desktop.js?v=20261115r18"></script>
@@ -28682,5 +28680,23 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <script src="./extensions/f99_owner_access.js?v=20261115r18"></script>
 <script src="./extensions/F99DeviceManager.js?v=20261115r18"></script>
 <script src="./extensions/f99_access_workspace.js?v=20261115r18"></script>
+<style id="f99-store17-layout">
+/* Store17 (owner order 2026-11-15 20:10): final, single source of store card layout.
+   Phone: one full-width card per row; tablet: 2; desktop: 3. No horizontal overflow, no cropped
+   promo images, names/descriptions/buttons fully visible. Content/prices/states are not changed here. */
+#f99s-modal{overflow-x:hidden!important}
+#f99s-modal .f99s-sheet{max-width:100%!important;box-sizing:border-box!important}
+#f99s-modal .f99v6-tiles{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:14px!important;align-items:stretch!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important}
+@media(min-width:601px){#f99s-modal .f99v6-tiles{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(min-width:1000px){#f99s-modal .f99v6-tiles{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+#f99s-modal .f99v6-tile,#f99s-modal .f99v6-tile.f36-coming-card{min-width:0!important;width:auto!important;max-width:100%!important;margin:0!important;grid-column:auto!important;box-sizing:border-box!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
+#f99s-modal .f99v6-tile>img{width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;aspect-ratio:16/10!important;object-fit:contain!important;background:#f3f8fc!important}
+#f99s-modal .f99v6-tile>div:not(.f64-code-entry){min-width:0!important;padding:14px!important;display:flex;flex-direction:column;gap:7px;flex:1}
+#f99s-modal .f99v6-tile h3,#f99s-modal .f99v6-tile .f99s-small,#f99s-modal .f99v6-tile small{overflow-wrap:anywhere;word-break:normal;white-space:normal!important}
+#f99s-modal .f99v6-tile h3{font-size:clamp(16px,4.4vw,20px)!important;line-height:1.5!important;margin:2px 0!important}
+#f99s-modal .f99v6-tile .f99v6-price{white-space:nowrap;font-size:clamp(18px,5vw,22px)!important}
+#f99s-modal .f99v6-tile button,#f99s-modal .f99v6-tile a{max-width:100%!important;box-sizing:border-box!important;white-space:normal;overflow-wrap:anywhere}
+#f99s-modal .f99v6-tile .f99v6-primary{width:100%!important;margin-top:auto!important;font-size:15px!important;padding:12px 10px!important}
+</style>
 </body>
 </html>

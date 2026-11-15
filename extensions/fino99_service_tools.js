@@ -244,9 +244,9 @@
     function summary(host, x) {
       const s = serviceOf(x), box = card(host, s.title || x.name || 'الباقة');
       text(box, s.description || x.description || '');
-      const p = x.presentation || s.presentation || x, state = p.status || x.status;
-      const tag = text(box, state === 'custom' ? p.status_text || STATES.custom : STATES[state] || 'الحالة تحتاج تحققًا مركزيًا', 'f99a10-badge'); tag.dataset.state = state || 'unknown';
-      if (s.price != null) text(box, Number(s.price).toLocaleString('ar-SA') + ' ريال — السعر المحفوظ للباقة');
+      const p = x.presentation || s.presentation || x, original = storeProducts().find(p => p.key === productKey(x)), state = original?.launch_status === 'coming_soon' ? 'soon' : p.status || x.status;
+      const tag = text(box, state === 'available' && current?.role === 'public' && !canPurchase(x) ? 'غير متاحة للشراء حاليًا' : state === 'custom' ? p.status_text || STATES.custom : STATES[state] || 'الحالة تحتاج تحققًا مركزيًا', 'f99a10-badge'); tag.dataset.state = state || 'unknown';
+      if (state !== 'soon' && s.price != null) text(box, Number(s.price).toLocaleString('ar-SA') + ' ريال — السعر المحفوظ للباقة');
       if (x.reason || x.reasons?.length) text(box, x.reason || x.reasons.join(' • '), 'f99a9-muted');
       return box;
     }
@@ -568,7 +568,7 @@
     async function openCatalog() {
       const s = {role: 'public'}, v = open(s, 'كتالوج الخدمات وحالات الباقات'); say('جاري قراءة الحالة والمخزون من المركزية...');
       try { const r = await call(s, 'catalog'); if (!active(v, s)) return; const items = products(r); say('الحالة معروضة من الخادم؛ لا يؤثر منع الشراء على حقوق الأكواد القديمة.');
-        for (const x of items) { const box = summary(content, x); const p = storeProducts().find(p => p.key === productKey(x)); if ((p?.services || []).some(k => KINDS.includes(k))) button(box, 'التفاصيل والتعليمات قبل الشراء', () => openOffer(productKey(x)), true); else text(box, 'تُستكمل شروط الأهلية والشراء من المتجر الأصلي.'); }
+        for (const x of items) { const p = storeProducts().find(p => p.key === productKey(x)); if (!isHumanStoreProduct(p)) continue; const box = summary(content, x); button(box, 'التفاصيل والتعليمات قبل الشراء', () => openOffer(productKey(x)), true); }
         button(content, 'لدي كود — دخول المنصة', login);
       } catch (e) { if (active(v, s)) { say(errorText(e), true); button(content, 'إعادة التحقق', openCatalog); } }
     }
@@ -773,10 +773,14 @@
     function paintStoreStates() {
       for (const tile of d.querySelectorAll('#f99s-modal .f99v6-tile[data-product-key]')) {
         if (protectedNode(tile)) continue;
+        const original = storeProducts().find(p => p.key === tile.dataset.productKey);
+        // Financial products keep the original flow; coming_soon keeps the original tile label only.
+        if (!isHumanStoreProduct(original) || original.launch_status === 'coming_soon') { tile.querySelector('.f99a10-store-state')?.remove(); continue; }
         const x = findProduct(publicStates, tile.dataset.productKey), p = x?.presentation || x || {}, state = p.status || 'unknown';
         let badge = tile.querySelector('.f99a10-store-state');
         if (!badge) { badge = el('p', 'f99a10-badge f99a10-store-state'); tile.append(badge); }
-        const message = x ? (state === 'custom' ? p.status_text || STATES.custom : STATES[state] || 'الحالة غير معلومة') + (canPurchase(x) ? '' : ' — الشراء غير متاح') : 'الحالة تحتاج تحققًا مركزيًا — لا نؤكد توفر الشراء';
+        const allowed = canPurchase(x), label = state === 'custom' ? p.status_text || STATES.custom : STATES[state] || 'الحالة غير معلومة';
+        const message = x ? (state === 'available' ? (allowed ? label : 'غير متاحة للشراء حاليًا') : label + (state === 'custom' && !allowed ? ' — الشراء غير متاح' : '')) : 'الحالة تحتاج تحققًا مركزيًا — لا نؤكد توفر الشراء';
         if (badge.textContent !== message) badge.textContent = message;
         if (badge.dataset.state !== state) badge.dataset.state = state;
       }
@@ -799,6 +803,8 @@
       storeWasVisible = storeVisible; if (storeVisible) paintStoreStates();
     }
     function storeProducts() { try { return w.FINO99ReadStorefront?.()?.products || []; } catch (_) { return []; } }
+    // PACKAGE17_SCOPE_ONLY: financial products retain their original store/payment flow.
+    function isHumanStoreProduct(p) { return Array.isArray(p?.services) && p.services.length === 1 && KINDS.includes(p.services[0]); }
     // Window capture runs BEFORE the A9 document capture. Preserve original financial
     // eligibility questions, terms and calculator guards; only gate its final checkout.
     w.addEventListener('click', ev => {
@@ -806,13 +812,14 @@
       if (replayAllowed.has(target)) { replayAllowed.delete(target); return; }
       const tile = target.closest('#f99s-modal .f99v6-tile[data-product-key]');
       if (tile) {
-        const key = tile.dataset.productKey, p = storeProducts().find(x => x.key === key); if (!p) return; selectedStoreKey = key;
-        if ((p.services || []).some(k => KINDS.includes(k))) { ev.preventDefault(); ev.stopImmediatePropagation(); const modal = d.getElementById('f99s-modal'); if (modal && !protectedNode(modal) && !modal.querySelector(PROTECTED)) modal.hidden = true; void openOffer(key); }
+        const key = tile.dataset.productKey, p = storeProducts().find(x => x.key === key); if (!p) return; selectedStoreKey = isHumanStoreProduct(p) ? key : '';
+        if (isHumanStoreProduct(p)) { ev.preventDefault(); ev.stopImmediatePropagation(); const modal = d.getElementById('f99s-modal'); if (modal && !protectedNode(modal) && !modal.querySelector(PROTECTED)) modal.hidden = true; void openOffer(key); }
         return;
       }
       const terminal = target.closest('#f99s-modal .f99v10-actions') && ['إتمام الشراء', 'نعم، تأكيد الشراء'].includes(target.textContent.trim());
       const checkoutLink = target.matches('#f99s-modal a[data-checkout="link"]');
       if ((!terminal && !checkoutLink) || !selectedStoreKey) return;
+      if (!isHumanStoreProduct(storeProducts().find(p => p.key === selectedStoreKey))) return;
       ev.preventDefault(); ev.stopImmediatePropagation();
       const key = selectedStoreKey;
       void openOffer(key, () => {
