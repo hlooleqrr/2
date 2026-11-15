@@ -1,0 +1,9 @@
+/* G4 reuses existing O2/O3 styles; no global design changes. */
+.f99g4-overlay { z-index: 2147483000; direction: rtl; }
+.f99g4-overlay textarea { min-height: 90px; }
+.f99g4-text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.9; }
+.f99g4-client form { display: flex; flex-direction: column; gap: 10px; }
+.f99g4-client .o2-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.f99g4-client .o3-btn { min-height: 44px; }
+.f99g4-faqs .o3-box { margin-block: 12px; }
+.f99g4-history { display: flex; flex-direction: column; gap: 8px; }

@@ -1,0 +1,32 @@
+/* Scoped optional panel only; reuses FINO99's existing CSS variables. */
+#f99-voice-panel {
+  box-sizing: border-box;
+  width: min(100% - 24px, 540px);
+  margin: 12px auto;
+  border: 1px solid var(--line, #dceaf3);
+  border-radius: 13px;
+  background: var(--paper, #fbfdff);
+  color: var(--ink, #173244);
+  direction: rtl;
+  font: 600 13px/1.85 Cairo, system-ui, sans-serif;
+}
+#f99-voice-panel *, #f99-voice-panel *::before, #f99-voice-panel *::after { box-sizing: border-box; }
+#f99-voice-panel [hidden] { display: none !important; }
+#f99-voice-panel summary { cursor: pointer; padding: 12px 15px; min-height: 44px; color: var(--navy, #073b67); font-weight: 850; }
+#f99-voice-body { padding: 0 15px 15px; }
+#f99-voice-panel h3 { margin: 4px 0; font-size: 16px; color: var(--navy, #073b67); }
+#f99-voice-panel p { margin: 8px 0; overflow-wrap: anywhere; }
+#f99-voice-panel label { display: flex; align-items: flex-start; gap: 8px; margin: 10px 0; }
+#f99-voice-panel input[type=checkbox] { flex: 0 0 auto; width: 19px; height: 19px; margin: 3px 0; accent-color: var(--blue, #1881c2); }
+#f99-voice-panel input[type=text] { width: 100%; min-height: 44px; padding: 9px 12px; margin: 5px 0; border: 1px solid var(--line, #dceaf3); border-radius: 9px; background: #fff; color: inherit; font: inherit; }
+#f99-voice-panel button { min-height: 44px; padding: 8px 12px; border-radius: 9px; border: 1px solid var(--line, #dceaf3); background: var(--soft, #f3f8fc); color: var(--navy, #073b67); font: inherit; font-weight: 800; cursor: pointer; }
+#f99-voice-panel button:disabled { opacity: .6; cursor: not-allowed; }
+#f99-voice-panel button:not(:disabled):hover { border-color: var(--blue, #1881c2); }
+#f99-voice-panel :focus-visible { outline: 3px solid var(--blue, #1881c2); outline-offset: 3px; }
+#f99-voice-panel .f99-voice-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+#f99-voice-status { padding: 8px 10px; border: 1px solid var(--line, #dceaf3); border-radius: 9px; background: var(--soft, #f3f8fc); }
+#f99-voice-panel[data-listening=true] #f99-voice-status { border-color: #b45309; background: #fff7ed; color: #7c2d12; font-weight: 900; }
+#f99-voice-privacy, #f99-voice-help { font-size: 12px; color: var(--text, #466374); }
+#f99-voice-draft { white-space: pre-wrap; overflow-wrap: anywhere; margin: 8px 0; padding: 10px; border: 1px dashed var(--line, #dceaf3); border-radius: 9px; font: inherit; background: var(--soft, #f3f8fc); }
+@media (prefers-reduced-motion: reduce) { #f99-voice-panel * { scroll-behavior: auto; transition: none; animation: none; } }
+@media print { #f99-voice-panel { display: none !important; } }
