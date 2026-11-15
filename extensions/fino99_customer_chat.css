@@ -1,0 +1,161 @@
+/* FINO99 customer chat only. Every selector requires a JS-whitelisted f99cc-* marker.
+   No styles on body/page/chat/result ancestors; no font/color/custom-property inheritance
+   from a container that can hold result cards, fees, consent or export content. */
+#specialistBotPage.active #finoBotChat > .f99cc-row {
+  position: relative;
+  margin: 12px 0;
+  max-width: 100%;
+  align-items: flex-start;
+  animation: none !important;
+}
+#specialistBotPage.active #finoBotChat > .f99cc-row > .f99cc-bubble {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: min(94%, 580px) !important;
+  padding: 12px 14px !important;
+  font: 600 15px/1.9 Cairo, Tahoma, Arial, sans-serif !important;
+  color: #183d50;
+  border: 1px solid #d5e3e9;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(12, 53, 76, .035);
+  overflow-wrap: break-word;
+  word-break: normal;
+  text-align: right;
+}
+#specialistBotPage.active #finoBotChat > .f99cc-row.user > .f99cc-bubble {
+  background: #e7f3ee;
+  color: #164538;
+  border-color: #c9dfd5;
+  border-bottom-left-radius: 5px;
+}
+#specialistBotPage.active #finoBotChat > .f99cc-row.assistant > .f99cc-bubble {
+  border-bottom-right-radius: 5px;
+}
+#specialistBotPage.active #finoBotChat .f99cc-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+#specialistBotPage.active #finoBotChat .f99cc-banks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+#specialistBotPage.active #finoBotChat .f99cc-option,
+#specialistBotPage.active #finoBotChat .f99cc-post-button {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 46px !important;
+  max-width: 100%;
+  padding: 10px 14px !important;
+  border: 1px solid #b8ced9;
+  border-radius: 12px;
+  font: 700 14px/1.65 Cairo, Tahoma, Arial, sans-serif !important;
+  white-space: normal;
+  overflow-wrap: break-word;
+  color: #134e6c;
+  background: #f6fafc;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+#specialistBotPage.active #finoBotChat .f99cc-option.f99cc-selected {
+  border-color: #1a6b82;
+  background: #e7f2f7;
+  box-shadow: inset 0 0 0 1px #1a6b82;
+}
+#specialistBotPage.active #finoBotChat .f99cc-bank-label {
+  font: 700 13px/1.7 Cairo, Tahoma, Arial, sans-serif !important;
+  color: #234f65;
+}
+#specialistBotPage.active #finoBotChat .f99cc-option:focus-visible,
+#specialistBotPage.active #finoBotChat .f99cc-post-button:focus-visible,
+#specialistBotPage.active #finoBotInput.f99cc-input:focus-visible,
+#specialistBotPage.active #finoBotSendBtn.f99cc-send:focus-visible {
+  outline: 3px solid #1c7190;
+  outline-offset: 3px;
+}
+#specialistBotPage.active #finoBotChat .f99cc-option:disabled,
+#specialistBotPage.active #finoBotChat .f99cc-post-button:disabled {
+  opacity: .58;
+  cursor: not-allowed;
+}
+#specialistBotPage.active #finoBotChat > .f99cc-post {
+  box-sizing: border-box;
+  margin: 14px 0;
+  padding: 14px;
+  border: 1px solid #c7dce6;
+  border-radius: 16px;
+  background: #f7fbfd;
+  /* Deliberately no inherited typography, direction, opacity, transform or color. */
+}
+#specialistBotPage.active #finoBotChat .f99cc-post-text {
+  font: 600 15px/1.9 Cairo, Tahoma, Arial, sans-serif;
+  color: #234759;
+  margin: 0 0 10px;
+  overflow-wrap: break-word;
+}
+#specialistBotPage.active #finoBotChat .f99cc-post-button {
+  margin: 4px;
+}
+#specialistBotPage.active #portalComposer.f99cc-composer {
+  padding: 10px 12px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  /* This composer is a fixed original sibling of #finoBotChat, never an export ancestor. */
+}
+#specialistBotPage.active #finoBotInput.f99cc-input {
+  box-sizing: border-box;
+  min-width: 0;
+  height: 48px;
+  font: 600 16px/1.5 Cairo, Tahoma, Arial, sans-serif !important;
+  border-radius: 13px;
+  border: 1px solid #aac6d5;
+  padding: 0 12px;
+  background: #fff;
+  color: #163e56;
+}
+#specialistBotPage.active #finoBotSendBtn.f99cc-send {
+  box-sizing: border-box;
+  height: 48px;
+  min-width: 72px;
+  padding: 8px 12px;
+  border-radius: 13px;
+  font: 700 14px/1.5 Cairo, Tahoma, Arial, sans-serif !important;
+  background: #0c557c;
+  color: #fff;
+  touch-action: manipulation;
+}
+#specialistBotPage.active #portalInputHelper.f99cc-helper {
+  font: 500 12px/1.7 Cairo, Tahoma, Arial, sans-serif !important;
+  color: #536f7d;
+}
+#specialistBotPage.active #finoBotChat .f99cc-arrival {
+  position: absolute;
+  inset-inline-end: 5px;
+  bottom: -7px;
+  pointer-events: none;
+  font: 700 15px/1 Arial, sans-serif;
+  color: #668490;
+}
+@media (max-width: 430px) {
+  #specialistBotPage.active #finoBotChat > .f99cc-row > .f99cc-bubble {
+    max-width: 96% !important;
+    padding: 11px 12px !important;
+    font-size: 15px !important;
+  }
+  #specialistBotPage.active #finoBotChat .f99cc-options > .f99cc-option {
+    flex: 1 1 calc(50% - 8px);
+  }
+  #specialistBotPage.active #finoBotChat .f99cc-post-button {
+    width: calc(100% - 8px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #specialistBotPage.active #finoBotChat .f99cc-arrival { display: none; }
+}
+@media print {
+  #specialistBotPage.active #finoBotChat .f99cc-arrival { display: none; }
+}

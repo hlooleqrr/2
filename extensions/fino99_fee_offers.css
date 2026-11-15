@@ -1,0 +1,21 @@
+/* FINO99 F13 only. Existing Tajawal font is inherited; no remote font or image rules. */
+.f99f13 { direction: rtl; font-family: Tajawal, sans-serif; color: var(--f99-text, #173349); background: var(--f99-panel, #fff); border: 1px solid var(--f99-border, #dbe5eb); border-radius: 18px; padding: clamp(14px, 3vw, 28px); max-width: 100%; box-sizing: border-box; line-height: 1.65; }
+.f99f13 .f99f13-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 12px; }
+.f99f13 .f99f13-card { border: 1px solid var(--f99-border, #dbe5eb); border-radius: 14px; padding: 18px; margin-block: 14px; }
+.f99f13 .f99f13-form { display: flex; flex-direction: column; gap: 14px; max-width: 820px; }
+.f99f13 .f99f13-field { display: flex; flex-direction: column; gap: 6px; font-weight: 600; }
+.f99f13 .f99f13-field input, .f99f13 .f99f13-field select, .f99f13 .f99f13-field textarea { font: inherit; color: inherit; background: var(--f99-panel, #fff); border: 1px solid var(--f99-border, #bdcdd7); border-radius: 9px; padding: 10px; min-width: 0; max-width: 100%; box-sizing: border-box; }
+.f99f13 .f99f13-field input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--f99-accent, #087d7b); }
+.f99f13 .f99f13-field textarea { min-height: 120px; resize: vertical; }
+.f99f13 .f99f13-button { font: inherit; color: var(--f99-button-text, #fff); background: var(--f99-accent, #087d7b); border: 1px solid transparent; border-radius: 9px; padding: 10px 15px; cursor: pointer; margin: 4px; }
+.f99f13 .f99f13-button:disabled { opacity: .6; cursor: not-allowed; }
+.f99f13 .f99f13-button:focus-visible, .f99f13 .f99f13-field input:focus-visible, .f99f13 .f99f13-field select:focus-visible, .f99f13 .f99f13-field textarea:focus-visible { outline: 3px solid var(--f99-focus, #eead4a); outline-offset: 3px; }
+.f99f13 .f99f13-amount { font-size: clamp(26px, 6vw, 40px); font-weight: 800; color: var(--f99-accent, #087d7b); margin-block: 10px; }
+.f99f13 .f99f13-meta { font-size: .88em; overflow-wrap: anywhere; }
+.f99f13 .f99f13-terms { font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--f99-subtle, #f2f7f9); border-radius: 10px; padding: 14px; max-width: 100%; }
+.f99f13 .f99f13-notice { background: var(--f99-notice, #fff5df); color: var(--f99-notice-text, #654500); padding: 12px; border-inline-start: 4px solid var(--f99-focus, #dca34b); border-radius: 8px; }
+.f99f13 .f99f13-status { white-space: pre-wrap; overflow-wrap: anywhere; font-weight: 600; }
+.f99f13 .f99f13-preview { margin-block: 15px; }
+.f99f13 [hidden] { display: none !important; }
+@media (max-width: 520px) { .f99f13 .f99f13-actions { flex-direction: column; } .f99f13 .f99f13-button { max-width: 100%; } .f99f13 .f99f13-card { padding: 12px; } }
+@media print { .f99f13 { color: #000; background: #fff; border: none; padding: 0; } .f99f13 .f99f13-button { display: none; } .f99f13 .f99f13-terms { color: #000; background: #fff; } }

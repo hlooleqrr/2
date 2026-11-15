@@ -1,0 +1,14 @@
+.f99aw14 { position: fixed; inset: 0; z-index: 2147483000; display: flex; align-items: flex-start; justify-content: center; padding: 1rem; overflow: auto; background: rgb(0 0 0 / .65); color: #17293d; }
+.f99aw14 .f99aw14-dialog { box-sizing: border-box; width: min(100%, 68rem); margin-block: 2vh; padding: 1rem; border: 1px solid #a4b3c1; border-radius: 1rem; background: #fff; box-shadow: 0 1rem 3rem rgb(0 0 0 / .3); }
+.f99aw14 .f99aw14-dialog > header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.f99aw14 .f99aw14-body { overflow-wrap: anywhere; }
+.f99aw14 nav { display: flex; flex-wrap: wrap; gap: .5rem; margin-block: .75rem; }
+.f99aw14 button { min-height: 44px; padding: .6rem .85rem; margin: .2rem; border: 1px solid #8da0b0; border-radius: .45rem; background: #edf4fa; color: #17334c; cursor: pointer; }
+.f99aw14 button:disabled { opacity: .55; cursor: default; }
+.f99aw14 button:focus-visible, .f99aw14 input:focus-visible, .f99aw14 select:focus-visible { outline: 3px solid #24769d; outline-offset: 2px; }
+.f99aw14 label { display: block; margin-block: .75rem; }
+.f99aw14 input:not([type=checkbox]), .f99aw14 select { box-sizing: border-box; width: 100%; min-height: 44px; padding: .6rem; margin-block: .35rem; border: 1px solid #8da0b0; border-radius: .35rem; color: #17293d; background: #fff; }
+.f99aw14 input[type=checkbox] { width: 1.25rem; height: 1.25rem; margin-inline: .5rem; vertical-align: middle; }
+.f99aw14 article { padding: .75rem; margin-block: .5rem; border: 1px solid #cbd5df; border-radius: .5rem; }
+.f99aw14 [hidden] { display: none !important; }
+@media (max-width: 480px) { .f99aw14 { padding: .35rem; } .f99aw14 .f99aw14-dialog { padding: .65rem; margin-block: .25rem; } .f99aw14 nav > button { flex: 1 1 100%; } }

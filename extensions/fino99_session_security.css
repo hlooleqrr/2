@@ -1,0 +1,24 @@
+/* S12 privacy veil is removed only after a successful server state read. */
+html[data-f99s12-pending] .page:not(#page1),
+html[data-f99s12-pending] #f99a10-overlay,
+html[data-f99s12-pending] #f99a9-overlay,
+html[data-f99s12-pending] #portalImageOverlay,
+html[data-f99s12-pending] #imagePreviewModal { visibility:hidden!important; pointer-events:none!important; }
+.f99s12-panel,.f99s12-warning { box-sizing:border-box; direction:rtl; text-align:right; color:#193e53; background:#f8fbfc; border:1px solid #cbdde6; border-radius:16px; padding:18px; margin:14px auto; max-width:700px; font:500 15px/1.8 Cairo,Tahoma,Arial,sans-serif; }
+.f99s12-panel h3,.f99s12-warning h3 {font-size:18px;margin:0 0 8px;color:#173b51}
+.f99s12-panel p,.f99s12-warning p {margin:8px 0}
+.f99s12-button {box-sizing:border-box;min-height:46px;padding:10px 15px;margin:6px 0 6px 8px;border:1px solid #8aafbf;border-radius:11px;background:#edf5f8;color:#193e53;font:700 14px/1.5 Cairo,Tahoma,Arial,sans-serif;cursor:pointer}
+.f99s12-button:focus-visible {outline:3px solid #0b718e;outline-offset:3px}
+.f99s12-button:disabled {opacity:.55;cursor:wait}
+.f99s12-field {display:block;margin:12px 0;font-size:14px}
+.f99s12-field>span {display:block;margin-bottom:5px}
+.f99s12-field input:not([type=checkbox]),.f99s12-field textarea,.f99s12-field select {box-sizing:border-box;width:100%;min-height:44px;border:1px solid #9eb9c6;border-radius:8px;padding:9px;background:#fff;color:#163c51;font:inherit}
+.f99s12-field textarea {min-height:100px;resize:vertical}
+.f99s12-field input[type=checkbox] {width:22px;height:22px;accent-color:#176d7f}
+.f99s12-amount {display:block;font-size:23px;color:#185766;margin:9px 0}
+.f99s12-offer {padding:14px;border:1px solid #ccdfe5;border-radius:12px;margin:12px 0;background:#fff}
+.f99s12-offer h4 {font-size:16px;margin:0 0 5px}
+.f99s12-renewal {background:#f2f7f8;border-color:#b5d1d8}
+.f99s12-warning {position:fixed;inset:auto 14px 20px;z-index:2147483638;box-shadow:0 14px 45px #16394c2b;background:#fff9ee;border-color:#c6a878;max-height:85dvh;overflow:auto}
+.f99s12-panel [data-s12-status] {padding:10px;background:#eef5f7;border-radius:8px}
+@media(max-width:560px){.f99s12-panel{padding:14px;margin:12px 6px}.f99s12-button{width:100%;margin:5px 0}.f99s12-warning{padding:16px}.f99s12-panel h3{font-size:17px}}

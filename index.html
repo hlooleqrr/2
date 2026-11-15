@@ -6355,7 +6355,14 @@ window.F99V45DefaultCover=function(p){const k=String(p?.key||'').toLowerCase(),n
 </div>
 </div></div></section>
 </div>
+<!-- FINO99 bounded public-read performance: before root classic script. -->
+<link rel="stylesheet" href="./extensions/fino99_session_security.css?v=20261115r18">
+<script src="./extensions/bank_followup17.js?v=20261115r18"></script>
+<script src="./extensions/bank_followup17_bootstrap.js?v=20261115r18"></script>
+<script src="./extensions/fino99_session_security.js?v=20261115r18"></script>
+<script src="./extensions/fino99_performance.js?v=20261115r18"></script>
 <script>
+window.F99Performance && window.F99Performance.install(window);
 
 /* FINO99 isolated browser state; never read or overwrite the earlier platform's storage. */
 const FINO99_NEW_STORAGE_NAMESPACE='FINO99_NEW_SEPARATE_V2:';
@@ -6647,6 +6654,31 @@ function getFINOAdminConfig(){
 // FINO99 central config: public read-only settings + authenticated owner writes.
 let fino99CentralRevision='';
 let fino99CentralSyncBusy=false;
+
+/* F99R9: apply a freshly confirmed source to the original calculator; no duplicate math. */
+window.F99ApplyConfirmedFinanceConfig=function(raw,context){
+ if(context?.setting_key==='f99m_mortgage')return window.F99ApplyConfirmedMortgageConfig?.(raw)||{ok:false,reason:'MORTGAGE_HOOK_MISSING'};
+ if(context?.setting_key!=='fino99_finance_config'||!raw?.banks)return {ok:false,reason:'INVALID_CONFIRMED_CONFIG'};
+ finoAdminConfig=normalizeFINOAdminConfig(raw);fino99CentralRevision=JSON.stringify(raw);
+ try{f99LocalStorage.setItem(FINO_ADMIN_STORAGE_KEY,JSON.stringify(finoAdminConfig))}catch(e){}
+ applyFINOAdminConfig();if(typeof fino99EmployerAnswers!=='undefined')fino99EmployerAnswers.clear();
+ if(document.getElementById('adminPanel')?.classList.contains('show'))renderFINOAdmin();
+ return {ok:true};
+};
+window.F99VerifyConfirmedRate=function(change,raw){
+ const l=change?.locator||{},expected=Number(change?.new_rate);
+ if(l.finance_type==='mortgage')return window.F99VerifyConfirmedMortgageRate?.(change,raw)||{ok:false,reason:'MORTGAGE_VERIFY_MISSING'};
+ const b=raw?.banks?.[l.bank_id],row=b?.tables?.[l.segment]?.[l.row_index];
+ if(!b||!row||b.buyoutEnabled!==true)return {ok:false,reason:'SELECTED_BANK_NOT_ACTIVE_IN_CALCULATOR'};
+ const salary=Math.max(Number(row.min)||0,Number(b.minSalary)||0,1);
+ if(row.max!=null&&salary>Number(row.max))return {ok:false,reason:'SELECTED_BAND_NOT_ELIGIBLE'};
+ const type=l.segment==='general'?'government':l.segment;
+ const resolved=adminRateForBank(l.bank_id,salary,type),previous=customerType;
+ let result;try{customerType=type;result=buildFinance({key:l.bank_id,name:b.name,rate:resolved},salary,0,0)}finally{customerType=previous}
+ if(Number(resolved)!==expected||Number(result?.rate)!==expected||!Number.isFinite(result?.principalBeforeFees))return {ok:false,reason:'ORIGINAL_CALCULATOR_RATE_MISMATCH'};
+ return {ok:true,engine:'original adminRateForBank + buildFinance',rate:resolved,principalBeforeFees:result.principalBeforeFees,synthetic_probe:true,consumed_use:false};
+};
+
 async function fino99ReadCentral(){
   if(fino99CentralSyncBusy)return false;
   fino99CentralSyncBusy=true;
@@ -6656,7 +6688,7 @@ async function fino99ReadCentral(){
     const settings=r.data?.settings||{};
     const cfg=settings.fino99_finance_config;
     if(cfg&&cfg.banks&&typeof cfg==='object'){
-      const revision=String(cfg.updatedAt||JSON.stringify(cfg));
+      const revision=JSON.stringify(cfg);
       if(revision!==fino99CentralRevision){
         fino99CentralRevision=revision;
         finoAdminConfig=normalizeFINOAdminConfig(cfg);
@@ -7010,6 +7042,7 @@ function renderFINOAdmin(){
   if(finoAdminTab==='entities')main.innerHTML=renderFINOAdminEntitiesHtml(cfg);
   else if(finoAdminTab==='backup')main.innerHTML=renderFINOAdminBackupHtml(cfg);
   else main.innerHTML=renderFINOAdminBankEditorHtml(cfg);
+  window.F99B17Integration?.mountPersonalOwner(main,finoAdminTab==='banks'?finoAdminEditingBankId:null);
 }
 function renderFINOAdminBankList(){
   const cfg=getFINOAdminConfig();
@@ -7686,7 +7719,8 @@ function fino99PackageFromCode(c){
      }
      const ids=[...new Set(selected.map(n=>{
        const clean=String(n||'').replace(/\s+/g,'');
-       const b=BANKS.find(b=>b.name===n||b.id===n||b.short===n||String(b.name||'').replace(/\s+/g,'')===clean);
+       const central=(window.FINO99CentrallyRatedBanks?.()||[]).find(b=>b.name===n||b.id===n);
+       const b=BANKS.find(b=>b.id===central?.id||b.name===n||b.id===n||b.short===n||String(b.name||'').replace(/\s+/g,'')===clean);
        return b?.id||null;
      }).filter(Boolean))];
      return fino99NormalizePackage({...base,tier:product?.name||'باقة FINO99',enabledBanks:ids.length?ids:['__NONE__']});
@@ -8311,14 +8345,20 @@ let finoCentralHeartbeatTimer=null;
 // This is a transport safety guard, NOT a replacement for the server meter or a free-review policy.
 let f99QuotaSessionEpoch=0;
 const f99QuotaUnresolved=new Map();
+function f99QuotaAccessIdentity(access){
+  if(!access?.record?.central)return null;
+  const r=access.record;
+  return JSON.stringify([true,!!r.owner,String(r.code_id||r.codeId||r.id||''),String(access.code||access.key||'')]);
+}
 function f99QuotaCapture(entry=finoCentralRestoreEntry()){
   return {token:String(entry?.entryToken||''),device:String(entry?.deviceId||finoCentralDeviceId()),
-    epoch:f99QuotaSessionEpoch,access:activeAccess,portal:typeof finoPortal==='undefined'?null:finoPortal};
+    epoch:f99QuotaSessionEpoch,access:activeAccess,accessIdentity:f99QuotaAccessIdentity(activeAccess),portal:typeof finoPortal==='undefined'?null:finoPortal};
 }
 function f99QuotaIsCurrent(ctx){
   const e=finoCentralRestoreEntry();
   return ctx.epoch===f99QuotaSessionEpoch && ctx.token===String(e?.entryToken||'') &&
-    ctx.device===String(e?.deviceId||finoCentralDeviceId()) && ctx.access===activeAccess &&
+    ctx.device===String(e?.deviceId||finoCentralDeviceId()) &&
+    (ctx.access===activeAccess || (!!ctx.token && ctx.accessIdentity!==null && ctx.accessIdentity===f99QuotaAccessIdentity(activeAccess))) &&
     ctx.portal===(typeof finoPortal==='undefined'?null:finoPortal);
 }
 function f99QuotaPreventNew(){
@@ -8464,12 +8504,15 @@ async function finoCentralGetLocation(){
 }
 
 async function finoCentralOpenCode(code,clientNameValue=''){
+  /* S12_OPEN_INTERACTION: auto-entry cannot allocate or revive a session. */
+  if(!window.F99SessionSecurity?.loginInProgress())return {transport:true,data:{ok:false,reason:'S12_INTERACTION_REQUIRED'}};
   const device=finoCentralDeviceId();
   // Resume an existing session for the same code/device without consuming a new entry.
   // Backend still enforces expiry, device binding and code status.
   const reused=await finoRpc('f99v23_client_resume_code',{
     p_code:String(code||'').trim(),p_device_id:device
   },6000);
+  if(reused.ok && reused.data?.mode==='renewal_only')return {transport:true,data:reused.data};
   if(reused.ok && reused.data?.ok===true && reused.data?.entry_token)
     return {transport:true,data:reused.data};
   let res=await finoRpc('f99v23_client_open_atomic',{
@@ -8531,6 +8574,49 @@ function finoCentralClearEntry(){
   finoCentralHeartbeatTimer=null;
   try{finoSafeSessionRemove(FINO_CENTRAL_ENTRY_KEY);}catch(e){}
 }
+
+/* FINO99 S12 runtime adapter 20261115-s12-1 */
+window.F99S12Runtime=Object.freeze({
+  device:()=>finoCentralDeviceId(), entry:()=>finoCentralRestoreEntry(),
+  owner:()=>activeAccess?.record?.owner===true&&activeAccess.record.central===true,
+  ownerToken:()=>String(finoCentralAdminToken||''),
+  store:data=>finoCentralStoreEntry(data),
+  snapshot:()=>({entry:finoCentralRestoreEntry(),packageKey:window.F99V32MainAccess?.()?.packageKey||'',
+    resultReady:((['buyout_result','smart_result'].includes(finoPortal?.step)&&
+      (!!document.querySelector('#finoBotChat .portal-result')||!!smartLastResult||latestResults.length>0))||
+      (document.getElementById('page3')?.classList.contains('active')&&latestResults.length>0)||
+      (document.getElementById('smartResultPage')?.classList.contains('active')&&!!smartLastResult))}),
+  clear:()=>{
+    const previous=finoCentralRestoreEntry();
+    const codeId=previous?.code_id||previous?.codeId||activeAccess?.record?.id;
+    if(codeId){try{window.localStorage.removeItem('fino99-v50-name:'+String(codeId))}catch(_){}}
+    finoCentralClearEntry(); hideSubscriptionBadge();
+    activeAccess=null;pendingAccessAfterLogin=null;clientName='';f99LastAttemptedCode='';
+    finoCentralAdminToken=null;finoSafeSessionRemove(FINO_CENTRAL_ADMIN_TOKEN_KEY);
+    finoCentralDashboardCache=null;finoAdminUnlocked=false;
+    f99QuotaUnresolved.clear();f99QuotaSessionEpoch++;f85PaidBasis=null;
+    latestResults=[];selectedResultIndex=0;smartLastResult=null;smartRequestedAmount=0;
+    selectedBank='';selectedBankName='';customerType='government';smartSelectedBank='';smartCustomerType='government';
+    smartObligationItems=[];smartReducedInstallment=null;smartPersonalInstallment=0;
+    smartMortgageCurrent=0;smartMortgageMax=0;smartHasMortgage=false;smartCustomFinancierName='';
+    fino99QuestionResponses.clear();fino99QuestionsAppliedMonthly=0;
+    finoAIHistory=[];finoAIState={lastMode:null,lastInput:null,lastRankings:[],lastSmart:null,pendingUpdate:null};
+    finoBotPendingImage=null;finoBotListening=false;
+    if(finoBotRecognition){try{finoBotRecognition.stop()}catch(_){}}finoBotRecognition=null;
+    if(preparedImageUrl){try{URL.revokeObjectURL(preparedImageUrl)}catch(_){}}
+    preparedImageBlob=null;preparedImageUrl='';preparedClientPhone='';preparedCaption='';
+    finoPortal={trial:false,mode:null,step:null,data:{},adminUnlocked:false,adminBankId:'',adminRateIndex:null,
+      imageFile:null,imageRead:null,includeFees:false,feeAmount:0,clientNote:'',currentPreviewType:'',currentPreviewIndex:0,currentPreviewUrl:''};
+    for(const id of ['finoBotChat','results','smartResults','profile','portalContractBody','finoBotMessages'])document.getElementById(id)?.replaceChildren();
+    for(const id of ['imagePreviewImg','portalImageOverlayImg'])document.getElementById(id)?.removeAttribute('src');
+    for(const id of ['imagePreviewModal','portalImageOverlay','phoneModal'])document.getElementById(id)?.classList.remove('open','show');
+    for(const id of ['page2','smartPage','specialistBotPage','identityCard'])for(const n of document.getElementById(id)?.querySelectorAll('input:not([type=button]),textarea')||[]){n.value='';if(n.type==='checkbox')n.checked=false;}
+    const identity=document.getElementById('identityCard');if(identity)identity.classList.remove('show');
+    // Owner settings, BankCfg, theme, dynamic-code stock and raw archive/usage logs remain untouched.
+  }
+});
+if(!window.F99SessionSecurity?.bindRuntime(window.F99S12Runtime))throw Error('S12_RUNTIME_BIND_REQUIRED');
+/* FINO99 S12 runtime adapter end */
 
 
 
@@ -8789,6 +8875,7 @@ function finoCentralLockPortal(reason='RESTARTS_FINISHED'){
   </div>`);
 }
 function finoCentralGuard(){
+  if(!window.F99SessionSecurity?.guard())return false;
   if(!finoCentralIsPortalLocked())return true;
   return false;
 }
@@ -11504,7 +11591,7 @@ function ensureFINOLocalTesseract(){
   if(ensureFINOLocalTesseract._promise)return ensureFINOLocalTesseract._promise;
   ensureFINOLocalTesseract._promise=new Promise((resolve,reject)=>{
     const s=document.createElement('script');
-    s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    s.src='/vendor/fino99-ocr/tesseract-5.1.1-core-5.1.1-data-1.0.0/tesseract.min.js';
     s.async=true;
     s.onload=()=>window.Tesseract?resolve(window.Tesseract):reject(new Error('TESSERACT_MISSING'));
     s.onerror=()=>reject(new Error('TESSERACT_LOAD_FAILED'));
@@ -12880,6 +12967,8 @@ function selectType(btn){
   }
 }
 function showPage(id){
+  /* S12_PAGE_GUARD: lexical state accessed through the explicit runtime adapter. */
+  if(!window.F99SessionSecurity?.allowPage(id))id='page1';
   const target=document.getElementById(id);
   if(!target)return;
 
@@ -13369,6 +13458,7 @@ async function login(){
 
   // All codes are verified by the NEW FINO99 central service, never old browser storage.
   let centralAttempt=await finoCentralOpenCode(value,'');
+  if(centralAttempt.data?.mode==='renewal_only')return; // S12: no owner exchange or old calculator.
   if(centralAttempt.transport && centralAttempt.data && centralAttempt.data.reason!=='CODE_INVALID'){
     if(centralAttempt.data.ok===false){
       const reason=centralAttempt.data.reason;
@@ -17861,7 +17951,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   }
   b.append(list);
  }
- function openDetail(p){
+ function openDetail(p){if(window.F99Appointments&&(p.services||[]).some(k=>['guidance_mortgage','guidance_personal','custom_service'].includes(k))){window.F99Appointments.openOffer(p.key);return;}
   const b=body(p.name||'تفاصيل المنتج');
   const back=el('button','f99v6-text','العودة إلى المتجر');back.type='button';back.onclick=openShop;b.append(back);
   if(p.tagline)b.append(info(publicTagline(p)));if(p.purchase_qr_url&&urlOK(p.purchase_qr_url)&&p.launch_status!=='coming_soon'){const qr=el('img');qr.src=p.purchase_qr_url;qr.alt='رمز QR للشراء عبر سلة';qr.style.cssText='display:block;width:128px;height:128px;object-fit:contain;margin:10px auto';b.append(qr)}
@@ -19146,9 +19236,9 @@ function workChange(e){if(e.target.id==='f99m-sector'&&e.target.value==='militar
 function openControl(){if(!isOwner()){alert('مركز التحكم للمالك فقط');return;}const d=modal('f99m-admin');d.hidden=false;d.innerHTML=`<div class="f99m-shell"><header class="f99m-head"><div><strong>مركز التحكم — التمويل العقاري</strong><small>تعديل النسب والمزايا والأكواد؛ منفصل عن الحاسبة التشغيلية</small></div><button class="f99m-btn secondary" data-close>رجوع</button></header><div class="f99m-body"><nav class="f99m-tabbar"><button class="active" data-tab="banks">البنوك والهوامش</button><button data-tab="global">السياسات والحدود</button><button data-tab="codes">صلاحيات الأكواد</button><button data-tab="transfer">تحويل المديونية (مالك فقط)</button></nav><section id="f99m-admin-body"></section><p class="f99m-message" id="f99m-admin-msg" role="status"></p></div></div>`;
  if(!d.dataset.bound){d.addEventListener('click',adminClick);d.addEventListener('change',adminChange);d.dataset.bound='1'}
  loadOwner().then(()=>renderControl(controlTab)).catch(e=>err(e.message,'f99m-admin-msg'));}
-function renderControl(tab){controlTab=tab;document.querySelectorAll('#f99m-admin [data-tab]').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));const c=$('f99m-admin-body');if(!c)return;
+function renderControl(tab){controlTab=tab;document.querySelectorAll('#f99m-admin [data-tab]').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));const c=$('f99m-admin-body');if(!c)return;window.F99B17Integration?.mountMortgageOwner(c,[]);
  if(tab==='global'){c.innerHTML=`<article class="f99m-card"><h3>إعدادات الإظهار والحدود</h3>${check('f99m-global-on','تشغيل خدمة التمويل العقاري للأكواد المسموح لها',cfg.enabled)}${check('f99m-public','إظهار باقة عقارية في الباقات العامة بعد مراجعة أسعار البنوك',cfg.publicVisible)}<div class="f99m-grid">${box('f99m-ordinarycap','سقف مدة العقاري (شهر)',cfg.maxMonths.ordinary,'number','min="1" max="360"')}${box('f99m-supportedcap','سقف مدة المدعوم (شهر)',cfg.maxMonths.supported,'number','min="1" max="300"')}${box('f99m-lowratio','نسبة تقديرية دخل أقل من 15000',cfg.ratios.low,'number','min="0" max="55"')}${box('f99m-highratio','نسبة تقديرية دخل 15000 فأعلى',cfg.ratios.high,'number','min="0" max="65"')}${box('f99m-supportratio','نسبة العقاري المدعوم',cfg.ratios.supported,'number','min="0" max="65"')}</div><label class="f99m-field">تعليمات وإرشادات العميل<textarea id="f99m-guidance" rows="4">${esc(cfg.guidance)}</textarea></label><div class="f99m-actions"><button class="f99m-btn" data-save-global>حفظ مركزياً</button></div><p class="f99m-note">هذه إعدادات تقديرية؛ لا تسمح برفعها فوق الضوابط النظامية والحدود الفعلية للبنك.</p></article>`;return;}
- if(tab==='banks'){c.innerHTML=`<article class="f99m-card"><h3>البنوك — نسب المالك فقط</h3><p class="f99m-note">أضف النسب الموثقة للبنوك أو عدلها. لا تُعرض للباقات قبل تفعيل البنك وإدخال تاريخ التحقق. 60 نقطة تعني +0.60 نقطة مئوية.</p><div id="f99m-bank-list" class="f99m-ordered">${cfg.banks.map((b,i)=>bankCard(b,i)).join('')}</div><div class="f99m-actions"><button class="f99m-btn secondary" data-add-bank>+ إضافة بنك</button><button class="f99m-btn" data-save-banks>حفظ ومزامنة البنوك</button></div></article>`;return;}
+ if(tab==='banks'){c.innerHTML=`<article class="f99m-card"><h3>البنوك — نسب المالك فقط</h3><p class="f99m-note">أضف النسب الموثقة للبنوك أو عدلها. لا تُعرض للباقات قبل تفعيل البنك وإدخال تاريخ التحقق. 60 نقطة تعني +0.60 نقطة مئوية.</p><div id="f99m-bank-list" class="f99m-ordered">${cfg.banks.map((b,i)=>bankCard(b,i)).join('')}</div><div class="f99m-actions"><button class="f99m-btn secondary" data-add-bank>+ إضافة بنك</button><button class="f99m-btn" data-save-banks>حفظ ومزامنة البنوك</button></div></article>`;window.F99B17Integration?.mountMortgageOwner(c,cfg.banks);return;}
  if(tab==='codes'){c.innerHTML=`<article class="f99m-card"><h3>صلاحيات كل كود</h3>${pick('f99m-codepick','اختر الكود الموجود في المركزية',codes.map(c=>[c.id,c.name+' • '+c.code]),codes[0]?.id)}<div id="f99m-code-panel"></div></article>`;renderCodePanel();return;}
  if(tab==='transfer'){c.innerHTML=`<article class="f99m-card f99m-alert"><h3>تحويل مديونية العقار مع استمرار الدعم</h3><p class="f99m-note">قسم محاكاة للمالك فقط ومغلق على العملاء افتراضياً؛ يحتاج جدول دعم رسمي قبل أي ترشيح.</p>${check('f99m-transfer-on','تفعيل المحاكاة اليدوية للمالك فقط',cfg.transferEnabled)}<div class="f99m-grid">${box('f99m-newprofit','ربح الدعم المؤهل في التمويل الجديد',180000,'number')}${box('f99m-previoussupport','الدعم الذي صُرف سابقاً',50000,'number')}${box('f99m-remainingmonths','الأشهر المتبقية',240,'number')}</div><div class="f99m-actions"><button class="f99m-btn secondary" data-sim-transfer>حساب افتراضي</button><button class="f99m-btn" data-save-transfer>حفظ حالة الوحدة</button></div><div id="f99m-transfer-result"></div><p class="f99m-note">الفرق (180000 - 50000 = 130000) مجرد اختبار توضيحي، ولا يمثل آلية حساب الدعم الرسمية المعتمدة من الصندوق عند نقل مديونية.</p></article>`;}
 }
@@ -19205,6 +19295,24 @@ function installClientDock(services){let b=$('f99m-client-access');if(b)b.remove
 }
 const oldHub=window.openOwnerHub;if(typeof oldHub==='function')window.openOwnerHub=function(...a){const v=oldHub.apply(this,a);setTimeout(installOwner,30);return v};
 const oldEnter=window.finishIdentityAndEnter;if(typeof oldEnter==='function')window.finishIdentityAndEnter=function(...a){const current=(()=>{try{return pendingAccessAfterLogin?.record?.centralData?.allowed_services||[]}catch{return []}})();const v=oldEnter.apply(this,a);if(current.includes('mortgage_quote')||current.includes('mortgage_compare'))setTimeout(openFromClient,250);return v};
+
+window.F99ApplyConfirmedMortgageConfig=function(raw){
+ if(!isOwner()||!Array.isArray(raw?.banks))return {ok:false,reason:'OWNER_MORTGAGE_SOURCE_REQUIRED'};
+ cfg={...structuredClone(DEFAULT),...raw,maxMonths:{...DEFAULT.maxMonths,...(raw.maxMonths||{})},ratios:{...DEFAULT.ratios,...(raw.ratios||{})},banks:structuredClone(raw.banks)};
+ if(!workClient)workBanks=cfg.banks;
+ window.dispatchEvent(new CustomEvent('f99m-config-confirmed',{detail:{banks:cfg.banks.map(b=>b.key)}}));
+ return {ok:true};
+};
+window.F99VerifyConfirmedMortgageRate=function(change,raw){
+ if(!isOwner())return {ok:false,reason:'OWNER_REQUIRED'};
+ const b=cfg.banks?.[change.locator.row_index];
+ if(!b||b.key!==change.locator.bank_id||b.enabled===false)return {ok:false,reason:'MORTGAGE_LOCATOR_NOT_ACTIVE'};
+ const probe={sector:'retired',netSalary:25000,verifiedPension:20000,months:120,requestedFinance:100000,todayISO:today()};
+ const expected=Number(change.new_rate),rate=M.annualRate(b,probe,cfg),result=M.calculateBank(b,probe,cfg);
+ if(Number(rate)!==expected||Number(result?.rate)!==expected||!Number.isFinite(result?.finance))return {ok:false,reason:'ORIGINAL_MORTGAGE_CALCULATOR_MISMATCH'};
+ return {ok:true,engine:'original F99MortgageCore annualRate + calculateBank',rate,finance:result.finance,synthetic_probe:true,consumed_use:false,source:'protected owner source; no broadened public projection'};
+};
+
 window.F99MOpenWork=(compare=false)=>openWork(!!compare,true);window.F99MOpenControl=openControl;window.F99MOpenClient=(compare=false)=>openWork(!!compare,false);
 function init(){installOwner()};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
@@ -23770,6 +23878,30 @@ window.F99V49DebtRestore=async()=>{if(!activeCase)return note('لا توجد ح�
 
 // Complete-and-follow-up dialogue: quote is ALWAYS read from the server for selected bank.
 let pendingCompletion=null;
+/* B17_FRONTEND_INTEGRATION_V1 */
+const B17I=window.F99B17Integration;
+if(!B17I)throw Error('B17_INTEGRATION_REQUIRED');
+let b17Slot=null,b17Mount=null,b17Epoch=0;
+function b17Clear(){b17Epoch++;pendingCompletion=null;b17Mount?.destroy();b17Mount=null;b17Slot?.remove();b17Slot=null;}
+function b17Paused(e){if(!B17I.paused(e))return false;pendingCompletion=null;if(b17Slot)B17I.showApology(b17Slot);return true;}
+window.F99V49CompletionSelect=async i=>{
+ if(!inBot())return;
+ const r=bankResults()[Number(i)];if(!r)return note('الترشيح غير موجود.');
+ b17Clear();B17I.clearPreviews();
+ const chat=$('finoBotChat');if(!chat)return;
+ b17Slot=element('section');b17Slot.className='f49-card f49-completion-request';
+ b17Slot.dataset.b17Followup='personal';chat.append(b17Slot);
+ if(typeof r.key!=='string'||!r.key){b17Slot.textContent='تعذر تحديد البنك المعتمد. لم يتم عرض أتعاب أو إرسال طلب.';return;}
+ const slot=b17Slot,epoch=b17Epoch,id=B17I.identity();
+ b17Mount=B17I.mountCustomer(slot,{selectedBank:()=>({finance_type:'personal',bank_id:r.key}),
+  onAvailable:async binding=>{
+   if(epoch!==b17Epoch||slot!==b17Slot)return;
+   B17I.assertIdentity(id);B17I.requireBinding(binding,{finance_type:'personal',bank_id:r.key});
+   await B17I.refreshPreviews();
+   if(epoch!==b17Epoch)return;
+   return b17RenderExistingCompletionQuote(r,i,epoch,id);
+  }});
+};
 function completionStatus(){const e=entry();if(!e?.entryToken||!e?.deviceId)throw Error('سجّل دخولك بالكود من جديد.');return api('f99v41_client_completion_status',{p_entry_token:e.entryToken,p_device_id:e.deviceId})}
 const feeQuote=async r=>{const e=entry(),k=window.F99V32MainAccess?.()?.packageKey||window.fino99ActivePackage?.()?.key;
  if(!e?.entryToken||!e?.deviceId||!k)throw Error('تعذر قراءة جلسة الباقة.');
@@ -23784,9 +23916,9 @@ window.F99V49CompletionOpen=async()=>{if(!inBot())return note('أكمل الحس
   say(`<div class="f49-card"><b>أبشر يا ${esc(name())}، أي جهة تبي نساعدك في إجراءاتها؟</b><p>اختر الحسبة المناسبة لك، وأعرض لك أتعاب المتابعة المعتمدة والخصم الساري قبل إرسال أي طلب.</p><div class="f49-actions">${choices}${button('ليس الآن','F99V49CompletionCancel()')}</div><small>العرض مبدئي ولا يضمن موافقة الجهة التمويلية.</small></div>`);
  }catch(e){note('تعذر التحقق من خدمة الإنجاز الآن؛ لم يتم إرسال أي طلب. '+String(e.message||e).replace(/COMPLETION_[A-Z_]+/g,''))}
 };
-window.F99V49CompletionSelect=async i=>{if(!inBot())return;const r=bankResults()[Number(i)];if(!r)return note('الترشيح غير موجود.');
+async function b17RenderExistingCompletionQuote(r,i,epoch,id){if(!inBot()||epoch!==b17Epoch)return;
  try{const st=await completionStatus();if(!enabled(st))return note('خدمة الإنجاز غير مفعّلة حاليًا على هذا الكود.');
- const q=await feeQuote(r);if(!validPhone(q.whatsapp))throw Error('رقم استقبال الطلبات غير مكتمل في إعدادات المالك.');
+ const q=await feeQuote(r);B17I.assertIdentity(id);if(epoch!==b17Epoch)return;B17I.requireBinding(q.bank_followup,{finance_type:'personal',bank_id:r.key});if(!validPhone(q.whatsapp))throw Error('رقم استقبال الطلبات غير مكتمل في إعدادات المالك.');
  const old=Number(q.old_price),current=Number(q.new_price);if(!Number.isFinite(current)||current<0)throw Error('تعذر اعتماد مبلغ الأتعاب.');
  pendingCompletion={result:{...r},quote:q,index:Number(i),at:Date.now(),message:''};
  const expires=q.valid_until&&Number.isFinite(Date.parse(q.valid_until))?new Intl.DateTimeFormat('ar-SA',{timeZone:'Asia/Riyadh',dateStyle:'medium',timeStyle:'short'}).format(new Date(q.valid_until)):'';
@@ -23814,19 +23946,20 @@ window.F99V49CompletionSelect=async i=>{if(!inBot())return;const r=bankResults()
  const details=element('details');details.append(element('summary','تفاصيل الطلب الذي سينفتح في واتساب'));details.append(preview);last.append(details);
  const actions=element('div');actions.className='f49-actions';const send=element('button','أبي تنجزون معاملتي — إرسال عبر واتساب');send.type='button';send.onclick=()=>window.F99V49CompletionSend();const cancel=element('button','ليس الآن');cancel.type='button';cancel.onclick=()=>window.F99V49CompletionCancel();actions.append(send,cancel);last.append(actions);
  const output=element('p','');output.setAttribute('role','status');last.append(output);
- const chat=$('finoBotChat');if(!chat)return;const wrap=element('div');wrap.className='portal-assistant f49-request-shell';wrap.append(last);chat.append(wrap);last.scrollIntoView?.({block:'nearest',behavior:'smooth'});
- }catch(e){note('ما قدرت أجيب عرضًا معتمدًا لهذا الكود الآن. '+String(e.message||e).replace(/COMPLETION_[A-Z_]+/g,''))}
+ if(epoch!==b17Epoch||!b17Slot)return;b17Slot.replaceChildren(last);last.scrollIntoView?.({block:'nearest',behavior:'smooth'});
+ }catch(e){if(epoch!==b17Epoch)return;if(b17Paused(e))return;pendingCompletion=null;note('ما قدرت أجيب عرضًا معتمدًا لهذا الكود الآن. '+String(e.message||e).replace(/COMPLETION_[A-Z_]+/g,''))}
 };
 window.F99V49CompletionSend=async()=>{if(!pendingCompletion)return note('اختر جهة التمويل أولًا.');const msg=String(pendingCompletion.message||'').trim();if(msg.length<20)return note('نص الطلب المعتمد غير مكتمل، أعد فتح عرض المتابعة.');
- try{const st=await completionStatus();if(!enabled(st))throw Error('خدمة الإنجاز توقفت على هذا الرمز.');
- const live=await feeQuote(pendingCompletion.result);if(Number(live.new_price)!==Number(pendingCompletion.quote.new_price)||live.whatsapp!==pendingCompletion.quote.whatsapp)
+ const p=pendingCompletion,epoch=b17Epoch,id=B17I.identity();
+ try{B17I.requireBinding(p.quote.bank_followup,{finance_type:'personal',bank_id:p.result.key});await B17I.api.verify(p.quote.bank_followup);B17I.assertIdentity(id);if(p!==pendingCompletion||epoch!==b17Epoch)return;const st=await completionStatus();if(!enabled(st))throw Error('خدمة الإنجاز توقفت على هذا الرمز.');
+ const live=await feeQuote(p.result);B17I.assertIdentity(id);if(p!==pendingCompletion||epoch!==b17Epoch)return;B17I.requireBinding(live.bank_followup,{finance_type:'personal',bank_id:p.result.key});if(live.bank_followup.intent_id!==p.quote.bank_followup.intent_id)throw Error('B17_STALE_BANK_INTENT');if(Number(live.new_price)!==Number(p.quote.new_price)||live.whatsapp!==p.quote.whatsapp)
  throw Error('تغيّر العرض في المركزية. افتح عرض الإنجاز من جديد لمراجعة السعر.');
  if(live.valid_until&&Date.now()>=Date.parse(live.valid_until))throw Error('انتهت مدة العرض، اطلب تسعيرة محدثة.');
  window.open('https://wa.me/'+live.whatsapp+'?text='+encodeURIComponent(msg),'_blank','noopener,noreferrer');
  note('جهّزنا رسالتك في واتساب. راجعها وأرسلها بنفسك؛ لا يتم اعتماد أي طلب تلقائيًا.');
- }catch(e){note('لم يُفتح طلب الإنجاز: '+String(e.message||e))}
+ }catch(e){if(epoch!==b17Epoch)return;if(b17Paused(e))return;pendingCompletion=null;note('لم يُفتح طلب الإنجاز: '+String(e.message||e))}
 };
-window.F99V49CompletionCancel=()=>{pendingCompletion=null;note('على راحتك يا '+name()+'، أبشر.');say(menu());queueMicrotask(()=>window.F99V46SyncClientActions?.(activeIndex()))};
+window.F99V49CompletionCancel=()=>{b17Clear();B17I.clearPreviews();note('على راحتك يا '+name()+'، أبشر.');say(menu());queueMicrotask(()=>window.F99V46SyncClientActions?.(activeIndex()))};
 window.F99V49SetCompletionText=(msg)=>{if(pendingCompletion&&typeof msg==='string'&&msg.trim().length>=20){pendingCompletion.message=msg.trim();return true}return false};
 window.F99V42RequestCompletion=()=>window.F99V49CompletionOpen();
 window.F99V41Pick=i=>window.F99V49CompletionSelect(i);
@@ -26516,7 +26649,7 @@ function mountOwner(){if(!own())return;const groups=window.F99V60Test?.groups;if
  const grid=q('#f64-packages .f64-pack-grid');if(grid)for(const card of qa('.f64-pack',grid)){if(q('.f68-pack-edit',card))continue;const p=products().find(x=>card.textContent.includes(x.name));if(p)action(card,'إعدادات هذه الباقة',()=>{q('#f64-packages')?.remove();ownerPackage(p.key)})}
 }
 const reentrySeen=new Set();
-function checkReentry(){const pk=activePackage();if(!pk||feeMode()!=='reentry'||own())return;const e=window.finoCentralRestoreEntry?.();if(!e?.entryToken||reentrySeen.has(e.entryToken))return;reentrySeen.add(e.entryToken);let previously=false;try{previously=sessionStorage.getItem('f68-seen-'+pk)==='1';sessionStorage.setItem('f68-seen-'+pk,'1')}catch{};if(previously)setTimeout(()=>{if(feeMode()==='reentry'&&typeof window.F99V25OpenOffer==='function')window.F99V25OpenOffer(0)},800)}
+function checkReentry(){if(window.F99SessionSecurity&&!own())return;const pk=activePackage();if(!pk||feeMode()!=='reentry'||own())return;const e=window.finoCentralRestoreEntry?.();if(!e?.entryToken||reentrySeen.has(e.entryToken))return;reentrySeen.add(e.entryToken);let previously=false;try{previously=sessionStorage.getItem('f68-seen-'+pk)==='1';sessionStorage.setItem('f68-seen-'+pk,'1')}catch{};if(previously)setTimeout(()=>{if(feeMode()==='reentry'&&typeof window.F99V25OpenOffer==='function')window.F99V25OpenOffer(0)},800)}
 function tick(){mountOwner();mountExit();updateShop();applyFeeMode();checkReentry()}
 window.F99V68UI={get,packageConfig:get,feeMode,refresh,ownerPackage,photoToPng,exit:offerExit};
 hookContract();
@@ -26780,8 +26913,8 @@ function offerPopup(trigger){if(isOwner())return;const k=window.F99V32MainAccess
 function overrideExit(k){return !!k&&Object.prototype.hasOwnProperty.call(scopeData(k),'fee_triggers')}
 window.F99V70OverridesFee=overrideExit;
 window.F99V70Exit=()=>{const k=window.F99V32MainAccess?.()?.packageKey||window.fino99ActivePackage?.()?.key;const c=cfg(k),list=c.fee_triggers||[];if(Array.isArray(list)&&list.includes('exit')){const e=sessionKey(),id=e+'|'+k+(c.fee_once?'':'|exit');if(!shown.has(id)){shown.add(id);const box=modal('قبل خروجك');box.append(N('p',(c.fee_message||defaults.fee_message).replaceAll('{name}',nameForClient())));const row=actions(box);button(row,c.fee_button||'عرض المتابعة',()=>{close();window.F99V25OpenOffer?.(0)},true);button(row,'خروج الآن',()=>{window.finoCentralClearEntry?.();location.reload()});return}}window.finoCentralClearEntry?.();location.reload()};
-let oldRank=null;function hookRank(){const f=window.showFINOPortalRank;if(typeof f!=='function'||f===oldRank||f._f70)return;oldRank=f;const patched=function(...args){const res=f.apply(this,args);Promise.resolve(res).then(()=>setTimeout(()=>offerPopup('bank'),150)).catch(()=>{});return res};patched._f70=true;window.showFINOPortalRank=patched}
-const entryVisits=new Set();function reactEntry(){if(isOwner())return;const e=window.finoCentralRestoreEntry?.();if(!e?.entryToken)return;const k=window.F99V32MainAccess?.()?.packageKey||window.fino99ActivePackage?.()?.key;if(!k||!Object.prototype.hasOwnProperty.call(scopeData(k),'fee_triggers'))return;const session=e.entryToken;if(entryVisits.has(session))return;entryVisits.add(session);offerPopup('start');const savedKey='f70-visit-'+(e.codeId||k);let seen=false;try{seen=sessionStorage.getItem(savedKey)==='1';sessionStorage.setItem(savedKey,'1')}catch{}if(seen)setTimeout(()=>offerPopup('reentry'),800)}
+let oldRank=null;function hookRank(){const f=window.showFINOPortalRank;if(typeof f!=='function'||f===oldRank||f._f70)return;oldRank=f;const patched=function(...args){const res=f.apply(this,args);Promise.resolve(res).then(()=>setTimeout(()=>{if(!window.F99SessionSecurity)offerPopup('bank')},150)).catch(()=>{});return res};patched._f70=true;window.showFINOPortalRank=patched}
+const entryVisits=new Set();function reactEntry(){if(window.F99SessionSecurity&&!isOwner())return;if(isOwner())return;const e=window.finoCentralRestoreEntry?.();if(!e?.entryToken)return;const k=window.F99V32MainAccess?.()?.packageKey||window.fino99ActivePackage?.()?.key;if(!k||!Object.prototype.hasOwnProperty.call(scopeData(k),'fee_triggers'))return;const session=e.entryToken;if(entryVisits.has(session))return;entryVisits.add(session);offerPopup('start');const savedKey='f70-visit-'+(e.codeId||k);let seen=false;try{seen=sessionStorage.getItem(savedKey)==='1';sessionStorage.setItem(savedKey,'1')}catch{}if(seen)setTimeout(()=>offerPopup('reentry'),800)}
 let contractBusy=false;async function decorateContract(){if(contractBusy||isOwner())return;const layer=$('#f60-client-layer .f60-modal'),entry=window.finoCentralRestoreEntry?.();if(!layer||!entry?.entryToken||$('.f70-contract-brand',layer))return;contractBusy=true;try{const r=await window.finoRpc('f99v70_client_contract_design',{p_entry_token:entry.entryToken,p_device_id:entry.deviceId||window.finoCentralDeviceId?.()},12000);if(!r?.ok||r?.data?.ok!==true||!r.data.found)return;const d=r.data.design||{};if(!d.contract_show_logo&&!d.contract_show_qr&&!d.contract_caption)return;const section=N('section',null,'f70-contract-brand');if(d.contract_show_logo&&d.contract_logo){const img=N('img');img.src=d.contract_logo;img.alt='شعار العقد';section.append(img)}if(d.contract_caption)section.append(N('strong',d.contract_caption));if(d.contract_show_qr&&d.contract_qr_image){const img=N('img');img.src=d.contract_qr_image;img.alt='رمز QR للعقد';section.append(img)}layer.insertBefore(section,layer.firstChild)}catch(e){console.warn('V70 contract design unavailable',e?.message||e)}finally{contractBusy=false}}
 function ownerLinks(){if(!isOwner())return;const hubs=$('#f60-owner-console .f60-head');if(hubs&&!$('#f70-owner-links')){const row=N('div',null,'f70-actions');row.id='f70-owner-links';button(row,'إعدادات المالك',()=>void ownerSettings());button(row,'عرض النتائج',()=>void cardEditor(products()[0]?.key));hubs.append(row)}const groups=window.F99V60Test?.groups;if(Array.isArray(groups)){const g=groups.find(x=>x.id==='settings');if(g&&!g.items.some(x=>x[1]==='F99V70OwnerSettings'))g.items.push(['إعدادات المالك والأمان','F99V70OwnerSettings',[]]);const sg=groups.find(x=>x.id==='store');if(sg&&!sg.items.some(x=>x[1]==='F99V70ShopEditor'))sg.items.push(['شكل عرض المتجر','F99V70ShopEditor',[]]);const cg=groups.find(x=>x.id==='contracts');if(cg&&!cg.items.some(x=>x[1]==='F99V70ContractEditor'))cg.items.push(['شكل عرض العقود','F99V70ContractEditor',[]]);}}
 let lastTick=0;function tick(){if(Date.now()-lastTick<1400)return;lastTick=Date.now();ownerLinks();decorateShare();applyShop();decorateBanks();hookRank();reactEntry();void decorateContract()}
@@ -27141,13 +27274,14 @@ window.F99V60OpenClientContract=bridgeClientEntry;
 function boot(){const o=owner();const grid=$('#ownerHub .owner-grid');if(grid&&!$('#f73-owner-tile')){const t=EL('button',null,'owner-tile primary');t.id='f73-owner-tile';t.type='button';t.append(EL('span','§','owner-icon'),EL('b','العقود وسجل الإقرار'),EL('small','قوالب حرة، عروض، أكواد، استفسارات وأرشيف'));t.onclick=()=>void openOwner();grid.prepend(t)}if(o)return;const a=access();if(!a){clientSeen='';return}const fp=a.token;if(fp===clientSeen||clientInFlight||Date.now()<clientRetryAt)return;void popupClient()}
 /* Owner shell: daily actions first; existing tools remain behind "باقي الأدوات". */
 let ownerMore=false,ownerFilter='';
-function compactHub(){if(!owner())return;const hub=$('#ownerHub'),grid=$('#ownerHub .owner-grid');if(!hub||!grid)return;
+function compactHub(){if(window.F99OwnerDesktop?.mounted)return;if(!owner())return;const hub=$('#ownerHub'),grid=$('#ownerHub .owner-grid');if(!hub||!grid)return;
  let bar=$('#f73-owner-shortcuts');if(!bar){bar=EL('section',null,'f73-owner-shortcuts');bar.id='f73-owner-shortcuts';hub.querySelector('.owner-hero')?.after(bar);
   const title=EL('b','التحكم المباشر');bar.append(title);const btns=EL('div',null,'f73-owner-quick');bar.append(btns);
   button(btns,'◎ بوابة المدير التنفيذي الذكي',()=>void window.F99ExecGateway?.open?.(),true);
   button(btns,'↔ تحويل المديونية',()=>window.ownerOpenBuyout?.(),true);
   {const kb=button(btns,'§ نظام العقود الذكي: متعدد الأطراف ومراحل وأكواد',()=>void window.F99KContracts?.openOwner?.(),true);const kbg=document.createElement('span');kbg.id='f99k-hub-badge';kbg.hidden=true;kb.append(kbg);}
   button(btns,'▣ العقود السابقة (V73)',()=>void openOwner('templates'));
+  button(btns,'⏱ الخدمات البشرية والمواعيد',()=>void window.F99Appointments?.openOwner?.());
   button(btns,'؟ إرشادات الباقات: الأسئلة والأجوبة',()=>void window.F99G4GuidanceUI?.openOwner?.());
   button(btns,'↻ أكواد التجديد ومخزونها لكل باقة',()=>void window.FINO99V74OwnerRenewal?.());
   button(btns,'# سياسة عدد الحسبات لكل كود',()=>void window.F99CalcPolicy?.openOwner?.());button(btns,'⏱ سياسة السداد المبكر للعقاري',()=>void window.F99MEarly?.openOwner?.());
@@ -27246,9 +27380,9 @@ const shop=$('#f99s-modal');if(shop&&!shop.hidden&&!shop.dataset.v74CountChecked
  }
 }
 if(shop?.hidden)shop.dataset.v74CountChecked='';
-const entry=access();if(entry&&!owner()&&!$('#v74-client-feedback')){const wrap=$('#finoBotChat')||$('#page2')||document.body;const n=E('div',null,'v74-client-actions');n.id='v74-client-feedback';button(n,'★ يهمنا رأيك',()=>void openFeedbackCustomer());wrap.append(n)}
+const entry=access();if(entry&&!owner()&&!window.F99SessionSecurity&&!$('#v74-client-feedback')){const wrap=$('#finoBotChat')||$('#page2')||document.body;const n=E('div',null,'v74-client-actions');n.id='v74-client-feedback';button(n,'★ يهمنا رأيك',()=>void openFeedbackCustomer());wrap.append(n)}
 const used=window.__F99V43QuotaExhausted===true||window.__F99V43LastPending===true;
-if(used&&entry&&!owner()&&!$('#v74-client-renew')&&!document.querySelector('#subscriptionRenewBtn.show')){const wrap=$('#finoBotChat')||$('#page2')||document.body;const n=E('div',null,'v74-client-actions');n.id='v74-client-renew';n.append(E('p','انتهت مرات الحسبة المتاحة؟ عندك فرصة للاستفادة من عروض تجديد خاصة بهذه الباقة.'));button(n,'عرض تجديد الأكواد',()=>openRenewCustomer(),true);wrap.append(n)}
+if(used&&entry&&!owner()&&!window.F99SessionSecurity&&!$('#v74-client-renew')&&!document.querySelector('#subscriptionRenewBtn.show')){const wrap=$('#finoBotChat')||$('#page2')||document.body;const n=E('div',null,'v74-client-actions');n.id='v74-client-renew';n.append(E('p','انتهت مرات الحسبة المتاحة؟ عندك فرصة للاستفادة من عروض تجديد خاصة بهذه الباقة.'));button(n,'عرض تجديد الأكواد',()=>openRenewCustomer(),true);wrap.append(n)}
 }
 window.FINO99V74OwnerRenewal=openRenewOwner;window.FINO99V74CustomerRenewal=openRenewCustomer;window.F99V8OpenRenewal=(oldCode)=>openRenewCustomer('',String(oldCode||''));window.FINO99V74CustomerFeedback=openFeedbackCustomer;window.FINO99V74OwnerFeedback=openFeedbackOwner;
 window.FINO99V74_TEST={SAR,pkgKey,products};
@@ -28497,25 +28631,56 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 </script>
 
 <!-- FINO99 additive optional voice; absent central migration means OFF. -->
-<link rel="stylesheet" href="./extensions/fino99_voice_optional.css?v=20261115a">
-<script src="./extensions/fino99_voice_optional.js?v=20261115a"></script>
-<script src="./extensions/fino99_voice_central.js?v=20261115b"></script>
+<link rel="stylesheet" href="./extensions/fino99_voice_optional.css?v=20261115r18">
+<script src="./extensions/fino99_voice_optional.js?v=20261115r18"></script>
+<script src="./extensions/fino99_voice_central.js?v=20261115r18"></script>
 <!-- Trial integrator: copy the two G4 assets to public/extensions/.
      Insert once at the end of public/index.html AFTER #f99o3-module and
      BEFORE </body>. Keep the original O2/O3 and optional voice tags unchanged. -->
-<link rel="stylesheet" href="./extensions/fino99_guidance_additive.css?v=20261115a">
-<script src="./extensions/fino99_guidance_additive.js?v=20261115a"></script>
+<link rel="stylesheet" href="./extensions/fino99_guidance_additive.css?v=20261115r18">
+<script src="./extensions/fino99_guidance_additive.js?v=20261115r18"></script>
 <!-- Executive gateway + mortgage early settlement (owner-controlled, OFF for clients by default). -->
-<link rel="stylesheet" href="./extensions/fino99_exec_mortgage.css?v=20261115a">
-<script src="./extensions/fino99_mortgage_early_settlement.js?v=20261115a"></script>
-<link rel="stylesheet" href="./extensions/fino99_mortgage_advanced.css?v=20261115a">
-<script src="./extensions/fino99_mortgage_advanced.js?v=20261115a"></script>
+<link rel="stylesheet" href="./extensions/fino99_exec_mortgage.css?v=20261115r18">
+<script src="./extensions/fino99_mortgage_early_settlement.js?v=20261115r18"></script>
+<link rel="stylesheet" href="./extensions/fino99_mortgage_advanced.css?v=20261115r18">
+<script src="./extensions/fino99_mortgage_advanced.js?v=20261115r18"></script>
 <!-- Smart contracts system (f99k): owner center + party portal by contract-vault code. -->
-<link rel="stylesheet" href="./extensions/fino99_contracts_center.css?v=20261115a">
-<script src="./extensions/fino99_contracts_center.js?v=20261115a"></script>
-<link rel="stylesheet" href="./extensions/fino99_exec_chat.css?v=20261115a">
-<script src="./extensions/fino99_calc_policy.js?v=20261115b"></script>
-<script src="./extensions/fino99_executive_gateway.js?v=20261115b"></script>
+<link rel="stylesheet" href="./extensions/fino99_contracts_center.css?v=20261115r18">
+<script src="./extensions/fino99_contracts_center.js?v=20261115r18"></script>
+<link rel="stylesheet" href="./extensions/fino99_exec_chat.css?v=20261115r18">
+<script src="./extensions/fino99_calc_policy.js?v=20261115r18"></script>
+<script src="./extensions/fino99_rate_manager.js?v=20261115r18"></script>
+<script src="./extensions/fino99_executive_gateway.js?v=20261115r18"></script>
 
+
+<link rel="stylesheet" href="./extensions/fino99_appointments.css?v=20261115r18">
+<script src="./extensions/fino99_appointments.js?v=20261115r18"></script>
+<link rel="stylesheet" href="./extensions/fino99_customer_chat.css?v=20261115r18">
+<script src="./extensions/fino99_customer_chat.js?v=20261115r18"></script>
+<script src="./extensions/fino99_display_labels.js?v=20261115r18"></script>
+
+<!-- FINO99 services09 / coupons10 / fee offers12: additive, protected -->
+<link rel="stylesheet" href="./extensions/fino99_coupons.css?v=20261115r18">
+<script src="./extensions/fino99_coupons.js?v=20261115r18"></script>
+<link rel="stylesheet" href="./extensions/fino99_fee_offers.css?v=20261115r18">
+<script src="./extensions/fino99_fee_offers.js?v=20261115r18"></script>
+<link rel="stylesheet" href="./extensions/fino99_service_tools.css?v=20261115r18">
+<script src="./extensions/fino99_service_tools.js?v=20261115r18"></script>
+<!-- F99 owner desktop 13: owner-only, device-local visual approval; load after fee/service modules. -->
+<link rel="stylesheet" href="./extensions/fino99_owner_desktop.css?v=20261115r18">
+<script src="./extensions/fino99_owner_desktop.js?v=20261115r18"></script>
+<!-- Existing bank-image icon: local OCR, full review, original audited per-record approval. -->
+<link rel="stylesheet" href="./extensions/fino99_rate_table_import.css?v=20261115r18">
+<script defer src="./extensions/fino99_rate_table_import.js?v=20261115r18"></script>
+<script defer src="./extensions/fino99_local_ocr_browser_adapter.js?v=20261115r18"></script>
+<script defer src="./extensions/fino99_local_ocr_integration.js?v=20261115r18"></script>
+<script defer src="./extensions/fino99_rate_import_setup.js?v=20261115r18"></script>
+<!-- Original-auth owner delegation and opt-in device management. -->
+<link rel="stylesheet" href="./extensions/f99_owner_access.css?v=20261115r18">
+<link rel="stylesheet" href="./extensions/F99DeviceManager.css?v=20261115r18">
+<link rel="stylesheet" href="./extensions/f99_access_workspace.css?v=20261115r18">
+<script src="./extensions/f99_owner_access.js?v=20261115r18"></script>
+<script src="./extensions/F99DeviceManager.js?v=20261115r18"></script>
+<script src="./extensions/f99_access_workspace.js?v=20261115r18"></script>
 </body>
 </html>

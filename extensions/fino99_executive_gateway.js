@@ -7,13 +7,14 @@
  *   it returns an intent, never executes anything itself.
  * - Chat history stays in this browser tab (sessionStorage) only; no audio is stored. */
 (function (root, factory) {
-  const api = factory();
+  const api = factory(root);
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root && root.document) { root.F99ExecGateway = api; api.install(root); }
-})(typeof window !== 'undefined' ? window : null, function () {
+})(typeof window !== 'undefined' ? window : null, function (root) {
   'use strict';
 
   /* ---------------- language engine (pure) ---------------- */
+  const rateAPI = () => root?.F99RateManager || (typeof require === 'function' ? require('./fino99_rate_manager.js') : null);
   const DIGITS = {'٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4', '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9', '۰': '0', '۱': '1', '۲': '2', '۳': '3', '۴': '4', '۵': '5', '۶': '6', '۷': '7', '۸': '8', '۹': '9', '٫': '.'};
   function norm(s) {
     return String(s || '').toLowerCase().replace(/[٠-٩۰-۹٫]/g, d => DIGITS[d]).replace(/[\u064B-\u0652\u0670\u0640]/g, '')
@@ -149,13 +150,13 @@
       const fields = ['صوره', 'اسم', 'وصف', 'سعر', 'تصميم'].filter(f => has(input, [f])); return {intent: 'package_edit', fields, query: input};
     }
     // rates
-    if (has(input, ['نسب', 'نسبه', 'فائده', 'هامش', 'فوائد']) && (has(input, ['بنك', 'بنوك', 'البنوك', 'البنك']) || /\d/.test(text))) {
-      const nums = allNumbers(input).filter(x => x > 0 && x <= 30);
-      if (nums.length && has(input, CHANGE.concat(['نسبه', 'خل', 'صارت', 'صار']))) {
-        const src = (String(input).split(/المصدر|مصدر|source/i)[1] || '').trim();
-        return {intent: 'bank_rate_set', rate: nums[0], source: src.slice(0, 200), query: input};
+    if ((has(input, ['نسب', 'نسبه', 'فائده', 'هامش', 'فوائد', 'apr', 'معدل']) || /\bapr(?=\W|\d|$)/.test(text)) && (has(input, ['بنك', 'بنوك', 'البنوك', 'البنك']) || /\d/.test(text) || has(input, ['شخصي', 'عقاري', 'سجل', 'استعاده']))) {
+      if (has(input, ['سجل', 'تاريخ التعديلات', 'استعاده', 'استرجاع'])) return {intent: 'bank_rate_history', query: input};
+      const spec = rateAPI()?.parse(input);
+      if (has(input, CHANGE.concat(['صارت', 'صار'])) || spec?.new_rate !== null && spec?.new_rate !== undefined || spec?.metric === 'APR') {
+        return {intent: 'bank_rate_set', rate: spec?.new_rate ?? null, source: spec?.source || '', spec, query: input};
       }
-      return {intent: 'bank_rates'};
+      return {intent: 'bank_rates', query: input};
     }
     if ((has(input, ['سياسه', 'سياسات']) && has(input, ['عقاري', 'العقاري', 'العقاريه', 'سداد مبكر', 'السداد المبكر'])) || (has(input, ['سداد مبكر', 'السداد المبكر']) && (has(input, CHANGE) || /\d/.test(text) || has(input, ['فعل', 'شغل', 'اوقف', 'عطل', 'سنتين']))))
       return {intent: 'mortgage_policy', changes: parseEarlyPolicy(input)};
@@ -310,17 +311,18 @@
       const acts = el('div', 'f99xc-actions'); c.append(acts);
       const status = el('p', 'f99xc-status'); status.setAttribute('role', 'status');
       const ok = btn(acts, opts.okLabel || 'اعتمد ونفّذ', async () => {
+        if (ok.disabled || c.classList.contains('done') || c.classList.contains('cancelled')) return;
         ok.disabled = true; no.disabled = true; status.textContent = 'جاري التنفيذ في المركزية...';
         const vals = {}; Object.entries(fields).forEach(([k, i]) => { vals[k] = typeof i.value === 'string' ? i.value.trim() : i.value; });
         let res; try { res = await onConfirm(vals, status); } catch (e) { res = {ok: false, reason: e.message || 'ERROR'}; }
         if (pending && pending.card === c) pending = null; ctx.pending = !!pending;
-        if (res && res.ok === false) { status.textContent = 'ما تم: ' + res.reason; ok.disabled = !!res.final; no.disabled = false; if (!res.final) pending = {card: c, run: () => ok.click()}; ctx.pending = !!pending; return; }
-        status.textContent = 'تم ✓'; c.classList.add('done');
+        if (res && res.ok === false) { status.textContent = 'ما تم: ' + res.reason; ok.disabled = !!res.final; no.disabled = false; if (!res.final) pending = {card: c, run: opts.requireButton ? () => say('اضغط زر البطاقة بنفسك لاعتماد النسبة.') : () => ok.click(), voiceBlocked: true}; ctx.pending = !!pending; return; }
+        status.textContent = res?.statusText || 'تم ✓'; c.classList.add('done');
       }, 'f99xc-chip primary');
       if (opts.disabled) ok.disabled = true;
       const no = btn(acts, 'إلغاء', () => { c.classList.add('cancelled'); ok.disabled = true; no.disabled = true; status.textContent = 'أُلغيت المسودة.'; if (pending?.card === c) pending = null; ctx.pending = !!pending; }, 'f99xc-chip');
       c.append(status); list.append(m); m.scrollIntoView({block: 'end'});
-      if (!opts.disabled) { pending = {card: c, run: () => ok.click(), voiceBlocked: true}; ctx.pending = true; }
+      if (!opts.disabled) { pending = {card: c, run: opts.requireButton ? () => say('اعتماد النسبة يتطلب الضغط على زر البطاقة بنفسك، وليس رسالة أو صوتًا.') : () => ok.click(), voiceBlocked: true}; ctx.pending = true; }
       return c;
     }
     function codeBlock(host, label, code, ref) {
@@ -463,31 +465,17 @@
       });
     }
     async function mortgageState() { const r = await call('f99m_admin_state'); return r.ok ? r.settings || {} : null; }
-    async function doBankRates() {
-      const s = await mortgageState(); if (!s) return say('ما قدرت أقرأ إعدادات العقاري من المركزية.');
-      const banks = Array.isArray(s.banks) ? s.banks : []; const today = Date.now();
-      const lines = banks.map(b => { const v = b.verifiedAt ? Date.parse(b.verifiedAt) : NaN; const age = Number.isFinite(v) ? Math.floor((today - v) / 86400000) : null;
-        return '• ' + b.name + ': ' + (b.baseRate ?? '—') + '%' + (b.enabled === false ? ' (موقوف)' : '') + ' — ' + (age === null ? 'بدون تاريخ تحقق ⚠️' : 'آخر تحقق قبل ' + age + ' يوم' + (age > 90 ? ' ⚠️ قديم' : '')) + (b.notes ? ' — ' + String(b.notes).slice(0, 60) : ''); });
-      say('نسب البنوك في الحاسبة العقارية (من المركزية):\n' + (lines.join('\n') || 'لا توجد بنوك.') + '\n\nما أجيب نسب من الإنترنت ولا أخترع نسبة. أرسل لي النسبة الجديدة ومصدرها هكذا:\n«حدث نسبة ' + (banks[0]?.name || 'البنك') + ' 4.25 المصدر موقع البنك 2026/11»\nوأجهز لك التعديل للموافقة.');
-      const acts = el('div', 'f99xc-actions'); openBtn(acts, 'mortgage'); openBtn(acts, 'banks'); list.lastChild.querySelector('.f99xc-bubble').append(acts);
+    let ratesUI = null;
+    function rateManager() {
+      const api = w.F99RateManager;
+      if (!api?.create) { say('وحدة إدارة النسب غير محملة؛ لم يتغير أي إعداد.'); return null; }
+      if (!ratesUI) ratesUI = api.create(w, {call, card, say});
+      return ratesUI;
     }
+    async function doBankRates(query) { return rateManager()?.show(query || ''); }
     async function doBankRateSet(rate, source, query) {
-      const s = await mortgageState(); if (!s) return say('ما قدرت أقرأ إعدادات العقاري.');
-      const banks = Array.isArray(s.banks) ? s.banks : []; const m = matchPackage(query, banks.map(b => ({key: b.key, name: b.name})));
-      const pick = m.item ? banks.find(b => b.key === m.item.key) : null;
-      if (!pick) return say('أي بنك تقصد؟ البنوك المسجلة: ' + banks.map(b => b.name).join('، ') + '. اكتب اسم البنك مع النسبة والمصدر.');
-      if (!(rate > 0 && rate <= 30)) return say('النسبة لازم تكون بين 0 و30.');
-      card('مسودة تحديث نسبة بنك (عقاري)', [['البنك', pick.name], ['النسبة الحالية', (pick.baseRate ?? '—') + '%'], ['النسبة الجديدة', rate + '%'], ['تاريخ التحقق', new Date().toISOString().slice(0, 10)]],
-        [{key: 'source', label: 'المصدر (إلزامي)', value: source || ''}],
-        async v => {
-          if (String(v.source || '').trim().length < 4) return {ok: false, reason: 'اكتب مصدر النسبة أولًا.'};
-          const fresh = await mortgageState(); if (!fresh || fresh.version !== s.version) return {ok: false, reason: 'تغيرت الإعدادات من مكان آخر؛ أعد طلب التحديث.', final: true};
-          const next = JSON.parse(JSON.stringify(fresh)); const b = next.banks.find(x => x.key === pick.key);
-          b.baseRate = rate; b.verifiedAt = new Date().toISOString().slice(0, 10); b.notes = ('المصدر: ' + v.source.trim()).slice(0, 300); next.version = Date.now();
-          const r = await call('fino_admin_upsert_setting', {p_setting_key: 'f99m_mortgage', p_value: next}); if (!r.ok) return {ok: false, reason: 'فشل الحفظ: ' + r.reason};
-          const chk = await mortgageState(); if (!chk || chk.version !== next.version) return {ok: false, reason: 'الحفظ لم يتأكد من المركزية.', final: true};
-          say('تم ✓ نسبة ' + pick.name + ' صارت ' + rate + '% في الحاسبة العقارية، وسُجل المصدر وتاريخ التحقق.'); return {ok: true};
-        }, {okLabel: 'اعتمد النسبة', note: 'تغيير النسب يحتاج موافقتك. الحاسبة تستخدم النسبة الجديدة فور الاعتماد.'});
+      // Reparse the original sentence; never trust old allNumbers/AI rate slots.
+      return rateManager()?.change(query || '');
     }
 
     /* ---- «سوّ لي باقة»: saved as a hidden draft (enabled:false) through the original V39 save; codes/renewal follow with their own approval ---- */
@@ -603,8 +591,9 @@
         case 'package_edit': return doPackageEdit(u.fields, u.query || text);
         case 'package_create': return doPackageCreate(u.spec || parsePackageSpec(text));
         case 'mortgage_policy': return doMortgagePolicy(u.changes || parseEarlyPolicy(text));
-        case 'bank_rates': return doBankRates();
+        case 'bank_rates': return doBankRates(u.query || text);
         case 'bank_rate_set': return doBankRateSet(u.rate, u.source, u.query || text);
+        case 'bank_rate_history': return rateManager()?.history();
         case 'open': return go(u.route);
         case 'report': {
           if ((u.topics || []).length === 1 && u.topics[0] === 'contracts' && lastDeal && has(text, ['وش صار', 'وين وصل'])) return doDealStatus();
