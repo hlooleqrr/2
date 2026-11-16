@@ -210,7 +210,7 @@
       const fields = [...(!selected ? [{key: 'target', label: 'اختر السجل الناقص فقط (لا توجد مدة/منتج مستقل)', type: 'select',
         options: [['', 'اختر السجل'], ...records.map((r, i) => [String(i), r.bank_name + ' / ' + (r.locator.finance_type === 'personal' ? 'شخصي ' + (SECTORS[r.locator.segment] || '') + ' راتب ' + r.scope.salary_min + '–' + (r.scope.salary_max ?? '∞') : 'عقاري أساس') + ' / ' + r.rate + '%'])]}] : []),
         ...(spec.new_rate === null ? [{key: 'new_rate', label: 'هامش الربح السنوي الجديد (%) — ليس APR', value: '', numeric: true}] : []), ...metadataFields(spec.source)];
-      io.card('استكمال بيانات معاينة النسبة', selected ? scopeRows(selected) : [['الهدف', 'حدد البنك/القطاع/شريحة الراتب الناقصة من السجلات المطابقة فقط'], ['النسبة الجديدة', spec.new_rate === null ? 'لم تحدد' : spec.new_rate + '%']],
+      io.card('استكمال بيانات معاينة النسبة', [...(selected ? scopeRows(selected) : [['الهدف', 'حدد البنك/القطاع/شريحة الراتب الناقصة من السجلات المطابقة فقط']]), ['النسبة الجديدة', spec.new_rate === null ? 'لم تحدد' : spec.new_rate + '%']],
         fields, async v => {
           const r = selected || (v.target !== '' ? records[Number(v.target)] : null);
           if (!r) return {ok: false, reason: 'اختر سجلًا محددًا.'};

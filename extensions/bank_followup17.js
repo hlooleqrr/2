@@ -5,6 +5,9 @@
   if (root) root.F99BankFollowup17 = value;
 })(typeof window === 'undefined' ? null : window, function () {
   'use strict';
+  const T = (key, vars, fallback) => typeof window !== 'undefined' && window.F99T ? window.F99T('followup22.' + key, vars, fallback) : fallback;
+  const declined = new Set();
+  const session = () => typeof window !== 'undefined' ? window.F99B17Integration?.identity?.() || '' : '';
   const APOLOGY = 'نشكرك على ثقتك بنا 🌷\n\nنعتذر منك، خدمة متابعة إجراءات التمويل عبرنا لهذا البنك غير متاحة حاليًا.\n\nتقدر تستفيد من الحسبة وتقارن الخيارات الأخرى، ويسعدنا خدمتك في الخيارات المتاحة.';
   const safe = (tag, text, className) => {
     const node = document.createElement(tag);
@@ -52,7 +55,7 @@
   }
   function showApology(host) {
     if (!host) throw Error('B17_HOST_REQUIRED');
-    const note = safe('div', APOLOGY, 'f99b17-note'); note.setAttribute('role', 'status');
+    const note = safe('div', T('apology', {}, APOLOGY), 'f99b17-note'); note.setAttribute('role', 'status');
     // Host must be a dedicated slot, never a bank/result/card parent.
     host.replaceChildren(); scopeStyle(host); host.append(note);
     return note;
@@ -94,8 +97,14 @@
   // This is an EXPLICIT follow-up button, NOT the bank-selection/comparison handler.
   function mountCustomerAction(host, o) {
     const box = safe('div', undefined, 'f99b17-action'); scopeStyle(box);
-    const button = safe('button', 'أريد متابعة إجراءات التمويل عن طريقكم'); button.type = 'button';
-    const output = safe('div'); box.append(button, output); host.append(box);
+    const id = session();
+    if (id && declined.has(id)) return { destroy() {} };
+    const client = o.clientName?.() || (typeof clientName !== 'undefined' ? clientName : '');
+    const invitation = safe('p', T('invite', {client}, 'يا ' + client + '، عندك عرض خاص لمتابعة إجراءات تمويلك. ودك تشوف التفاصيل؟'));
+    const button = safe('button', T('view', {}, 'نعم، أشوف العرض')); button.type = 'button';
+    const later = safe('button', T('postpone', {}, 'ليس الآن')); later.type = 'button';
+    const output = safe('div'); box.append(invitation, button, later, output); host.append(box);
+    later.onclick = () => { if (busy) return; if (id) declined.add(id); box.remove(); };
     let alive = true, busy = false;
     button.addEventListener('click', async () => {
       if (!alive || busy) return; busy = true; button.disabled = true; output.replaceChildren();
@@ -105,8 +114,9 @@
         if (!alive) return;
         if (r?.reason === 'BANK_FOLLOWUP_PAUSED') { showApology(output); return; }
         assertOK(r);
+        invitation.remove(); button.hidden = true; later.hidden = true;
         await o.onAvailable?.(r.bank_followup, bank); // Existing fee preview is called only here.
-      } catch (_) { if (alive) output.append(safe('p', 'تعذر التحقق الآن. لم يتم إرسال أي طلب.')); }
+      } catch (_) { if (alive) output.append(safe('p', T('unavailable', {}, 'تعذر التحقق الآن. لم يتم إرسال أي طلب.'))); }
       finally { busy = false; if (alive) button.disabled = false; }
     });
     return { destroy: () => { alive = false; box.remove(); } };

@@ -850,7 +850,13 @@
       const s = clientSession(); if (!s) return openClient(); open(s, 'خدمات باقتك المصرح بها'); button(content, 'الخدمة البشرية ومواعيدي', () => openClient(), true);
       if (entryKinds().some(k => !KINDS.includes(k)) && oldChoose) button(content, 'الخدمات الأخرى عبر المحدد الأصلي', () => { close(); oldChoose.call(w); });
     };
-    if (legacy) w.F99Appointments = Object.freeze({...legacy, openOwner, openClient, openOffer, openCatalog});
+    // R22H: F99Appointments owns the flexible calendar. Service tools stay
+    // reachable through F99ServiceTools/F99O2 and their existing owner navigation.
+    // Close only our overlay before delegating; never replace the calendar API.
+    if (legacy) w.F99Appointments = Object.freeze({...legacy,
+      openOwner: function () { close(); return legacy.openOwner.apply(this, arguments); },
+      openClient: function () { close(); return legacy.openClient.apply(this, arguments); },
+      openOffer, openCatalog});
     if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', mount, {once: true}); else mount();
     d.addEventListener('input', ev => { if (ev.target?.matches?.('#f99l-code,#password') && !protectedNode(ev.target)) void receiptHint(ev.target); });
     // No polling RPCs. Only mount/refresh on visible owner navigation or explicit reads.

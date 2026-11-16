@@ -29,7 +29,10 @@
   let oldFocus, scheduled = false, observer, originalObserver, booted = false;
   let mountedToken = '';
   const displaced = new Map();
-  const api = {version: '13.1.0', mounted: false, refresh, destroy, openCategory};
+  const portals = new Map();
+  const lockedCategories = new Set(['executive', 'banks', 'packages', 'extra']);
+  const api = {version: '22.0.0', mounted: false, refresh, destroy, openCategory, isOwner,
+    registerPortal, layoutItems, applyLayout};
   w.F99OwnerDesktop = api;
 
   function isOwner() {
@@ -94,6 +97,39 @@
   function spec(id, cat, label, sub, path, args = []) {
     return {id, cat, label, sub, path, args, available: () => !!resolve(path), run: () => callExport(path, args)};
   }
+  function registerPortal(entry) {
+    if (!entry || !/^[a-z][a-z0-9-]{1,63}$/.test(entry.id) || typeof entry.open !== 'function') return;
+    portals.set(entry.id, entry);
+    if (api.mounted) { renderGateways(); collect(); renderTools(); }
+  }
+  function layoutItems() {
+    return [
+      ...CATS.map(([id, label]) => ({id, label, locked: lockedCategories.has(id)})),
+      ...[...portals.values()].map(x => ({id: x.id, label: x.label, locked: x.locked === true}))
+    ];
+  }
+  function renderGateways() {
+    const host = root?.querySelector('.f99od13-gateways'); if (!host) return;
+    host.replaceChildren();
+    const entries = [...CATS.map(([id, label, sub, icon]) => ({id, label, sub, icon, open: () => openCategory(id)})), ...portals.values()];
+    for (const x of entries) {
+      const b = button(host, '', x.open, 'f99od13-gateway'); b.dataset.category = x.id;
+      b.dataset.layoutLocked = String(layoutItems().find(p => p.id === x.id)?.locked === true);
+      b.setAttribute('aria-controls', 'f99od13-panel'); b.setAttribute('aria-expanded', 'false');
+      b.append(node('span', 'f99od13-icon', x.icon || '▤'), node('b', '', x.label), node('small', '', x.sub || ''));
+    }
+    w.dispatchEvent(new CustomEvent('f99owner:gateways'));
+  }
+  function applyLayout(value) {
+    if (!api.mounted || !isOwner()) return;
+    const host = root.querySelector('.f99od13-gateways'), specs = layoutItems();
+    const ids = specs.map(x => x.id), order = [...new Set([...(Array.isArray(value?.order) ? value.order : []), ...ids])].filter(id => ids.includes(id));
+    const hidden = new Set(Array.isArray(value?.hidden) ? value.hidden : []);
+    for (const id of order) {
+      const b = [...host.children].find(n => n.dataset.category === id); if (!b) continue;
+      b.hidden = hidden.has(id) && !specs.find(x => x.id === id).locked; host.append(b);
+    }
+  }
   function nativeCategory(text) {
     if (/تنفيذي|نبض|أولويات/.test(text)) return 'executive';
     if (/بنك|بنوك|نسب|نسبة|شعار/.test(text)) return 'banks';
@@ -154,6 +190,7 @@
       {id: 'idle-policy', cat: 'extra', label: 'سياسة خمول العملاء', sub: 'سياسة S12 الأصلية؛ اعتماد ومراجعة من الوحدة الحالية', available: () => !!d.getElementById('f99s12-owner-policy'), run: () => d.getElementById('f99s12-owner-policy')?.click()},
       {id: 'theme', cat: 'extra', label: 'المظهر والمعاينة', sub: 'مظهر المالك فقط — هذا الجهاز؛ بدون مزامنة مركزية', available: () => true, run: () => { const x = root.querySelector('.f99od13-design'); x.open = true; x.querySelector('select')?.focus(); }}
     ];
+    for (const x of portals.values()) result.push({id: x.id, cat: x.cat || 'extra', label: x.label, sub: x.sub || '', available: () => true, run: x.open});
     const seenAttr = new Set(), seenFn = new Set();
     const exactCalls = new Map(result.filter(x => x.path).map(x => [x.path + '(' + JSON.stringify(x.args).slice(1, -1).replaceAll('"', "'") + ')', x.id]));
     for (const n of originalButtons()) {
@@ -258,15 +295,12 @@
     originalShell.before(anchor); root = node('section', 'f99od13-desktop'); root.id = 'f99od13-desktop'; root.dir = 'rtl'; root.setAttribute('aria-label', 'مركز قيادة FINO99 للمالك'); anchor.before(root);
     const head = node('header', 'f99od13-head'); root.append(head);
     const brand = node('div', 'f99od13-brand'); brand.append(node('b', '', 'FINO99'), node('small', '', 'مركز القيادة • صلاحية المالك الأصلية')); head.append(brand);
-    button(head, 'خروج', () => { destroy(); const out = resolve('ownerLogout'); if (out) out.fn.apply(out.host); }, 'f99od13-button f99od13-exit');
+    button(head, 'خروج', () => { destroy(); const out = resolve('ownerLogout'); if (out) out.fn.apply(out.host); }, 'f99od13-button f99od13-exit').dataset.layoutLocked = 'true';
     const hero = node('div', 'f99od13-hero'); hero.append(node('small', '', 'مساحة عمل واحدة'), node('h1', '', 'كل قرار في مكانه.'), node('p', '', 'اختر بوابة، وابحث عن الأداة، وأنجز عبر وحداتك الأصلية.')); root.append(hero);
     const search = node('input', 'f99od13-search'); search.type = 'search'; search.placeholder = 'ابحث في أدوات المالك: أكواد، عقود، بنوك…'; search.setAttribute('aria-label', 'بحث في أسماء أدوات المالك المحملة');
     search.addEventListener('input', () => { closeFees(); query = search.value; collect(); renderTools(); }); root.append(search);
     const gateways = node('nav', 'f99od13-gateways'); gateways.setAttribute('aria-label', 'بوابات مركز القيادة'); root.append(gateways);
-    for (const [id, title, sub, icon] of CATS) {
-      const b = button(gateways, '', () => openCategory(id), 'f99od13-gateway'); b.dataset.category = id; b.setAttribute('aria-controls', 'f99od13-panel'); b.setAttribute('aria-expanded', 'false');
-      b.append(node('span', 'f99od13-icon', icon), node('b', '', title), node('small', '', sub));
-    }
+    renderGateways();
     panel = node('section', 'f99od13-panel'); panel.id = 'f99od13-panel'; panel.hidden = true; root.append(panel);
     categoryTitle = node('h2', 'f99od13-panel-title'); categoryTitle.tabIndex = -1; panel.append(categoryTitle);
     packageControls = node('div', 'f99od13-packages'); panel.append(packageControls);
@@ -280,12 +314,14 @@
     buildDesign(); drawer = node('details', 'f99od13-legacy'); anchor.before(drawer);
     drawer.append(node('summary', '', 'الأدوات والإعدادات الأصلية — محفوظة بالكامل'));
     drawer.append(node('p', 'f99od13-legacy-note', 'الأزرار أدناه أصلية بمستمعاتها. إعدادات الهوية والتصميم القديمة لها نطاقها الأصلي؛ ثيمات مركز القيادة لا تعدّلها.'));
+    drawer.dataset.layoutLocked = 'true';
     drawer.append(originalShell); loadLocal(); applyDesign(approved); collect(); renderTools();
     originalObserver = new MutationObserver(() => schedule()); originalObserver.observe(originalShell, {childList: true, subtree: true, characterData: true});
     // Publish mounted ONLY after original authorization and actual DOM construction.
     mountedToken = token();
     api.mounted = true;
     message('البحث في أسماء الأدوات فقط. أسعار الباقات والنسب والعقود لم تتغير.');
+    w.dispatchEvent(new CustomEvent('f99owner:mounted'));
   }
   function schedule() {
     if (scheduled) return; scheduled = true;
@@ -303,6 +339,7 @@
   function destroy() {
     if (!root) { api.mounted = false; return; }
     api.mounted = false; originalObserver?.disconnect(); originalObserver = null;
+    w.dispatchEvent(new CustomEvent('f99owner:destroyed'));
     closeFees(); previewing = false;
     // Restore original node placement, not clones or rewritten owner controls.
     drawer?.querySelectorAll('.f99od13-identical-entry').forEach(n => n.classList.remove('f99od13-identical-entry'));

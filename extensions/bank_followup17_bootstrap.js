@@ -115,7 +115,7 @@
         const id=identity(),preview=registerPreview(w.F99FeeOffers.mountClientOffer(previewHost,{api:previewApi}),()=>id===identity());mounts.push(preview);
         const result=await preview.ready;
         if(id!==identity())return;
-        if(result?.ok===true&&!result.offer&&!['BANK_FOLLOWUP_PAUSED'].includes(result.followup_reason)){const note=host.ownerDocument.createElement('p');note.textContent='لا يوجد عرض متابعة مالي معتمد متاح الآن. لم يتم تسجيل طلب أو قبول.';previewHost.append(note);}
+        if(result?.ok===true&&!result.offer&&!['BANK_FOLLOWUP_PAUSED'].includes(result.followup_reason)){const note=host.ownerDocument.createElement('p');note.textContent=w.F99T('followup22.no_financial_offer',{},'لا يوجد عرض متابعة مالي معتمد متاح الآن. لم يتم تسجيل طلب أو قبول.');previewHost.append(note);}
       }}));
     }
     if(mounts.length){host.append(root);mortgage.set(host,{root,mounts});}

@@ -1,0 +1,19 @@
+/* Scoped owner-only controls; never touches customer chat/results. */
+#ownerHub .f99bt22-module, #ownerHub .f99layout22-module { margin-block: 18px; padding: 16px; border: 1px solid var(--f99od13-border); border-radius: 14px; background: var(--f99od13-surface); color: var(--f99od13-text); }
+#ownerHub .f99bt22-module h2 { margin: 0; font-size: 21px; }
+#ownerHub .f99bt22-body { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(260px, 1.3fr); gap: 16px; margin-block: 16px; }
+#ownerHub .f99bt22-list { max-height: 600px; overflow-y: auto; }
+#ownerHub .f99bt22-list details { padding: 10px; border-bottom: 1px solid var(--f99od13-border); }
+#ownerHub .f99bt22-list summary, #ownerHub .f99layout22-module summary { font-weight: 800; cursor: pointer; }
+#ownerHub .f99bt22-sentence { width: 100%; display: flex; flex-direction: column; gap: 5px; text-align: right; margin-block: 7px; padding: 10px; border: 1px solid var(--f99od13-border); border-radius: 9px; background: #fff; color: #18334f; cursor: pointer; font: inherit; overflow-wrap: anywhere; }
+#ownerHub .f99bt22-sentence[aria-pressed="true"] { border: 2px solid var(--f99od13-accent); }
+#ownerHub .f99bt22-editor label { display: block; font-weight: 700; }
+#ownerHub .f99bt22-editor textarea, #ownerHub .f99bt22-module select { width: 100%; box-sizing: border-box; min-height: 44px; padding: 10px; border: 1px solid var(--f99od13-border); border-radius: 9px; font: inherit; background: #fff; color: #18334f; }
+#ownerHub .f99bt22-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-block: 10px; }
+#ownerHub .f99bt22-chip { min-height: 36px; border-radius: 8px; border: 1px solid var(--f99od13-border); background: #eef4fb; color: #18334f; font: inherit; cursor: pointer; }
+#ownerHub .f99bt22-preview { white-space: pre-wrap; overflow-wrap: anywhere; padding: 14px; border-radius: 10px; background: #eef4fb; }
+#ownerHub #f99bt22-errors, #ownerHub [data-error="true"] { color: #852832; }
+#ownerHub .f99bt22-history-row, #ownerHub .f99layout22-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding-block: 8px; border-bottom: 1px solid var(--f99od13-border); }
+#ownerHub .f99layout22-row label { flex: 1 1 200px; }
+#ownerHub .f99bt22-module button:focus-visible, #ownerHub .f99bt22-module textarea:focus-visible, #ownerHub .f99layout22-module button:focus-visible { outline: 3px solid var(--f99od13-accent); outline-offset: 3px; }
+@media (max-width: 700px) { #ownerHub .f99bt22-body { grid-template-columns: 1fr; } #ownerHub .f99bt22-list { max-height: 330px; } }

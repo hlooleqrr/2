@@ -125,6 +125,12 @@
     if (has(input, ['شكرا', 'يعطيك العافيه', 'مشكور', 'تسلم', 'الله يعطيك']) && text.split(' ').length <= 5) return {intent: 'thanks'};
     if (has(input, ['وش تقدر', 'ساعدني', 'مساعده', 'وش تسوي', 'الاوامر', 'help'])) return {intent: 'help'};
 
+    // A screenshot is not calculator input. This static gateway has no vision endpoint.
+    if (has(input, ['صورة حسبة', 'صوره حسبه', 'اقرأ الصورة', 'اقرا الصوره', 'محتوى الصورة', 'هذه الصورة', 'صورة الحساب', 'صورة النتيجة', 'قراءة الصور'])) return {intent: 'image'};
+    if (has(input, CHANGE.concat(['اصلح', 'اصلاح'])) && has(input, ['تقني', 'برمجي', 'كود الموقع', 'html', 'css', 'javascript', 'ملف', 'الاداء', 'البطء'])) return {intent: 'technical_edit', query: input};
+    if (/apr|معدل النسبه السنوي|التكلفه السنوي/.test(text) && has(input, ['ما هو', 'ما هي', 'وش', 'ايش', 'معنى', 'الفرق'])) return {intent: 'question', answer: 'APR هو معدل النسبة السنوي للتكلفة الإجمالية للتمويل، وليس هامش الربح السنوي؛ لا يُستبدل أحدهما بالآخر في الحاسبة.'};
+    if (has(input, ['هل تغير', 'هل تعدل', 'تغير بنفسك', 'صلاحيتك', 'صلاحياتك'])) return {intent: 'question', answer: 'لا أغيّر نسب البنوك أو العقود أو المخزون من تلقاء نفسي. أعرض مسودة، والتنفيذ الحساس يحتاج مراجعتك واعتمادك بالزر.'};
+
     const count = parseNumber(input);
     const isContract = has(input, ['عقد', 'عقود', 'العقد', 'العقود']);
     // contracts
@@ -151,7 +157,7 @@
     }
     // rates
     if ((has(input, ['نسب', 'نسبه', 'فائده', 'هامش', 'فوائد', 'apr', 'معدل']) || /\bapr(?=\W|\d|$)/.test(text)) && (has(input, ['بنك', 'بنوك', 'البنوك', 'البنك']) || /\d/.test(text) || has(input, ['شخصي', 'عقاري', 'سجل', 'استعاده']))) {
-      if (has(input, ['سجل', 'تاريخ التعديلات', 'استعاده', 'استرجاع'])) return {intent: 'bank_rate_history', query: input};
+    if (has(input, ['سجل', 'تاريخ التعديلات', 'استعاده', 'استرجاع'])) return {intent: 'bank_rate_history', query: input};
       const spec = rateAPI()?.parse(input);
       if (has(input, CHANGE.concat(['صارت', 'صار'])) || spec?.new_rate !== null && spec?.new_rate !== undefined || spec?.metric === 'APR') {
         return {intent: 'bank_rate_set', rate: spec?.new_rate ?? null, source: spec?.source || '', spec, query: input};
@@ -160,6 +166,13 @@
     }
     if ((has(input, ['سياسه', 'سياسات']) && has(input, ['عقاري', 'العقاري', 'العقاريه', 'سداد مبكر', 'السداد المبكر'])) || (has(input, ['سداد مبكر', 'السداد المبكر']) && (has(input, CHANGE) || /\d/.test(text) || has(input, ['فعل', 'شغل', 'اوقف', 'عطل', 'سنتين']))))
       return {intent: 'mortgage_policy', changes: parseEarlyPolicy(input)};
+    // A question about a calculator is not permission to open it or recompute.
+    if (/^(ما هو|ما هي|ما معني|وش معني|ايش معني)/.test(text)) {
+      if (/عقار|رهن/.test(text)) return {intent: 'question', answer: 'التمويل العقاري تمويل لشراء أو بناء عقار بضمانه عادةً. تختلف شروطه حسب البنك والمنتج؛ لا أعتمد عرضًا أو أعيد حساب حسبة دون طلبك.'};
+      if (/مديوني/.test(text)) return {intent: 'question', answer: 'شراء المديونية هو نقل الالتزام القائم إلى جهة تمويل أخرى لتسويته وفق عرضها. المقارنة تحتاج شروط العرض الفعلي، وليست موافقة مصرفية.'};
+      return {intent: 'unknown'};
+    }
+    if (/^كيف/.test(text) && /افتح|ادخل|استخدم/.test(text)) return {intent: 'question', answer: 'اختر بوابة الخدمة المطلوبة من مكتب المالك، ثم افتح أداتها الأصلية. حدّد اسم الخدمة لأوضح مكانها؛ لم أفتح حاسبة أو أنفذ تغييرًا.'};
     // navigation
     if (has(input, ['سداد مبكر', 'السداد المبكر'])) return {intent: 'open', route: 'early'};
     if (has(input, ['بناء ذاتي', 'البناء الذاتي', 'على الخارطه', 'الخارطه', 'نقل التمويل العقاري', 'نقل المديونيه العقاريه', 'ترشيح البنوك', 'منتجات العقاري'])) return {intent: 'open', route: 'advanced'};
@@ -171,7 +184,8 @@
     if (has(input, ['البنوك', 'بنوك', 'الشعارات'])) return {intent: 'open', route: 'banks'};
     // reports
     const topics = TOPICS.filter(([, w]) => has(input, w)).map(([k]) => k);
-    if (has(input, SHOW)) return {intent: 'report', topics: topics.length ? topics : ['summary']};
+    if (topics.length && has(input, SHOW)) return {intent: 'report', topics};
+    if (has(input, ['تقرير', 'ملخص المنصة', 'ملخص المنصه', 'وضع المنصة', 'وضع المنصه'])) return {intent: 'report', topics: ['summary']};
     // A topic word with a number but no "show" verb is probably an action phrased differently: ask the server brain.
     if (topics.length && count === null) return {intent: 'report', topics};
     return {intent: 'unknown'};
@@ -275,14 +289,29 @@
 
     const SOURCES = [['dashboard', 'fino_admin_dashboard', {}], ['alerts', 'f99v78_owner_alerts', {}], ['stock', 'f99v9_admin_stock_summary', {}], ['cases', 'f99v60_admin_cases', {p_limit: 30}],
       ['packages', 'f99v76_owner_packages', {}], ['kdeals', 'f99k_owner_deals', {p_limit: 60}], ['kvault', 'f99k_owner_vault', {}]];
-    async function read(force) {
-      if (!force && Date.now() - readAt < 60000) return [];
-      const got = await Promise.all(SOURCES.map(([k, fn, a]) => call(fn, a).then(r => [k, r])));
-      const failed = []; got.forEach(([k, r]) => { if (r.ok) data[k] = r; else failed.push(k); }); readAt = Date.now(); return failed;
+    const TOPIC_SOURCES = {sales: ['dashboard', 'packages'], stock: ['stock', 'kvault'], contracts: ['kdeals'], alerts: ['alerts'], codes: ['dashboard'], renewal: ['packages'], summary: ['dashboard', 'stock', 'kdeals']};
+    const reads = new Map();
+    let dataOwner = '';
+    async function read(force, topics = ['summary']) {
+      if (!isOwner()) return ['owner'];
+      const actor = finoCentralAdminToken;
+      if (dataOwner !== actor) { data = {}; reads.clear(); dataOwner = actor; }
+      const wanted = new Set(topics.flatMap(t => TOPIC_SOURCES[t] || []));
+      const got = await Promise.all(SOURCES.filter(([k]) => wanted.has(k)).map(([k, fn, a]) => {
+        // Share only concurrent reads in this owner session, never cache protected data.
+        if (!reads.has(k)) {
+          const promise = call(fn, a).then(r => [k, r]).finally(() => { if (reads.get(k) === promise) reads.delete(k); });
+          reads.set(k, promise);
+        }
+        return reads.get(k);
+      }));
+      if (!isOwner() || finoCentralAdminToken !== actor || !modal) return ['session_changed'];
+      const failed = []; got.forEach(([k, r]) => { if (r.ok) data[k] = r; else { delete data[k]; failed.push(k); } }); readAt = Date.now(); return failed;
     }
 
     function save() { try { const items = [...(list?.querySelectorAll('.f99xc-msg[data-plain]') || [])].slice(-40).map(m => ({who: m.dataset.who, text: m.dataset.plain})); sessionStorage.setItem(HKEY, JSON.stringify(items)); } catch (e) { /* ignore */ } }
     function bubble(who, text, keep = true) {
+      if (!list || !isOwner()) return null;
       const m = el('div', 'f99xc-msg ' + who); const b = el('div', 'f99xc-bubble'); String(text).split('\n').forEach((line, i) => { if (i) b.append(el('br')); b.append(d.createTextNode(line)); });
       const t = el('time', '', new Date().toLocaleTimeString('ar-SA', {hour: '2-digit', minute: '2-digit'})); b.append(t); m.append(b);
       if (keep) { m.dataset.who = who; m.dataset.plain = String(text).slice(0, 2000); }
@@ -310,7 +339,9 @@
       c.append(el('p', 'f99xc-muted', opts.note || 'ما نفذت شيء للحين. راجع واضغط «اعتمد».'));
       const acts = el('div', 'f99xc-actions'); c.append(acts);
       const status = el('p', 'f99xc-status'); status.setAttribute('role', 'status');
-      const ok = btn(acts, opts.okLabel || 'اعتمد ونفّذ', async () => {
+      const cardActor = finoCentralAdminToken;
+      const ok = btn(acts, opts.okLabel || 'اعتمد ونفّذ', async ev => {
+        if (ev?.isTrusted !== true || !isOwner() || finoCentralAdminToken !== cardActor || !c.isConnected) return;
         if (ok.disabled || c.classList.contains('done') || c.classList.contains('cancelled')) return;
         ok.disabled = true; no.disabled = true; status.textContent = 'جاري التنفيذ في المركزية...';
         const vals = {}; Object.entries(fields).forEach(([k, i]) => { vals[k] = typeof i.value === 'string' ? i.value.trim() : i.value; });
@@ -472,7 +503,10 @@
       if (!ratesUI) ratesUI = api.create(w, {call, card, say});
       return ratesUI;
     }
-    async function doBankRates(query) { return rateManager()?.show(query || ''); }
+    async function doBankRates(query) {
+      if (has(query, ['جدول', 'جداول', 'تقرير', 'سجلات', 'اعرض النسب', 'ورني نسب'])) return rateManager()?.show(query || '');
+      return say('لا أقترح نسبة من دون مصدر وتاريخ ونوع منتج ونسبة دقيقة، ولا أعتمدها تلقائيًا. حدّد البنك والسجل المطلوب؛ ويمكنك طلب «اعرض جدول النسب» لقراءة السجلات الحالية فقط.');
+    }
     async function doBankRateSet(rate, source, query) {
       // Reparse the original sentence; never trust old allNumbers/AI rate slots.
       return rateManager()?.change(query || '');
@@ -574,10 +608,17 @@
 
     async function handle(u, text, fromVoice) {
       switch (u.intent) {
-        case 'greet': say('هلا والله يا مالك FINO99 👋 وش تبي نسوي اليوم؟'); chips(HELP.slice(0, 4)); return;
-        case 'thanks': say('العفو، أنا حاضر. 🌹'); return;
-        case 'help': say('أقدر أقرأ لك المنصة وأجهز وأنفذ بعد موافقتك:'); chips(HELP); return;
-        case 'confirm': if (!pending) return say('ما فيه شيء بانتظار الموافقة.'); if (fromVoice && pending.voiceBlocked) return say('للأمان ما أعتمد أي تنفيذ بالصوت. اضغط زر «اعتمد» بنفسك.'); pending.run(); return;
+        case 'greet': say('هلا بك. ما سؤالك أو طلبك المحدد؟'); return;
+        case 'thanks': say('العفو، حاضر.'); return;
+        case 'help': say('أجيب عن الاستخدام وأقرأ بيانات المنصة عند طلبها، وأعرض مسودة قبل التغيير الحساس. قراءة الصور غير متاحة في النسخة الثابتة، والفهم اللغوي العام يحتاج خادمًا موثوقًا.'); return;
+        case 'question': return say(u.answer);
+        case 'image': return say('قراءة الصور وفهم محتوى صورة الحسبة غير متاحين في هذه النسخة الثابتة. لا أستطيع تأكيد أي رقم منها ولن أعيد حسابها. انسخ النص أو حدّد السطر المطلوب، وسأشرح ما ترسله أو أقترح تعديلًا محددًا فقط.');
+        case 'technical_edit': {
+          const q = norm(u.query || text);
+          const place = /نسب|بنك/.test(q) ? 'public/extensions/fino99_rate_manager.js' : /مساعد|تنفيذي/.test(q) ? 'public/extensions/fino99_executive_gateway.js' : /بطء|اداء/.test(q) ? 'public/extensions/fino99_performance.js' : 'public/index.html';
+          return say('المكان المبدئي للمراجعة: ' + place + '. لا أملك وصولًا لملفات النشر من الموقع الثابت. أرسل اسم الدالة أو مقطع الكود والنتيجة المطلوبة؛ سأحدد التعديل وأعرض الفرق قبل أي تغيير حساس. لم أغيّر ملفًا أو نسبًا أو عقدًا أو مخزونًا.');
+        }
+        case 'confirm': if (!pending) return say('ما فيه شيء بانتظار الموافقة.'); return say('التنفيذ الحساس لا يُعتمد برسالة أو صوت. راجع التفاصيل واضغط زر الاعتماد بنفسك.');
         case 'cancel': if (pending) { pending.card.querySelector('.f99xc-actions button:last-child')?.click(); } ctx.awaiting = null; say('تمام، ألغيت.'); return;
         case 'contract_free': ctx.awaiting = 'contract_body'; say('أبشر. أرسل لي نص العقد كامل في رسالة وحدة (أقل شي 20 حرف)، وأجهز لك المسودة والكود.'); return;
         case 'contract_body': ctx.awaiting = null; return doContractFree(u.body);
@@ -597,7 +638,8 @@
         case 'open': return go(u.route);
         case 'report': {
           if ((u.topics || []).length === 1 && u.topics[0] === 'contracts' && lastDeal && has(text, ['وش صار', 'وين وصل'])) return doDealStatus();
-          const failed = await read(true); const parts = (u.topics || ['summary']).map(t => report(t, data));
+          const failed = await read(true, u.topics || ['summary']); if (!modal || failed.includes('session_changed')) return;
+          const parts = (u.topics || ['summary']).map(t => report(t, data));
           say(parts.join('\n\n') + (failed.length ? '\n(تعذرت قراءة: ' + failed.join('، ') + ')' : ''));
           const acts = el('div', 'f99xc-actions'); (u.topics || []).forEach(t => { const r = {stock: 'inventory', contracts: 'contracts', renewal: 'renewal', alerts: null, codes: 'code', sales: 'renewal'}[t]; if (r) openBtn(acts, r); });
           if (acts.childElementCount) list.lastChild.querySelector('.f99xc-bubble').append(acts); drawPulse(); return;
@@ -605,14 +647,14 @@
         default: {
           const b = await brain(text);
           if (b && b.intent && b.intent !== 'unknown' && b.intent !== 'chat') return handle({...b.slots, intent: b.intent, query: text}, text, fromVoice);
-          if (b && b.reply) return say(String(b.reply).slice(0, 800));
-          say('ما فهمت عليك تمامًا. جرّب وحدة من هذي:'); chips(HELP.slice(0, 6));
+          if (b && b.reply) return say(String(b.reply).slice(0, 300));
+          say('لم أستطع فهم هذا السؤال بثقة. النسخة الثابتة تعتمد على أوامر محلية وليست مساعدًا عامًا متصلًا بالذكاء الاصطناعي. حدّد المطلوب أو أرسل النص الذي تريد شرحه.');
         }
       }
     }
 
     async function send(text, fromVoice) {
-      const t = String(text || '').trim().slice(0, 4000); if (!t || !modal) return;
+      const t = String(text || '').trim().slice(0, 4000); if (!t || !modal || !isOwner()) return;
       bubble('me', t); if (input) input.value = '';
       const u = understand(t, {awaiting: ctx.awaiting, pending: !!pending});
       const typing = el('div', 'f99xc-msg bot typing'); typing.append(el('div', 'f99xc-bubble', '…')); list.append(typing);
@@ -667,11 +709,9 @@
       restored.forEach(m => bubble(m.who === 'me' ? 'me' : 'bot', m.text, true));
       if (!restored.length) greet();
       input.focus?.();
-      await read(true); drawPulse();
-      const pr = priorities(data).filter(p => p.level !== 'ok');
-      if (pr.length && !restored.length) { say('أولويات اليوم من قراءة المركزية:\n' + pr.slice(0, 5).map(p => '• ' + p.text).join('\n')); }
+      // No unsolicited dashboard/report reads. Only the requested topic is fetched.
     }
-    function greet() { say('هلا يا مالك FINO99 👋 أنا مديرك التنفيذي الذكي. كلمني بالعامية كتابة أو صوت، وأقرأ لك المنصة من المركزية وأجهز لك العقود والأكواد والنسب، وما أنفذ تغيير حساس إلا بعد ما تضغط «اعتمد».'); chips(HELP.slice(0, 5)); }
+    function greet() { say('هلا بك. أجيب باختصار بحسب طلبك، ولا أنفذ تغييرًا حساسًا دون مراجعتك واعتمادك. قراءة الصور غير متاحة في النسخة الثابتة.'); }
 
     return {open, close: () => closeChat(true), send};
   }

@@ -12,7 +12,21 @@
     fino_public_settings: Object.freeze({ ttl: 5000, args: [] }),
     f99v25_public_completion_offers: Object.freeze({ ttl: 5000, args: [] }),
     f99v27_preflight: Object.freeze({ ttl: 0, args: [] }),
-    f99v32_live_snapshot: Object.freeze({ ttl: 0, args: ['p_package_key'] })
+    f99v32_live_snapshot: Object.freeze({ ttl: 0, args: ['p_package_key'] }),
+    // r22: exact read-only definitions audited in DELIVERY_21 schema (voice in EPS).
+    // These reads previously fenced one another as unknown writes at startup,
+    // causing 5–8 identical settings downloads. No settled cache for these RPCs.
+    f99v24_public_studio: Object.freeze({ ttl: 0, args: [] }),
+    f99v45_public_theme: Object.freeze({ ttl: 0, args: [] }),
+    f99v49_public_copy: Object.freeze({ ttl: 0, args: [] }),
+    f99v50_public_experience: Object.freeze({ ttl: 0, args: [] }),
+    f99v58_public_ui: Object.freeze({ ttl: 0, args: [] }),
+    f99v68_public_configs: Object.freeze({ ttl: 0, args: [] }),
+    f99v70_public_presentation: Object.freeze({ ttl: 0, args: [] }),
+    f99o3_public_catalog: Object.freeze({ ttl: 0, args: [] }),
+    f99v8_public_renewal_settings: Object.freeze({ ttl: 0, args: [] }),
+    f99d1_voice_public: Object.freeze({ ttl: 0, args: [] }),
+    f99r22_settings_public: Object.freeze({ ttl: 0, args: [] })
   });
   const MAX_ENTRIES = 32;
   const MAX_ENTRY_BYTES = 256 * 1024;
@@ -325,7 +339,7 @@
   }
 
   w.F99Performance = Object.freeze({
-    version: '20261115-r19b', install, invalidate, freshRpc,
+    version: '20261116r22J', install, invalidate, freshRpc,
     diagnostics: () => Object.freeze({ ...stats, generation, cacheEntries: cache.size,
       cacheBytes, inFlight: inFlight.size, installed: !!wrapped && host.finoRpc === wrapped }),
     policy: Object.freeze({ fino_public_settings: 5000, f99v25_public_completion_offers: 5000, f99v32_live_snapshot: 0 })

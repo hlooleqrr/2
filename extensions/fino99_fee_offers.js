@@ -9,6 +9,28 @@
   if (root) root.F99FeeOffers = api;
 })(typeof window !== 'undefined' ? window : null, function () {
   'use strict';
+  const textDefs = [
+    ['f13_title','عنوان عرض الأتعاب','{title}',['title']],
+    ['f13_amount','أتعاب العرض','{amount} ريال',['amount']],
+    ['f13_amounts','الأتعاب السابقة والخصم','المبلغ الأساسي: {base} — الخصم الثابت: {discount}',['base','discount']],
+    ['f13_meta','مدة عرض المالك','أتعاب حددها المالك • {start} • حتى {expiry}',['start','expiry']],
+    ['f13_terms_title','عنوان الشروط','الشروط قبل الإقرار',[]],
+    ['f13_notice','حدود الموافقة','الموافقة هنا إقرار بالشروط وإبداء اهتمام فقط؛ ليست توقيع عقد أو سدادًا أو تنفيذ تمويل.',[]],
+    ['f13_ack','نص الإقرار','قرأت الشروط وأقر بها وأبدي اهتمامي بالعرض.',[]],
+    ['f13_accept','زر الموافقة','إقرار بالشروط وإبداء اهتمام',[]],
+    ['f13_read_terms','تنبيه قراءة الشروط','اقرأ الشروط ثم حدد الإقرار أولًا.',[]],
+    ['f13_existing','موافقة مسجلة','تم تسجيل الاهتمام والإقرار بهذه النسخة؛ ليست عملية سداد أو توقيع.',[]],
+    ['f13_accepted','بعد الموافقة','سُجل إقرارك واهتمامك فقط. يراجع المالك الخطوة التالية.',[]],
+    ['f13_retry','تعذر تأكيد الاتصال','تعذر تأكيد الاتصال؛ أعد المحاولة بنفس الطلب.',[]],
+    ['f13_refresh','تحديث العرض','تحديث العرض وقراءة الشروط',[]],
+    ['f13_load_error','تعذر تحميل العرض','تعذر تحميل العرض؛ لا يوجد مبلغ مؤكد محليًا.',[]],
+    ['f13_external_notice','حدود رابط العرض','رابط خارجي فقط — لا يوجد اتصال checkout أو تحقق دفع.',[]],
+    ['f13_external_action','إجراء العرض الخارجي','فتح المنصة الخارجية',[]],
+    ['f13_error_changed','تغير العرض','تغيّر العرض؛ حدّث البيانات وأعد قراءة الشروط قبل المحاولة.',[]],
+    ['f13_error','تعذر التنفيذ','تعذر التنفيذ بأمان: {reason}',['reason']]
+  ];
+  if (typeof window !== 'undefined') window.F99Texts?.register(textDefs.map(([key,label,text,vars]) => ({key:'followup22.'+key,label,text,vars,category:key.includes('ack')||key.includes('accept')||key.includes('notice')||key.includes('retry')||key.includes('error')?'الموافقة والاعتذار والتأجيل':'عروض المتابعة'})));
+  const T = (key, vars, fallback) => typeof window !== 'undefined' && window.F99T ? window.F99T('followup22.' + key, vars, fallback) : fallback;
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const NOTICE = 'الموافقة هنا إقرار بالشروط وإبداء اهتمام فقط؛ ليست توقيع عقد أو سدادًا أو تنفيذ تمويل.';
   const DRAFT_NOTICE = 'مسودة فاتورة/مطالبة فقط، ليست وثيقة ضريبية معتمدة ولا إثبات سداد. إصدار الفاتورة النظامية والضريبة والسداد محجوب.';
@@ -86,20 +108,20 @@
   }
   function textError(status, r) {
     status.textContent = r?.reason === 'F13_CAS_CONFLICT' || r?.reason === 'F13_OFFER_CHANGED'
-      ? 'تغيّر العرض؛ حدّث البيانات وأعد قراءة الشروط قبل المحاولة.'
-      : 'تعذر التنفيذ بأمان: ' + String(r?.reason || 'تعذر الاتصال.');
+      ? T('f13_error_changed', {}, 'تغيّر العرض؛ حدّث البيانات وأعد قراءة الشروط قبل المحاولة.')
+      : T('f13_error', {reason:String(r?.reason || 'تعذر الاتصال.')}, 'تعذر التنفيذ بأمان: ' + String(r?.reason || 'تعذر الاتصال.'));
   }
   function offerPanel(doc, host, offer) {
-    host.appendChild(node(doc, 'h3', offer.title));
-    host.appendChild(node(doc, 'p', offer.trueOfferAmount + ' ريال', 'f99f13-amount'));
-    host.appendChild(node(doc, 'p', 'المبلغ الأساسي: ' + offer.baseAmount + ' — الخصم الثابت: ' + offer.discountAmount));
-    host.appendChild(node(doc, 'p', 'أتعاب حددها المالك • ' + offer.owner_defined_at + ' • حتى ' + offer.expires_at, 'f99f13-meta'));
-    host.appendChild(node(doc, 'h4', 'الشروط قبل الإقرار'));
+    host.appendChild(node(doc, 'h3', T('f13_title', {title:offer.title}, offer.title)));
+    host.appendChild(node(doc, 'p', T('f13_amount', {amount:offer.trueOfferAmount}, offer.trueOfferAmount + ' ريال'), 'f99f13-amount'));
+    host.appendChild(node(doc, 'p', T('f13_amounts', {base:offer.baseAmount,discount:offer.discountAmount}, 'المبلغ الأساسي: ' + offer.baseAmount + ' — الخصم الثابت: ' + offer.discountAmount)));
+    host.appendChild(node(doc, 'p', T('f13_meta', {start:offer.owner_defined_at,expiry:offer.expires_at}, 'أتعاب حددها المالك • ' + offer.owner_defined_at + ' • حتى ' + offer.expires_at), 'f99f13-meta'));
+    host.appendChild(node(doc, 'h4', T('f13_terms_title', {}, 'الشروط قبل الإقرار')));
     host.appendChild(node(doc, 'pre', offer.validTerms, 'f99f13-terms'));
-    host.appendChild(node(doc, 'p', NOTICE, 'f99f13-notice'));
+    host.appendChild(node(doc, 'p', T('f13_notice', {}, NOTICE), 'f99f13-notice'));
     if (offer.scope === 'external_link') {
-      host.appendChild(node(doc, 'p', 'رابط خارجي فقط — لا يوجد اتصال checkout أو تحقق دفع.', 'f99f13-notice'));
-      if (safeHttps(offer.external_url)) { const a = node(doc, 'a', 'فتح المنصة الخارجية'); a.href = offer.external_url; a.target = '_blank'; a.rel = 'noopener noreferrer'; host.appendChild(a); }
+      host.appendChild(node(doc, 'p', T('f13_external_notice', {}, 'رابط خارجي فقط — لا يوجد اتصال checkout أو تحقق دفع.'), 'f99f13-notice'));
+      if (safeHttps(offer.external_url)) { const a = node(doc, 'a', T('f13_external_action', {}, 'فتح المنصة الخارجية')); a.href = offer.external_url; a.target = '_blank'; a.rel = 'noopener noreferrer'; host.appendChild(a); }
     }
   }
   function mountClientOffer(container, options) {
@@ -122,10 +144,10 @@
         if (!r?.ok) { root.hidden = false; root.appendChild(status); textError(status, r); return r; }
         if (!r.offer) { root.hidden = true; return r; }
         current = r.offer; root.hidden = false; offerPanel(doc, root, current); root.appendChild(status);
-        if (r.acceptance) { status.textContent = 'تم تسجيل الاهتمام والإقرار بهذه النسخة؛ ليست عملية سداد أو توقيع.'; return r; }
-        const ack = field(doc, root, 'قرأت الشروط وأقر بها وأبدي اهتمامي بالعرض.', 'checkbox', false);
-        const accept = button(doc, root, 'إقرار بالشروط وإبداء اهتمام', async () => {
-          if (busy || destroyed || !ack.checked) { status.textContent = 'اقرأ الشروط ثم حدد الإقرار أولًا.'; return; }
+        if (r.acceptance) { status.textContent = T('f13_existing', {}, 'تم تسجيل الاهتمام والإقرار بهذه النسخة؛ ليست عملية سداد أو توقيع.'); return r; }
+        const ack = field(doc, root, T('f13_ack', {}, 'قرأت الشروط وأقر بها وأبدي اهتمامي بالعرض.'), 'checkbox', false);
+        const accept = button(doc, root, T('f13_accept', {}, 'إقرار بالشروط وإبداء اهتمام'), async () => {
+          if (busy || destroyed || !ack.checked) { status.textContent = T('f13_read_terms', {}, 'اقرأ الشروط ثم حدد الإقرار أولًا.'); return; }
           busy = true; accept.disabled = true;
           try {
             // Keep request UUID stable for uncertain transport retries, never send client amount/package.
@@ -135,14 +157,14 @@
             if (res?.reason === 'BANK_FOLLOWUP_PAUSED') {
               current = null; pending = null; window.F99BankFollowup17.showApology(root); return res;
             }
-            if (res?.ok) { status.textContent = 'سُجل إقرارك واهتمامك فقط. يراجع المالك الخطوة التالية.'; ack.disabled = true; o.onAccepted?.(res.acceptance); }
-            else { textError(status, res); accept.disabled = false; if (res?.reason === 'F13_OFFER_CHANGED') { current = null; accept.disabled = true; button(doc, root, 'تحديث العرض وقراءة الشروط', refresh); } }
-          } catch (_) { if (!destroyed) { status.textContent = 'تعذر تأكيد الاتصال؛ أعد المحاولة بنفس الطلب.'; accept.disabled = false; } }
+            if (res?.ok) { status.textContent = T('f13_accepted', {}, 'سُجل إقرارك واهتمامك فقط. يراجع المالك الخطوة التالية.'); ack.disabled = true; o.onAccepted?.(res.acceptance); }
+            else { textError(status, res); accept.disabled = false; if (res?.reason === 'F13_OFFER_CHANGED') { current = null; accept.disabled = true; button(doc, root, T('f13_refresh', {}, 'تحديث العرض وقراءة الشروط'), refresh); } }
+          } catch (_) { if (!destroyed) { status.textContent = T('f13_retry', {}, 'تعذر تأكيد الاتصال؛ أعد المحاولة بنفس الطلب.'); accept.disabled = false; } }
           finally { busy = false; }
         });
-        button(doc, root, 'إغلاق العرض', () => { if (busy) return; root.hidden = true; o.onDecline?.(); });
+        button(doc, root, T('close', {}, 'إغلاق العرض'), () => { if (busy) return; root.hidden = true; o.onDecline?.(); });
         return r;
-      } catch (_) { if (!destroyed && gen === generation) { root.hidden = false; root.replaceChildren(status); status.textContent = 'تعذر تحميل العرض؛ لا يوجد مبلغ مؤكد محليًا.'; } return { ok: false }; }
+      } catch (_) { if (!destroyed && gen === generation) { root.hidden = false; root.replaceChildren(status); status.textContent = T('f13_load_error', {}, 'تعذر تحميل العرض؛ لا يوجد مبلغ مؤكد محليًا.'); } return { ok: false }; }
     }
     const ready = refresh();
     return { root, ready, refresh, clearFollowup() { generation++; current = null; pending = null; root.replaceChildren(); root.hidden = true; }, destroy() { destroyed = true; generation++; root.remove(); current = null; pending = null; } };
@@ -211,6 +233,7 @@
     if (!api?.catalog || !api?.saveOffer) throw new Error('F13_API_REQUIRED');
     const root = node(doc, 'section', '', 'f99f13 f99f13-owner'); root.dir = 'rtl'; container.appendChild(root);
     root.appendChild(node(doc, 'h2', 'عروض الأتعاب'));
+    if (typeof window !== 'undefined' && window.F99BotTextsPortal) button(doc, root, 'نصوص العرض وواتساب', () => window.F99BotTextsPortal && window.F99BotTextsPortal.open({category:'عروض المتابعة'}));
     root.appendChild(node(doc, 'p', 'بوابة واحدة: كود محدد أولًا، ثم الباقة، ثم الرابط الخارجي. مبالغ مستقلة يحددها المالك، لا تغيّر أسعار الباقات.', 'f99f13-notice'));
     const nav = node(doc, 'nav', '', 'f99f13-actions'), status = node(doc, 'p', '', 'f99f13-status'), body = node(doc, 'div'); root.appendChild(nav); root.appendChild(status); root.appendChild(body);
     status.setAttribute('role', 'status'); let destroyed = false, version = 0, catalog = null;

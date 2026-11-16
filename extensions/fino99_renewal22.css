@@ -1,0 +1,12 @@
+/* G22 scoped renewal/service links only; original result cards/images are untouched. */
+#f99r22RenewalPage .viewport{max-width:760px;margin:0 auto;padding:22px 12px}
+.f99r22-chat{direction:rtl;min-height:0;flex:1;overflow:auto;color:#193e53;font:500 15px/1.8 Cairo,Tahoma,sans-serif}
+.f99r22-renewal{direction:rtl;box-sizing:border-box;max-width:600px;border:1px solid #b5d1d8;background:#f2f7f8;border-radius:15px;padding:12px 14px;margin:12px 4px;color:#193e53;font:500 14px/1.8 Cairo,Tahoma,sans-serif}
+.f99r22-renewal>p{margin:0 0 9px}.f99r22-renewal .f99s12-button{min-height:44px;padding:8px 12px;margin:4px;font-size:14px}
+.f99r22-offers[hidden]{display:none!important}.f99r22-offer{background:#fff;border:1px solid #d0e1e7;border-radius:12px;padding:11px;margin:10px 0}
+.f99r22-offer h4{margin:0 0 5px;font-size:15px;color:#173b51}.f99r22-offer strong{color:#185766;font-size:18px}.f99r22-offer p{margin:5px 0}
+.f99r22-links{direction:rtl;display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 4px;padding:6px;border-bottom:1px solid #d0e1e7}
+.f99r22-links .f99s12-button{background:transparent;text-decoration:underline;border:0;margin:0;padding:8px;min-height:44px;color:#244762}
+.f99r22-code-entry{width:100%;padding:10px;background:#f5faff;border-radius:12px}.f99r22-code-entry label,.f99r22-code-entry input{display:block;width:100%;box-sizing:border-box}.f99r22-code-entry input{min-height:44px;border:1px solid #a6bfce;border-radius:8px;font:inherit;background:#fff;padding:8px}
+.f99r22-review{margin:12px 4px;padding:10px;border:1px solid #d0e1e7;border-radius:12px;color:#193e53}.f99r22-review summary{cursor:pointer;min-height:44px}.f99r22-review pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}
+@media(max-width:560px){.f99r22-renewal .f99s12-button{width:auto;max-width:100%}.f99r22-links{margin-top:3px}.f99r22-links .f99s12-button{width:auto;font-size:13px}}

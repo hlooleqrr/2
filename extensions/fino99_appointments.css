@@ -106,3 +106,17 @@
 @media (prefers-reduced-motion: reduce) {
   .f99a9-overlay *, .f99a9-entry * { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }
+
+/* R22 H: true month grid, scoped to appointments. */
+.f99a22-calendar { border: 1px solid #c9dce3; border-radius: 12px; padding: 12px; margin: 12px 0; min-width: 0; }
+.f99a22-monthnav { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.f99a22-monthgrid { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 4px; direction: ltr; margin-top: 10px; }
+.f99a22-weekday { text-align: center; font-size: 12px; color: #486775; }
+.f99a22-date { min-width: 0; min-height: 42px; border: 1px solid #ccdce3; border-radius: 7px; background: #fff; color: #174b5d; font: inherit; cursor: pointer; }
+.f99a22-date[aria-pressed="true"] { background: #125f73; color: #fff; outline: 2px solid #073c4b; }
+.f99a22-date[data-state="working"] { border-bottom: 4px solid #347c54; }
+.f99a22-date[data-state="closed"] { background: #eee; color: #777; }
+.f99a22-date:disabled { opacity: .38; cursor: not-allowed; }
+.f99a22-period { border-inline-start: 4px solid #125f73; padding: 10px; margin: 8px 0; background: #f0f7f8; }
+.f99a22-dates { display: flex; flex-wrap: wrap; gap: 6px; }
+@media(max-width:650px) { .f99a22-calendar {padding:8px;} .f99a22-monthgrid {gap:3px;} .f99a22-date {min-height:40px;font-size:14px;} }

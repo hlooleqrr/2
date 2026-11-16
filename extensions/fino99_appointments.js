@@ -185,8 +185,11 @@
       status.textContent = publicText(message); status.dataset.error = bad ? '1' : '0';
       status.setAttribute('role', bad ? 'alert' : 'status');
     }
+    function T(key, vars) { return w.F99AppointmentCalendar22.t(key, vars); }
     function errorText(err) {
       const reason = String(err?.code || err?.message || '');
+      if (/DUPLICATE_BOOKING/i.test(reason)) return T('appointment22.duplicate');
+      if (/OWNER_POLICY_DENIED/i.test(reason)) return T('appointment22.policy_denied');
       if (/REVISION|VERSION|CONSENT/i.test(reason)) return 'تغيرت نسخة الخدمة أو الإقرار. أعد قراءة الخدمة وراجعها قبل الحفظ أو الحجز.';
       if (/SESSION|TOKEN|ADMIN|AUTH|DEVICE/i.test(reason)) return 'جلسة الدخول غير متاحة أو انتهت. أعد الدخول بالكود المناسب.';
       if (/SLOT|OVERLAP|COLLISION|HOURS|CLOSED/i.test(reason)) return 'الوقت غير متاح الآن أو خارج الدوام. حدّث الأوقات الفعلية واختر وقتًا آخر.';
@@ -207,7 +210,7 @@
     async function ownerCall(s, action, data = {}, mutation = false) {
       if (!sessionLive(s) || s?.role !== 'owner' || typeof w.finoCentralAdminCall !== 'function') throw Error('ADMIN_SESSION_INVALID');
       let r;
-      try { r = await w.finoCentralAdminCall('f99a9_owner', {p_action: action, p_data: data}); }
+      try { r = await w.finoCentralAdminCall('f99r22h_owner', {p_action: action, p_data: data}); }
       catch (err) { err.uncertain = mutation; throw err; }
       if (!sessionLive(s)) { const e = Error('SESSION_CHANGED'); e.uncertain = mutation; throw e; }
       return unpack(r, mutation);
@@ -215,7 +218,7 @@
     async function clientCall(s, action, data = {}, mutation = false) {
       if (!sessionLive(s) || s?.role !== 'client' || typeof w.finoRpc !== 'function') throw Error('SESSION_INVALID');
       let r;
-      try { r = await w.finoRpc('f99a9_client', {p_entry_token: s.token, p_device_id: s.device, p_product_key: s.key, p_action: action, p_data: data}, 20000); }
+      try { r = await w.finoRpc('f99r22h_client', {p_entry_token: s.token, p_device_id: s.device, p_product_key: s.key, p_action: action, p_data: data}, 20000); }
       catch (err) { err.uncertain = mutation; throw err; }
       if (!sessionLive(s)) { const e = Error('SESSION_CHANGED'); e.uncertain = mutation; throw e; }
       return unpack(r, mutation);
@@ -361,7 +364,7 @@
         button(box, 'تحرير الخدمة والدوام', () => renderServiceEditor(s, x), true);
         button(box, 'مواعيد هذه الخدمة', () => renderOwnerSchedule(s, x.product_key));
         button(box, 'تخصيص أكواد لهذه الخدمة بموافقتي', () => renderAllocation(s, x));
-        button(box,'مخزون الخدمة وتصدير الدفعات واعتماد الرفع',()=>renderStock(s,x));
+        button(box,'مخزون المواعيد المستقل وتصدير سلة',()=>renderStock(s,x));
       }
     }
     function renderCreate(s) {
@@ -387,18 +390,18 @@
         } }
       }, true);
     }
-    function inventoryAvailable() {
-      return typeof w.F99AppointmentsInventory?.openBatch === 'function' || typeof w.F99V17OpenInventory === 'function';
-    }
+    function inventoryAvailable() { return true; }
     function openInventory(s, detail) {
       if (!sessionLive(s)) return invalidate();
-      if (!inventoryAvailable()) throw localError('واجهة المخزون غير محملة؛ احتفظ بمعرّف الدفعة وأعد فتح المخزون الأصلي لاحقًا.');
-      close();
-      if (typeof w.F99AppointmentsInventory?.openBatch === 'function') return w.F99AppointmentsInventory.openBatch(detail);
-      return w.F99V17OpenInventory(detail.product_key);
+      const service = ownerItems.find(x => x.product_key === detail.product_key);
+      if (!service) throw localError('حدّث كتالوج المواعيد أولًا.');
+      return renderStock(s, service);
     }
     function renderStock(s,service){
       const v=page();ownerNav(s);const list=card(content,'مخزون '+publicText(service.title));let offset=0;
+      button(list,'قراءة عدد أكواد المواعيد غير المخصصة',async()=>{const r=await ownerCall(s,'inventory_summary');if(activeView(v,s))say('مخزون المواعيد المستقل غير المخصص: '+r.available);});
+      const count=field(list,'إضافة أكواد جديدة إلى مخزون المواعيد المستقل فقط',10,'number',{min:1,max:500,step:1});
+      button(list,'إنشاء أكواد مواعيد مستقلة بموافقتي',async()=>{if(!count.reportValidity()||!w.confirm('إنشاء '+count.value+' كود جديد في مخزون المواعيد فقط؟'))return;await ownerCall(s,'inventory_add',{count:Number(count.value),approve:true},true);if(activeView(v,s))say('أضيفت الأكواد إلى مخزون المواعيد فقط، دون تخصيص أو بيع.');});
       text(list,'الحجز الداخلي ليس استيرادًا أو سدادًا. النشر مشروط بتأكيد المالك رفع الدفعة ومطابقة العدد خارج المنصة. لا تُفعّل الخدمة تلقائيًا.');
       async function load(){
         say('جاري قراءة مخزون الخدمة...');
@@ -407,12 +410,13 @@
           if(!Array.isArray(r.items))throw Error('BAD_STOCK_CONTRACT');
           for(const item of r.items){
             const box=card(list,item.allocation_id);text(box,'العدد: '+item.count+' • الحالة: '+item.state+' • صلاحية الكود: '+item.duration_minutes+' دقيقة');
-            button(box,'تنزيل أكواد الدفعة نفسها CSV',async()=>{
+            const exportFormat=select(box,'صيغة ملف سلة','xlsx',[['xlsx','Excel لسلة — الصيغة الأصلية V17'],['txt','TXT — كود في كل سطر']]);
+            button(box,'تنزيل ملف سلة للدفعة نفسها',async()=>{
               if(!w.confirm('أوافق على تصدير '+item.count+' كود من هذه الدفعة إلى ملف خاص. لا يعني التنزيل رفعها أو بيعها.'))return;
               const ex=await ownerCall(s,'export_codes',{product_key:service.product_key,allocation_id:item.allocation_id,approve:true},true);
-              if(!sessionLive(s)||!Array.isArray(ex.items)||ex.items.length!==Number(ex.count)||Number(ex.count)!==Number(item.count)||ex.items.some(x=>typeof x.code!=='string')||new Set(ex.items.map(x=>x.code)).size!==ex.items.length)throw Error('CODE_EXPORT_COUNT_MISMATCH');
-              const rows=['Code',...ex.items.map(x=>'"'+x.code.replace(/"/g,'""')+'"')];
-              const blob=new Blob(['\ufeff'+rows.join('\r\n')+'\r\n'],{type:'text/csv;charset=utf-8'});const url=w.URL.createObjectURL(blob),a=el('a');a.href=url;a.download='FINO99_CODES_'+item.allocation_id+'.csv';a.click();w.URL.revokeObjectURL(url);
+              if(!sessionLive(s)||!Array.isArray(ex.codes)||ex.codes.length!==Number(ex.count)||Number(ex.count)!==Number(item.count)||ex.codes.some(x=>typeof x!=='string'||/[\r\n]/.test(x))||new Set(ex.codes).size!==ex.codes.length)throw Error('CODE_EXPORT_COUNT_MISMATCH');
+              // Same Salla format as V17: UTF-8 TXT, one code per line, no header/BOM/extra words.
+              const xlsx=exportFormat.value==='xlsx';if(xlsx&&typeof w.F99V17BuildSallaXlsx!=='function')throw localError('مُنشئ Excel الأصلي V17 غير محمل؛ استخدم TXT أو حدّث الصفحة.');const blob=new Blob([xlsx?w.F99V17BuildSallaXlsx(ex.codes,ex.last_day||null):ex.codes.join('\n')+'\n'],{type:xlsx?'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':'text/plain;charset=utf-8'});const url=w.URL.createObjectURL(blob),a=el('a');a.href=url;a.download='FINO99_APPOINTMENTS_'+item.allocation_id+(xlsx?'.xlsx':'.txt');a.click();w.setTimeout(()=>w.URL.revokeObjectURL(url),1000);
               say('نُزّلت أكواد الدفعة نفسها فقط؛ لا نؤكد استيرادها أو سدادها.');
             });
             if(item.state==='reserved'){
@@ -479,9 +483,10 @@
         const item = {row, start, end}; rows.push(item);
         button(row, 'حذف الفترة', () => { rows.splice(rows.indexOf(item), 1); row.remove(); });
       }
-      (Array.isArray(initial) ? initial : []).forEach(add);
+      function set(windows) { area.replaceChildren(); rows.length=0; (Array.isArray(windows)?windows:[]).forEach(add); }
+      set(initial);
       button(host, 'إضافة فترة دوام', () => add());
-      return () => validateWindows(rows.map(r => ({start: r.start.value, end: r.end.value})));
+      const read=()=>validateWindows(rows.map(r=>({start:r.start.value,end:r.end.value}))); read.set=set; return read;
     }
     function renderServiceEditor(s, service) {
       const v = page(); ownerNav(s);
@@ -500,6 +505,10 @@
       for (const [key, label, type] of definitions) {
         inputs[key] = field(grid, label, service[key] ?? '', type, type === 'number' ? {min: key === 'max_bookings_per_code' || key === 'appointment_minutes' || key === 'code_duration_minutes' || key === 'booking_horizon_days' ? 1 : 0, step: ['price', 'old_price'].includes(key) ? '0.01' : '1'} : {});
       }
+      const durationChoices=[...new Set([15,20,30,45,60,90,120,Number(service.appointment_minutes)])].filter(Number.isFinite).sort((a,b)=>a-b);
+      const durationPreset=select(box,'مدة جاهزة أو إدخال يدوي',String(service.appointment_minutes),[...durationChoices.map(n=>[String(n),n+' دقيقة']),['manual','إدخال عدد الدقائق يدويًا']]);
+      durationPreset.onchange=()=>{if(durationPreset.value!=='manual')inputs.appointment_minutes.value=durationPreset.value;else inputs.appointment_minutes.focus();};
+      inputs.appointment_minutes.oninput=()=>{durationPreset.value=durationChoices.includes(Number(inputs.appointment_minutes.value))?inputs.appointment_minutes.value:'manual';};
       inputs.whatsapp.autocomplete = 'off'; inputs.whatsapp.inputMode = 'tel';
       const mode = select(box, 'طريقة تنفيذ الخدمة', service.service_mode, [['appointment', 'خدمة بموعد'], ['manual', 'تعليمات يدوية دون حجز آلي']]);
       const enabled = checkbox(box, 'تفعيل الخدمة بعد مراجعة الشروط والمخزون', service.enabled);
@@ -508,7 +517,7 @@
       for (const [key, label] of [['description', 'وصف الخدمة'], ['instructions', 'تعليمات العميل بعد تفعيل الكود'], ['terms', 'شروط الخدمة'], ['consent_text', 'نص الإقرار والموافقة'], ['confirmation_text', 'نص رسالة واتساب الجاهزة']]) inputs[key] = field(copy, label, service[key], 'textarea');
       text(copy, 'متغيرات رسالة واتساب: {name} {phone} {question} {service} {date} {time} {booking_id}. المركزية تستبدلها من الحجز المحفوظ؛ فتح الرسالة لا يرسلها.');
       const hoursBox = card(form, 'الدوام الأسبوعي — ISO: الاثنين 1، الأحد 7'); const readHours = {};
-      for (let i = 1; i <= 7; i++) { const row = el('fieldset', 'f99a9-day'); row.append(el('legend', '', DAYS[i - 1] + ' (' + i + ')')); hoursBox.append(row); readHours[i] = windowsEditor(row, service.hours?.[String(i)], DAYS[i - 1]); }
+      for (let i=1;i<=7;i++){const row=el('fieldset','f99a9-day');row.append(el('legend','',DAYS[i-1]));hoursBox.append(row);const active=checkbox(row,'يوم عمل',!!service.hours?.[String(i)]?.length), read=windowsEditor(row,service.hours?.[String(i)],DAYS[i-1]);readHours[i]=()=>active.checked?read():[];readHours[i].set=(windows)=>{active.checked=windows.length>0;read.set(windows);};}
       text(hoursBox, 'يوم بلا فترات = مغلق. لا تظهر مواعيد خارج الدوام؛ المركزية تحسب الفاصل وتمنع التداخل.');
       const exceptions = card(form, 'استثناءات حسب التاريخ'); const overrideRows = [];
       function addOverride(date = '', windows = []) {
@@ -519,7 +528,9 @@
       }
       Object.entries(service.date_overrides || {}).sort(([a], [b]) => a.localeCompare(b)).forEach(([day, list]) => addOverride(day, list));
       button(exceptions, 'إضافة استثناء بتاريخ', () => addOverride());
-      const blocked = field(form, 'تواريخ محجوبة بالكامل — YYYY-MM-DD، كل تاريخ في سطر', (service.blocked_dates || []).join('\n'), 'textarea');
+      const blockedDays=new Set(service.blocked_dates||[]);
+      const getOverrides=()=>{const o={};for(const r of overrideRows){if(!validDay(r.day.value)||Object.hasOwn(o,r.day.value))throw localError('راجع تاريخ الاستثناء؛ لا تكرر التاريخ.');o[r.day.value]=r.read();}return o;};
+      renderCalendarEditor(s,service,form,readHours,getOverrides,blockedDays,addOverride); 
       text(form, 'مدة الكود وعدد الحجوزات تخضعان للحدود والسياسات الآمنة في الخادم. لا تُضعَف حقوق الأكواد القائمة ولا تُنشأ أكواد جديدة من هذا المحرر.');
       const row = actions(form);
       const save = button(row, 'حفظ الخدمة والدوام في المركزية', async () => {
@@ -540,7 +551,7 @@
           const hours = {}, overrides = {};
           for (let i = 1; i <= 7; i++) hours[String(i)] = readHours[i]();
           for (const entry of overrideRows) { const day = entry.day.value; if (!validDay(day) || Object.prototype.hasOwnProperty.call(overrides, day)) throw localError('راجع تاريخ الاستثناء؛ لا تكرر التاريخ.'); overrides[day] = entry.read(); }
-          Object.assign(draft, validateSchedule(hours, overrides, blocked.value.split(/\s+/).filter(Boolean)));
+          Object.assign(draft, validateSchedule(hours, overrides, [...blockedDays]));
         } catch (err) { err.local = true; say(errorText(err), true); return; }
         if (!w.confirm('حفظ هذه القيم للخدمة المحددة فقط؟ النشر الفعلي يتطلب تحقق المركزية من المخزون والسياسات.')) return;
         // Freeze editor while the revision-checked write is unresolved; keep draft on rejection.
@@ -565,6 +576,33 @@
       button(row, 'سجل هذه الخدمة', () => renderHistory(s, {product_key: service.product_key}));
       void save;
     }
+    function renderCalendarEditor(s, service, form, readHours, getOverrides, blockedDays, addOverride) {
+      const v=screen, box=card(form,'التقويم وفترة التشغيل — توقيت الرياض'), today=riyadhDay();
+      const from=field(box,'بداية فترة التشغيل',today,'date',{required:true}),to=field(box,'نهاية فترة التشغيل',addDays(w.F99AppointmentCalendar22.addMonths(today,3),-1),'date',{required:true});
+      for(const [n,label] of [[1,'شهر'],[3,'ثلاثة أشهر'],[12,'سنة']])button(box,'تحديد فترة '+label,()=>{to.value=addDays(w.F99AppointmentCalendar22.addMonths(from.value,n),-1);calendar.setRange(from.value,to.value);});
+      const capacity=field(box,'عدد الحجوزات المسموحة لكل فترة',1,'number',{min:1,max:100,step:1,required:true});
+      const policy=card(box,'صلاحيات العميل — مع تطبيق مهلة الخدمة'),permissions={};
+      for(const [k,label] of [['modify','تعديل'],['cancel','إلغاء'],['postpone','تأجيل'],['apologize','اعتذار']])permissions[k]=checkbox(policy,'السماح بـ'+label,true);
+      const breaks=card(box,'فترة الراحة — تُقسم الدوام دون كتابة تواريخ'),breakDay=select(breaks,'اليوم الأسبوعي','1',DAYS.map((x,i)=>[String(i+1),x]));
+      const breakStart=field(breaks,'بداية الراحة','12:00','time'),breakEnd=field(breaks,'نهاية الراحة','12:30','time');
+      button(breaks,'تطبيق الراحة على دوام هذا اليوم',()=>{if(!validTime(breakStart.value)||!validTime(breakEnd.value)||breakStart.value>=breakEnd.value)throw localError('راجع وقت الراحة.');const result=[];for(const win of readHours[breakDay.value]()){if(win.end<=breakStart.value||win.start>=breakEnd.value)result.push(win);else{if(win.start<breakStart.value)result.push({start:win.start,end:breakStart.value});if(win.end>breakEnd.value)result.push({start:breakEnd.value,end:win.end});}}readHours[breakDay.value].set(result);say('أضيفت الراحة إلى مسودة الدوام الأسبوعي.');});
+      const vacations=[],vac=card(box,'إجازة أسبوع أو عدة أسابيع'),vacStart=field(vac,'بداية الإجازة',addDays(today,7),'date'),weeks=field(vac,'عدد أسابيع الإجازة',1,'number',{min:1,max:52,step:1}),vacList=el('div');vac.append(vacList);
+      button(vac,'إضافة إجازة إلى مسودة التقويم',()=>{if(!validDay(vacStart.value)||!weeks.reportValidity())return;const item={from:vacStart.value,to:addDays(vacStart.value,Number(weeks.value)*7-1)};vacations.push(item);const row=el('div');vacList.append(row);text(row,item.from+' — '+item.to);button(row,'حذف الإجازة من المسودة',()=>{vacations.splice(vacations.indexOf(item),1);row.remove();});});
+      const chosen=field(box,'التاريخ المختار من التقويم',from.value,'date'),dates=el('div','f99a22-dates'),periodHost=el('div');box.append(dates);
+      let revision=0,periods=[],selected=chosen.value,serial=0;
+      function blockedList(){dates.replaceChildren();for(const dy of [...blockedDays].sort())button(dates,dy+' — إعادة فتح في المسودة',()=>{blockedDays.delete(dy);blockedList();calendar.refresh();});}
+      function showPeriods(){periodHost.replaceChildren();const matches=periods.filter(p=>p.day===selected);if(!matches.length)text(periodHost,'لا توجد فترات محفوظة لهذا اليوم. يمكن إضافته كاستثناء في المسودة ثم إنشاء التقويم.');for(const p of matches){const row=el('div','f99a22-period');periodHost.append(row);text(row,p.day+' • '+p.start_time.slice(0,5)+' — '+p.end_time.slice(0,5)+' • السعة '+p.capacity);const dy=field(row,'تاريخ هذه الفترة فقط',p.day,'date'),start=field(row,'بداية هذه الفترة',p.start_time.slice(0,5),'time'),end=field(row,'نهاية هذه الفترة',p.end_time.slice(0,5),'time'),cap=field(row,'سعة هذه الفترة',p.capacity,'number',{min:1,max:100,step:1});button(row,'حفظ هذه الفترة فقط دون إعادة إنشاء',async()=>{const r=await ownerCall(s,'period_save',{product_key:service.product_key,id:p.id,expected_revision:p.revision,day:dy.value,start:start.value,end:end.value,capacity:Number(cap.value)},true);if(!activeView(v,s))return;periods=periods.map(x=>x.id===p.id?r.period:x);showPeriods();calendar.refresh();say('حُفظت الفترة المحددة فقط؛ بقية الفترات لم تتغير.');},true);}}
+      const calendar=w.F99AppointmentCalendar22.create(box,{from:from.value,to:to.value,selected,onSelect:dy=>{selected=dy;chosen.value=dy;showPeriods();},state:dy=>blockedDays.has(dy)?'closed':periods.some(p=>p.day===dy)?'working':''});
+      chosen.onchange=()=>{selected=chosen.value;calendar.select(selected);showPeriods();};
+      button(box,'إغلاق/فتح اليوم المختار في المسودة',()=>{if(blockedDays.has(selected))blockedDays.delete(selected);else blockedDays.add(selected);blockedList();calendar.refresh();});
+      button(box,'إضافة استثناء لليوم المختار من التقويم',()=>{const overrides=getOverrides();if(Object.hasOwn(overrides,selected))throw localError('يوجد استثناء لهذا اليوم بالفعل؛ عدله أعلاه.');addOverride(selected,[]);say('أضيف اليوم المختار إلى الاستثناءات؛ اختر فتراته أعلاه.');});
+      box.append(periodHost);blockedList();
+      async function readCalendar(){const seq=++serial;const r=await ownerCall(s,'calendar_get',{product_key:service.product_key,from:from.value,to:to.value});if(!activeView(v,s)||seq!==serial)return;revision=r.calendar?.revision||0;periods=r.periods;if(r.calendar){from.value=r.calendar.operating_from;to.value=r.calendar.operating_to;capacity.value=r.calendar.capacity;for(const k of Object.keys(permissions))permissions[k].checked=r.calendar['client_'+k];calendar.setRange(from.value,to.value);}showPeriods();calendar.refresh();}
+      button(box,'قراءة التقويم المحفوظ',readCalendar);
+      button(box,'إنشاء التقويم للفترة المحددة',async()=>{if(!validDay(from.value)||!validDay(to.value)||!capacity.reportValidity())return;const hours={};for(let i=1;i<=7;i++)hours[String(i)]=readHours[i]();const validated=validateSchedule(hours,getOverrides(),[...blockedDays]);if(!w.confirm('إنشاء تقويم الفترة المحددة من الدوام والإجازات والاستثناءات؟ لا تستخدم الإنشاء لتعديل فترة واحدة.'))return;await ownerCall(s,'calendar_generate',{product_key:service.product_key,expected_revision:revision,from:from.value,to:to.value,capacity:Number(capacity.value),...validated,vacations,permissions:Object.fromEntries(Object.entries(permissions).map(([k,n])=>[k,n.checked]))},true);if(activeView(v,s)){await readCalendar();say('أُنشئ التقويم المركزي للفترة المحددة. يمكن تعديل فترة منفردة من التقويم دون إعادة الإنشاء.');}},true);
+      text(box,'الأخضر: يوم يحتوي فترات محفوظة. الإغلاق والإجازات والاستثناءات تُطبّق عند الإنشاء. لحجز قائم استخدم تحرير الفترة فقط؛ لا يُلغى أي حجز تلقائيًا.');
+      void readCalendar().catch(e=>{if(activeView(v,s))say(errorText(e),true);});
+    }
     function bookingDetails(host, booking, owner) {
       const box = card(host, formatDate(booking.starts_at));
       text(box, 'الخدمة: ' + (ownerItems.find(x => x.product_key === booking.product_key)?.title || booking.product_key || ''));
@@ -572,6 +610,8 @@
       if (owner) { text(box, 'الاسم: ' + booking.name); text(box, 'الجوال: ' + booking.phone); }
       else text(box, 'الاسم: ' + booking.name);
       text(box, 'الاستفسار: ' + (booking.question || '')); text(box, 'رقم الحجز: ' + booking.id, 'f99a9-muted');
+      if (booking.consent_at) text(box,T('appointment22.consent_time',{time:formatDate(booking.consent_at)}));
+      if (booking.created_at) text(box,T('appointment22.booked_time',{time:formatDate(booking.created_at)}));
       if (owner && booking.notes != null) text(box, 'ملاحظات داخلية: ' + String(booking.notes));
       return box;
     }
@@ -722,8 +762,10 @@
       for (const b of ctx.bookings) {
         const box = bookingDetails(list, b, false), a = actions(box);
         if (b.status === 'confirmed' && !unresolved) {
-          button(a, 'تعديل الموعد بعد فحص المهلة', () => renderSlots(s, ctx, {booking: b}));
-          button(a, 'إلغاء الحجز بعد فحص المهلة', () => renderClientCancel(s, ctx, b));
+          if(ctx.permissions?.modify!==false)button(a, 'تعديل الموعد بعد فحص المهلة', () => renderSlots(s, ctx, {booking: b}));
+          if(ctx.permissions?.cancel!==false)button(a, 'إلغاء الحجز بعد فحص المهلة', () => renderClientCancel(s, ctx, b));
+          if(ctx.permissions?.postpone!==false)button(a,T('appointment22.postpone'),()=>renderSlots(s,ctx,{booking:b,postpone:true}));
+          if(ctx.permissions?.apologize!==false)button(a,T('appointment22.apologize'),()=>renderClientCancel(s,ctx,b,true));
         }
         const link = waLinks.get(scopeKey(s) + ':' + b.id);
         if (b.status === 'confirmed' && link && link.start === b.starts_at) addWhatsApp(box, link.url);
@@ -739,6 +781,8 @@
         text(box,'الطلب يُحفظ لدى صاحب الخدمة بعد اعتمادك؛ ليس جوابًا آليًا ولا حجز موعد.');
       } else if (!unresolved && Number(ctx.quota.remaining) > 0) button(content, 'بدء الحجز — قراءة التعليمات والإقرار أولًا', () => renderConsent(s, ctx), true);
       else if (!unresolved) text(content, 'لا يوجد رصيد متبقٍ لحجز جديد. يحدد الخادم إمكانية الإلغاء أو التعديل.');
+      if(ctx.timeline?.length){const log=card(content,T('appointment22.timeline'));for(const e of ctx.timeline)text(log,T('appointment22.timeline_event',{status:STATUS[e.status]||e.action,time:formatDate(e.at)}));}
+      text(content,T('appointment22.permission_note'));
       button(content, 'تحديث الخدمة والحجوزات من المركزية', () => openClient(null, s.key));
       if (message) say(message);
     }
@@ -783,7 +827,8 @@
         if (!selected) return; renderClientConfirmation(s, ctx, {...flow, slot: selected});
       }, true); next.disabled = true;
       const clear = () => { serial++; selected = null; next.disabled = true; slotsArea.replaceChildren(); say('لم يتم تأكيد حجز. اعرض أوقات اليوم المحدد من المركزية.'); };
-      day.onchange = clear;
+      const calendar=w.F99AppointmentCalendar22.create(box,{from:riyadhDay(),to:ctx.operating_to||addDays(riyadhDay(),ctx.service.booking_horizon_days||90),selected:day.value,onSelect:dy=>{day.value=dy;clear();load.click();}});
+      day.onchange=()=>{calendar.select(day.value);clear();};
       const load = button(box, 'عرض أوقات هذا اليوم من المركزية', async () => {
         if (!day.reportValidity() || !validDay(day.value)) return;
         const n = ++serial, requestedDay = day.value; selected = null; next.disabled = true; slotsArea.replaceChildren(); load.disabled = true;
@@ -817,18 +862,18 @@
         if (pending.has(scopeKey(s))) { renderClientHome(s, ctx); return; }
         submit.disabled = true;
         const data = reschedule ? {booking_id: flow.booking.id, start: flow.slot.starts_at, request_id: uuid(w.crypto)} : {start: flow.slot.starts_at, ...flow.details, request_id: uuid(w.crypto)};
-        const attempt = {action: reschedule ? 'reschedule' : 'book', data, busy: false, uncertain: false};
+        const attempt = {action: reschedule ? (flow.postpone?'postpone':'reschedule') : 'book', data, busy: false, uncertain: false};
         pending.set(scopeKey(s), attempt); await performMutation(s, ctx, attempt, v);
       }, true);
       button(box, 'رجوع واختيار وقت آخر', () => renderSlots(s, ctx, flow)); button(box, 'رجوع إلى حجوزاتي', () => renderClientHome(s, ctx));
     }
-    function renderClientCancel(s, ctx, booking) {
-      const v = page(); bookingDetails(content, booking, false); const box = card(content, 'إلغاء الحجز بعد فحص المركزية');
+    function renderClientCancel(s, ctx, booking, apology=false) {
+      const v = page(); bookingDetails(content, booking, false); const box = card(content, apology?T('appointment22.apology_title'):'إلغاء الحجز بعد فحص المركزية');
       text(box, 'المركزية تتحقق من ملكية الحجز وحالته ومهلة الإلغاء. يبقى الحجز والسجل محفوظين بحالة ملغية عند قبول الإلغاء.');
       button(box, 'تأكيد طلب الإلغاء', async () => {
-        if (!w.confirm('إلغاء هذا الحجز فقط إذا سمحت المهلة المركزية؟')) return;
+        if (!w.confirm(apology?T('appointment22.apology_confirm'):'إلغاء هذا الحجز فقط إذا سمحت المهلة المركزية؟')) return;
         if (pending.has(scopeKey(s))) { renderClientHome(s, ctx); return; }
-        const attempt = {action: 'cancel', data: {booking_id: booking.id, request_id: uuid(w.crypto)}, busy: false, uncertain: false}; pending.set(scopeKey(s), attempt);
+        const attempt = {action: apology?'apologize':'cancel', data: {booking_id: booking.id, request_id: uuid(w.crypto)}, busy: false, uncertain: false}; pending.set(scopeKey(s), attempt);
         await performMutation(s, ctx, attempt, v);
       }, true); button(box, 'الاحتفاظ بالحجز والرجوع', () => renderClientHome(s, ctx));
     }

@@ -67,11 +67,12 @@
   function validOffers(context, now) {
     if (context?.ok !== true || context.eligible !== true || !Array.isArray(context.offers)) return [];
     const t = Date.parse(context.server_now) || now || Date.now();
-    return context.offers.filter(x => x?.available === true && x.id && typeof x.title === 'string' && x.price_sar != null && Number.isFinite(Number(x.price_sar)) && Number(x.price_sar) >= 0 && Number(x.duration_minutes) > 0 && Number(x.max_calculations) > 0 && Date.parse(x.offer_expires_at) > t && safeHttps(x.checkout_url));
+    return context.offers.filter(x => Number.isSafeInteger(Number(x?.available)) && Number(x.available) > 0 && x.id && typeof x.title === 'string' && x.price_sar != null && Number.isFinite(Number(x.price_sar)) && Number(x.price_sar) >= 0 && Number(x.duration_minutes) > 0 && Number(x.max_calculations) > 0 && (!x.offer_expires_at || Date.parse(x.offer_expires_at) > t) && safeHttps(x.checkout_url));
   }
   function activeState(s) { return s?.ok === true && s.state === 'active' && Number.isFinite(Date.parse(s.server_now)) && Number.isFinite(Date.parse(s.idle_expires_at)); }
   function allowPage(page, ctx) {
     if (PUBLIC.has(page)) return true;
+    if (page === 'f99r22RenewalPage') return ctx?.renewalOnlyVerified === true;
     if (ctx?.owner === true) return true;
     if (!ctx?.verified || ctx?.scope !== 'entry' || !activeState(ctx.state) || !CLIENT_PAGES.has(page)) return false;
     if (['page2', 'smartPage'].includes(page) && ctx.state.calculator_allowed !== true) return false;
@@ -171,7 +172,7 @@
     const ctrl = createController({rpc: (fn, args) => originalRpc(fn, args, 20000), conceal,
       invalidate: () => { ctrl.replace(null); clearLocal(true); },
       ended: () => { clearLocal(true); w.location.reload(); }});
-    const browserContext = () => ({...ctrl.context(), verified: ctrl.active(), owner: runtime?.owner?.() === true});
+    const browserContext = () => ({...ctrl.context(), verified: ctrl.active(), owner: runtime?.owner?.() === true, renewalOnlyVerified: w.F99Renewal22?.authorized?.() === true});
     const still = snap => ctrl.same(snap) && ctrl.active();
     // Installed before the first inline startup. Never headers on state/poll/touch/end/feedback.
     const oldFetch = w.fetch;
@@ -223,7 +224,16 @@
       if (!offers.length) host.append(element('p', 'لا يوجد عرض تجديد متاح ومؤهل الآن. يمكنك إدخال كود جديد.'));
       return offers.length;
     }
-    async function showRenewal(code) {
+    async function showRenewal(code, loginData) {
+      if (w.F99Renewal22?.open) {
+        const previousChat = renewalCode === codeValue(code) ? d.getElementById('finoBotChat')?.cloneNode(true) : null;
+        // A renewal-only login never restores an entry bearer. Keep a same-code
+        // read-only DOM copy only; identity/history are reverified on the server.
+        if (loginData?.mode === 'renewal_only') { ctrl.replace(null); clearLocal(false); }
+        renewalCode = codeValue(code);
+        if (previousChat) { previousChat.removeAttribute('id'); previousChat.inert = true; }
+        return w.F99Renewal22.open(renewalCode, {capturedChat: previousChat});
+      }
       // No bearer or old calculator is restored from a renewal-only response.
       ctrl.replace(null); clearLocal(false); renewalCode = codeValue(code); w.showPage?.('page1');
       const codeSnapshot = renewalCode, box = sheet('انتهت الخدمة — التجديد اختياري', d.getElementById('page1'), 'f99s12-renewal');
@@ -236,7 +246,7 @@
       button(box, 'إدخال كود جديد', () => { destroyFlow(); renewalCode = ''; d.getElementById('f99l-code')?.focus(); });
     }
     async function receiveLogin(data, args) {
-      if (data?.mode === 'renewal_only') { await showRenewal(args.p_code); return data; }
+      if (data?.mode === 'renewal_only') { if (data.ok === true) await showRenewal(args.p_code, data); return data; }
       if (data?.ok !== true || !UUID.test(data.entry_token || '')) return data;
       // Supersede all old memory BEFORE original owner-token exchange/runtime/identity call.
       const savedCode = codeValue(args.p_code); ctrl.replace(null); clearLocal(false); renewalCode = savedCode;
@@ -245,7 +255,9 @@
       if (!await ctrl.verify()) return {ok: false, reason: 'S12_SESSION_NOT_VERIFIED'};
       // Bank entitlement uses the original storefront closure. Await its first load,
       // not a fixed delay or a permissive fallback when it is still empty.
-      if (!(w.FINO99ReadStorefront?.()?.products?.length) && typeof w.F99V33RefreshStorefront === 'function') await w.F99V33RefreshStorefront();
+      // Owner permissions come from the verified session/admin exchange, not a
+      // customer package. Keep the exact entitlement wait for customers only.
+      if (data.owner !== true && !(w.FINO99ReadStorefront?.()?.products?.length) && typeof w.F99V33RefreshStorefront === 'function') await w.F99V33RefreshStorefront();
       try { w.sessionStorage.removeItem(MARKER); } catch (_) {}
       return data;
     }
