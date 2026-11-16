@@ -41,7 +41,9 @@
     off: ['رسائل التجديد','التجديد معطل','التجديد غير مفعّل لهذه الباقة. نتائجك المحفوظة لا تُحذف.'],
     loading: ['رسائل التجديد','قراءة العروض','جاري قراءة عروض باقتك من المركزية...'],
     client: ['رسائل التجديد','اسم احتياطي','عميلنا'],
-    oldUnavailable: ['رسائل التجديد','عدم توفر الاستقبال','استقبال طلبات التجديد غير متاح حاليًا.']
+    oldUnavailable: ['رسائل التجديد','عدم توفر الاستقبال','استقبال طلبات التجديد غير متاح حاليًا.'],
+    expiredNotice: ['نفاد الاستخدامات','رسالة انتهاء صلاحية الكود','انتهت صلاحية كودك.'],
+    finishedNotice: ['نفاد الاستخدامات','رسالة استنفاد الحسبات','استخدمت جميع الحسبات المتاحة في باقتك.']
   };
   w.F99Texts?.register(Object.entries(words).map(([key,x])=>({key:'renewal22.'+key,category:x[0],label:x[1],text:x[2],vars:x[3]||[]})));
   const t=(key,vars={})=>w.F99T('renewal22.'+key,vars,words[key][2].replace(/\{([a-z][a-z0-9_]*)\}/g,(match,name)=>Object.prototype.hasOwnProperty.call(vars,name)?String(vars[name]):match));
@@ -99,7 +101,7 @@
     current={code:normalized(code),ctx};validUntil=Date.now()+600000;
     const card=el('section',null,'f99r22-renewal');card.setAttribute('role','status');host.append(card);
     const client=ctx.client_name||options.clientName||t('client');
-    card.append(el('p',t(ctx.status==='expired'?'expired':'invite',{client})));
+    card.append(el('strong',t(ctx.status==='expired'?'expiredNotice':'finishedNotice'),'f99r22-notice'),el('p',t(ctx.status==='expired'?'expired':'invite',{client})));
     const offers=el('div',null,'f99r22-offers');offers.hidden=true;card.append(offers);
     if(modeFor(ctx)!=='off')btn(card,'view',()=>{offers.hidden=false;offers.replaceChildren();showOffers(offers,ctx,normalized(code));card.scrollIntoView({block:'nearest',behavior:'smooth'});});
     else card.querySelector('p').textContent=t('off');
@@ -110,7 +112,9 @@
   function inquiry(host){host.querySelector('.f99r22-code-entry')?.remove();const row=el('div',null,'f99r22-code-entry'),label=el('label',t('code')),input=el('input');input.dir='ltr';input.autocomplete='off';input.maxLength=32;label.append(input);row.append(label);host.append(row);btn(row,'enter',()=>open(input.value));input.focus();}
   function currentCode(){try{return current?.code||w.finoCentralRestoreEntry()?.code||activeAccess?.record?.code||f99LastAttemptedCode||'';}catch(_){return current?.code||'';}}
   function serviceLinks(){const visibility=w.F99Settings?.value('store_design')?.renewal_services_links!==false;
-    const roots=[d.querySelector('#freeHub .viewport')||d.getElementById('freeHub'),d.querySelector('#specialistBotPage .viewport')||d.getElementById('specialistBotPage'),d.querySelector('#f99s-modal .f99s-sheet')].filter(Boolean);
+    // Owner order 2026-11-16: never inside the store sheet. Remove any earlier copy there.
+    d.querySelectorAll('#f99s-modal .f99r22-links').forEach(n=>n.remove());
+    const roots=[d.querySelector('#freeHub .viewport')||d.getElementById('freeHub'),d.querySelector('#specialistBotPage .viewport')||d.getElementById('specialistBotPage')].filter(Boolean);
     for(const host of roots){let nav=host.querySelector(':scope > .f99r22-links');if(!visibility){nav?.remove();continue;}if(nav)continue;nav=el('nav',null,'f99r22-links');nav.setAttribute('aria-label',t('title'));host.prepend(nav);
       btn(nav,'title',()=>{const code=currentCode();if(code)return open(code);inquiry(nav);});btn(nav,'inquiry',()=>inquiry(nav));}
   }
@@ -125,7 +129,7 @@
   function boot(){
     const block=w.F99V43BlockNewCalculation;if(typeof block==='function')w.F99V43BlockNewCalculation=function(){if(w.__F99V43QuotaExhausted===true){void open(currentCode());return true;}return block.apply(this,arguments);};
     const request=w.F99V82RequestNewCalculation;if(typeof request==='function')w.F99V82RequestNewCalculation=async function(){const ctx=w.F99SessionSecurity.context();if(ctx.verified&&ctx.state?.calculator_allowed===false&&Number(ctx.state.remaining_calculations)===0)return open(currentCode());return request.apply(this,arguments);};
-    const renew=()=>open(currentCode());w.F99V8OpenRenewal=renew;w.FINO99V74CustomerRenewal=renew;
+    const renew=code=>open(typeof code==='string'&&code.trim()?code:currentCode());w.F99V8OpenRenewal=renew;w.FINO99V74CustomerRenewal=renew;
     w.F99Settings.onChange(serviceLinks);serviceLinks();ownerTools();
     let queued=false;new MutationObserver(()=>{if(queued)return;queued=true;queueMicrotask(()=>{queued=false;serviceLinks();ownerTools();});}).observe(d.body,{childList:true,subtree:true});
   }

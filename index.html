@@ -8472,9 +8472,9 @@ function finoCentralReasonMessage(reason){
     CODE_INVALID:'الرمز غير صحيح. تحقق من الرمز وحاول مرة أخرى.',
     CODE_DISABLED:'هذا الكود موقوف حاليًا.',
     CODE_NOT_STARTED:'هذا الكود لم يبدأ بعد.',
-    CODE_EXPIRED:'انتهت مدة الكود.',
+    CODE_EXPIRED:(window.F99T?.('renewal22.expiredNotice',{},'انتهت صلاحية كودك.')||'انتهت صلاحية كودك.'),
     CODE_USES_FINISHED:'انتهى عدد استخدامات الكود. إذا كان كود عقد فراجع الجهة المصدرة.',
-    CALCULATIONS_FINISHED:'اكتملت مرات الحسبة الثلاث للباقة. اختر تجديد نفس الكود.',
+    CALCULATIONS_FINISHED:(window.F99T?.('renewal22.finishedNotice',{},'استخدمت جميع الحسبات المتاحة في باقتك.')||'استخدمت جميع الحسبات المتاحة في باقتك.'),
     CONTRACT_EXPIRED:'انتهت صلاحية كود العقد.',
     CONTRACT_ALREADY_ACCEPTED:'تم اعتماد هذا العقد مسبقًا.',
     CONTRACT_ALREADY_REJECTED:'تم تسجيل عدم الموافقة على هذا العقد مسبقًا.',
@@ -8869,7 +8869,7 @@ function finoCentralLockPortal(reason='RESTARTS_FINISHED'){
   if(btn){btn.disabled=true;btn.textContent='انتهت الباقة';}
   document.querySelectorAll('#finoBotChat button').forEach(b=>{b.disabled=true;b.style.pointerEvents='none';b.style.opacity='.48';});
   const msg = reason==='CODE_EXPIRED'
-    ? 'انتهت مدة هذا الكود.'
+    ? (window.F99T?.('renewal22.expiredNotice',{},'انتهت صلاحية كودك.')||'انتهت صلاحية كودك.')
     : reason==='CODE_USES_FINISHED'
       ? 'انتهى العدد المحدد لاستخدام هذا الكود.'
       : 'انتهى العدد المحدد للحسب في هذه الدخلة.';
@@ -13488,11 +13488,9 @@ async function login(){
         const kind=await finoRpc('f99v8_public_code_status',{p_code:value,p_device_id:finoCentralDeviceId()},7000);
         if(reason!=='CODE_EXPIRED' && kind.data?.kind!=='contract')setTimeout(()=>window.F99V23ShowEnd?.(reason),30); // Contracts never get package renewal offers.
         if(kind.ok && kind.data?.kind==='package'){
-          error.textContent=reason==='CODE_EXPIRED'
-           ?'تعذّر دخول هذا الكود بسبب انتهاء الصلاحية المسجلة. إذا اشتريته جديدًا ولم تستخدمه، لا تدفع للتجديد قبل مراجعة سجل البيع والتفعيل.'
-           :'اكتملت مرات الحسبة المتاحة لك. اختر تجديد نفس الكود أو شراء باقة جديدة.';
+          error.textContent=reason==='CODE_EXPIRED'?(window.F99T?.('renewal22.expiredNotice',{},'انتهت صلاحية كودك.')||'انتهت صلاحية كودك.'):(window.F99T?.('renewal22.finishedNotice',{},'استخدمت جميع الحسبات المتاحة في باقتك.')||'استخدمت جميع الحسبات المتاحة في باقتك.');
           const renew=document.getElementById('packageRenewBtn');
-          if(renew){renew.classList.add('show');renew.onclick=()=>reason==='CODE_EXPIRED'?window.F99V49RequestCodeReview?.(value):window.F99V8OpenRenewal?.(value);renew.textContent=reason==='CODE_EXPIRED'?'مراجعة الكود قبل التجديد':'تجديد نفس الكود';}
+          if(renew){renew.classList.add('show');renew.onclick=()=>window.F99V8OpenRenewal?.(value);renew.textContent='شوف عروض التجديد';}
         } else if(kind.ok && kind.data?.kind==='contract'){
           error.textContent=String(window.F99V8PublicSettings?.contract_expired||'انتهت صلاحية كود العقد. تواصل مع جهة العقد.');
         } else {
@@ -14221,9 +14219,9 @@ async function fino99BronzeAcceptCalculation(intent=''){
     if(r.quotaUnknown){f99QuotaUnknownMessage();return false;}
     if(!r.ok||r.data?.ok!==true){
       const reason=r.data?.reason||r.error?.message||'CENTRAL_NOT_READY';
-      const message=reason==='CALCULATIONS_FINISHED'?'اكتمل عدد مرات الحسبة المسموحة لهذا الكود.':
-        reason==='CODE_EXPIRED'?'انتهت صلاحية الباقة.':
-        'لم يتم اعتماد الحسبة من المركزية؛ لم تُعرض النتيجة. '+reason;
+      const message=reason==='CALCULATIONS_FINISHED'?(window.F99T?.('renewal22.finishedNotice',{},'استخدمت جميع الحسبات المتاحة في باقتك.')||'استخدمت جميع الحسبات المتاحة في باقتك.'):
+        reason==='CODE_EXPIRED'?(window.F99T?.('renewal22.expiredNotice',{},'انتهت صلاحية كودك.')||'انتهت صلاحية كودك.'):
+        'لم يتم اعتماد الحسبة من المركزية؛ لم تُعرض النتيجة.';
       alert(message);
       if(['CALCULATIONS_FINISHED','CODE_EXPIRED'].includes(reason))window.F99V8OpenRenewal?.(code);
       return false;
@@ -18064,7 +18062,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   function renderStep(index){
    step=index;
    const control=window.F99V68UI?.packageConfig?.(p.key)||{};
-   const nationEnabled=(services.includes('buyout')||services.includes('bot_buyout'))&&control.nationality_enabled!==false;
+   const nationEnabled=false; // owner order 2026-11-16: built-in «جنسيتك؟» removed; only owner-approved package questions are asked
    const sectorPlace=['first','second','last'].includes(control.sector_position)?control.sector_position:(nationEnabled?'second':'first');
    const filteredQuestions=questions.filter(q=>!sector||questionForSector(q,sector));
    const steps=[];
@@ -20768,8 +20766,8 @@ window.F99V21ConsumeCalculation=async function(service,intent=''){
     if(r.quotaUnknown){f99QuotaUnknownMessage();return false;}
     if(!r.ok||r.data?.ok!==true){
       const reason=String(r.data?.reason||r.error?.message||'UNAVAILABLE');
-      const msgs={CALCULATIONS_FINISHED:'انتهت مرات الحسبة المسموحة لهذه الباقة.',SERVICE_NOT_ALLOWED:'هذه الحاسبة غير مشمولة في الكود.',SESSION_INVALID_OR_EXPIRED:'انتهت الجلسة أو لم يعد هذا الجهاز مصرحًا له.'};
-      alert(msgs[reason]||'تعذر اعتماد الحسبة من المركزية: '+reason);
+      const msgs={CALCULATIONS_FINISHED:(window.F99T?.('renewal22.finishedNotice',{},'استخدمت جميع الحسبات المتاحة في باقتك.')||'استخدمت جميع الحسبات المتاحة في باقتك.'),SERVICE_NOT_ALLOWED:'هذه الحاسبة غير مشمولة في الكود.',SESSION_INVALID_OR_EXPIRED:'انتهت الجلسة أو لم يعد هذا الجهاز مصرحًا له.'};
+      alert(msgs[reason]||'تعذر اعتماد الحسبة من المركزية؛ لم تُعرض النتيجة.');
       return false;
     }
     if(Number.isFinite(Number(r.data.used)))window.__F99V86Usage={used:Number(r.data.used),remaining:r.data.remaining===null?null:Number(r.data.remaining),max:Number(r.data.max_calculations)};
@@ -26634,7 +26632,7 @@ const own=()=>{try{return window.F99V60Test?.owner?.()===true&&!!finoCentralAdmi
 const products=()=>{try{return (window.FINO99ReadStorefront?.()?.products||[]).filter(x=>x?.key)}catch{return []}};
 const isBuyout=p=>(p?.services||[]).some(x=>['buyout','bot_buyout'].includes(x));
 let configs={},versions={},ready=false;
-const defaultPkg=p=>({soldout:false,soldout_text:'نفدت كمية الأكواد لهذه الباقة',fee_mode:isBuyout(p)?'exit':'each',nationality_enabled:isBuyout(p),nationality_text:'جنسيتك؟',sector_position:isBuyout(p)?'second':'first',sector_text:'اختر قطاعك أو جهة عملك',obligation_chat_enabled:false,compare_note:''});
+const defaultPkg=p=>({soldout:false,soldout_text:'نفدت كمية الأكواد لهذه الباقة',fee_mode:isBuyout(p)?'exit':'each',nationality_enabled:false,nationality_text:'جنسيتك؟',sector_position:isBuyout(p)?'second':'first',sector_text:'اختر قطاعك أو جهة عملك',obligation_chat_enabled:false,compare_note:''});
 function get(key){const p=products().find(x=>x.key===key);return {...defaultPkg(p),...(configs[key]||{})}}
 function getApp(){return {...{app_message_enabled:false,app_message:'أضف منصة FINO99 إلى الشاشة الرئيسية للوصول السريع.',app_color:'#145e80',app_message_delay:3,app_message_seconds:12,app_install_hint:'يمكنك استخدام «مشاركة» ثم «إضافة إلى الشاشة الرئيسية».',app_icon:'',app_wallpaper:''},...(configs['*']||{})}}
 async function adminCall(fn,args){if(!own())throw Error('ادخل بجلسة المالك أولًا.');const r=await window.finoCentralAdminCall(fn,args);if(r?.ok!==true||r?.data?.ok!==true)throw Error(r?.data?.reason||r?.error?.message||'المركزية لم تؤكد العملية');return r.data}
@@ -26672,9 +26670,8 @@ function ownerQuestions(packageKey){
  const d=get(packageKey),box=lay('أسئلة الباقة: '+(p.name||packageKey));
  box.append(tag('p','هذه الأسئلة جزء من تسلسل أسئلة العميل داخل الباقة، وليست سؤالًا إضافيًا خارجها.','f68-note'));
  const sequence=tag('div','','f69-question-sequence');box.append(sequence);
- const nat=toggle(box,'إظهار سؤال الجنسية للعميل',d.nationality_enabled);
- const natText=addInput(box,'السؤال الأول: الجنسية',d.nationality_text);natText.maxLength=130;
- const sec=addSelect(box,'ترتيب سؤال جهة العمل / القطاع',[['second','الثاني بعد الجنسية'],['first','الأول'],['last','الأخير قبل الجهات']],d.sector_position);
+ const nat={checked:false,addEventListener(){}},natText={value:String(d.nationality_text||'جنسيتك؟'),addEventListener(){}}; // built-in nationality question removed by owner order
+ const sec=addSelect(box,'ترتيب سؤال جهة العمل / القطاع',[['second','قبل أسئلة الباقة'],['first','الأول'],['last','الأخير قبل الجهات']],d.sector_position);
  const secText=addInput(box,'نص سؤال القطاع أو جهة العمل',d.sector_text);secText.maxLength=130;
  function preview(){sequence.replaceChildren();const order=[];
   if(isBuyout(p)&&nat.checked)order.push(natText.value.trim()||'جنسيتك؟');
@@ -28771,13 +28768,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <script src="./extensions/fino99_followup22.js?v=20261116r22INTX3"></script>
 <link rel="stylesheet" href="./extensions/fino99_service_tools.css?v=20261115r18">
 <script src="./extensions/fino99_service_tools.js?v=20261116r22INTY"></script>
-<link rel="stylesheet" href="./extensions/fino99_renewal22.css?v=20261116r22G">
-<script src="./extensions/fino99_renewal22.js?v=20261116r22G"></script>
+<link rel="stylesheet" href="./extensions/fino99_renewal22.css?v=20261116r23b">
+<script src="./extensions/fino99_renewal22.js?v=20261116r23b"></script>
 <!-- F99 owner desktop 13: owner-only, device-local visual approval; load after fee/service modules. -->
 <link rel="stylesheet" href="./extensions/fino99_owner_desktop.css?v=20261115r18">
 <script src="./extensions/fino99_owner_desktop.js?v=20261116r22B"></script>
 <link rel="stylesheet" href="./extensions/fino99_bot_texts_portal22.css?v=20261116r22B">
-<script src="./extensions/fino99_bot_texts_portal22.js?v=20261116r22B"></script>
+<script src="./extensions/fino99_bot_texts_portal22.js?v=20261116r23b"></script>
 <script src="./extensions/fino99_owner_layout22.js?v=20261116r22B"></script>
 <!-- Existing bank-image icon: local OCR, full review, original audited per-record approval. -->
 <link rel="stylesheet" href="./extensions/fino99_rate_table_import.css?v=20261115r18">
@@ -28813,7 +28810,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <!-- Round22 A: fixed adjacent iPhone default + owner-only store design portal. -->
 <link rel="stylesheet" href="./extensions/fino99_store_design22.css?v=20261116r22INTY2">
 <script src="./extensions/fino99_store_design22.js?v=20261116r22A"></script>
-<script src="./extensions/fino99_identity22.js?v=20261116r22C"></script>
+<script src="./extensions/fino99_identity22.js?v=20261116r23b"></script>
 <script src="./extensions/fino99_package_options22.js?v=20261116r22C"></script>
  <!-- R23 presentation-only enhancement: no calculator, inventory, or session modifications. -->
 </body>

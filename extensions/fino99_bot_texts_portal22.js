@@ -151,7 +151,7 @@
     close(); const desktop = d.getElementById('f99od13-desktop'); if (!desktop) return false;
     root = el('section', null, 'f99bt22-module'); root.id = 'f99bt22-portal'; root.dir = 'rtl';
     const head = el('div', null, 'f99od13-actions'); root.append(head);
-    const title = el('h2', 'إدارة نصوص ومحادثات البوت'); title.tabIndex = -1; head.append(title);
+    const title = el('h2', 'إدارة النصوص والرسائل'); title.tabIndex = -1; head.append(title);
     button(head, 'إغلاق', close, 'close-texts');
     status = el('p'); status.id = 'f99bt22-status'; status.setAttribute('role', 'status'); root.append(status);
     const label = el('label', 'التصنيف'); filter = el('select'); filter.id = 'f99bt22-category';
@@ -171,6 +171,6 @@
   w.F99BotTextsPortal = {open, close};
   w.addEventListener('f99owner:destroyed', close);
   w.addEventListener('f99t:registry', () => { if (root && owner()) renderList(); });
-  w.F99OwnerDesktop?.registerPortal({id: 'bot-texts', label: 'إدارة نصوص ومحادثات البوت',
+  w.F99OwnerDesktop?.registerPortal({id: 'bot-texts', label: 'إدارة النصوص والرسائل',
     sub: 'القوالب الآمنة والمعاينة وسجل التعديلات', icon: '▤', open: () => open()});
 })(window);

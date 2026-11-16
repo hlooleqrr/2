@@ -10,3 +10,4 @@
 .f99r22-code-entry{width:100%;padding:10px;background:#f5faff;border-radius:12px}.f99r22-code-entry label,.f99r22-code-entry input{display:block;width:100%;box-sizing:border-box}.f99r22-code-entry input{min-height:44px;border:1px solid #a6bfce;border-radius:8px;font:inherit;background:#fff;padding:8px}
 .f99r22-review{margin:12px 4px;padding:10px;border:1px solid #d0e1e7;border-radius:12px;color:#193e53}.f99r22-review summary{cursor:pointer;min-height:44px}.f99r22-review pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}
 @media(max-width:560px){.f99r22-renewal .f99s12-button{width:auto;max-width:100%}.f99r22-links{margin-top:3px}.f99r22-links .f99s12-button{width:auto;font-size:13px}}
+.f99r22-renewal>.f99r22-notice{display:block;margin:0 0 6px;font:800 15px/1.7 Cairo,Tahoma,sans-serif;color:#8a2f1d}

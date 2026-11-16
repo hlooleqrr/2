@@ -23,26 +23,28 @@
     ['edit','الحسبة لنفسه أو لشخص آخر','تعديل البيانات','تعديل البيانات'],
     ['end','انتهاء الحسبة','انتهاء الحسبة مع رصيد','يا {client}، انتهت حسبتك. تقدر تراجع النتائج أو تبدأ حسبة جديدة.'],
     ['end_empty','انتهاء الحسبة','انتهاء الحسبة بلا رصيد','يا {client}، انتهت حسبتك. تقدر تراجع النتائج. استهلكت رصيد الحسبات المخصص للباقة.'],
+    ['who','الهوية','صاحب الحسبة ومن أجراها (حسبة لشخص آخر)','صاحب الحسبة: {beneficiary_name} • أجرى الحسبة: {code_owner_name}'],
     ['balance','بداية حسبة جديدة','الرصيد والمدة','المتبقي {remaining} من {max} حسبات. صلاحية الكود حتى {expiry}.'],
     ['last','بداية حسبة جديدة','استخدام واحد متبقٍ','آخر حسبة'],
     ['new','بداية حسبة جديدة','بدء جديد','أبدأ حسبة جديدة'],
     ['review','انتهاء الحسبة','مراجعة النتائج','أراجع النتائج'],
     ['unknown','بداية حسبة جديدة','تعذر قراءة الرصيد','تعذر التحقق من الرصيد. يمكنك مراجعة النتائج، ولا تبدأ حسبة جديدة قبل التحقق.']
   ];
-  window.F99Texts?.register(defs.map(([k,category,label,text]) => ({key:'c22.'+k,category,label,text,vars:['client','beneficiary','remaining','max','expiry']})));
+  window.F99Texts?.register(defs.map(([k,category,label,text]) => ({key:'c22.'+k,category,label,text,vars:['client','beneficiary','code_owner_name','beneficiary_name','remaining','max','expiry']})));
   function T(k,v={}) { const d=defs.find(x=>x[0]===k); const fallback=d[3].replace(/\{(\w+)\}/g,(_,n)=>String(v[n]??''));return window.F99T('c22.'+k,v,fallback); }
   const clean=v=>typeof cleanClientName==='function'?cleanClientName(v):String(v||'').trim().slice(0,40);
   const e=()=>window.finoCentralRestoreEntry?.()||{};
-  const vars=()=>({client:clean(clientName),beneficiary:beneficiary||clean(clientName)});
+  const ownerName=()=>clean(codeOwner||clientName);
+  const vars=()=>({client:ownerName(),beneficiary:beneficiary||ownerName(),code_owner_name:ownerName(),beneficiary_name:beneficiary||ownerName()});
   const key=()=>String(e().code_id||e().codeId||'')+'|'+String(e().entryToken||'');
-  let identityKey='', beneficiary='', saved={}, self=true, choosing=false, endId='';
+  let identityKey='', beneficiary='', saved={}, self=true, choosing=false, endId='', codeOwner='';
   const originalRpc=window.finoRpc;
-  window.finoRpc=function(fn,args,...rest){if(fn==='fino_client_save_case'&&args?.p_input&&identityKey===key())args={...args,p_input:{...args.p_input,client_name:clean(clientName),beneficiary_name:beneficiary||clean(clientName),calculation_for:self?'self':'other'},p_event:args.p_event?{...args.p_event,beneficiary_name:beneficiary||clean(clientName),calculation_for:self?'self':'other'}:args.p_event};return originalRpc.call(this,fn,args,...rest);};
+  window.finoRpc=function(fn,args,...rest){if(fn==='fino_client_save_case'&&args?.p_input&&identityKey===key())args={...args,p_input:{...args.p_input,client_name:ownerName(),beneficiary_name:beneficiary||ownerName(),calculation_for:self?'self':'other'},p_event:args.p_event?{...args.p_event,code_owner_name:ownerName(),beneficiary_name:beneficiary||ownerName(),calculation_for:self?'self':'other'}:args.p_event};return originalRpc.call(this,fn,args,...rest);};
   function scroll(node) { requestAnimationFrame(()=>requestAnimationFrame(()=>{node?.scrollIntoView({block:'end',behavior:'auto'}); const c=document.getElementById('finoBotChat');if(c)c.scrollTop=c.scrollHeight;})); }
   async function identity(name=null,data=null) { const entry=e(); const r=await window.finoRpc('f99r22_client_identity',{p_entry_token:entry.entryToken,p_device_id:entry.deviceId,p_name:name,p_self_data:data},14000);if(!r?.ok||r.data?.ok!==true)throw Error('IDENTITY_UNAVAILABLE');return r.data; }
   function panel(title) { let m=document.getElementById('f99v21-name-panel');if(!m){m=document.createElement('div');m.id='f99v21-name-panel';m.setAttribute('role','dialog');m.setAttribute('aria-modal','true');document.body.append(m);}m.hidden=false;m.replaceChildren();const box=document.createElement('section');box.className='f21-card';const h=document.createElement('h2');h.textContent=title;box.append(h);m.append(box);return {m,box}; }
   function button(box,label,fn){const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=fn;box.append(b);return b;}
-  function setPerson(other,name='') { self=!other;beneficiary=other?clean(name):'';window.F99V50ActorState?.setActor(clean(clientName));window.F99V50ActorState?.setScenario(other?'أُدخلت بيانات الحسبة بواسطة '+clean(clientName)+' لصالح '+beneficiary:'');window.__F99WelcomeBackPending=false;endId=''; }
+  function setPerson(other,name='') { const owner=ownerName();codeOwner=owner;self=!other;beneficiary=other?clean(name):'';clientName=other?beneficiary:owner;window.F99V50ActorState?.setActor(owner);window.F99V50ActorState?.setScenario(other?'أُدخلت بيانات الحسبة بواسطة '+owner+' لصالح '+beneficiary:'');window.__F99WelcomeBackPending=false;endId=''; }
   function personChooser(next,cancel) {
     if(choosing)return;choosing=true;
     const product=window.F99V32MainAccess?.()?.packageKey||window.fino99ActivePackage?.()?.key;
@@ -58,12 +60,12 @@
     if(!activeAccess?.record?.central||activeAccess.record.owner)return launch();
     await window.F99Settings?.ready;
     try {
-      const known=await identity();clientName=clean(known.client_name);saved=known.self_data||{};identityKey=key();window.F99V50ActorState?.setActor(clientName);window.F99V50ActorState?.setScenario('');
+      const known=await identity();clientName=clean(known.client_name);codeOwner=clientName;saved=known.self_data||{};identityKey=key();window.F99V50ActorState?.setActor(clientName);window.F99V50ActorState?.setScenario('');
       const attempt=f99QuotaUnresolved.get(JSON.stringify([String(e().entryToken),String(e().deviceId)]));
       if(clientName&&attempt?.intent){try{const pending=JSON.parse(attempt.intent),basis=String(pending.basis||'').split('|');if(basis.length===5&&basis[0]===e().entryToken){saved={salary:Number(basis[1]),settlement:Number(basis[2]),bankId:basis[3],customerType:basis[4],external:Number(pending.externalObligations||0)};setPerson(false);window.F99R22RecoveringQuota=true;return launch();}}catch(_){} }
       if(clientName)return personChooser(launch);
       const {m,box}=panel(T('name'));const input=document.createElement('input');input.maxLength=40;input.autocomplete='given-name';input.setAttribute('aria-label',T('name'));box.append(input);const error=document.createElement('p');error.setAttribute('role','status');box.append(error);
-      const b=button(box,T('continue'),async()=>{const n=clean(input.value);if(n.length<2){error.textContent=T('name_error');return;}b.disabled=true;try{const r=await identity(n);clientName=clean(r.client_name);saved=r.self_data||{};setPerson(false);m.hidden=true;launch();}catch(_){error.textContent=T('identity_error');}finally{b.disabled=false;}});input.onkeydown=x=>{if(x.key==='Enter')b.click();};input.focus();
+      const b=button(box,T('continue'),async()=>{const n=clean(input.value);if(n.length<2){error.textContent=T('name_error');return;}b.disabled=true;try{const r=await identity(n);clientName=clean(r.client_name);codeOwner=clientName;saved=r.self_data||{};setPerson(false);m.hidden=true;launch();}catch(_){error.textContent=T('identity_error');}finally{b.disabled=false;}});input.onkeydown=x=>{if(x.key==='Enter')b.click();};input.focus();
     }catch(_){const {box}=panel(T('identity_error'));button(box,T('continue'),()=>window.F99V21WelcomeBot(service,launch));}
   };
   window.F99SaudiWelcomeLine=function(name){return T(window.F99SaudiGreetingWord()==='صباح الخير'?'morning':'evening',{client:clean(name)});};
@@ -97,6 +99,7 @@
     const chat=document.getElementById('finoBotChat');if(!chat||finoPortal?.step!=='buyout_result')return;
     const s=await status();const id=key()+'|'+s.calculations_used+'|'+(window.__F99V86Usage?.used??'');if(!force&&endId===id)return;endId=id;
     chat.querySelectorAll('[data-c22-end]').forEach(n=>n.remove());const row=document.createElement('div');row.className='f49-message f82-end-actions';row.dataset.c22End='1';const p=document.createElement('p');const max=Number(s.max_calculations),remaining=s.calculations_remaining===null?null:Number(s.calculations_remaining),has=max===0||remaining>0;
+    if(!self&&beneficiary){const who=document.createElement('p');who.className='f99c22-who';who.textContent=T('who',vars());row.append(who);}
     p.textContent=T(has?'end':'end_empty',vars());row.append(p);
     if(max>0){const q=document.createElement('p');const expiry=s.code?.expires_at||s.expires_at||e().expires_at;const date=expiry?new Intl.DateTimeFormat('ar-SA',{timeZone:'Asia/Riyadh',dateStyle:'short',timeStyle:'short'}).format(new Date(expiry)):'—';q.textContent=T('balance',{...vars(),max,remaining,expiry:date})+(remaining===1?' '+T('last'):'');row.append(q);}
     if(has)button(row,T('new'),()=>window.F99V82RequestNewCalculation());button(row,T('review'),review);chat.append(row);scroll(row);
@@ -107,5 +110,5 @@
   window.F99V82FinishReview=function(...args){const r=finish.apply(this,args);void status().then(s=>{const row=[...document.querySelectorAll('#finoBotChat .f82-end-actions')].at(-1);if(!row)return;const left=Number(s.calculations_remaining),max=Number(s.max_calculations);const h=row.querySelector('strong');if(h)h.textContent=T(max===0||left>0?'end':'end_empty',vars());row.querySelectorAll('button').forEach(b=>{if(b.textContent==='أبدأ حسبة جديدة'&&max>0&&left<=0)b.remove();});scroll(row);}).catch(()=>{});return r;};
   // Observe real new chat nodes, not result-card layout/style mutations.
   const chat=document.getElementById('finoBotChat');if(chat)new MutationObserver(records=>{if(records.some(x=>x.addedNodes.length))scroll(chat.lastElementChild);}).observe(chat,{childList:true});
-  window.F99R22Identity=Object.freeze({owner:()=>clean(clientName),beneficiary:()=>beneficiary,self:()=>self,saved:()=>JSON.parse(JSON.stringify(saved))});
+  window.F99R22Identity=Object.freeze({owner:()=>ownerName(),beneficiary:()=>beneficiary,self:()=>self,saved:()=>JSON.parse(JSON.stringify(saved))});
 })();
