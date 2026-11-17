@@ -6,7 +6,7 @@
   function define(key, label, text, vars = [], cat = category, note = '') {
     defs.push({ key: 'followup22.' + key, category: cat, label, text, vars, note });
   }
-  define('invite', 'دعوة مشاهدة العرض', 'يا {client}، عندك عرض خاص لمتابعة إجراءات تمويلك. ودك تشوف التفاصيل؟', ['client']);
+  define('invite', 'دعوة مشاهدة العرض', 'يا {client}، عندك عرض خاص لمتابعة إجراءات تحويل تمويلك. ودّك تشوف التفاصيل؟', ['client']);
   define('view', 'قبول مشاهدة العرض', 'نعم، أشوف العرض', [], consentCategory);
   define('postpone', 'إغلاق العرض دون متابعة', 'إغلاق العرض', [], consentCategory);
   define('title', 'عنوان بطاقة العرض', 'يا {client}، عرض متابعة إجراءات تمويلك', ['client']);
@@ -26,7 +26,7 @@
   define('changed', 'تحديث العرض قبل الموافقة', 'تغيّرت الحسبة أو شروط العرض؛ راجع البطاقة المحدثة قبل قبول المتابعة.', [], consentCategory);
   define('pick', 'اختيار الجهة قبل العرض', 'اختر الحسبة المناسبة لك، وأعرض لك أتعاب المتابعة المعتمدة والخصم الساري قبل إرسال أي طلب.');
   define('pick_result', 'زر اختيار حسبة', '{entity} — قسط {installment} ريال', ['entity', 'installment']);
-  define('apology', 'اعتذار توقف متابعة البنك', w.F99BankFollowup17?.APOLOGY || 'نعتذر منك، خدمة متابعة إجراءات التمويل عبرنا لهذا البنك غير متاحة حاليًا.', [], consentCategory);
+  define('apology', 'اعتذار توقف متابعة جهة التمويل', w.F99BankFollowup17?.APOLOGY || 'نعتذر منك، خدمة متابعة إجراءات التمويل عبرنا لجهة التمويل المختارة غير متاحة حاليًا.', [], consentCategory);
   define('no_financial_offer', 'لا يوجد عرض مالي معتمد', 'لا يوجد عرض متابعة مالي معتمد متاح الآن. لم يتم تسجيل طلب أو قبول.', [], consentCategory);
   define('final_message', 'نص واتساب النهائي', '{message}', ['message'], shareCategory, 'النص الأصلي الكامل في {message}. لا يتجهز إلا بعد قبول المتابعة؛ المتغير لا يتضمن أكوادًا أو بيانات جلسة.');
   ['title', 'entity', 'previous', 'saving', 'discount', 'expiry', 'terms'].forEach(k => define('show_' + k, 'إظهار النص: ' + k, '1', [], category, '1 إظهار / 0 إخفاء النص فقط؛ لا يغير الأتعاب أو الشروط المعتمدة.'));
@@ -124,7 +124,13 @@
       yes.className = 'f41-primary'; button(a, T('postpone'), cancel); return true;
     } catch (_) { return false; }
   }
-  function cancel() { if (session()) postponed.add(session()); clear(); bank()?.clearPreviews(); }
+  function others(h, i) {
+    if (!h) return; const a = el('div', undefined, 'f49-actions'); h.append(a);
+    rows().forEach((r, n) => { if (n !== Number(i)) button(a, T('pick_result', { entity: r.name, installment: fmt(r.installment) }), () => { busy = false; openCard(n); }); });
+    button(a, T('postpone'), cancel);
+  }
+  // r24: closing the offer continues to the approved end of service (no automatic new offer).
+  function cancel() { const wasActive = active(); if (session()) postponed.add(session()); clear(); bank()?.clearPreviews(); if (wasActive) w.F99V82FinishReview?.(); }
   function addText(parent, key, vars, tag = 'p', cls) { if (shown(key)) parent.append(el(tag, T(key, vars), cls)); }
   function render(r, q, offer, index, id) {
     const h = slot(), current = Number(q.new_price), old = Number(q.old_price);
@@ -158,11 +164,12 @@
   }
   async function openCard(i) {
     if (!active() || !rows()[i]) return;
+    if (!host?.isConnected) slot('f41-offer'); // dedicated slot for status/apology, never a result card
     const id = session(), r = rows()[i], generation = epoch, sig = snapshot(r);
     try {
       const want = await bank().api.want({ finance_type: 'personal', bank_id: r.key });
       if (generation !== epoch) return; bank().assertIdentity(id);
-      if (want?.reason === 'BANK_FOLLOWUP_PAUSED') { bank().showApology(host); busy = false; return; }
+      if (want?.reason === 'BANK_FOLLOWUP_PAUSED') { bank().showApology(host); others(host, i); busy = false; return; }
       if (want?.ok !== true || !await allowed()) throw Error('FOLLOWUP_UNAVAILABLE');
       const q = await quote(r), raw = await w.finoRpc('f99v25_public_completion_offers', {}, 20000);
       if (generation !== epoch) return; bank().assertIdentity(id);
@@ -206,7 +213,7 @@
       const msg = message(rows()[p.index], q);
       w.open('https://wa.me/' + q.whatsapp + '?text=' + encodeURIComponent(msg), '_blank', 'noopener,noreferrer');
       status(T('prepared'));
-    } catch (e) { if (generation === epoch) { if (bank().paused(e)) { pending = null; bank().showApology(host); } else status(T('unavailable')); } }
+    } catch (e) { if (generation === epoch) { if (bank().paused(e)) { pending = null; bank().showApology(host); others(host, p.index); } else status(T('unavailable')); } }
     finally { if (generation === epoch) busy = false; }
   }
   const originalOwner = w.F99V41CompletionOwner;

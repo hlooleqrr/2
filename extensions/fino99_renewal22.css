@@ -11,3 +11,17 @@
 .f99r22-review{margin:12px 4px;padding:10px;border:1px solid #d0e1e7;border-radius:12px;color:#193e53}.f99r22-review summary{cursor:pointer;min-height:44px}.f99r22-review pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}
 @media(max-width:560px){.f99r22-renewal .f99s12-button{width:auto;max-width:100%}.f99r22-links{margin-top:3px}.f99r22-links .f99s12-button{width:auto;font-size:13px}}
 .f99r22-renewal>.f99r22-notice{display:block;margin:0 0 6px;font:800 15px/1.7 Cairo,Tahoma,sans-serif;color:#8a2f1d}
+
+/* r24 (owner order 2026-11-17): post-result question, yes/no and exit warning. */
+#finoBotChat .f24-menu{display:flex;flex-direction:column;gap:10px}
+#finoBotChat .f24-ask,#finoBotChat .f24-next{margin:6px 0 0;font-weight:800;font-size:17px;line-height:1.7;color:#0f2742}
+#finoBotChat .f24-questions,#finoBotChat .f24-yes-no{display:flex;flex-wrap:wrap;gap:8px}
+#finoBotChat .f24-questions>button,#finoBotChat .f24-yes-no>button{flex:1 1 calc(50% - 8px);min-height:44px;max-width:100%;white-space:normal}
+#finoBotChat .f24-exit-warning{margin:10px 0;padding:14px;border-radius:16px;border:1.5px solid #e0a400;background:#fff6dc;color:#5c3d00;font-weight:700;font-size:15px;line-height:1.8}
+#finoBotChat .f24-exit-warning p{margin:0 0 10px}
+#finoBotChat .f24-exit-warning .f24-danger{background:#b3261e;color:#fff;border-color:#b3261e}
+.f99r22-renewal .f99r22-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.f99r22-renewal .f99r22-actions>button{flex:1 1 calc(50% - 8px);min-height:44px}
+
+/* r24: one «الخيارات اللي بعدها» question only (the yes/no under the post-result menu) */
+#finoBotChat .portal-bubble:has(.f24-menu) .f85-finish>button[onclick="F99V82FinishReview()"]{display:none!important}

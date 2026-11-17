@@ -6356,10 +6356,10 @@ body:has(#page1.active)>.app>.ambient { display:none !important; }
 <script src="./extensions/fino99_bot_texts.js?v=20261116r22B"></script>
 <script src="./extensions/fino99_settings22.js?v=20261116r22"></script>
 <link rel="stylesheet" href="./extensions/fino99_session_security.css?v=20261115r18">
-<script src="./extensions/bank_followup17.js?v=20261116r22E"></script>
+<script src="./extensions/bank_followup17.js?v=20261117r24"></script>
 <script src="./extensions/bank_followup17_bootstrap.js?v=20261116r22E"></script>
 <script src="./extensions/fino99_session_security.js?v=20261116r22INT"></script>
-<script src="./extensions/fino99_performance.js?v=20261116r22J"></script>
+<script src="./extensions/fino99_performance.js?v=20261117r24"></script>
 <script>
 window.F99Performance && window.F99Performance.install(window);
 
@@ -17006,7 +17006,7 @@ async function testFINOSmartImageClipboardSupport(){
 }
 
 
-try{loadLocalFINIUMIdentity();setTimeout(()=>{loadPublicFINIUMIdentity();fino99ReadCentral();refreshFINIUMWeather()},80);setInterval(()=>fino99ReadCentral().catch(()=>{}),3000);setInterval(()=>refreshFINIUMWeather(),15*60*1000);}catch(e){}
+try{loadLocalFINIUMIdentity();setTimeout(()=>{loadPublicFINIUMIdentity();fino99ReadCentral();refreshFINIUMWeather()},80);setInterval(()=>{if(document.hidden)return;/* r24: a central customer's rates come only from the live package snapshot (F99V32); the public poller must not overwrite its revision */try{if(activeAccess?.record?.central&&!activeAccess?.record?.owner)return}catch(_){}fino99ReadCentral().catch(()=>{})},3000);setInterval(()=>refreshFINIUMWeather(),15*60*1000);}catch(e){}
 
 // ============================================================
 // FINO V21 — Broadcast Mode
@@ -22962,8 +22962,13 @@ async function syncFeatures(force=false){const a=access();if(a.owner)return true
  const signature=entry.entryToken+'|'+entry.deviceId;
  if(!force&&signature===overrideKey&&Date.now()-overrideAt<3000)return true;
  if(overridePending)return overridePending;
- overridePending=(async()=>{const x=await window.finoRpc('f99v38_client_code_features',{p_entry_token:entry.entryToken,p_device_id:entry.deviceId},12000);
-  if(!x?.ok||x.data?.ok!==true)throw Error('تعذر التحقق من الصلاحيات الفردية للكود؛ لا يمكن متابعة حسبة جديدة.');
+ overridePending=(async()=>{let x=null;
+  // r24: retry ONLY transient transport/timeout/lock failures; a real guard refusal is never bypassed.
+  for(let n=0;n<3;n++){x=await window.finoRpc('f99v38_client_code_features',{p_entry_token:entry.entryToken,p_device_id:entry.deviceId},12000);
+   if(x?.ok&&x.data?.ok===true)break;const why=String(x?.data?.reason||x?.error||'');
+   if(x?.ok&&x.data&&!/timeout|canceling statement|57014|lock|connection|fetch|network|503|502|500/i.test(why))break;
+   if(n<2)await new Promise(r=>setTimeout(r,n?1600:700));}
+  if(!x?.ok||x.data?.ok!==true)throw Error('تعذر التحقق من الكود مؤقتًا. أعد المحاولة بعد لحظات؛ لم تُخصم أي حسبة.');
   override=x.data.features||{};overrideKey=signature;overrideAt=Date.now();return true;
  })().finally(()=>{overridePending=null});return overridePending;
 }
@@ -28759,17 +28764,17 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <link rel="stylesheet" href="./extensions/fino99_customer_chat.css?v=20261115r18">
 <script src="./extensions/fino99_customer_chat.js?v=20261115r18"></script>
 <script src="./extensions/fino99_display_labels.js?v=20261116r22"></script>
-<script src="./extensions/fino99_scenarios22.js?v=20261116r22INTX3"></script>
+<!-- r24: owner order 2026-11-17 — standalone scenario/review sections paused in the customer UI (file and saved data kept). -->
 <!-- FINO99 services09 / coupons10 / fee offers12: additive, protected -->
 <link rel="stylesheet" href="./extensions/fino99_coupons.css?v=20261115r18">
 <script src="./extensions/fino99_coupons.js?v=20261115r18"></script>
 <link rel="stylesheet" href="./extensions/fino99_fee_offers.css?v=20261115r18">
 <script src="./extensions/fino99_fee_offers.js?v=20261116r22E"></script>
-<script src="./extensions/fino99_followup22.js?v=20261116r22INTX3"></script>
+<script src="./extensions/fino99_followup22.js?v=20261117r24"></script>
 <link rel="stylesheet" href="./extensions/fino99_service_tools.css?v=20261115r18">
 <script src="./extensions/fino99_service_tools.js?v=20261116r22INTY"></script>
-<link rel="stylesheet" href="./extensions/fino99_renewal22.css?v=20261116r23b">
-<script src="./extensions/fino99_renewal22.js?v=20261116r23b"></script>
+<link rel="stylesheet" href="./extensions/fino99_renewal22.css?v=20261117r24b">
+<script src="./extensions/fino99_renewal22.js?v=20261117r24e"></script>
 <!-- F99 owner desktop 13: owner-only, device-local visual approval; load after fee/service modules. -->
 <link rel="stylesheet" href="./extensions/fino99_owner_desktop.css?v=20261115r18">
 <script src="./extensions/fino99_owner_desktop.js?v=20261116r22B"></script>
@@ -28810,7 +28815,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <!-- Round22 A: fixed adjacent iPhone default + owner-only store design portal. -->
 <link rel="stylesheet" href="./extensions/fino99_store_design22.css?v=20261116r22INTY2">
 <script src="./extensions/fino99_store_design22.js?v=20261116r22A"></script>
-<script src="./extensions/fino99_identity22.js?v=20261116r23b"></script>
+<script src="./extensions/fino99_identity22.js?v=20261117r24d"></script>
 <script src="./extensions/fino99_package_options22.js?v=20261116r22C"></script>
  <!-- R23 presentation-only enhancement: no calculator, inventory, or session modifications. -->
 </body>

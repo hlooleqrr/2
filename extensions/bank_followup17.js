@@ -8,7 +8,7 @@
   const T = (key, vars, fallback) => typeof window !== 'undefined' && window.F99T ? window.F99T('followup22.' + key, vars, fallback) : fallback;
   const declined = new Set();
   const session = () => typeof window !== 'undefined' ? window.F99B17Integration?.identity?.() || '' : '';
-  const APOLOGY = 'نشكرك على ثقتك بنا 🌷\n\nنعتذر منك، خدمة متابعة إجراءات التمويل عبرنا لهذا البنك غير متاحة حاليًا.\n\nتقدر تستفيد من الحسبة وتقارن الخيارات الأخرى، ويسعدنا خدمتك في الخيارات المتاحة.';
+  const APOLOGY = 'نشكرك على ثقتك بنا 🌷\n\nنعتذر منك، خدمة متابعة إجراءات التمويل عبرنا لجهة التمويل المختارة غير متاحة حاليًا.\n\nتقدر تستفيد من الحسبة وتقارن الخيارات الأخرى، ويسعدنا خدمتك في الخيارات المتاحة.';
   const safe = (tag, text, className) => {
     const node = document.createElement(tag);
     if (text !== undefined) node.textContent = String(text);

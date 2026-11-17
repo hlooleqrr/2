@@ -26,7 +26,12 @@
     f99o3_public_catalog: Object.freeze({ ttl: 0, args: [] }),
     f99v8_public_renewal_settings: Object.freeze({ ttl: 0, args: [] }),
     f99d1_voice_public: Object.freeze({ ttl: 0, args: [] }),
-    f99r22_settings_public: Object.freeze({ ttl: 0, args: [] })
+    f99r22_settings_public: Object.freeze({ ttl: 0, args: [] }),
+    // r24 (2026-11-17): read-only session status/feature reads. Production logs showed
+    // concurrent identical polls queueing on the same code row lock until 57014.
+    // Share one request per session; any write still invalidates (bypass fence).
+    f99v23_client_status: Object.freeze({ ttl: 1500, args: ['p_entry_token', 'p_device_id'], session: true }),
+    f99v38_client_code_features: Object.freeze({ ttl: 1500, args: ['p_entry_token', 'p_device_id'], session: true })
   });
   const MAX_ENTRIES = 32;
   const MAX_ENTRY_BYTES = 256 * 1024;
@@ -106,6 +111,7 @@
       if (!descriptor || !descriptor.enumerable || !Object.prototype.hasOwnProperty.call(descriptor, 'value')) return null;
       const value = descriptor.value;
       if (key === 'p_package_key' && (typeof value !== 'string' || value.length > 120 || (value !== '' && !/^[A-Za-z0-9_:-]+$/.test(value)))) return null;
+      if ((key === 'p_entry_token' || key === 'p_device_id') && (typeof value !== 'string' || value.length < 8 || value.length > 256)) return null;
       clean[key] = value;
     }
     return { name, policy, timeout, serialized: JSON.stringify(clean) };
@@ -248,7 +254,8 @@
   function read(receiver, call, forceFresh) {
     const safe = safeCall(call);
     if (!safe) return bypass(receiver, call, safe, forceFresh);
-    const key = receiverKey(receiver) + '|' + safe.name + '|' + safe.serialized + '|' + safe.timeout;
+    // Session status polls with different caller timeouts share one server read.
+    const key = receiverKey(receiver) + '|' + safe.name + '|' + safe.serialized + '|' + (safe.policy.session ? 'session' : safe.timeout);
     const time = now();
     if (!forceFresh) {
       const cached = cache.get(key);

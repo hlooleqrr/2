@@ -6,8 +6,8 @@
   'use strict';
   const w = window, d = document;
   const words = {
-    invite: ['نفاد الاستخدامات','دعوة التجديد','يا {client}، استهلكت حسبات باقتك، وعندك عروض خاصة للتجديد. ودك تشوفها؟',['client']],
-    expired: ['نفاد الاستخدامات','دعوة تجديد المدة','يا {client}، انتهت مدة باقتك، وعندك عروض خاصة للتجديد. ودك تشوفها؟',['client']],
+    invite: ['نفاد الاستخدامات','دعوة التجديد','يا {client}، انتهت حسبات باقتك، وعندك عروض خاصة للتجديد. ودّك تشوفها؟',['client']],
+    expired: ['نفاد الاستخدامات','دعوة تجديد المدة','يا {client}، انتهت مدة باقتك، وعندك عروض خاصة للتجديد. ودّك تشوفها؟',['client']],
     view: ['رسائل التجديد','عرض العروض','نعم، أشوف العروض'],
     later: ['رسائل التجديد','تأجيل التجديد','ليس الآن'],
     title: ['رسائل التجديد','عنوان التجديد','تجديد الكود'],
@@ -54,7 +54,7 @@
   const safeURL=raw=>{const u=w.F99SessionSecurity.safeHttps(raw);try{const x=new URL(u);return ['salla.sa','www.salla.sa'].includes(x.hostname)&&!x.port?u:'';}catch(_){return '';}};
   let current=null, validUntil=0, serial=0;
   const modeFor=ctx=>w.F99Settings?.packageOption(ctx.package_key,'renewal_mode',ctx.renewal_mode||'new')||'new';
-  async function details(code){const r=await w.finoRpc('f99r22_renewal_context',{p_code:normalized(code),p_device_id:w.F99S12Runtime.device()},15000);return r?.ok&&r.data?.ok?r.data:null;}
+  async function details(code){const r=await w.finoRpc('f99r22_renewal_context',{p_code:normalized(code),p_device_id:w.F99S12Runtime.device()},15000);if(r?.ok&&r.data?.ok)return r.data;/* r24: valid code with balance -> active (no renewal, no error) */if(r?.ok&&r.data?.reason==='CODE_NOT_EXHAUSTED')return {status:'active'};return null;}
   function page(){let p=d.getElementById('f99r22RenewalPage');if(!p){p=el('section',null,'page');p.id='f99r22RenewalPage';p.dir='rtl';const viewport=el('div',null,'viewport');const chat=el('div',null,'f99r22-chat');chat.setAttribute('role','log');viewport.append(chat);p.append(viewport);d.body.append(p);}return p;}
   function close(card){card?.remove();validUntil=0;current=null;serial++;if(w.F99SessionSecurity.context()?.verified)w.showPage?.('freeHub');else w.showPage?.('page1');}
   function offerCard(host,o){const c=el('article',null,'f99r22-offer');c.dataset.offerId=o.id;host.append(c);c.append(el('h4',o.title),el('strong',t('price',{price:Number(o.price_sar??o.price).toLocaleString('en-US',{maximumFractionDigits:2})})),el('p',t('terms',{minutes:o.duration_minutes,count:o.max_calculations})));return c;}
@@ -94,6 +94,8 @@
   }
   async function open(code,options={}){const id=++serial;let ctx;try{ctx=await details(code);}catch(_){}
     if(id!==serial)return false;
+    // r24: a valid code with remaining calculations is never treated as exhausted/expired.
+    if(ctx&&ctx.status==='active')return false;
     const active=w.F99SessionSecurity.context()?.verified===true;
     const host=active?d.getElementById('finoBotChat'):page().querySelector('.f99r22-chat');
     if(!ctx){if(active&&host)status(host,'failed');else {validUntil=0;current=null;w.showPage?.('page1');const error=d.getElementById('f99l-error');if(error)error.textContent=t('failed');}return false;}
@@ -103,25 +105,28 @@
     const client=ctx.client_name||options.clientName||t('client');
     card.append(el('strong',t(ctx.status==='expired'?'expiredNotice':'finishedNotice'),'f99r22-notice'),el('p',t(ctx.status==='expired'?'expired':'invite',{client})));
     const offers=el('div',null,'f99r22-offers');offers.hidden=true;card.append(offers);
-    if(modeFor(ctx)!=='off')btn(card,'view',()=>{offers.hidden=false;offers.replaceChildren();showOffers(offers,ctx,normalized(code));card.scrollIntoView({block:'nearest',behavior:'smooth'});});
+    const actions=el('div',null,'f99r22-actions');card.append(actions);
+    if(modeFor(ctx)!=='off'){const view=btn(actions,'view',()=>{offers.hidden=false;offers.replaceChildren();showOffers(offers,ctx,normalized(code));if(['new','both'].includes(modeFor(ctx)))purchased(offers,normalized(code));view.remove();offers.scrollIntoView({block:'start',behavior:'smooth'});});view.classList.add('f99r22-primary');}
     else card.querySelector('p').textContent=t('off');
-    if(['new','both'].includes(modeFor(ctx)))purchased(card,normalized(code));
-    btn(card,'later',()=>close(card));renderReviews(host,ctx,options.capturedChat);
-    if(!active)w.showPage?.('f99r22RenewalPage');card.scrollIntoView({block:'nearest',behavior:'smooth'});return true;
+    btn(actions,'later',()=>close(card));
+    // r24: saved-review sections are paused in the customer UI (records kept on the server).
+    if(!active)w.showPage?.('f99r22RenewalPage');card.scrollIntoView({block:'start',behavior:'smooth'});return true;
   }
   function inquiry(host){host.querySelector('.f99r22-code-entry')?.remove();const row=el('div',null,'f99r22-code-entry'),label=el('label',t('code')),input=el('input');input.dir='ltr';input.autocomplete='off';input.maxLength=32;label.append(input);row.append(label);host.append(row);btn(row,'enter',()=>open(input.value));input.focus();}
-  function currentCode(){try{return current?.code||w.finoCentralRestoreEntry()?.code||activeAccess?.record?.code||f99LastAttemptedCode||'';}catch(_){return current?.code||'';}}
-  function serviceLinks(){const visibility=w.F99Settings?.value('store_design')?.renewal_services_links!==false;
-    // Owner order 2026-11-16: never inside the store sheet. Remove any earlier copy there.
-    d.querySelectorAll('#f99s-modal .f99r22-links').forEach(n=>n.remove());
-    const roots=[d.querySelector('#freeHub .viewport')||d.getElementById('freeHub'),d.querySelector('#specialistBotPage .viewport')||d.getElementById('specialistBotPage')].filter(Boolean);
-    for(const host of roots){let nav=host.querySelector(':scope > .f99r22-links');if(!visibility){nav?.remove();continue;}if(nav)continue;nav=el('nav',null,'f99r22-links');nav.setAttribute('aria-label',t('title'));host.prepend(nav);
-      btn(nav,'title',()=>{const code=currentCode();if(code)return open(code);inquiry(nav);});btn(nav,'inquiry',()=>inquiry(nav));}
-  }
+  // r24: the code typed at the login form is kept for THIS tab session only (sessionStorage, cleared with the session)
+  // so the in-chat renewal card can verify the exhausted/expired code. Never sent anywhere else.
+  const CODE_KEY='f99r24-renewal-code';let typed='';
+  function rememberTyped(v){const c=normalized(v||'');if(!c)return;typed=c;try{w.sessionStorage.setItem(CODE_KEY,c);}catch(_){}}
+  function forgetTyped(){typed='';try{w.sessionStorage.removeItem(CODE_KEY);}catch(_){}}
+  d.addEventListener('click',e=>{if(e.target?.closest?.('#f99l-enter'))rememberTyped(d.getElementById('f99l-code')?.value);},true);
+  d.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target?.id==='f99l-code')rememberTyped(e.target.value);},true);
+  function currentCode(){let s='';try{s=w.sessionStorage.getItem(CODE_KEY)||'';}catch(_){}
+    // the typed code is used only while a verified entry session exists in this tab (cleared on logout/exit)
+    let live=false;try{live=!!w.finoCentralRestoreEntry?.()?.entryToken;}catch(_){}if(!live){s='';if(!current)typed='';}try{return current?.code||typed||s||w.finoCentralRestoreEntry()?.code||activeAccess?.record?.code||f99LastAttemptedCode||'';}catch(_){return current?.code||typed||s||'';}}
+  // r24: owner order — no «تجديد الكود»/«الاستعلام عن الكود» buttons on top of customer pages.
+  function serviceLinks(){d.querySelectorAll('.f99r22-links').forEach(n=>n.remove());}
   function ownerTools(){let owner=false;try{owner=activeAccess?.record?.owner===true&&activeAccess.record.central===true;}catch(_){}if(!owner)return;
-    const root=d.querySelector('#f76-modal main');if(!root||root.querySelector('.f99r22-owner'))return;const box=el('section',null,'f76-card f99r22-owner');root.append(box);box.append(el('h3','إدارة روابط التجديد وحذف العرض غير المستخدم'));
-    const label=el('label','إظهار رابط التجديد والاستعلام أعلى الخدمات'),check=el('input');check.type='checkbox';check.checked=w.F99Settings.value('store_design').renewal_services_links!==false;label.prepend(check);box.append(label);
-    const save=el('button','حفظ ظهور الروابط');save.type='button';box.append(save);save.onclick=async()=>{save.disabled=true;try{for(let i=0;i<3;i++){const latest=await w.F99Settings.adminGet('store_design');if(!latest.ok)throw Error();const ack=await w.F99Settings.adminSave('store_design',{...latest.value,renewal_services_links:check.checked},latest.version);if(ack.ok){serviceLinks();return;}if(ack.reason!=='VERSION_CONFLICT')throw Error();}}catch(_){box.append(el('p','تعذر الحفظ؛ أعد المحاولة بعد قراءة الإعدادات.'));}finally{save.disabled=false;}};
+    const root=d.querySelector('#f76-modal main');if(!root||root.querySelector('.f99r22-owner'))return;const box=el('section',null,'f76-card f99r22-owner');root.append(box);box.append(el('h3','حذف عرض تجديد غير مستخدم'));
     const sel=el('select');sel.append(new Option('اختر عرضًا غير مستخدم لحذفه',''));box.append(sel);let offers=[];
     void w.finoCentralAdminCall('f99v74_owner_offers',{}).then(r=>{offers=r?.data?.items||[];for(const o of offers)sel.append(new Option(o.title,o.id));});
     const remove=el('button','حذف العرض غير المستخدم');remove.type='button';box.append(remove);remove.onclick=async()=>{const o=offers.find(x=>x.id===sel.value);if(!o||!confirm('حذف هذا العرض غير المستخدم فقط؟ لا تُحذف العروض المرتبطة بمخزون أو مشتريات.'))return;remove.disabled=true;try{const r=await w.finoCentralAdminCall('f99r22_admin_delete_renewal_offer',{p_id:o.id,p_expected_version:o.version});box.append(el('p',r?.data?.deleted?'تم حذف العرض غير المستخدم.':'لم يُحذف العرض. العرض المستخدم أو المرتبط بمخزون يُعطّل من إعداداته ولا يُحذف.'));}finally{remove.disabled=false;}};
@@ -133,7 +138,7 @@
     w.F99Settings.onChange(serviceLinks);serviceLinks();ownerTools();
     let queued=false;new MutationObserver(()=>{if(queued)return;queued=true;queueMicrotask(()=>{queued=false;serviceLinks();ownerTools();});}).observe(d.body,{childList:true,subtree:true});
   }
-  w.F99Renewal22={open,authorized:()=>Date.now()<validUntil,modeFor,details};
+  w.F99Renewal22={open,openCurrent:()=>open(currentCode()),authorized:()=>Date.now()<validUntil,modeFor,details};
   w.addEventListener('pagehide',()=>{validUntil=0;});
   if(d.readyState==='loading')d.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();

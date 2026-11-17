@@ -28,7 +28,19 @@
     ['last','بداية حسبة جديدة','استخدام واحد متبقٍ','آخر حسبة'],
     ['new','بداية حسبة جديدة','بدء جديد','أبدأ حسبة جديدة'],
     ['review','انتهاء الحسبة','مراجعة النتائج','أراجع النتائج'],
-    ['unknown','بداية حسبة جديدة','تعذر قراءة الرصيد','تعذر التحقق من الرصيد. يمكنك مراجعة النتائج، ولا تبدأ حسبة جديدة قبل التحقق.']
+    ['unknown','بداية حسبة جديدة','تعذر قراءة الرصيد','تعذر التحقق من الرصيد. يمكنك مراجعة النتائج، ولا تبدأ حسبة جديدة قبل التحقق.'],
+    ['ask','ما بعد النتيجة','سؤال ما بعد النتيجة','يا {beneficiary}، ودّك تسأل عن شيء في الحسبة؟'],
+    ['q_installment','ما بعد النتيجة','سؤال القسط','كم القسط؟'],
+    ['q_cash','ما بعد النتيجة','سؤال الكاش','كم يصفّى لي كاش؟'],
+    ['q_lower','ما بعد النتيجة','طلب أقل قسط','أبي أقل قسط'],
+    ['q_max','ما بعد النتيجة','طلب أعلى مبلغ تمويل','أبي أعلى مبلغ تمويل'],
+    ['q_impact','ما بعد النتيجة','سؤال أثر الالتزامات','كم أثّرت الالتزامات على تمويلي؟'],
+    ['next','ما بعد النتيجة','سؤال الخيارات التالية','يا {client}، ودّك تشوف الخيارات اللي بعدها؟'],
+    ['yes','ما بعد النتيجة','زر نعم','نعم'],
+    ['no','ما بعد النتيجة','زر لا','لا'],
+    ['exit_warn','الخروج من الحسبة','تحذير الخروج','تنبيه: إذا خرجت من هذه الحسبة، ما راح تقدر ترجع لمراجعة نفس النتيجة من المحادثة بعد الخروج. هل ترغب بالخروج؟'],
+    ['exit_yes','الخروج من الحسبة','تأكيد الخروج','نعم، أعلم وأرغب بالخروج'],
+    ['exit_back','الخروج من الحسبة','العودة للحسبة','العودة للحسبة']
   ];
   window.F99Texts?.register(defs.map(([k,category,label,text]) => ({key:'c22.'+k,category,label,text,vars:['client','beneficiary','code_owner_name','beneficiary_name','remaining','max','expiry']})));
   function T(k,v={}) { const d=defs.find(x=>x[0]===k); const fallback=d[3].replace(/\{(\w+)\}/g,(_,n)=>String(v[n]??''));return window.F99T('c22.'+k,v,fallback); }
@@ -40,8 +52,12 @@
   let identityKey='', beneficiary='', saved={}, self=true, choosing=false, endId='', codeOwner='';
   const originalRpc=window.finoRpc;
   window.finoRpc=function(fn,args,...rest){if(fn==='fino_client_save_case'&&args?.p_input&&identityKey===key())args={...args,p_input:{...args.p_input,client_name:ownerName(),beneficiary_name:beneficiary||ownerName(),calculation_for:self?'self':'other'},p_event:args.p_event?{...args.p_event,code_owner_name:ownerName(),beneficiary_name:beneficiary||ownerName(),calculation_for:self?'self':'other'}:args.p_event};return originalRpc.call(this,fn,args,...rest);};
-  function scroll(node) { requestAnimationFrame(()=>requestAnimationFrame(()=>{node?.scrollIntoView({block:'end',behavior:'auto'}); const c=document.getElementById('finoBotChat');if(c)c.scrollTop=c.scrollHeight;})); }
-  async function identity(name=null,data=null) { const entry=e(); const r=await window.finoRpc('f99r22_client_identity',{p_entry_token:entry.entryToken,p_device_id:entry.deviceId,p_name:name,p_self_data:data},14000);if(!r?.ok||r.data?.ok!==true)throw Error('IDENTITY_UNAVAILABLE');return r.data; }
+  // r24: show the beginning of a new message and let the customer scroll down himself.
+  function scroll(node) { requestAnimationFrame(()=>{const c=document.getElementById('finoBotChat');if(!c||!node?.isConnected)return;c.scrollTo({top:Math.max(0,node.offsetTop-c.offsetTop-8),behavior:'smooth'});}); }
+  const transient=r=>!r?.ok||/timeout|canceling statement|57014|lock|connection|fetch|network|50[023]/i.test(String(r?.data?.reason||r?.error||''));
+  async function identity(name=null,data=null) { const entry=e(); let r=null;
+    for(let n=0;n<3;n++){r=await window.finoRpc('f99r22_client_identity',{p_entry_token:entry.entryToken,p_device_id:entry.deviceId,p_name:name,p_self_data:data},14000);if(r?.ok&&r.data?.ok===true)return r.data;if(!transient(r))break;if(n<2)await new Promise(x=>setTimeout(x,n?1600:700));}
+    throw Error('IDENTITY_UNAVAILABLE'); }
   function panel(title) { let m=document.getElementById('f99v21-name-panel');if(!m){m=document.createElement('div');m.id='f99v21-name-panel';m.setAttribute('role','dialog');m.setAttribute('aria-modal','true');document.body.append(m);}m.hidden=false;m.replaceChildren();const box=document.createElement('section');box.className='f21-card';const h=document.createElement('h2');h.textContent=title;box.append(h);m.append(box);return {m,box}; }
   function button(box,label,fn){const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=fn;box.append(b);return b;}
   function setPerson(other,name='') { const owner=ownerName();codeOwner=owner;self=!other;beneficiary=other?clean(name):'';clientName=other?beneficiary:owner;window.F99V50ActorState?.setActor(owner);window.F99V50ActorState?.setScenario(other?'أُدخلت بيانات الحسبة بواسطة '+owner+' لصالح '+beneficiary:'');window.__F99WelcomeBackPending=false;endId=''; }
@@ -82,7 +98,7 @@
       if(step==='buyout_external'&&/التزامات/.test(plain))k='external';
       if(k){const grid=k==='bank'?text.slice(text.indexOf('<')):'';text=portalEsc(T(k,vars()))+(grid&&grid!=='>'?grid:'');}
     }
-    const out=assistant.call(this,text);const chat=document.getElementById('finoBotChat');scroll(chat?.lastElementChild);return out;
+    return assistant.call(this,text);
   };
   const setInput=window.setPortalInput;
   window.setPortalInput=function(...args){const out=setInput.apply(this,args);if(self&&args[0]){const fields={buyout_salary:'salary',buyout_settlement:'settlement',buyout_external:'external'};const f=fields[finoPortal?.step];const input=document.getElementById('finoBotInput');if(f&&saved[f]!=null&&input)input.value=String(saved[f]);}return out;};
@@ -104,11 +120,51 @@
     if(max>0){const q=document.createElement('p');const expiry=s.code?.expires_at||s.expires_at||e().expires_at;const date=expiry?new Intl.DateTimeFormat('ar-SA',{timeZone:'Asia/Riyadh',dateStyle:'short',timeStyle:'short'}).format(new Date(expiry)):'—';q.textContent=T('balance',{...vars(),max,remaining,expiry:date})+(remaining===1?' '+T('last'):'');row.append(q);}
     if(has)button(row,T('new'),()=>window.F99V82RequestNewCalculation());button(row,T('review'),review);chat.append(row);scroll(row);
   }
-  const rank=window.showFINOPortalRank;
-  if(typeof rank==='function')window.showFINOPortalRank=async function(...args){const r=await rank.apply(this,args);if(document.querySelector('#finoBotChat .portal-detail-lines'))void end().catch(()=>{});return r;};
+  // r24: the end panel is no longer appended automatically after the result card.
   const finish=window.F99V82FinishReview;
-  window.F99V82FinishReview=function(...args){const r=finish.apply(this,args);void status().then(s=>{const row=[...document.querySelectorAll('#finoBotChat .f82-end-actions')].at(-1);if(!row)return;const left=Number(s.calculations_remaining),max=Number(s.max_calculations);const h=row.querySelector('strong');if(h)h.textContent=T(max===0||left>0?'end':'end_empty',vars());row.querySelectorAll('button').forEach(b=>{if(b.textContent==='أبدأ حسبة جديدة'&&max>0&&left<=0)b.remove();});scroll(row);}).catch(()=>{});return r;};
-  // Observe real new chat nodes, not result-card layout/style mutations.
-  const chat=document.getElementById('finoBotChat');if(chat)new MutationObserver(records=>{if(records.some(x=>x.addedNodes.length))scroll(chat.lastElementChild);}).observe(chat,{childList:true});
+  window.F99V82FinishReview=function(...args){const r=finish.apply(this,args);/* r24: the offer is reached only via «نعم» */[...document.querySelectorAll('#finoBotChat button')].forEach(b=>{if(/عندك عرض للمتابعة$/.test(b.textContent||''))b.remove();});void status().then(s=>{const row=[...document.querySelectorAll('#finoBotChat .f82-end-actions')].at(-1);if(!row)return;const left=Number(s.calculations_remaining??s.remaining),max=Number(s.max_calculations);const h=row.querySelector('strong');if(h)h.textContent=T(max===0||left>0?'end':'end_empty',vars());row.querySelectorAll('button').forEach(b=>{if(b.textContent==='أبدأ حسبة جديدة'&&max>0&&left<=0)b.remove();});scroll(row);
+    /* r24: calculations exhausted -> the approved renewal invitation card, once, inside the conversation */if(max>0&&left<=0&&Number.isFinite(left)&&typeof window.F99Renewal22?.openCurrent==='function'&&!document.querySelector('#finoBotChat .f99r22-renewal'))void window.F99Renewal22.openCurrent();}).catch(()=>{});return r;};
+  // r24: saved-history review is paused in the customer UI (records stay on the server).
+  const request0=window.F99V82RequestNewCalculation;if(typeof request0==='function')window.F99V82RequestNewCalculation=async function(...a){const r=await request0.apply(this,a);document.querySelectorAll('#finoBotChat .f82-end-actions button').forEach(b=>{if(b.textContent==='أراجع الحسب السابقة')b.remove();});return r;};
+  // r24: no MutationObserver auto-scroll to the bottom of the conversation.
+  // Post-result questions (owner order 2026-11-17): the ORIGINAL answer functions on the saved result only.
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const allowed=k=>window.F99V38FeatureAllowed?.(k)===true;
+  const btnHtml=(label,act,cls='')=>`<button type="button"${cls?` class="${cls}"`:''} onclick="${act}">${esc(label)}</button>`;
+  // r24: a question already answered for this result is not offered again (no duplicate buttons).
+  const answered=new WeakMap();const bag=i=>{const r=typeof latestResults!=='undefined'&&latestResults?latestResults:null;if(!r)return new Set();let m=answered.get(r);if(!m){m=new Map();answered.set(r,m);}if(!m.has(i))m.set(i,new Set());return m.get(i);};
+  const ask0=window.F99V41Ask;if(typeof ask0==='function')window.F99V41Ask=function(key,i){bag(Number(i)).add(String(key));return ask0.apply(this,arguments);};
+  const originalMenu=window.F99V38BotStepsHtml;
+  if(typeof originalMenu==='function')window.F99V38BotStepsHtml=function(...args){
+    const html=originalMenu.apply(this,args);const m=/F99V41Ask\('installment',(\d+)\)/.exec(String(html||''));if(!m)return html;const i=Number(m[1]);
+    const tpl=document.createElement('template');tpl.innerHTML=html;const more=tpl.content.querySelector('details.f49-more');
+    // Keep the original extra options, without the items that belong to «الخيارات اللي بعدها».
+    more?.querySelectorAll('button').forEach(b=>{const a=b.getAttribute('onclick')||'';if(/F99V82RequestNewCalculation|F99V82OpenOffer|F99V47ResetFinance/.test(a))b.remove();});
+    const nextBank=tpl.content.querySelector('button[onclick="F99V38NextBank()"]');if(nextBank&&more)more.querySelector('.f49-more-actions')?.prepend(nextBank);
+    const used=bag(i),q=[];
+    if(!used.has('installment'))q.push(btnHtml(T('q_installment'),`F99V41Ask('installment',${i})`));
+    if(!used.has('cash'))q.push(btnHtml(T('q_cash'),`F99V41Ask('cash',${i})`));
+    if(allowed('reduce_installment'))q.push(btnHtml(T('q_lower'),"F99V37BeginAdjust('installment')"));
+    if(allowed('reduce_amount'))q.push(btnHtml(T('q_max'),'F99V47ResetFinance()'));
+    /* shown/removed by the original effect() rule (only when obligations really reduced the financing) */if(window.F99V38FeatureAllowed?.('show_obligation_impact')!==false)q.push(btnHtml(T('q_impact'),'F99V41Impact()'));
+    return `<div class="f41-options f47-main-options f49-menu f24-menu"><p class="f24-ask">${esc(T('ask',vars()))}</p><div class="f24-questions">${q.join('')}</div>${more?more.outerHTML:''}<p class="f24-next">${esc(T('next',vars()))}</p><div class="f24-yes-no">${btnHtml(T('yes'),'F99R24Next()','f41-primary')}${btnHtml(T('no'),'F99R24Exit()')}</div></div>`;
+  };
+  window.F99R24Next=async function(){
+    document.getElementById('f24-exit-warning')?.remove();
+    let shown=false;
+    if(allowed('show_completion')&&window.F99Followup22?.invitation){try{shown=await window.F99Followup22.invitation();}catch(_){shown=false;}}
+    if(!shown)window.F99V82FinishReview?.();
+  };
+  window.F99R24Exit=function(){
+    const chat=document.getElementById('finoBotChat');if(!chat)return;document.getElementById('f24-exit-warning')?.remove();
+    const box=document.createElement('div');box.id='f24-exit-warning';box.className='f24-exit-warning';box.setAttribute('role','alertdialog');
+    const p=document.createElement('p');p.textContent=T('exit_warn');box.append(p);const row=document.createElement('div');row.className='f24-yes-no';box.append(row);
+    button(row,T('exit_yes'),()=>{box.remove();window.__F99V85KeepConversation=false;window.__F99V82LastUseConsent=false;
+      // Close THIS conversation only: no consumption, no code invalidation, server records untouched.
+      try{if(typeof finoPortal!=='undefined')finoPortal.step='f24_exit';}catch(_){}
+      if(typeof window.F99V41LeaveNow==='function')window.F99V41LeaveNow();else window.FINOPortalBack?.();}).className='f24-danger';
+    button(row,T('exit_back'),()=>box.remove());
+    chat.append(box);scroll(box);
+  };
   window.F99R22Identity=Object.freeze({owner:()=>ownerName(),beneficiary:()=>beneficiary,self:()=>self,saved:()=>JSON.parse(JSON.stringify(saved))});
 })();
