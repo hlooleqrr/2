@@ -35,3 +35,7 @@
 #finoBotChat .f24-exit-warning .f24-yes-no>button{min-width:min(9em,100%)}
 #finoBotChat .f24-exit-warning,#finoBotChat .f99r22-renewal,#finoBotChat .f49-card,#finoBotChat .f25-menu{max-width:100%;box-sizing:border-box;min-width:0}
 #finoBotChat .f82-fee-hero .f82-fee-price{font-size:22px;font-weight:900;line-height:1.6}
+
+/* r26b: the approved follow-up offer appears in front of the customer at exit, not at the end of a long chat. */
+#finoBotChat.f26-exit #f41-offer{position:fixed;left:14px;right:14px;top:50%;transform:translateY(-50%);z-index:9998;background:#fff;border:1px solid #e6eef3;border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,.45);padding:18px;max-height:82vh;overflow:auto}
+#finoBotChat.f26-exit #f41-offer::before{content:'';position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(3,8,16,.55);z-index:-1}

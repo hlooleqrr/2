@@ -24377,7 +24377,7 @@ function detailLines(r,fee,offerExpiry){const d=finoPortal?.data||{},name=who(),
  '— بيانات الحسبة المبدئية —',
  'اسم صاحب الحسبة: '+name,
  requestedScenario?'ملاحظة: '+requestedScenario:'',
- 'القطاع: '+(({government:'حكومي',military:'عسكري',private:'قطاع خاص',semi_government:'شبه حكومي',semiGovernment:'شبه حكومي',retired:'متقاعد'}[String(d.customerType)]||String(d.customerType||'غير مذكور'))),
+ 'القطاع: '+(({government:'حكومي',military:'عسكري',private:'قطاع خاص',semiGovernment:'شبه حكومي',semiGovernment:'شبه حكومي',retired:'متقاعد'}[String(d.customerType)]||String(d.customerType||'غير مذكور'))),
  'جهة الراتب: '+String(d.bankName||'غير مذكورة'),
  'الجهة المرشحة: '+String(r?.name||'غير محددة'),
  'صافي الراتب الشهري: '+fmt(d.salary)+' ريال',
@@ -24520,7 +24520,7 @@ async function buildCard(raw,opts={}){
  textRTL(c,`هامش الربح السنوي ${pct(r.rate)}%${custom?' — من إدخال العميل':''}`,1370,391,1020,23,750,'#567486');
  if(!custom){try{const logo=bankLogo(r);if(logo){const im=await imageOf(logo);const w=Math.min(235,im.naturalWidth),h=Math.min(90,im.naturalHeight);c.drawImage(im,110,297,w,h)}}catch{}}
  rectangle(c,70,448,1340,95,'#f0f7fb','#d8e7ee',18);
- const sector=({government:'حكومي',military:'عسكري',private:'قطاع خاص',semi_government:'شبه حكومي',retired:'متقاعد'}[String(d.customerType)]||String(d.customerType||'غير محدد'));textRTL(c,`صاحب الحسبة: ${person}  •  القطاع: ${sector}  •  صافي الراتب: ${fmt(d.salary)} ريال  •  الالتزامات الأخرى: ${fmt(d.external)} ريال`,1367,507,1240,24,850,'#234e66');
+ const sector=({government:'حكومي',military:'عسكري',private:'قطاع خاص',semiGovernment:'شبه حكومي',retired:'متقاعد'}[String(d.customerType)]||String(d.customerType||'غير محدد'));textRTL(c,`صاحب الحسبة: ${person}  •  القطاع: ${sector}  •  صافي الراتب: ${fmt(d.salary)} ريال  •  الالتزامات الأخرى: ${fmt(d.external)} ريال`,1367,507,1240,24,850,'#234e66');
  rectangle(c,70,562,1340,190,'#eaf6fb','#b8dbe9',22);
  textRTL(c,'صافي الكاش المتوقع بعد سداد المديونية',1370,629,1250,30,850,'#587384');
  textRTL(c,fmt(r.cashAfterDebt)+' ريال',1370,708,1260,66,900,'#0476ab');
@@ -28836,7 +28836,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <!-- Round22 A: fixed adjacent iPhone default + owner-only store design portal. -->
 <link rel="stylesheet" href="./extensions/fino99_store_design22.css?v=20261116r22INTY2">
 <script src="./extensions/fino99_store_design22.js?v=20261116r22A"></script>
-<script src="./extensions/fino99_identity22.js?v=20261117r26"></script>
+<script src="./extensions/fino99_identity22.js?v=20261117r26bb"></script>
 <script src="./extensions/fino99_package_options22.js?v=20261117r26"></script>
  <!-- R23 presentation-only enhancement: no calculator, inventory, or session modifications. -->
 </body>

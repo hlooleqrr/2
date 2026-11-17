@@ -165,8 +165,9 @@
     await new Promise(res=>{const mo=new MutationObserver(()=>{if(!box.isConnected){mo.disconnect();res();}});mo.observe(document.body,{childList:true});});}
   async function exitFlow(){if(exiting)return;exiting=true;document.querySelectorAll('#finoBotChat .f25-menu button').forEach(b=>{b.disabled=true;});
     // 1) follow-up offer: once, only if enabled by the owner for this package and the customer is eligible.
-    if(allowed('show_completion')&&window.F99Followup22?.invitation)await new Promise(res=>{window.__F99R25FollowupDone=()=>{window.__F99R25FollowupDone=null;res();};
-      Promise.resolve().then(()=>window.F99Followup22.invitation()).then(ok=>{if(!ok){window.__F99R25FollowupDone=null;res();}},()=>{window.__F99R25FollowupDone=null;res();});});
+    const chatEl=document.getElementById('finoBotChat');
+    if(allowed('show_completion')&&window.F99Followup22?.invitation)await new Promise(res=>{chatEl?.classList.add('f26-exit');window.__F99R25FollowupDone=()=>{window.__F99R25FollowupDone=null;chatEl?.classList.remove('f26-exit');res();};
+      Promise.resolve().then(()=>window.F99Followup22.invitation()).then(ok=>{if(!ok){window.__F99R25FollowupDone=null;chatEl?.classList.remove('f26-exit');res();}},()=>{window.__F99R25FollowupDone=null;chatEl?.classList.remove('f26-exit');res();});});
     // 2) renewal: only when the calculations are exhausted. Choosing to renew stays in the renewal path (no rating).
     let s=null;try{s=await status();}catch(_){}
     const max=Number(s?.max_calculations),left=s?.calculations_remaining==null?NaN:Number(s.calculations_remaining);
