@@ -23039,7 +23039,7 @@ function details(r,type){const title=type==='installment'?'تم تخفيض ال�
  const newAmount=type==='installment'?r.installment:type==='principal'?r.principalBeforeFees:r.cashAfterDebt;
  const beforeLine=old!==null&&old!==undefined?`<div class="f38-change"><div><small>قبل التخفيض</small><s>${m(old)} ريال</s></div><div><small>بعد التخفيض</small><b>${m(newAmount)} ريال</b></div></div>`:'';
  const l=[['الجهة المرشحة',r.name],['أصل التمويل قبل الرسوم',m(r.principalBeforeFees)+' ريال'],['الرسوم الإدارية',m(r.adminFee)+' ريال'],['الضريبة على الرسوم الإدارية',m(r.adminVat)+' ريال'],['رسوم السلعة',m(r.commodityFee)+' ريال'],['رسوم بنكية إضافية',m(r.additionalFee)+' ريال'],['الصافي قبل سداد المديونية',m(r.netBeforeDebt)+' ريال'],['السداد المبكر',m(finoPortal?.data?.settlement)+' ريال'],['صافي الكاش بعد السداد',m(r.cashAfterDebt)+' ريال'],['القسط الشهري',m(r.installment)+' ريال'],['مدة التمويل',String(r.actualPayments)+' شهر'],['هامش الربح السنوي',m(r.rate)+'%'],['إجمالي الأرباح',m(r.totalProfit)+' ريال'],['إجمالي الأقساط مع الأرباح',m(r.grossWithProfit)+' ريال']];
- return `<div class="portal-result f38-full"><div class="portal-result-head"><b>${esc(title)} — ${esc(nm())}</b><span>حسبة مبدئية</span></div>${beforeLine}<div class="portal-detail-lines">${l.map(([a,b])=>`<div class="portal-detail-line"><span>${esc(a)}</span><b>${esc(b)}</b></div>`).join('')}</div><small>التاريخ والوقت (الرياض): ${time()} • الأرقام تقريبية وخاضعة لشروط جهة التمويل. أتعاب إنجاز المعاملة الاختيارية غير داخلة في حساب التمويل.</small><div class="portal-chat-actions">${window.F99V38BotStepsHtml?.(Number(selectedResultIndex)||0)||''}</div></div>`;
+ return `<div class="portal-result f38-full"><div class="portal-result-head"><b>${esc(title)} — ${esc(nm())}</b><span>حسبة مبدئية</span></div>${beforeLine}<div class="portal-detail-lines">${l.map(([a,b])=>`<div class="portal-detail-line"><span>${esc(a)}</span><b>${esc(b)}</b></div>`).join('')}</div><small>التاريخ والوقت (الرياض): ${time()} • الأرقام تقريبية وخاضعة لشروط جهة التمويل.</small><div class="portal-chat-actions">${window.F99V38BotStepsHtml?.(Number(selectedResultIndex)||0)||''}</div></div>`;
 }
 window.F99V38FullResultHtml=details;
 window.F99V38BeforeAdjustment=(kind,r)=>{adjustment={kind,before:kind==='installment'?Number(r.installment):kind==='principal'?Number(r.principalBeforeFees):Number(r.cashAfterDebt)};};
@@ -28781,11 +28781,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <script src="./extensions/fino99_coupons.js?v=20261115r18"></script>
 <link rel="stylesheet" href="./extensions/fino99_fee_offers.css?v=20261115r18">
 <script src="./extensions/fino99_fee_offers.js?v=20261116r22E"></script>
-<script src="./extensions/fino99_followup22.js?v=20261117r24"></script>
+<script src="./extensions/fino99_followup22.js?v=20261117r25b"></script>
 <link rel="stylesheet" href="./extensions/fino99_service_tools.css?v=20261115r18">
 <script src="./extensions/fino99_service_tools.js?v=20261116r22INTY"></script>
-<link rel="stylesheet" href="./extensions/fino99_renewal22.css?v=20261117r24b">
-<script src="./extensions/fino99_renewal22.js?v=20261117r24e"></script>
+<link rel="stylesheet" href="./extensions/fino99_renewal22.css?v=20261117r25b">
+<script src="./extensions/fino99_renewal22.js?v=20261117r25b"></script>
 <!-- F99 owner desktop 13: owner-only, device-local visual approval; load after fee/service modules. -->
 <link rel="stylesheet" href="./extensions/fino99_owner_desktop.css?v=20261115r18">
 <script src="./extensions/fino99_owner_desktop.js?v=20261116r22B"></script>
@@ -28826,7 +28826,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <!-- Round22 A: fixed adjacent iPhone default + owner-only store design portal. -->
 <link rel="stylesheet" href="./extensions/fino99_store_design22.css?v=20261116r22INTY2">
 <script src="./extensions/fino99_store_design22.js?v=20261116r22A"></script>
-<script src="./extensions/fino99_identity22.js?v=20261117r24d"></script>
+<script src="./extensions/fino99_identity22.js?v=20261117r25b"></script>
 <script src="./extensions/fino99_package_options22.js?v=20261116r22C"></script>
  <!-- R23 presentation-only enhancement: no calculator, inventory, or session modifications. -->
 </body>

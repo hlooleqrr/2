@@ -6,7 +6,7 @@
   'use strict';
   const w = window, d = document;
   const words = {
-    invite: ['نفاد الاستخدامات','دعوة التجديد','يا {client}، انتهت حسبات باقتك، وعندك عروض خاصة للتجديد. ودّك تشوفها؟',['client']],
+    invite: ['نفاد الاستخدامات','دعوة التجديد','يا {client}، خلصت حسبات باقتك، وعندك عرض خاص للتجديد. ودّك تجدّد وتحسب من جديد؟',['client']],
     expired: ['نفاد الاستخدامات','دعوة تجديد المدة','يا {client}، انتهت مدة باقتك، وعندك عروض خاصة للتجديد. ودّك تشوفها؟',['client']],
     view: ['رسائل التجديد','عرض العروض','نعم، أشوف العروض'],
     later: ['رسائل التجديد','تأجيل التجديد','ليس الآن'],
@@ -18,7 +18,7 @@
     price: ['رسائل التجديد','سعر العرض','{price} ريال',['price']],
     terms: ['رسائل التجديد','مدة وحسبات العرض','مدة الاستخدام: {minutes} دقيقة • {count} حسبة جديدة',['minutes','count']],
     empty: ['رسائل التجديد','عدم توفر عروض','لا توجد عروض تجديد مفعلة الآن. يمكنك العودة لاحقًا.'],
-    stock: ['رسائل التجديد','نفاد مخزون العرض','نفد مخزون هذا العرض حاليًا.'],
+    stock: ['رسائل التجديد','نفاد مخزون العرض','العرض غير متاح حاليًا.'],
     changed: ['رسائل التجديد','تغير العرض','تغيّر العرض أو نفد المخزون. أعد عرض التفاصيل قبل الشراء.'],
     failed: ['رسائل التجديد','تعذر التحقق','تعذر التحقق من الكود أو عروضه. لم تُفتح حسبة جديدة.'],
     old: ['رسائل التجديد','التجديد القديم','التجديد القديم — نفس الكود بعد اعتماد المالك'],
@@ -99,6 +99,8 @@
     const active=w.F99SessionSecurity.context()?.verified===true;
     const host=active?d.getElementById('finoBotChat'):page().querySelector('.f99r22-chat');
     if(!ctx){if(active&&host)status(host,'failed');else {validUntil=0;current=null;w.showPage?.('page1');const error=d.getElementById('f99l-error');if(error)error.textContent=t('failed');}return false;}
+    // r25: inside the exit sequence a disabled renewal shows no card (the sequence continues).
+    if(options.exit===true&&modeFor(ctx)==='off')return false;
     if(!active)host.replaceChildren();host.querySelector('.f99r22-renewal')?.remove();
     current={code:normalized(code),ctx};validUntil=Date.now()+600000;
     const card=el('section',null,'f99r22-renewal');card.setAttribute('role','status');host.append(card);
@@ -108,7 +110,7 @@
     const actions=el('div',null,'f99r22-actions');card.append(actions);
     if(modeFor(ctx)!=='off'){const view=btn(actions,'view',()=>{offers.hidden=false;offers.replaceChildren();showOffers(offers,ctx,normalized(code));if(['new','both'].includes(modeFor(ctx)))purchased(offers,normalized(code));view.remove();offers.scrollIntoView({block:'start',behavior:'smooth'});});view.classList.add('f99r22-primary');}
     else card.querySelector('p').textContent=t('off');
-    btn(actions,'later',()=>close(card));
+    btn(actions,'later',()=>{if(typeof options.onLater==='function'){card.remove();validUntil=0;current=null;serial++;return options.onLater();}close(card);});
     // r24: saved-review sections are paused in the customer UI (records kept on the server).
     if(!active)w.showPage?.('f99r22RenewalPage');card.scrollIntoView({block:'start',behavior:'smooth'});return true;
   }
@@ -138,7 +140,7 @@
     w.F99Settings.onChange(serviceLinks);serviceLinks();ownerTools();
     let queued=false;new MutationObserver(()=>{if(queued)return;queued=true;queueMicrotask(()=>{queued=false;serviceLinks();ownerTools();});}).observe(d.body,{childList:true,subtree:true});
   }
-  w.F99Renewal22={open,openCurrent:()=>open(currentCode()),authorized:()=>Date.now()<validUntil,modeFor,details};
+  w.F99Renewal22={open,openCurrent:(o)=>open(currentCode(),o||{}),authorized:()=>Date.now()<validUntil,modeFor,details};
   w.addEventListener('pagehide',()=>{validUntil=0;});
   if(d.readyState==='loading')d.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();

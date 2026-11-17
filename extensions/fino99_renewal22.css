@@ -25,3 +25,13 @@
 
 /* r24: one «الخيارات اللي بعدها» question only (the yes/no under the post-result menu) */
 #finoBotChat .portal-bubble:has(.f24-menu) .f85-finish>button[onclick="F99V82FinishReview()"]{display:none!important}
+/* r25 (owner order Pasted_23 §2,§5,§9): post-result menu, fee card and chat width. Original result card untouched. */
+#finoBotChat{overflow-x:hidden}
+#finoBotChat .f25-menu .f24-questions>button{flex:1 1 calc(50% - 8px);min-width:min(10em,100%)}
+#finoBotChat .f25-end>button{flex:1 1 calc(50% - 8px);min-width:min(8em,100%);min-height:46px;font-weight:800}
+#finoBotChat .f25-end>button[hidden],#finoBotChat .f25-exhausted[hidden]{display:none!important}
+#finoBotChat .f25-exhausted{margin:0;padding:8px 10px;border-radius:12px;background:#fff1ee;color:#8a2f1d;font-weight:800;line-height:1.7}
+#finoBotChat .f41-options button,#finoBotChat .f49-actions button,#finoBotChat .f24-yes-no button,#finoBotChat .f99r22-renewal button{word-break:keep-all;overflow-wrap:normal;hyphens:none}
+#finoBotChat .f24-exit-warning .f24-yes-no>button{min-width:min(9em,100%)}
+#finoBotChat .f24-exit-warning,#finoBotChat .f99r22-renewal,#finoBotChat .f49-card,#finoBotChat .f25-menu{max-width:100%;box-sizing:border-box;min-width:0}
+#finoBotChat .f82-fee-hero .f82-fee-price{font-size:22px;font-weight:900;line-height:1.6}

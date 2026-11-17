@@ -79,7 +79,8 @@
   const data = () => typeof finoPortal !== 'undefined' ? finoPortal.data || {} : {};
   const active = () => w.F99S12Runtime?.owner?.() !== true && typeof finoPortal !== 'undefined' && finoPortal.step === 'buyout_result' && !!chat();
   const selected = () => typeof selectedResultIndex !== 'undefined' ? Number(selectedResultIndex) : -1;
-  const fmt = v => typeof money === 'function' ? money(v) : String(v);
+  // r25: number only (the templates add «ريال» once); keeps the approved decimals, e.g. 18.99.
+  const fmt = v => { const n = Number(v); if (!Number.isFinite(n)) return String(v ?? ''); return n.toLocaleString('en-US', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 }); };
   const packageKey = () => w.F99V32MainAccess?.()?.packageKey || w.fino99ActivePackage?.()?.key;
   const entry = () => w.F99S12Runtime?.entry?.();
   const snapshot = r => JSON.stringify({ result: r, data: data(), client: who() });
@@ -130,7 +131,7 @@
     button(a, T('postpone'), cancel);
   }
   // r24: closing the offer continues to the approved end of service (no automatic new offer).
-  function cancel() { const wasActive = active(); if (session()) postponed.add(session()); clear(); bank()?.clearPreviews(); if (wasActive) w.F99V82FinishReview?.(); }
+  function cancel() { const wasActive = active(); if (session()) postponed.add(session()); clear(); bank()?.clearPreviews(); if (typeof w.__F99R25FollowupDone === 'function') return w.__F99R25FollowupDone(); if (wasActive) w.F99V82FinishReview?.(); }
   function addText(parent, key, vars, tag = 'p', cls) { if (shown(key)) parent.append(el(tag, T(key, vars), cls)); }
   function render(r, q, offer, index, id) {
     const h = slot(), current = Number(q.new_price), old = Number(q.old_price);
@@ -148,9 +149,11 @@
       hero.append(before);
     }
     if (discounted) {
-      addText(hero, 'saving', { amount: fmt(q.discount_amount ?? old - current) }, 'div', 'f82-fee-saving');
+      // r25: the saving shown is exactly the difference between the two approved prices.
+      const saving = Math.round((old - current) * 100) / 100;
+      if (q.discount_amount != null && Math.abs(Number(q.discount_amount) - saving) > 0.005) console.warn('FINO99 fee: discount_amount differs from price difference');
+      addText(hero, 'saving', { amount: fmt(saving) }, 'div', 'f82-fee-saving');
       if (q.discount_percent != null && Number.isFinite(Number(q.discount_percent))) addText(hero, 'discount', { percent: fmt(q.discount_percent) }, 'small');
-      else if (shown('discount') && q.discount_amount != null) hero.append(el('small', T('discount_amount', { amount: fmt(q.discount_amount) })));
     }
     hero.append(el('div', T(discounted ? 'discounted_fee' : 'fee', { amount: fmt(current) }), 'f82-fee-price'));
     const terms = offer?.terms || offer?.validTerms || offer?.disclaimer || 'الحسبة مبدئية، والنتيجة النهائية وشروطها لدى الجهة التمويلية.';
