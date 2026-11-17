@@ -194,7 +194,7 @@
     if(window.F99V38MenuReady?.(i,'compare')===true)opt(T('q_compare'),'F99V38ComparePicker()');
     if(reduced&&(allowed('reduce_installment')||allowed('reduce_amount')))opt(T('q_back'),'F99V47ResetFinance()');
     setTimeout(()=>{void refreshNew();},0);
-    return `<div class="f41-options f47-main-options f49-menu f24-menu f25-menu"><p class="f24-ask">${esc(T('ask',vars()))}</p><div class="f24-questions">${q.join('')}</div><p class="f25-exhausted"${lastHas===false?'':' hidden'}>${lastHas===false?esc(T('exhausted25')):''}</p><div class="f24-yes-no f25-end"><button type="button" class="f41-primary" data-r25-new${lastHas===true?'':' hidden'} onclick="F99V82RequestNewCalculation()">${esc(T('new25'))}</button>${btnHtml(T('exit25'),'F99R24Exit()')}</div></div>`;
+    return `<div class="f41-options f47-main-options f49-menu f24-menu f25-menu"><p class="f24-ask">${esc(T('ask',vars()))}</p><div class="f24-questions">${q.join('')}</div><details class="f49-more" data-r25-more><summary>خيارات إضافية للحسبة</summary><div class="f49-more-actions">${btnHtml('كم النسبة؟',`F99V41Ask('rate',${i})`)}${btnHtml('إجمالي الأرباح',`F99V41Ask('profit',${i})`)}${btnHtml('مدة التمويل',`F99V41Ask('term',${i})`)}${btnHtml('رسوم البنك',`F99V41Ask('fees',${i})`)}</div></details><p class="f25-exhausted"${lastHas===false?'':' hidden'}>${lastHas===false?esc(T('exhausted25')):''}</p><div class="f24-yes-no f25-end"><button type="button" class="f41-primary" data-r25-new${lastHas===true?'':' hidden'} onclick="F99V82RequestNewCalculation()">${esc(T('new25'))}</button>${btnHtml(T('exit25'),'F99R24Exit()')}</div></div>`;
   };
   window.F99R24Next=async function(){
     document.getElementById('f24-exit-warning')?.remove();
