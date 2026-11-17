@@ -1,0 +1,70 @@
+/* FINO99 r35 — «قبل تاخذ العقاري» + store ads. Scoped to #f35-aqari / #f35-ads only. */
+html.f35-lock,html.f35-lock body{overflow:hidden}
+#f35-aqari{position:fixed;inset:0;z-index:2147483647;background:rgba(10,28,40,.55);display:flex;align-items:flex-end;justify-content:center;padding:env(safe-area-inset-top) 0 0;-webkit-tap-highlight-color:transparent}
+#f35-aqari[hidden]{display:none}
+#f35-aqari .f35-sheet{width:min(640px,100%);max-height:94vh;max-height:94dvh;overflow:auto;-webkit-overflow-scrolling:touch;background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.25);font-family:Cairo,system-ui,sans-serif;color:#193b50;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+@media(min-width:700px){#f35-aqari{align-items:center}#f35-aqari .f35-sheet{border-radius:20px;max-height:90vh}}
+#f35-aqari .f35-head{position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;background:linear-gradient(135deg,#193b50,#245a76);color:#fff}
+#f35-aqari .f35-head h2{margin:0;font-size:18px;line-height:1.5;font-weight:900;color:#fff}
+#f35-aqari .f35-body{padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+#f35-aqari .f35-btn{min-height:44px;padding:10px 16px;border-radius:12px;border:1px solid #c9d8e1;background:#f6f9fb;color:#193b50;font:800 15px/1.4 Cairo,system-ui,sans-serif;cursor:pointer;touch-action:manipulation}
+#f35-aqari .f35-btn:disabled{opacity:.5;cursor:not-allowed}
+#f35-aqari .f35-primary{background:linear-gradient(135deg,#c08a2e,#9d671b);border-color:#9d671b;color:#fff}
+#f35-aqari .f35-x{min-height:36px;padding:6px 12px;background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.4);color:#fff;font-size:14px}
+#f35-aqari .f35-img{width:100%;max-height:260px;object-fit:cover;border-radius:14px}
+#f35-aqari .f35-tagline,#f35-aqari .f35-pre{white-space:pre-line;font-size:15.5px;line-height:1.95;background:#fbf8f1;border:1px solid #eadfca;border-radius:14px;padding:12px 14px}
+#f35-aqari .f35-meta{display:flex;flex-wrap:wrap;gap:8px}
+#f35-aqari .f35-meta span{background:#eef4f7;border-radius:999px;padding:5px 12px;font-size:13.5px;font-weight:800}
+#f35-aqari .f35-meta .f35-price{background:#193b50;color:#fff}
+#f35-aqari .f35-topics h3,#f35-aqari .f35-card h3{margin:0 0 8px;font-size:16.5px;font-weight:900;color:#193b50}
+#f35-aqari .f35-topics ol{margin:0;padding:0 22px 0 0;line-height:2;font-size:15px}
+#f35-aqari .f35-closing{margin:10px 0 0;font-weight:800;color:#9d671b}
+#f35-aqari .f35-actions{display:flex;flex-wrap:wrap;gap:8px}
+#f35-aqari .f35-actions .f35-btn{flex:1 1 160px}
+#f35-aqari .f35-note{margin:0;font-size:14px;line-height:1.8;color:#3a6479}
+#f35-aqari .f35-err{color:#a12c2c}
+#f35-aqari .f35-ok{color:#1d6b43;font-weight:800}
+#f35-aqari .f35-soon{color:#9d671b;font-weight:800}
+#f35-aqari .f35-coupon{background:#fff6e3;border:1px dashed #d6a645;border-radius:12px;padding:8px 12px;color:#7a4f12;font-weight:800}
+#f35-aqari .f35-wait{margin:20px 0;text-align:center;color:#3a6479}
+#f35-aqari .f35-terms{display:flex;flex-direction:column;gap:8px}
+#f35-aqari .f35-term{border:1px solid #e2ebf0;border-radius:12px;padding:10px 12px;background:#fafcfd}
+#f35-aqari .f35-term h3{margin:0 0 4px;font-size:15px;font-weight:900}
+#f35-aqari .f35-term p{margin:0;font-size:14.5px;line-height:1.85}
+#f35-aqari .f35-consent{display:flex;gap:10px;align-items:flex-start;font-weight:800;font-size:15px;line-height:1.7;background:#f3f8f5;border:1px solid #cfe3d7;border-radius:12px;padding:12px}
+#f35-aqari .f35-consent input{width:22px;height:22px;flex:0 0 22px;margin-top:3px}
+#f35-aqari .f35-card{border:1px solid #dfe8ee;border-radius:16px;padding:14px;background:#fff;box-shadow:0 4px 14px rgba(25,59,80,.06);display:flex;flex-direction:column;gap:8px}
+#f35-aqari .f35-card p{margin:0;line-height:1.85}
+#f35-aqari .f35-card small{color:#5a7686}
+#f35-aqari .f35-okh{color:#1d6b43!important}
+#f35-aqari .f35-contact{font-weight:800}
+#f35-aqari .f35-renew{background:linear-gradient(180deg,#fffdf8,#f5f0e7);border-color:#dfd7c6}
+#f35-aqari .f35-form{display:flex;flex-direction:column;gap:10px}
+#f35-aqari .f35-form label,#f35-aqari .f35-f{display:flex;flex-direction:column;gap:6px;font-weight:800;font-size:14.5px}
+#f35-aqari input:not([type=checkbox]),#f35-aqari textarea,#f35-aqari select{width:100%;box-sizing:border-box;min-height:44px;border:1px solid #c9d8e1;border-radius:12px;padding:9px 12px;font:500 16px/1.6 Cairo,system-ui,sans-serif;color:#193b50;background:#fff}
+#f35-aqari .f35-f input[type=checkbox]{width:22px;height:22px}
+#f35-aqari .f35-fs{border:1px solid #e2ebf0;border-radius:12px;padding:10px;display:flex;flex-wrap:wrap;gap:10px}
+#f35-aqari .f35-fs legend{font-weight:900;padding:0 6px}
+#f35-aqari .f35-days{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+#f35-aqari .f35-day{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;min-width:120px}
+#f35-aqari .f35-day small{font-size:12px;color:#5a7686}
+#f35-aqari .f35-day.on{background:#193b50;color:#fff;border-color:#193b50}
+#f35-aqari .f35-day.on small{color:#d9e6ee}
+#f35-aqari .f35-slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+#f35-aqari .f35-tabs{display:flex;flex-wrap:wrap;gap:6px}
+#f35-aqari .f35-tabs .f35-btn{flex:1 1 140px;font-size:13.5px;min-height:40px}
+#f35-aqari .f35-tabs .on{background:#193b50;color:#fff}
+#f35-aqari .f35-pane{display:flex;flex-direction:column;gap:10px}
+/* Store ads: in-flow strip above product tiles; never fixed, never covering buttons. */
+#f35-ads{position:relative;display:grid;margin:0 0 12px;min-height:46px;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,#193b50,#2a6584);box-shadow:0 4px 14px rgba(25,59,80,.12)}
+#f35-ads .f35-ad{grid-area:1/1;display:flex;align-items:center;justify-content:center;text-align:center;padding:11px 14px;color:#fff;font:800 15px/1.6 Cairo,system-ui,sans-serif;border:0;background:none;width:100%;opacity:0;visibility:hidden;transition:opacity .6s ease,transform .6s ease}
+#f35-ads button.f35-ad{cursor:pointer}
+#f35-ads .f35-ad.on{opacity:1;visibility:visible;transform:none}
+#f35-ads .f35-ad.m-slide{transform:translateX(18px)}
+#f35-ads .f35-ad.m-slide.on{transform:none}
+#f35-ads .f35-ad.m-fade.on{animation:f35glow 3.2s ease-in-out infinite}
+#f35-ads.f35-stack{display:flex;flex-direction:column}
+#f35-ads.f35-stack .f35-ad{opacity:1;visibility:visible;transform:none}
+#f35-ads.f35-stack .f35-ad+.f35-ad{border-top:1px solid rgba(255,255,255,.18)}
+@keyframes f35glow{0%,100%{text-shadow:none}50%{text-shadow:0 0 10px rgba(255,214,140,.55)}}
+@media(prefers-reduced-motion:reduce){#f35-ads .f35-ad{transition:none!important;animation:none!important;transform:none!important}}
