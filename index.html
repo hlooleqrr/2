@@ -6357,7 +6357,7 @@ body:has(#page1.active)>.app>.ambient { display:none !important; }
 <script src="./extensions/fino99_settings22.js?v=20261116r22"></script>
 <link rel="stylesheet" href="./extensions/fino99_session_security.css?v=20261115r18">
 <script src="./extensions/bank_followup17.js?v=20261117r24"></script>
-<script src="./extensions/bank_followup17_bootstrap.js?v=20261116r22E"></script>
+<script src="./extensions/bank_followup17_bootstrap.js?v=20261117r34a"></script>
 <script src="./extensions/fino99_session_security.js?v=20261116r22INT"></script>
 <script src="./extensions/fino99_performance.js?v=20261117r24"></script>
 <script>
@@ -18582,9 +18582,9 @@ function init(){const page=$('page1');if(!page||$('f99l-root'))return;
 function showCode(){if(!$('f99l-codes'))return;$('f99l-codes').hidden=false;$('f99l-code-link').hidden=true;$('f99l-error').textContent='';$('f99l-code').focus({preventScroll:true})}
 async function submitCode(){const raw=String($('f99l-code')?.value||'').trim();const ext=typeof window.F99V8ExtractCode==='function'?window.F99V8ExtractCode(raw):raw.toUpperCase();const s=/^[A-Z0-9-]{8,32}$/.test(ext)?ext:raw.toUpperCase();if($('f99l-code'))$('f99l-code').value=s;if(!s){$('f99l-error').textContent='أدخل الكود';return}
  const legacy=$('password');if(!legacy||typeof window.login!=='function'){$('f99l-error').textContent='نظام الدخول غير متاح حالياً';return}
- legacy.value=s;$('f99l-error').textContent='';$('f99l-enter').disabled=true;
+ legacy.value=s;$('f99l-error').textContent='';const go=$('f99l-enter'),label=go.textContent;go.disabled=true;go.setAttribute('aria-busy','true');go.innerHTML='<span class="f99v18-spin" aria-hidden="true"></span>جاري الدخول…';
  try{await window.login();}catch(e){console.error('FINO99 code login error',e);$('f99l-error').textContent='تعذر الاتصال بخدمة الدخول. أعد المحاولة.'}
- finally{$('f99l-enter').disabled=false}
+ finally{go.disabled=false;go.removeAttribute('aria-busy');go.textContent=label}
 }
 function applyConfig(raw){Object.assign(state,DEFAULT,raw||{});const root=$('f99l-root');if(!root)return;
  $('f99l-title').textContent=String(state.landing_title||state.company_name||'FINO99').slice(0,70);
@@ -20474,7 +20474,8 @@ setInterval(()=>{if(!document.hidden)attach()},6000);
     const error=document.getElementById('loginError');
     if(busy)return;
     busy=true;
-    if(button){button.disabled=true;button.textContent='جاري التحقق من الكود...';}
+    const label=button?.textContent||'ابدأ';
+    if(button){button.disabled=true;button.setAttribute('aria-busy','true');button.innerHTML='<span class="f99v18-spin" aria-hidden="true"></span>جاري الدخول…';}
     if(error){error.classList.add('f99v18-status');error.textContent='جاري التحقق من الكود وصلاحيات الباقة في المركزية...';}
     try{
       if(typeof originalLogin!=='function')throw Error('تعذر تحميل وظيفة الدخول');
@@ -20484,7 +20485,7 @@ setInterval(()=>{if(!document.hidden)attach()},6000);
       console.error('FINO99 V18 login handling error',e);
     }finally{
       busy=false;
-      if(button){button.disabled=false;button.textContent='دخول المنصة';}
+      if(button){button.disabled=false;button.removeAttribute('aria-busy');button.textContent=label;}
       if(error)error.classList.remove('f99v18-status');
     }
   };
@@ -20796,7 +20797,7 @@ window.F99V21WelcomeBot=function(service,launch){
  modal.hidden=false;modal.replaceChildren();
  const box=document.createElement('section');box.className='f21-card';
  const mark=document.createElement('div');mark.className='f21-eyebrow';mark.textContent='FINO99 • البداية';
- const h=document.createElement('h2');h.textContent='اكتب اسمك الكريم';
+ const h=document.createElement('h2');h.textContent='نتعرف عليك، وش اسمك الكريم؟';
  const p=document.createElement('p');p.textContent='';
  const input=document.createElement('input');input.placeholder='اسمك الكريم';input.maxLength=40;input.autocomplete='given-name';input.setAttribute('aria-label','اسم العميل');
  const error=document.createElement('div');error.className='f21-error';error.setAttribute('role','status');
@@ -22835,7 +22836,7 @@ window.F99V37BeginAdjust=kind=>{
  const selected=(latestResults||[])[Number(selectedResultIndex)||0]||latestResults?.[0];
  if(!selected)return fail('لا يوجد ترشيح مؤهل لتخفيضه حاليًا.');
  finoPortal.step='f37_'+kind;
- const instructions=kind==='installment'?`يا ${who()}، قسطك الحالي ${fmt(selected.installment)} ريال. اكتب القسط الأقل الذي تبيه، بشرط ألا يتجاوز الحد الأعلى المسموح لك.`:
+ const instructions=kind==='installment'?`يا ${who()}، قسطك الحالي ${fmt(selected.installment)} ريال. كم تبي يصير قسطك؟ اكتب القسط الأقل الذي تبيه، بشرط ألا يتجاوز الحد الأعلى المسموح لك.`:
  kind==='principal'?`يا ${who()}، أصل التمويل قبل خصم الرسوم والمديونية حاليًا ${fmt(selected.principalBeforeFees)} ريال، والسداد المبكر ${fmt(Number(finoPortal.data.settlement||0))} ريال. اكتب أصل التمويل الجديد، ولازم يكفي السداد والرسوم وحد الكاش المطلوب.`:
  `يا ${who()}، صافي الكاش المتوقع بعد سداد المديونية والرسوم ${fmt(selected.cashAfterDebt)} ريال. كم صافي الكاش الأقل الذي تبيه؟`;
  say(`<div class="portal-note">${escapeHTML(instructions)}</div>`);
@@ -28791,7 +28792,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <script src="./extensions/fino99_coupons.js?v=20261115r18"></script>
 <link rel="stylesheet" href="./extensions/fino99_fee_offers.css?v=20261115r18">
 <script src="./extensions/fino99_fee_offers.js?v=20261116r22E"></script>
-<script src="./extensions/fino99_followup22.js?v=20261117r25b"></script>
+<script src="./extensions/fino99_followup22.js?v=20261117r34a"></script>
 <link rel="stylesheet" href="./extensions/fino99_service_tools.css?v=20261115r18">
 <script src="./extensions/fino99_service_tools.js?v=20261116r22INTY"></script>
 <link rel="stylesheet" href="./extensions/fino99_renewal22.css?v=20261117r27">
@@ -28836,8 +28837,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <!-- Round22 A: fixed adjacent iPhone default + owner-only store design portal. -->
 <link rel="stylesheet" href="./extensions/fino99_store_design22.css?v=20261116r22INTY2">
 <script src="./extensions/fino99_store_design22.js?v=20261116r22A"></script>
-<script src="./extensions/fino99_identity22.js?v=20261117r33a"></script>
-<script src="./extensions/fino99_package_options22.js?v=20261117r27"></script>
+<script src="./extensions/fino99_identity22.js?v=20261117r34a"></script>
+<script src="./extensions/fino99_package_options22.js?v=20261117r34a"></script>
  <!-- R23 presentation-only enhancement: no calculator, inventory, or session modifications. -->
 </body>
 </html>

@@ -37,7 +37,10 @@
     if (!field || typeof key !== 'string' || !key) return;
     const slot = host.ownerDocument.createElement('div'); slot.dataset.b17Owner = 'personal'; field.after(slot);
     const m = B.mountOwnerField(slot,{api,bank:bank({finance_type:'personal',bank_id:key})});
-    owners.set(host,[{destroy(){m.destroy();slot.remove();}}]);
+    // r34 §5: «تسعيرة أتعاب المتابعة» for this bank (server-validated; general pricing stays the fallback).
+    const feeSlot = host.ownerDocument.createElement('div'); feeSlot.dataset.r34BankFee = '1'; slot.after(feeSlot);
+    const fee = window.F99R34BankFeeEditor?.(feeSlot, key);
+    owners.set(host,[{destroy(){m.destroy();fee?.destroy?.();feeSlot.remove();slot.remove();}}]);
   }
   function mountMortgageOwner(host, banks) {
     clearOwners(host); const mounted = [];

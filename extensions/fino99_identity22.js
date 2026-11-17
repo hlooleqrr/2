@@ -4,7 +4,7 @@
   const defs = [
     ['morning','الترحيب الصباحي والمسائي','ترحيب صباحي','صباح الخير يا {client}، حياك الله'],
     ['evening','الترحيب الصباحي والمسائي','ترحيب مسائي','مساء الخير يا {client}، حياك الله'],
-    ['name','سؤال اسم العميل','طلب الاسم','اكتب اسمك الكريم'],
+    ['name','سؤال اسم العميل','طلب الاسم','نتعرف عليك، وش اسمك الكريم؟'],
     ['name_error','سؤال اسم العميل','اسم غير مكتمل','اكتب اسمًا واضحًا من حرفين على الأقل.'],
     ['identity_error','سؤال اسم العميل','تعذر حفظ الهوية','تعذر حفظ الاسم في المركزية. حاول مجددًا.'],
     ['continue','سؤال اسم العميل','متابعة','متابعة'],
@@ -35,7 +35,12 @@
     ['q_lower25','ما بعد النتيجة','طلب تقليل القسط','أبي أقلل قسطي.'],
     ['q_amount','ما بعد النتيجة','طلب تقليل مبلغ التمويل','أبي أقلل مبلغ التمويل.'],
     ['q_next_bank','ما بعد النتيجة','الجهة المرشحة التالية','الجهة المرشحة التالية'],
-    ['q_back','ما بعد النتيجة','العودة لمبلغ التمويل السابق','العودة لمبلغ التمويل السابق'],
+    ['q_back','ما بعد النتيجة','الرجوع للمبلغ الأساسي','الرجوع للمبلغ الأساسي'],
+    ['q_back_installment','ما بعد النتيجة','الرجوع للقسط الأساسي','الرجوع للقسط الأساسي'],
+    ['q_term','ما بعد النتيجة','طلب تقليل مدة التمويل','أبي أقلل مدة التمويل.'],
+    ['q_term_back','ما بعد النتيجة','الرجوع للمدة الأساسية','الرجوع للمدة الأساسية'],
+    ['term_ask','ما بعد النتيجة','سؤال مدة التمويل','كم شهر تبي تخلي مدة تمويلك؟'],
+    ['more25','ما بعد النتيجة','عنوان الخيارات الإضافية','خيارات إضافية للحسبة'],
     ['q_cash_reduce','ما بعد النتيجة','تقليل مبلغ الكاش','أبي أقلل مبلغ الكاش.'],
     ['q_max','ما بعد النتيجة','الرجوع لأعلى تمويل','الرجوع لأعلى تمويل'],
     ['q_summary','ما بعد النتيجة','تلخيص الحسبة','تلخيص الحسبة'],
@@ -141,9 +146,9 @@
   const ask0=window.F99V41Ask;if(typeof ask0==='function')window.F99V41Ask=function(key,i){bag(Number(i)).add(String(key));return ask0.apply(this,arguments);};
   // r25 (owner order Pasted_23 §2,§3,§7,§8): reduction state, balance-gated «ابدأ حسبة جديدة», exit sequence.
   let reduced=false,newSeq=0,lastHas=null,exiting=false;
-  const apply25=window.F99V37ApplyBotAdjustment;if(typeof apply25==='function')window.F99V37ApplyBotAdjustment=async function(...a){const r=await apply25.apply(this,a);if(r?.ok===true)reduced=true;return r;};
+  const apply25=window.F99V37ApplyBotAdjustment;if(typeof apply25==='function')window.F99V37ApplyBotAdjustment=async function(...a){const r=await apply25.apply(this,a);if(r?.ok===true)reduced=r.kind||a[0]||true;return r;};
   const reset25=window.F99V37ResetBotAdjustment;if(typeof reset25==='function')window.F99V37ResetBotAdjustment=async function(...a){const r=await reset25.apply(this,a);if(r)reduced=false;return r;};
-  const request25=window.F99V82RequestNewCalculation;if(typeof request25==='function')window.F99V82RequestNewCalculation=function(...a){reduced=false;return request25.apply(this,a);};
+  const request25=window.F99V82RequestNewCalculation;if(typeof request25==='function')window.F99V82RequestNewCalculation=function(...a){reduced=false;clientTerm=null;termBasis='';return request25.apply(this,a);};
   function paintNew(has){const all=[...document.querySelectorAll('#finoBotChat .f25-menu')];all.forEach((menu,n)=>{const last=n===all.length-1;const b=menu.querySelector('[data-r25-new]');if(b)b.hidden=!(has===true&&last);const note=menu.querySelector('.f25-exhausted');if(note){note.hidden=!(has===false&&last);note.textContent=has===false?T('exhausted25'):'';}
     // r26 §3: an exhausted code offers no question, adjustment or comparison — renewal/exit only.
     if(has===false)menu.querySelectorAll('[data-r25-opt]').forEach(x=>{x.hidden=true;x.disabled=true;});});
@@ -192,10 +197,72 @@
     if(allowed('reduce_installment')||allowed('reduce_amount'))opt(T('q_max'),'F99V37Reset()');
     if(window.F99V38MenuReady?.(i,'summary')===true)opt(T('q_summary'),`F99V38ShowSummary(${i})`);
     if(window.F99V38MenuReady?.(i,'compare')===true)opt(T('q_compare'),'F99V38ComparePicker()');
-    if(reduced&&(allowed('reduce_installment')||allowed('reduce_amount')))opt(T('q_back'),'F99V47ResetFinance()');
+    // r34 §6-§7: the return button names the reduction actually applied; both restore the BASE calculation.
+    if(reduced==='installment'&&allowed('reduce_installment'))opt(T('q_back_installment'),'F99V47ResetInstallment()');
+    else if(reduced&&allowed('reduce_amount'))opt(T('q_back'),'F99V47ResetFinance()');
+    if(window.F99R34TermReduced?.()===true)opt(T('q_term_back'),'F99R34ResetTerm()');
     setTimeout(()=>{void refreshNew();},0);
-    return `<div class="f41-options f47-main-options f49-menu f24-menu f25-menu"><p class="f24-ask">${esc(T('ask',vars()))}</p><div class="f24-questions">${q.join('')}</div><details class="f49-more" data-r25-more><summary>خيارات إضافية للحسبة</summary><div class="f49-more-actions">${btnHtml('كم النسبة؟',`F99V41Ask('rate',${i})`)}${btnHtml('إجمالي الأرباح',`F99V41Ask('profit',${i})`)}${btnHtml('مدة التمويل',`F99V41Ask('term',${i})`)}${btnHtml('رسوم البنك',`F99V41Ask('fees',${i})`)}</div></details><p class="f25-exhausted"${lastHas===false?'':' hidden'}>${lastHas===false?esc(T('exhausted25')):''}</p><div class="f24-yes-no f25-end"><button type="button" class="f41-primary" data-r25-new${lastHas===true?'':' hidden'} onclick="F99V82RequestNewCalculation()">${esc(T('new25'))}</button>${btnHtml(T('exit25'),'F99R24Exit()')}</div></div>`;
+    return `<div class="f41-options f47-main-options f49-menu f24-menu f25-menu"><p class="f24-ask">${esc(T('ask',vars()))}</p><div class="f24-questions">${q.join('')}</div>${pkgOpt('extra_services')?`<details class="f49-more" data-r25-more><summary>${esc(T('more25'))}</summary><div class="f49-more-actions">${btnHtml('كم النسبة؟',`F99V41Ask('rate',${i})`)}${btnHtml('كم إجمالي الأرباح؟',`F99V41Ask('profit',${i})`)}${btnHtml('كم مدة التمويل؟',`F99V41Ask('term',${i})`)}${btnHtml('كم رسوم البنك؟',`F99V41Ask('fees',${i})`)}${pkgOpt('reduce_term')?btnHtml(T('q_term'),'F99R34BeginTerm()'):''}</div></details>`:''}<p class="f25-exhausted"${lastHas===false?'':' hidden'}>${lastHas===false?esc(T('exhausted25')):''}</p><div class="f24-yes-no f25-end"><button type="button" class="f41-primary" data-r25-new${lastHas===true?'':' hidden'} onclick="F99V82RequestNewCalculation()">${esc(T('new25'))}</button>${btnHtml(T('exit25'),'F99R24Exit()')}</div></div>`;
   };
+  // r34 (owner order Pasted_27 §1): client-chosen shorter term. Reuses the owner calculator's term hook
+  // (currentBuyoutBaseTermMonths → buildFinance → actualPayments); no new engine, no rate change.
+  // Recalculation keeps the paid basis (step buyout_result + recalculate) so no new calculation is charged.
+  function pkgOpt(name){const k=window.F99V32MainAccess?.()?.packageKey||window.fino99ActivePackage?.()?.key;return window.F99Settings?.packageOption?.(k,name,true)!==false;}
+  let clientTerm=null,termBasis='',termBusy=false;
+  const termSteps=['buyout_result','f37_installment','f37_cash','f37_principal','f99r34_term'];
+  const termBasisNow=()=>{try{return JSON.stringify([window.F99S12Runtime?.entry?.()?.entryToken||'',typeof finoPortal!=='undefined'?finoPortal.data||{}:{}]);}catch(_){return '';}};
+  const termLive=()=>!!clientTerm&&typeof finoPortal!=='undefined'&&finoPortal?.mode==='buyout'&&termSteps.includes(finoPortal?.step)&&termBasis===termBasisNow();
+  const baseTerm=window.currentBuyoutBaseTermMonths;
+  if(typeof baseTerm==='function')window.currentBuyoutBaseTermMonths=function(...a){const b=baseTerm.apply(this,a);return termLive()?Math.min(b,clientTerm):b;};
+  window.F99R34TermReduced=()=>termLive();
+  const chosen34=()=>{const l=typeof latestResults!=='undefined'&&Array.isArray(latestResults)?latestResults:[];return l[Number(selectedResultIndex)||0]||l[0]||null;};
+  const say34=h=>{if(typeof window.portalAssistant==='function')window.portalAssistant(h);};
+  const note34=t=>say34(`<div class="portal-note">${esc(t)}</div>`),alert34=t=>say34(`<div class="portal-alert">${esc(t)}</div>`);
+  const sar34=n=>Number(n||0).toLocaleString('en-US',{maximumFractionDigits:2});
+  async function recalc34(next,keyId){const prev=[clientTerm,termBasis];clientTerm=next||null;termBasis=next?termBasisNow():'';finoPortal.step='buyout_result';
+    let ok=false;try{ok=await calculate({recalculate:true,botKeep:true});}catch(e){[clientTerm,termBasis]=prev;throw e;}
+    if(ok===false){[clientTerm,termBasis]=prev;throw Error('لم تعتمد المركزية الحسبة الجديدة، وبقيت القيم السابقة.');}
+    const l=latestResults||[],ix=keyId?l.findIndex(r=>(r.key||r.name)===keyId):-1;if(ix>=0)selectedResultIndex=ix;return ix>=0?l[ix]:null;}
+  window.F99R34BeginTerm=function(){
+    if(typeof finoPortal==='undefined'||finoPortal.mode!=='buyout'||!termSteps.includes(finoPortal.step)||termBusy||!pkgOpt('reduce_term'))return;
+    const r=chosen34();if(!r)return alert34('لا يوجد ترشيح مؤهل لتقليل مدته حاليًا.');
+    const months=Number(r.actualPayments);if(!Number.isFinite(months)||months<=1)return alert34('مدة هذه الحسبة لا تسمح بتقليل إضافي.');
+    finoPortal.step='f99r34_term';
+    say34(`<div class="portal-note"><b>${esc(T('term_ask'))}</b><br>${esc('مدة تمويلك الحالية '+months+' شهر. اكتب عدد الأشهر اللي تبيه بنفسك: رقم صحيح أقل من '+months+' شهر (الحد الأعلى 60 شهرًا).')}</div>`);
+    setPortalInput(true,'عدد الأشهر','number','تُعاد الحسبة بالمعادلات الأصلية ونفس نسبة الجهة، ولا تُخصم حسبة جديدة.');
+  };
+  async function applyTerm34(raw){if(termBusy)return;
+    const txt=String(raw).replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))).replace(/[۰-۹]/g,d=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))).trim();
+    const r=chosen34();if(!r){finoPortal.step='buyout_result';setPortalInput(false);return;}
+    const months=Number(r.actualPayments),keyId=r.key||r.name;
+    if(!/^\d{1,4}$/.test(txt))return alert34('اكتب عدد أشهر صحيحًا بالأرقام فقط، بدون كسور.');
+    const n=Number(txt);
+    if(n<1)return alert34('اكتب عدد أشهر أكبر من صفر.');
+    if(n>60)return alert34('الحد الأعلى لمدة التمويل في هذه الخدمة 60 شهرًا، ولازم تكون أقل من مدتك الحالية ('+months+' شهر). اكتب رقمًا آخر.');
+    if(n>=months)return alert34('لازم تكون المدة الجديدة أقل من مدتك الحالية ('+months+' شهر). اكتب رقمًا أصغر.');
+    // keep the engine's own waiver months for the chosen bank so it pays exactly n instalments.
+    const prevTerm=termLive()?clientTerm:null,base=window.currentBuyoutBaseTermMonths(),next=Math.min(60,n+Math.max(0,base-months));
+    termBusy=true;
+    try{const now=await recalc34(next,keyId);
+      if(!now||!(Number(now.actualPayments)<months)){await recalc34(prevTerm,keyId);finoPortal.step='f99r34_term';
+        return alert34('بهذه المدة ما تكون '+(r.name||'الجهة المختارة')+' مؤهلة ضمن شروط الحسبة المعتمدة، ورجعنا للمدة السابقة. اكتب مدة أخرى.');}
+      finoPortal.step='buyout_result';setPortalInput(false);
+      note34('تم تقليل مدة التمويل بناءً على طلبك: '+now.actualPayments+' شهر بدل '+months+' شهر. القسط الشهري '+sar34(now.installment)+' ريال (كان '+sar34(r.installment)+' ريال)، وإجمالي الأرباح '+sar34(now.totalProfit)+' ريال، وصافي الكاش '+sar34(now.cashAfterDebt)+' ريال.');
+      say34(window.F99V38FullResultHtml?.(now,'term')||'');window.F99V38AfterAdjustment?.(now,'term');
+    }catch(e){finoPortal.step='buyout_result';setPortalInput(false);alert34(e?.message||'تعذر إعادة الحسبة الآن؛ لم يُعتمد تغيير جديد.');}
+    finally{termBusy=false;}}
+  window.F99R34ResetTerm=async function(){if(termBusy||!termLive())return;const r=chosen34(),keyId=r?.key||r?.name;termBusy=true;
+    try{const now=await recalc34(null,keyId);finoPortal.step='buyout_result';setPortalInput(false);
+      if(!now)return alert34('البنك المختار لم يعد مؤهلًا بالمدة الأساسية؛ اختر أحد الترشيحات الأخرى.');
+      note34('رجعنا للمدة الأساسية: '+now.actualPayments+' شهر. القسط الشهري '+sar34(now.installment)+' ريال، وإجمالي الأرباح '+sar34(now.totalProfit)+' ريال، وصافي الكاش '+sar34(now.cashAfterDebt)+' ريال. تقدر تقلل المدة مرة ثانية.');
+      say34(window.F99V38FullResultHtml?.(now,'reset')||'');window.F99V38AfterAdjustment?.(now,'reset');
+    }catch(e){alert34(e?.message||'تعذر الرجوع للمدة الأساسية الآن.');}finally{termBusy=false;}};
+  const submit34=window.submitFINOPortalInput;
+  if(typeof submit34==='function')window.submitFINOPortalInput=function(...a){
+    if(typeof finoPortal==='undefined'||finoPortal.step!=='f99r34_term')return submit34.apply(this,a);
+    if(typeof finoCentralGuard==='function'&&!finoCentralGuard())return;
+    const input=document.getElementById('finoBotInput'),raw=String(input?.value||'').trim();if(!raw)return;
+    if(typeof portalUser==='function')portalUser(raw);if(input)input.value='';void applyTerm34(raw);};
   window.F99R24Next=async function(){
     document.getElementById('f24-exit-warning')?.remove();
     let shown=false;

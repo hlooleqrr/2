@@ -6,9 +6,14 @@
   function define(key, label, text, vars = [], cat = category, note = '') {
     defs.push({ key: 'followup22.' + key, category: cat, label, text, vars, note });
   }
-  define('invite', 'دعوة مشاهدة العرض', 'يا {client}، عندك عرض خاص لمتابعة إجراءات تحويل تمويلك. ودّك تشوف التفاصيل؟', ['client']);
-  define('view', 'قبول مشاهدة العرض', 'نعم، أشوف العرض', [], consentCategory);
-  define('postpone', 'إغلاق العرض دون متابعة', 'إغلاق العرض', [], consentCategory);
+  define('invite', 'دعوة مشاهدة العرض', '🎉 يا {client}، عندك عرض خاص لمتابعة إجراءات تمويلك!\nتبي تشوف تفاصيل العرض؟', ['client']);
+  define('view', 'قبول مشاهدة العرض', 'أبي أشوف العرض', [], consentCategory);
+  define('postpone', 'تأجيل العرض', 'ليس الآن', [], consentCategory);
+  define('continue', 'المتابعة بعد «ليس الآن»', 'أبشر يا {client}، نكمل حسبتك.', ['client'], consentCategory);
+  define('other_bank', 'زر اختيار جهة مرشحة ثانية', 'أبي جهة مرشحة ثانية', [], consentCategory);
+  define('other_pick', 'عنوان اختيار جهة المتابعة', 'اختر الجهة اللي تبي نتابع معاملتك عن طريقها (من الجهات المرشحة لك فقط):');
+  define('updated', 'تحديث العرض بعد تغيير الجهة', 'تم تحديث عرض المتابعة حسب الجهة اللي اخترتها.', [], consentCategory);
+  define('service_note', 'توضيح طبيعة الخدمة', 'الخدمة متابعة إجراءات فقط، وليست تمويلًا مباشرًا أو ضمانًا لموافقة الجهة التمويلية.');
   define('title', 'عنوان بطاقة العرض', 'يا {client}، عرض متابعة إجراءات تمويلك', ['client']);
   define('entity', 'الجهة المرتبطة بالنتيجة', 'يا {client}، هذا عرض المتابعة الخاص بك على {entity}', ['client', 'entity']);
   define('previous', 'الأتعاب السابقة', 'السعر السابق: {amount} ريال', ['amount']);
@@ -29,7 +34,7 @@
   define('apology', 'اعتذار توقف متابعة جهة التمويل', w.F99BankFollowup17?.APOLOGY || 'نعتذر منك، خدمة متابعة إجراءات التمويل عبرنا لجهة التمويل المختارة غير متاحة حاليًا.', [], consentCategory);
   define('no_financial_offer', 'لا يوجد عرض مالي معتمد', 'لا يوجد عرض متابعة مالي معتمد متاح الآن. لم يتم تسجيل طلب أو قبول.', [], consentCategory);
   define('final_message', 'نص واتساب النهائي', '{message}', ['message'], shareCategory, 'النص الأصلي الكامل في {message}. لا يتجهز إلا بعد قبول المتابعة؛ المتغير لا يتضمن أكوادًا أو بيانات جلسة.');
-  ['title', 'entity', 'previous', 'saving', 'discount', 'expiry', 'terms'].forEach(k => define('show_' + k, 'إظهار النص: ' + k, '1', [], category, '1 إظهار / 0 إخفاء النص فقط؛ لا يغير الأتعاب أو الشروط المعتمدة.'));
+  ['title', 'entity', 'previous', 'saving', 'discount', 'expiry', 'terms', 'service_note'].forEach(k => define('show_' + k, 'إظهار النص: ' + k, '1', [], category, '1 إظهار / 0 إخفاء النص فقط؛ لا يغير الأتعاب أو الشروط المعتمدة.'));
   const messageParts = [
     ['greeting', 'السلام عليكم ورحمة الله وبركاته', [], null],
     ['intro', 'أنا {client}، أطلب عرض خدمات متابعة معاملتي التمويلية.', ['client'], 'أنا '],
@@ -86,11 +91,21 @@
   const snapshot = r => JSON.stringify({ result: r, data: data(), client: who() });
   const session = () => bank()?.identity() || '';
   const postponed = new Set();
-  let host = null, pending = null, epoch = 0, busy = false, displayed = '';
+  let host = null, front = null, pending = null, epoch = 0, busy = false, displayed = '';
+  // r34: one automatic invitation per eligible calculation; «ليس الآن» never blocks later offers.
+  const responded = new Set(); let calcSeq = 0, invitedKey = '', gateNext = null, gateInstalled = false;
+  const calcKey = () => { try { return [entry()?.entryToken || '', calcSeq, JSON.stringify(data())].join('|'); } catch (_) { return ''; } };
+  const escH = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   function el(tag, text, cls) { const e = document.createElement(tag); if (text !== undefined) e.textContent = text; if (cls) e.className = cls; return e; }
   function button(parent, text, run) { const b = el('button', text); b.type = 'button'; b.onclick = run; parent.append(b); return b; }
-  function clear() { epoch++; host?.remove(); host = null; pending = null; busy = false; displayed = ''; }
-  function slot(cls = 'f49-card f49-completion-request') { clear(); host = el('section', undefined, cls); host.dataset.f99Followup22 = '1'; chat()?.append(host); return host; }
+  function clear() { epoch++; host?.remove(); front?.remove(); host = null; front = null; pending = null; busy = false; displayed = ''; }
+  // r34 §3: the fee card is a front dialog (never a faded line at the bottom); the invitation sits under the result.
+  function slot(cls = 'f49-card f49-completion-request', mode = 'front') {
+    clear(); host = el('section', undefined, cls); host.dataset.f99Followup22 = '1';
+    if (mode === 'front') { front = el('div', undefined, 'f34-front'); front.id = 'f34FeeFront'; host.setAttribute('role', 'dialog'); host.setAttribute('aria-modal', 'true'); host.tabIndex = -1; front.append(host); (chat() || document.body).append(front); setTimeout(() => { try { host?.focus({ preventScroll: true }); } catch (_) {} }, 0); }
+    else { host.id = 'f41-offer'; const menus = chat()?.querySelectorAll('.f25-menu'); const m = menus && menus[menus.length - 1]; if (m) m.before(host); else chat()?.append(host); }
+    return host;
+  }
   function status(text) { if (!host) return; let p = host.querySelector('[data-f22-status]'); if (!p) { p = el('p'); p.dataset.f22Status = '1'; p.setAttribute('role', 'status'); host.append(p); } p.textContent = text; }
   async function rpc(fn, args) { const r = await w.finoRpc(fn, args, 20000); if (!r?.ok || r.data?.ok !== true) throw Error(r?.data?.reason || 'FOLLOWUP_UNAVAILABLE'); return r.data; }
   function args() { const e = entry(); if (!e?.entryToken || !e.deviceId) throw Error('ENTRY_REQUIRED'); return { p_entry_token: e.entryToken, p_device_id: e.deviceId }; }
@@ -104,15 +119,15 @@
   }
   async function quote(r) { return rpc('f99v41_client_completion_quote', { ...args(), p_package_key: packageKey(), p_cash: Number(r.cashAfterDebt || 0), p_principal: Number(r.principalBeforeFees || 0) }); }
   function expiry(q) { return q.valid_until && Number.isFinite(Date.parse(q.valid_until)) ? new Intl.DateTimeFormat('ar-SA', { timeZone: 'Asia/Riyadh', dateStyle: 'medium', timeStyle: 'short' }).format(new Date(q.valid_until)) : ''; }
-  async function invitation(i = selected()) {
+  async function invitation(i = selected(), opts = {}) {
     if (!active() || postponed.has(session())) return false;
-    if (host?.isConnected && displayed === snapshot(rows()[i])) return true;
+    if (!opts.front && host?.isConnected && displayed === snapshot(rows()[i])) return true;
     if (host?.isConnected) clear();
     const id = session();
     try {
       if (!await allowed()) return false;
       bank().assertIdentity(id); if (!active() || postponed.has(id)) return false;
-      const h = slot('f41-offer');
+      const h = slot('f41-offer f34-invite', opts.front ? 'front' : 'inline');
       displayed = snapshot(rows()[i]);
       if (!rows()[i]) {
         h.append(el('p', T('pick'))); const a = el('div', undefined, 'f49-actions'); h.append(a);
@@ -121,7 +136,7 @@
       }
       h.append(el('b', T('invite', { client: who() })));
       const a = el('div', undefined, 'f41-options'); h.append(a);
-      const yes = button(a, T('view'), async () => { if (busy) return; busy = true; yes.disabled = true; await openCard(Number(i)); });
+      const yes = button(a, T('view'), async () => { if (busy) return; busy = true; yes.disabled = true; responded.add(calcKey()); await openCard(Number(i)); });
       yes.className = 'f41-primary'; button(a, T('postpone'), cancel); return true;
     } catch (_) { return false; }
   }
@@ -131,9 +146,15 @@
     button(a, T('postpone'), cancel);
   }
   // r24: closing the offer continues to the approved end of service (no automatic new offer).
-  function cancel() { const wasActive = active(); if (session()) postponed.add(session()); clear(); bank()?.clearPreviews(); if (typeof w.__F99R25FollowupDone === 'function') return w.__F99R25FollowupDone(); if (wasActive) w.F99V82FinishReview?.(); }
+  // r34 §3: «ليس الآن» continues the conversation; only the final exit sequence closes the offer for the session.
+  function cancel() {
+    const wasActive = active(); responded.add(calcKey()); clear(); bank()?.clearPreviews();
+    if (typeof w.__F99R25FollowupDone === 'function') { if (session()) postponed.add(session()); gateNext = null; return w.__F99R25FollowupDone(); }
+    if (wasActive && typeof w.portalAssistant === 'function') w.portalAssistant('<div class="portal-note">' + escH(T('continue', { client: who() })) + '</div>');
+    const g = gateNext; gateNext = null; if (typeof g === 'function') return g();
+  }
   function addText(parent, key, vars, tag = 'p', cls) { if (shown(key)) parent.append(el(tag, T(key, vars), cls)); }
-  function render(r, q, offer, index, id) {
+  function render(r, q, offer, index, id, prev) {
     const h = slot(), current = Number(q.new_price), old = Number(q.old_price);
     if (!Number.isFinite(current) || current < 0) throw Error('FEE_INVALID');
     const discounted = q.discount_active === true && Number.isFinite(old) && old > current;
@@ -160,14 +181,24 @@
     addText(h, 'terms', { terms });
     if (offer?.show_documents && offer.documents?.length) addText(h, 'terms', { terms: offer.documents.join('\n') }, 'pre');
     if (expiry(q)) addText(h, 'expiry', { expiry: expiry(q) });
+    addText(h, 'service_note', {}, 'p', 'f34-service');
     const actions = el('div', undefined, 'f49-actions'); h.append(actions);
     button(actions, T('consent', {}, offer?.button_text || 'أبي تتابعون إجراءات تمويلي — فتح واتساب'), send);
+    if (rows().length > 1) button(actions, T('other_bank'), () => pickOther(index));
     button(actions, T('close'), cancel);
-    h.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+    if (prev && (Number(prev.new_price) !== current || Number(prev.old_price) !== old)) status(T('updated'));
   }
-  async function openCard(i) {
+  // r34 §4: only the entities the calculator actually recommended; a new quote, no new calculation or charge.
+  function pickOther(i) {
+    if (!host) return; host.querySelector('[data-f34-others]')?.remove();
+    const box = el('div', undefined, 'f34-others'); box.dataset.f34Others = '1'; box.append(el('p', T('other_pick')));
+    const a = el('div', undefined, 'f49-actions'); box.append(a); host.append(box); const prev = pending?.quote;
+    rows().forEach((r, n) => { if (n !== Number(i)) button(a, T('pick_result', { entity: r.name, installment: fmt(r.installment) }), () => { busy = false; openCard(n, prev); }); });
+    a.querySelector('button')?.focus({ preventScroll: true });
+  }
+  async function openCard(i, prev) {
     if (!active() || !rows()[i]) return;
-    if (!host?.isConnected) slot('f41-offer'); // dedicated slot for status/apology, never a result card
+    if (!host?.isConnected) slot(); // dedicated front slot for status/apology, never a result card
     const id = session(), r = rows()[i], generation = epoch, sig = snapshot(r);
     try {
       const want = await bank().api.want({ finance_type: 'personal', bank_id: r.key });
@@ -178,7 +209,7 @@
       if (generation !== epoch) return; bank().assertIdentity(id);
       bank().requireBinding(q.bank_followup, { finance_type: 'personal', bank_id: r.key });
       if (q.bank_followup.intent_id !== want.bank_followup.intent_id || sig !== snapshot(rows()[i])) throw Error('RESULT_CHANGED');
-      render(rows()[i], q, raw?.data?.data?.packages?.[packageKey()] || {}, i, id);
+      render(rows()[i], q, raw?.data?.data?.packages?.[packageKey()] || {}, i, id, prev);
     } catch (_) { if (generation === epoch) { busy = false; status(T('unavailable')); } }
   }
   function message(r, q) {
@@ -227,6 +258,87 @@
       const b = button(target, 'نصوص العرض وواتساب', () => w.F99BotTextsPortal && w.F99BotTextsPortal.open({ category: 'عروض المتابعة' })); b.dataset.f22Texts = '1';
     }
     return result;
+  };
+  // r34 §3/§8: automatic invitation under each eligible result (once per calculation), and before a new
+  // calculation the due offer is shown first. Owner control: «توقيت ظهور الأتعاب» + show_completion + texts.
+  const featureOn = () => w.F99V38FeatureAllowed?.('show_completion') === true;
+  function autoInvite() {
+    installGate(); if (!active() || !rows().length || !featureOn() || host?.isConnected || front?.isConnected) return;
+    if (!chat()?.querySelector('.f25-menu')) return; const k = calcKey(); if (!k || invitedKey === k || responded.has(k)) return;
+    invitedKey = k; void invitation(selected());
+  }
+  function installGate() {
+    if (gateInstalled || typeof w.F99V82RequestNewCalculation !== 'function') return; gateInstalled = true;
+    const original = w.F99V82RequestNewCalculation;
+    w.F99V82RequestNewCalculation = function (...a) {
+      const self = this, go = () => { calcSeq++; return original.apply(self, a); }, k = calcKey();
+      if (!gateNext && active() && rows().length && featureOn() && k && !responded.has(k)) {
+        gateNext = go;
+        return invitation(selected(), { front: true }).then(ok => { if (!ok && gateNext === go) { gateNext = null; return go(); } return ok; },
+          () => { if (gateNext === go) { gateNext = null; return go(); } });
+      }
+      return go();
+    };
+  }
+  let tick = 0;
+  new MutationObserver(() => { if (tick) return; tick = setTimeout(() => { tick = 0; autoInvite(); }, 300); }).observe(document.documentElement, { childList: true, subtree: true });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', installGate, { once: true }); else setTimeout(installGate, 0);
+  (function css() {
+    const st = el('style'); st.id = 'f34-fee-front-css';
+    st.textContent = '#f34FeeFront{position:fixed;top:0;right:0;bottom:0;left:0;z-index:99990;background:rgba(3,8,16,.62);display:flex;align-items:center;justify-content:center;padding:14px;direction:rtl}'
+      + '#f34FeeFront>section{width:100%;max-width:460px;max-height:88vh;overflow:auto;-webkit-overflow-scrolling:touch;margin:0;background:#fff;border-radius:20px;box-shadow:0 24px 60px rgba(0,0,0,.45);padding:18px;outline:none}'
+      + '#finoBotChat .f34-invite>b{display:block;white-space:pre-line;line-height:1.9}#finoBotChat .f34-invite{border:2px solid #d4af37}'
+      + '.f99v18-spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;vertical-align:middle;margin-inline-end:6px;animation:f99v18spin .8s linear infinite}@keyframes f99v18spin{to{transform:rotate(360deg)}}'
+      + '#f34FeeFront .f34-service{font-size:13px;color:#526c7f;margin:8px 0}#f34FeeFront .f34-others{margin-top:12px;border-top:1px solid #e3edf3;padding-top:10px}';
+    document.head.append(st);
+  })();
+  // r34 §5 owner editor: «تسعيرة أتعاب المتابعة» inside each bank's settings. Server validates and resolves.
+  const feeReason = { NOT_SET: 'لا توجد تسعيرة خاصة لهذا البنك؛ تُعتمد تسعيرة الأتعاب العامة للباقة.', DISABLED: 'التسعيرة الخاصة معطلة؛ تُعتمد تسعيرة الأتعاب العامة للباقة.',
+    INCOMPLETE: 'التسعيرة الخاصة ناقصة (يلزم المبلغ الأساسي والمبلغ بعد الخصم)؛ لم تُعتمد، وتبقى التسعيرة العامة.', NOT_POSITIVE: 'المبالغ يجب أن تكون أكبر من صفر؛ لم تُعتمد، وتبقى التسعيرة العامة.',
+    FINAL_ABOVE_BASE: 'المبلغ بعد الخصم أعلى من المبلغ الأساسي؛ لم تُعتمد، وتبقى التسعيرة العامة.', STALE_VERSION: 'تغيّرت التسعيرة من جلسة أخرى؛ أعد فتح إعدادات البنك ثم احفظ.',
+    COMPLETION_OFFER_NOT_CONFIGURED_FOR_PACKAGE: 'لا يوجد عرض متابعة معتمد لهذه الباقة.', INVALID_ARGUMENT: 'قيمة غير صالحة (أرقام موجبة بحد أقصى منزلتين عشريتين).', NO_ADMIN_TOKEN: 'سجّل دخول المالك أولًا.' };
+  const reasonText = c => { const k = String(c || '').replace(/^BANK_FEE_/, ''); return feeReason[k] || ('تعذر الحفظ: ' + (c || 'خطأ غير معروف')); };
+  w.F99R34BankFeeEditor = function (box, bankId) {
+    if (!box || !bankId || typeof w.finoCentralAdminCall !== 'function') return null;
+    let alive = true, rev = 0; const sec = el('section', undefined, 'admin-field'); sec.dataset.r34Editor = '1'; box.append(sec);
+    sec.append(el('h4', 'تسعيرة أتعاب المتابعة'), el('small', 'خاصة بهذا البنك داخل الباقة المختارة. إذا كانت معطلة أو فارغة أو غير صالحة تُعتمد تسعيرة الأتعاب العامة للباقة تلقائيًا.'));
+    const field = (label, input) => { const l = el('label', label + ' '); l.style.display = 'block'; l.append(input); sec.append(l); return input; };
+    const pkg = field('الباقة', el('select')), on = el('input'); on.type = 'checkbox';
+    const onLab = el('label'); onLab.style.display = 'block'; onLab.append(on, el('span', ' تفعيل التسعيرة الخاصة لهذا البنك')); sec.append(onLab);
+    const num = label => { const i = el('input'); i.type = 'number'; i.min = '0.01'; i.step = '0.01'; i.inputMode = 'decimal'; return field(label, i); };
+    const base = num('مبلغ الأتعاب الأساسي (ريال)'), fin = num('مبلغ الأتعاب بعد الخصم (ريال)');
+    const general = el('p'), info = el('p'); info.setAttribute('role', 'status'); const actions = el('div', undefined, 'f49-actions'); sec.append(general, actions, info);
+    const saveBtn = button(actions, 'حفظ تسعيرة هذا البنك', save);
+    if (w.F99BotTextsPortal) button(actions, 'نصوص العرض', () => w.F99BotTextsPortal.open({ category }));
+    const value = i => { const t = String(i.value || '').trim(); return t === '' ? null : Number(t); };
+    async function load() {
+      if (!pkg.value) return; info.textContent = 'جاري القراءة من المركزية...';
+      const r = await w.finoCentralAdminCall('f99r34_owner_bank_fee_read', { p_package_key: pkg.value, p_bank_id: bankId });
+      if (!alive) return; if (!r?.ok || r.data?.ok !== true) { info.textContent = reasonText(r?.data?.reason || r?.reason); saveBtn.disabled = true; return; }
+      const d = r.data; rev = Number(d.revision || 0); on.checked = d.enabled === true; base.value = d.base_amount ?? ''; fin.value = d.final_amount ?? ''; saveBtn.disabled = false;
+      const g = d.general || {}; general.textContent = g.enabled ? 'التسعيرة العامة للباقة: ' + fmt(g.base_amount) + ' ريال، خصم ' + fmt(g.discount_percent) + '٪.' : 'التسعيرة العامة للباقة غير مفعّلة.';
+      info.textContent = d.problem ? reasonText(d.problem) : 'التسعيرة الخاصة مفعّلة وتُعتمد لهذا البنك: ' + fmt(d.base_amount) + ' ريال ← ' + fmt(d.final_amount) + ' ريال.';
+    }
+    async function save() {
+      const b = value(base), f = value(fin);
+      if (on.checked) { if (b == null || f == null) { info.textContent = reasonText('INCOMPLETE'); return; } if (!(b > 0) || !(f > 0)) { info.textContent = reasonText('NOT_POSITIVE'); return; } if (f > b) { info.textContent = reasonText('FINAL_ABOVE_BASE'); return; } }
+      saveBtn.disabled = true; info.textContent = 'جاري الحفظ في المركزية...';
+      try {
+        const r = await w.finoCentralAdminCall('f99r34_owner_bank_fee_save', { p_package_key: pkg.value, p_bank_id: bankId, p_base: b, p_final: f, p_enabled: on.checked, p_expected_revision: rev });
+        if (!alive) return; if (!r?.ok || r.data?.ok !== true) { info.textContent = reasonText(r?.data?.reason || r?.reason); return; }
+        await load(); if (alive) info.textContent = 'تم الحفظ والتحقق من المركزية. ' + info.textContent;
+      } catch (_) { info.textContent = 'تعذر الحفظ الآن؛ لم يتغير شيء.'; } finally { if (alive) saveBtn.disabled = false; }
+    }
+    pkg.onchange = () => void load();
+    (async () => {
+      try {
+        const raw = await w.finoRpc('f99v25_public_completion_offers', {}, 20000); if (!alive) return;
+        const list = raw?.data?.data?.packages || {}; Object.keys(list).forEach(k => pkg.append(new Option(list[k]?.package_name || list[k]?.name || list[k]?.title || k, k)));
+        if (!pkg.options.length) { info.textContent = reasonText('COMPLETION_OFFER_NOT_CONFIGURED_FOR_PACKAGE'); saveBtn.disabled = true; return; }
+        const main = w.F99V32MainAccess?.()?.packageKey; if (main && list[main]) pkg.value = main; await load();
+      } catch (_) { if (alive) info.textContent = 'تعذر قراءة الباقات من المركزية.'; }
+    })();
+    return { destroy() { alive = false; sec.remove(); } };
   };
   w.F99Followup22 = Object.freeze({ invitation, openCard, cancel });
   w.F99V82OpenOffer = () => invitation();
