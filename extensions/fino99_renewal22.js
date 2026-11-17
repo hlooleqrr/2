@@ -16,7 +16,7 @@
     enter: ['رسائل التجديد','تحقق من الكود','عرض فرصة التجديد'],
     buy: ['رسائل التجديد','زر الشراء','ادفع الآن'],
     price: ['رسائل التجديد','سعر العرض','{price} ريال',['price']],
-    terms: ['رسائل التجديد','مدة وحسبات العرض','مدة الاستخدام: {minutes} دقيقة • {count} حسبة جديدة',['minutes','count']],
+    terms: ['رسائل التجديد','مدة وحسبات العرض','صلاحية الباقة: {duration} | عدد الحسبات: {calcs}',['minutes','count','duration','calcs']],
     empty: ['رسائل التجديد','عدم توفر عروض','لا توجد عروض تجديد مفعلة الآن. يمكنك العودة لاحقًا.'],
     stock: ['رسائل التجديد','نفاد مخزون العرض','العرض غير متاح حاليًا.'],
     changed: ['رسائل التجديد','تغير العرض','تغيّر العرض أو نفد المخزون. أعد عرض التفاصيل قبل الشراء.'],
@@ -57,7 +57,7 @@
   async function details(code){const r=await w.finoRpc('f99r22_renewal_context',{p_code:normalized(code),p_device_id:w.F99S12Runtime.device()},15000);if(r?.ok&&r.data?.ok)return r.data;/* r24: valid code with balance -> active (no renewal, no error) */if(r?.ok&&r.data?.reason==='CODE_NOT_EXHAUSTED')return {status:'active'};return null;}
   function page(){let p=d.getElementById('f99r22RenewalPage');if(!p){p=el('section',null,'page');p.id='f99r22RenewalPage';p.dir='rtl';const viewport=el('div',null,'viewport');const chat=el('div',null,'f99r22-chat');chat.setAttribute('role','log');viewport.append(chat);p.append(viewport);d.body.append(p);}return p;}
   function close(card){card?.remove();validUntil=0;current=null;serial++;if(w.F99SessionSecurity.context()?.verified)w.showPage?.('freeHub');else w.showPage?.('page1');}
-  function offerCard(host,o){const c=el('article',null,'f99r22-offer');c.dataset.offerId=o.id;host.append(c);c.append(el('h4',o.title),el('strong',t('price',{price:Number(o.price_sar??o.price).toLocaleString('en-US',{maximumFractionDigits:2})})),el('p',t('terms',{minutes:o.duration_minutes,count:o.max_calculations})));return c;}
+  function offerCard(host,o){const c=el('article',null,'f99r22-offer');c.dataset.offerId=o.id;host.append(c);c.append(el('h4',o.title),el('strong',t('price',{price:Number(o.price_sar??o.price).toLocaleString('en-US',{maximumFractionDigits:2})})),el('p',t('terms',{minutes:o.duration_minutes,count:o.max_calculations,duration:(w.F99DurationAr?w.F99DurationAr(o.duration_minutes):o.duration_minutes),calcs:(w.F99CalcCountAr?w.F99CalcCountAr(o.max_calculations):o.max_calculations)})));return c;}
   function oldOffers(host,ctx,code){const catalog=ctx.old_catalog||{};if(catalog.enabled===false)return 0;
     const offers=(catalog.offers||[]).filter(o=>o.enabled===true&&Number.isFinite(Number(o.price))&&Number(o.duration_minutes)>0&&Number(o.max_calculations)>0);
     if(!offers.length)return 0;host.append(el('h4',t('old')),el('p',t('oldNote')));
@@ -114,7 +114,7 @@
     const o=bestOffer(ctx,c.offerId);
     if(o){const price=el('div');Object.assign(price.style,{fontSize:'36px',fontWeight:'800',color:c.accent,lineHeight:'1.1'});
       price.textContent=money2(o.price_sar);const cur=el('small',' ريال');Object.assign(cur.style,{fontSize:'15px',color:c.text,fontWeight:'600',marginRight:'4px'});price.append(cur);card.append(price);
-      const terms=el('p',t('terms',{minutes:o.duration_minutes,count:o.max_calculations}));Object.assign(terms.style,{fontSize:'13px',opacity:'.78',margin:'8px 0 18px',color:c.text});card.append(terms);}
+      const terms=el('p',t('terms',{minutes:o.duration_minutes,count:o.max_calculations,duration:(w.F99DurationAr?w.F99DurationAr(o.duration_minutes):o.duration_minutes),calcs:(w.F99CalcCountAr?w.F99CalcCountAr(o.max_calculations):o.max_calculations)}));Object.assign(terms.style,{fontSize:'13px',opacity:'.78',margin:'8px 0 18px',color:c.text});card.append(terms);}
     else{const none=el('p',t('stock'));Object.assign(none.style,{fontSize:'14px',opacity:'.9',margin:'8px 0 18px'});card.append(none);}
     if(c.note){const n=el('p',c.note);Object.assign(n.style,{fontSize:'12px',opacity:'.7',margin:'-8px 0 14px'});card.append(n);}
     const say=m=>{let n=card.querySelector('[data-r26-msg]');if(!n){n=el('p');n.dataset.r26Msg='1';Object.assign(n.style,{fontSize:'13px',color:c.accent,margin:'10px 0 0'});card.append(n);}n.textContent=m;};

@@ -24,7 +24,7 @@
     ['end','انتهاء الحسبة','انتهاء الحسبة مع رصيد','يا {client}، انتهت حسبتك. تقدر تراجع النتائج أو تبدأ حسبة جديدة.'],
     ['end_empty','انتهاء الحسبة','انتهاء الحسبة بلا رصيد','يا {client}، انتهت حسبتك. تقدر تراجع النتائج. استهلكت رصيد الحسبات المخصص للباقة.'],
     ['who','الهوية','صاحب الحسبة ومن أجراها (حسبة لشخص آخر)','صاحب الحسبة: {beneficiary_name} • أجرى الحسبة: {code_owner_name}'],
-    ['balance','بداية حسبة جديدة','الرصيد والمدة','المتبقي {remaining} من {max} حسبات. صلاحية الكود حتى {expiry}.'],
+    ['balance','بداية حسبة جديدة','الرصيد والمدة','المتبقي: {remaining_text} من {max}. صلاحية الكود حتى {expiry}.'],
     ['last','بداية حسبة جديدة','استخدام واحد متبقٍ','آخر حسبة'],
     ['new','بداية حسبة جديدة','بدء جديد','أبدأ حسبة جديدة'],
     ['review','انتهاء الحسبة','مراجعة النتائج','أراجع النتائج'],
@@ -47,17 +47,19 @@
     ['q_compare','ما بعد النتيجة','مقارنة الترشيحات','مقارنة الترشيحات'],
     ['new25','ما بعد النتيجة','زر حسبة جديدة','ابدأ حسبة جديدة'],
     ['exit25','ما بعد النتيجة','زر الخروج','الخروج'],
-    ['exhausted25','ما بعد النتيجة','انتهاء رصيد الحسبات','انتهى رصيد الحسبات لهذا الكود.'],
-    ['exit_warn','الخروج من الحسبة','تحذير الخروج','تنبيه: إذا خرجت من هذه الحسبة، ما راح تقدر ترجع لمراجعة نفس النتيجة من المحادثة بعد الخروج. هل ترغب بالخروج؟'],
-    ['exit_yes','الخروج من الحسبة','تأكيد الخروج','نعم، أعلم وأرغب بالخروج'],
-    ['exit_back','الخروج من الحسبة','العودة للحسبة','العودة للحسبة']
+    ['exhausted25','ما بعد النتيجة','انتهاء رصيد الحسبات','انتهى عدد الحسبات المتاحة في باقتك. نتيجتك كاملة أعلاه وتقدر تراجعها قبل الخروج.'],
+    ['exit_warn','الخروج من الحسبة','تأكيد الخروج','تبي تطلع من الحسبة؟'],
+    ['exit_yes','الخروج من الحسبة','زر تأكيد الخروج','نعم، خروج'],
+    ['exit_back','الخروج من الحسبة','زر إلغاء الخروج','إلغاء'],
+    ['last36','بداية حسبة جديدة','تنبيه آخر حسبة','تنبيه: هذه آخر حسبة متاحة في باقتك.']
   ];
-  window.F99Texts?.register(defs.map(([k,category,label,text]) => ({key:'c22.'+k,category,label,text,vars:['client','beneficiary','code_owner_name','beneficiary_name','remaining','max','expiry']})));
+  window.F99Texts?.register(defs.map(([k,category,label,text]) => ({key:'c22.'+k,category,label,text,vars:['client','beneficiary','code_owner_name','beneficiary_name','remaining','remaining_text','max','expiry']})));
   function T(k,v={}) { const d=defs.find(x=>x[0]===k); const fallback=d[3].replace(/\{(\w+)\}/g,(_,n)=>String(v[n]??''));return window.F99T('c22.'+k,v,fallback); }
   const clean=v=>typeof cleanClientName==='function'?cleanClientName(v):String(v||'').trim().slice(0,40);
   const e=()=>window.finoCentralRestoreEntry?.()||{};
   const ownerName=()=>clean(codeOwner||clientName);
   const vars=()=>({client:ownerName(),beneficiary:beneficiary||ownerName(),code_owner_name:ownerName(),beneficiary_name:beneficiary||ownerName()});
+  const countAr=k=>typeof window.F99CalcCountAr==='function'?window.F99CalcCountAr(k):String(k);
   const key=()=>String(e().code_id||e().codeId||'')+'|'+String(e().entryToken||'');
   let identityKey='', beneficiary='', saved={}, self=true, choosing=false, endId='', codeOwner='';
   const originalRpc=window.finoRpc;
@@ -127,7 +129,7 @@
     chat.querySelectorAll('[data-c22-end]').forEach(n=>n.remove());const row=document.createElement('div');row.className='f49-message f82-end-actions';row.dataset.c22End='1';const p=document.createElement('p');const max=Number(s.max_calculations),remaining=s.calculations_remaining===null?null:Number(s.calculations_remaining),has=max===0||remaining>0;
     if(!self&&beneficiary){const who=document.createElement('p');who.className='f99c22-who';who.textContent=T('who',vars());row.append(who);}
     p.textContent=T(has?'end':'end_empty',vars());row.append(p);
-    if(max>0){const q=document.createElement('p');const expiry=s.code?.expires_at||s.expires_at||e().expires_at;const date=expiry?new Intl.DateTimeFormat('ar-SA',{timeZone:'Asia/Riyadh',dateStyle:'short',timeStyle:'short'}).format(new Date(expiry)):'—';q.textContent=T('balance',{...vars(),max,remaining,expiry:date})+(remaining===1?' '+T('last'):'');row.append(q);}
+    if(max>0){const q=document.createElement('p');const expiry=s.code?.expires_at||s.expires_at||e().expires_at;const date=expiry?new Intl.DateTimeFormat('ar-SA',{timeZone:'Asia/Riyadh',dateStyle:'short',timeStyle:'short'}).format(new Date(expiry)):'—';q.textContent=T('balance',{...vars(),max,remaining,remaining_text:countAr(remaining),expiry:date})+(remaining===1?' '+T('last'):'');row.append(q);}
     if(has)button(row,T('new'),()=>window.F99V82RequestNewCalculation());button(row,T('review'),review);chat.append(row);scroll(row);
   }
   // r24: the end panel is no longer appended automatically after the result card.
@@ -188,6 +190,8 @@
     // then «ابدأ حسبة جديدة» (only with remaining balance/validity) and «الخروج». No «الخيارات اللي بعدها».
     // r26 (owner order Pasted_25 §1): every approved option returns, each gated by its OWN package/code switch.
     const used=bag(i),q=[],opt=(label,code)=>q.push(btnHtml(label,code).replace('<button','<button data-r25-opt="1"'));
+    // r36: the extra-services list sits directly under «تلخيص الحسبة» (or at the end of the options when no summary).
+    const more=pkgOpt('extra_services')?`<details class="f49-more" data-r25-more><summary>${esc(T('more25'))}</summary><div class="f49-more-actions">${btnHtml('كم النسبة؟',`F99V41Ask('rate',${i})`)}${btnHtml('كم إجمالي الأرباح؟',`F99V41Ask('profit',${i})`)}${btnHtml('كم مدة التمويل؟',`F99V41Ask('term',${i})`)}${btnHtml('كم رسوم البنك؟',`F99V41Ask('fees',${i})`)}${pkgOpt('reduce_term')?btnHtml(T('q_term'),'F99R34BeginTerm()'):''}</div></details>`:'';let morePlaced=false;
     if(!used.has('installment'))opt(T('q_installment'),`F99V41Ask('installment',${i})`);
     if(!used.has('cash'))opt(T('q_cash'),`F99V41Ask('cash',${i})`);
     if(allowed('reduce_installment'))opt(T('q_lower25'),"F99V37BeginAdjust('installment')");
@@ -195,14 +199,15 @@
     if(allowed('reduce_amount'))opt(T('q_cash_reduce'),"F99V37BeginAdjust('cash')");
     if(window.F99V38HasNextBank?.()===true)opt(T('q_next_bank'),'F99V38NextBank()');
     if(allowed('reduce_installment')||allowed('reduce_amount'))opt(T('q_max'),'F99V37Reset()');
-    if(window.F99V38MenuReady?.(i,'summary')===true)opt(T('q_summary'),`F99V38ShowSummary(${i})`);
+    if(window.F99V38MenuReady?.(i,'summary')===true){opt(T('q_summary'),`F99V38ShowSummary(${i})`);if(more){q.push(more);morePlaced=true;}}
     if(window.F99V38MenuReady?.(i,'compare')===true)opt(T('q_compare'),'F99V38ComparePicker()');
     // r34 §6-§7: the return button names the reduction actually applied; both restore the BASE calculation.
     if(reduced==='installment'&&allowed('reduce_installment'))opt(T('q_back_installment'),'F99V47ResetInstallment()');
     else if(reduced&&allowed('reduce_amount'))opt(T('q_back'),'F99V47ResetFinance()');
     if(window.F99R34TermReduced?.()===true)opt(T('q_term_back'),'F99R34ResetTerm()');
+    if(more&&!morePlaced)q.push(more);
     setTimeout(()=>{void refreshNew();},0);
-    return `<div class="f41-options f47-main-options f49-menu f24-menu f25-menu"><p class="f24-ask">${esc(T('ask',vars()))}</p><div class="f24-questions">${q.join('')}</div>${pkgOpt('extra_services')?`<details class="f49-more" data-r25-more><summary>${esc(T('more25'))}</summary><div class="f49-more-actions">${btnHtml('كم النسبة؟',`F99V41Ask('rate',${i})`)}${btnHtml('كم إجمالي الأرباح؟',`F99V41Ask('profit',${i})`)}${btnHtml('كم مدة التمويل؟',`F99V41Ask('term',${i})`)}${btnHtml('كم رسوم البنك؟',`F99V41Ask('fees',${i})`)}${pkgOpt('reduce_term')?btnHtml(T('q_term'),'F99R34BeginTerm()'):''}</div></details>`:''}<p class="f25-exhausted"${lastHas===false?'':' hidden'}>${lastHas===false?esc(T('exhausted25')):''}</p><div class="f24-yes-no f25-end"><button type="button" class="f41-primary" data-r25-new${lastHas===true?'':' hidden'} onclick="F99V82RequestNewCalculation()">${esc(T('new25'))}</button>${btnHtml(T('exit25'),'F99R24Exit()')}</div></div>`;
+    return `<div class="f41-options f47-main-options f49-menu f24-menu f25-menu"><p class="f24-ask">${esc(T('ask',vars()))}</p><div class="f24-questions">${q.join('')}</div><p class="f25-exhausted" role="status"${lastHas===false?'':' hidden'}>${lastHas===false?esc(T('exhausted25')):''}</p><div class="f24-yes-no f25-end"><button type="button" class="f41-primary" data-r25-new${lastHas===true?'':' hidden'} onclick="F99V82RequestNewCalculation()">${esc(T('new25'))}</button>${btnHtml(T('exit25'),'F99R24Exit()')}</div></div>`;
   };
   // r34 (owner order Pasted_27 §1): client-chosen shorter term. Reuses the owner calculator's term hook
   // (currentBuyoutBaseTermMonths → buildFinance → actualPayments); no new engine, no rate change.
@@ -269,14 +274,33 @@
     if(allowed('show_completion')&&window.F99Followup22?.invitation){try{shown=await window.F99Followup22.invitation();}catch(_){shown=false;}}
     if(!shown)window.F99V82FinishReview?.();
   };
-  window.F99R24Exit=function(){
-    const chat=document.getElementById('finoBotChat');if(!chat)return;document.getElementById('f24-exit-warning')?.remove();
-    const box=document.createElement('div');box.id='f24-exit-warning';box.className='f24-exit-warning';box.setAttribute('role','alertdialog');
-    const p=document.createElement('p');p.textContent=T('exit_warn');box.append(p);const row=document.createElement('div');row.className='f24-yes-no';box.append(row);
-    button(row,T('exit_yes'),()=>{box.remove();void exitFlow();}).className='f24-danger';
-    // r26 §3: no «العودة للحسبة» path once the balance is finished.
-    if(lastHas!==false)button(row,T('exit_back'),()=>box.remove());
-    chat.append(box);scroll(box);
+  // r36 §2: one front confirmation «تبي تطلع من الحسبة؟» — «نعم، خروج» / «إلغاء». Cancel only closes it:
+  // the result, the conversation and the balance stay exactly as they are (no reset, no consumption).
+  function confirmExit(onYes){
+    document.getElementById('f24-exit-warning')?.remove();
+    const ov=document.createElement('div');ov.id='f24-exit-warning';ov.className='f36-exit-overlay';
+    const box=document.createElement('div');box.className='f36-exit-box';box.setAttribute('role','alertdialog');box.setAttribute('aria-modal','true');box.setAttribute('aria-labelledby','f36-exit-title');
+    const p=document.createElement('p');p.id='f36-exit-title';p.textContent=T('exit_warn');box.append(p);const row=document.createElement('div');row.className='f24-yes-no';box.append(row);
+    const close=()=>{ov.remove();document.removeEventListener('keydown',esc36,true);};
+    const esc36=ev=>{if(ev.key==='Escape'){ev.preventDefault();close();}};
+    button(row,T('exit_yes'),()=>{close();onYes();}).className='f24-danger';
+    const no=button(row,T('exit_back'),close);no.className='f36-cancel';
+    ov.addEventListener('click',ev=>{if(ev.target===ov)close();});document.addEventListener('keydown',esc36,true);
+    ov.append(box);document.body.append(ov);try{no.focus({preventScroll:true});}catch(_){}
+  }
+  window.F99R24Exit=function(){confirmExit(()=>{void exitFlow();});};
+  // The header «رجوع» during a client calculation asks the same question; «نعم، خروج» keeps the original back path.
+  const back36=window.FINOPortalBack;
+  if(typeof back36==='function')window.FINOPortalBack=function(...a){
+    let inCalc=false;try{inCalc=!exiting&&activeAccess?.record?.central===true&&activeAccess.record.owner!==true&&/^buyout_/.test(String(finoPortal?.step||''))&&!!document.querySelector('#finoBotChat .f85-calc-marker');}catch(_){inCalc=false;}
+    if(!inCalc)return back36.apply(this,a);
+    confirmExit(()=>{void back36.apply(this,a);});
   };
+  // r36 §2: the third (last) calculation is announced at its own start; the server balance decides, read-only.
+  async function markLast(n){let s=null;try{s=await status();}catch(_){return;}
+    const max=Number(s?.max_calculations),left=s?.calculations_remaining==null?NaN:Number(s.calculations_remaining);
+    if(max>0&&left===1&&n.isConnected&&!n.querySelector('.f36-last')){const p=document.createElement('p');p.className='f36-last';p.setAttribute('role','alert');p.textContent=T('last36',vars());n.append(p);}}
+  const chat36=document.getElementById('finoBotChat');
+  if(chat36)new MutationObserver(ms=>{for(const m of ms)for(const n of m.addedNodes)if(n.nodeType===1&&n.classList?.contains('f85-calc-marker'))void markLast(n);}).observe(chat36,{childList:true});
   window.F99R22Identity=Object.freeze({owner:()=>ownerName(),beneficiary:()=>beneficiary,self:()=>self,saved:()=>JSON.parse(JSON.stringify(saved))});
 })();

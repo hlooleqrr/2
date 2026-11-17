@@ -209,7 +209,7 @@
       const offers = validOffers(ctx, ctrl.now());
       for (const x of offers) {
         try { if (renewalCode && decodeURIComponent(x.checkout_url).toUpperCase().includes(renewalCode)) continue; } catch (_) { continue; }
-        const box = element('article', null, 'f99s12-offer'); host.append(box); box.append(element('h4', x.title), element('strong', x.price_sar + ' ريال', 'f99s12-amount'), element('p', x.duration_minutes + ' دقيقة • ' + x.max_calculations + ' استخدام'));
+        const box = element('article', null, 'f99s12-offer'); host.append(box); box.append(element('h4', x.title), element('strong', x.price_sar + ' ريال', 'f99s12-amount'), element('p', 'صلاحية الباقة: ' + (window.F99DurationAr ? window.F99DurationAr(x.duration_minutes) : x.duration_minutes) + ' | عدد الحسبات: ' + (window.F99CalcCountAr ? window.F99CalcCountAr(x.max_calculations) : x.max_calculations)));
         button(box, 'الحصول على كود جديد من منصة الدفع', async () => {
           const latest = await renewalContext(renewalCode, snap); const actual = validOffers(latest, ctrl.now()).find(o => o.id === x.id);
           if (!actual || String(actual.price_sar) !== String(x.price_sar) || actual.checkout_url !== x.checkout_url) return notice('تغيّر العرض أو نفد المخزون. أعد قراءة التفاصيل قبل فتح منصة الدفع.');

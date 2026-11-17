@@ -39,3 +39,19 @@
 /* r26b: the approved follow-up offer appears in front of the customer at exit, not at the end of a long chat. */
 #finoBotChat.f26-exit #f41-offer{position:fixed;left:14px;right:14px;top:50%;transform:translateY(-50%);z-index:9998;background:#fff;border:1px solid #e6eef3;border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,.45);padding:18px;max-height:82vh;overflow:auto}
 #finoBotChat.f26-exit #f41-offer::before{content:'';position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(3,8,16,.55);z-index:-1}
+/* r36: the post-result menu stays inside the bubble on mobile; «خيارات إضافية للحسبة» sits under «تلخيص الحسبة». */
+#finoBotChat .f49-menu.f25-menu{flex-direction:column;flex-wrap:nowrap;align-items:stretch;width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+#finoBotChat .f25-menu>*{max-width:100%;min-width:0;box-sizing:border-box}
+#finoBotChat .f25-menu .f24-ask{overflow-wrap:anywhere}
+#finoBotChat .f25-menu .f24-questions>details.f49-more{flex:1 1 100%;width:100%;min-width:0;box-sizing:border-box;margin:0}
+#finoBotChat .f25-menu .f49-more-actions>button{flex:1 1 calc(50% - 7px);min-width:min(9em,100%);max-width:100%;white-space:normal}
+#finoBotChat .f25-menu .f25-end{width:100%}
+#finoBotChat .f25-exhausted:not([hidden]){margin:0;padding:10px 12px;border-radius:12px;background:#fff0f0;border:1px solid #efb5b5;color:#a62c3a;font-weight:800;line-height:1.7}
+#finoBotChat .f85-calc-marker .f36-last{flex:1 1 100%;margin:6px 0 0;padding:8px 10px;border-radius:10px;background:#fff6dc;border:1px solid #e0a400;color:#5c3d00;font-weight:800;font-size:13px;line-height:1.7}
+#f99v23-live-status .f36-terms{flex:1 1 100%;font-weight:800}
+.f36-exit-overlay{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(10,30,40,.45);box-sizing:border-box}
+.f36-exit-box{width:min(360px,100%);box-sizing:border-box;background:#fff;border-radius:18px;padding:22px 16px 16px;box-shadow:0 18px 50px rgba(0,0,0,.25);direction:rtl;text-align:center;font-family:Cairo,system-ui,sans-serif}
+.f36-exit-box p{margin:0 0 18px;font-size:18px;font-weight:800;color:#173f4f;line-height:1.7}
+.f36-exit-box .f24-yes-no{display:flex;gap:10px}
+.f36-exit-box .f24-yes-no>button{flex:1 1 0;min-width:0;min-height:46px;border-radius:12px;font:800 15px Cairo,system-ui,sans-serif;border:1.5px solid #b8d3e1;background:#fff;color:#155476;cursor:pointer}
+.f36-exit-box .f24-yes-no>button.f24-danger{background:#b3261e;color:#fff;border-color:#b3261e}
