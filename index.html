@@ -6301,7 +6301,7 @@ body:has(#page1.active)>.app>.ambient { display:none !important; }
 <div><b>اختر البنك الذي ينزل عليه راتبك</b></div>
 </div>
 <div class="bank-grid" id="bankGrid"></div>
-<div id="f99v7CalcStatus" style="font-weight:800;color:#1b526c;line-height:1.8;padding:8px">البرونزية: 3 مرات للاحتساب مكتملة كحد أقصى، والدخول من نفس الجهاز لا يستهلك مرات الحسبة.</div>
+<div id="f99v7CalcStatus" style="font-weight:800;color:#1b526c;line-height:1.8;padding:8px">الذكية: 3 مرات للاحتساب مكتملة كحد أقصى، والدخول من نفس الجهاز لا يستهلك مرات الحسبة.</div>
 <button class="calc-full" onclick="calculate()" type="button">⚡ احتساب التمويل وترشيح البنك الأنسب</button>
 <div class="calc-flow">
 <span>القسط المتاح</span><i>←</i>
@@ -7680,7 +7680,7 @@ async function refreshFINOCentralAdmin(){
 
 /* FINO99 owner package studio: configuration follows the issued central code. */
 function fino99DefaultPackage(){return {
- tier:'برونزية',theme:'default',entry:'bot',calculator:'general',resultLayout:'classic',feeCatalog:[{name:'تحويل مديونية التمويل الشخصي',fee:0},{name:'متابعة التمويل العقاري',fee:0}],
+ tier:'ذكية',theme:'default',entry:'bot',calculator:'general',resultLayout:'classic',feeCatalog:[{name:'تحويل مديونية التمويل الشخصي',fee:0},{name:'متابعة التمويل العقاري',fee:0}],
  showDeduction:false,allowMortgage:true,allowPersonal:true,allowOther:true,
  allowSettleOthers:true,allowPrevious:true,allowRestart:true,allowChangeInstallment:true,
  allowChangeAmount:true,showNotice:false,notice:'',feeUntil:'',feeOffer:'',
@@ -19484,14 +19484,14 @@ body:has(#ownerHub.active) .ticker{display:none!important}
 <div aria-live="polite" class="f99fix-status" id="f99v4-code-message">أدخل البيانات المطلوبة.</div>
 <nav class="f99v4-code-tabs" role="tablist"><button data-f99v4-tab="edit" onclick="f99v4CodeTab('edit')" type="button">البيانات</button><button data-f99v4-tab="upgrade" onclick="f99v4CodeTab('upgrade')" type="button">الخدمات والترقية</button><button data-f99v4-tab="renew" onclick="f99v4CodeTab('renew')" type="button">التجديد والحالة</button></nav>
 <section class="f99v4-code-pane" data-f99v4-pane="edit"><div class="f99fix-grid">
-<label>اسم الكود أو العميل<input id="f99fix-name" placeholder="كود برونزي"/></label>
+<label>اسم الكود أو العميل<input id="f99fix-name" placeholder="كود ذكي"/></label>
 <label>رمز الدخول<input dir="ltr" id="f99fix-code" placeholder="BR-XXXX-XXXX"/></label>
 <label>المدة بالدقائق<input id="f99fix-minutes" min="0" step="1" type="number" value="1440"/></label>
 <label>أقصى عدد دخولات (0 = غير محدود)<input id="f99fix-entries" min="0" type="number" value="0"/></label>
 <label>إعادات الحسبة بعد الأولى<input id="f99fix-restarts" min="0" type="number" value="3"/></label>
 <label>الحالة<select id="f99fix-enabled"><option value="1">مفعل</option><option value="0">موقوف</option></select></label>
 <label>تصنيف الكود<select id="f99fix-kind"><option value="private">خدمة خاصة أو عقد</option><option value="package">اشتراك / باقة منصة الدفع</option></select></label>
-<label>اسم الباقة مطابق لاسم منتجها في منصة الدفع<input id="f99fix-package-name" placeholder="مثلاً FINO99 – البرونزية"/></label>
+<label>اسم الباقة مطابق لاسم منتجها في منصة الدفع<input id="f99fix-package-name" placeholder="مثلاً FINO99 – الذكية"/></label>
 </div><div class="f99fix-actions"><button class="f99fix-btn success" onclick="f99v4CodeTab('upgrade')" type="button">التالي: الخدمات والصلاحيات</button></div></section>
 <section class="f99v4-code-pane" data-f99v4-pane="upgrade"><div class="f99fix-checks">
 <label><input checked="" data-f99fix-service="buyout" type="checkbox"/> تحويل المديونية</label>
@@ -19849,11 +19849,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  const id='f99v7-owner-panel';
  function owner(){return !!(typeof activeAccess!=='undefined'&&activeAccess?.record?.owner&&finoCentralAdminToken)}
  function open(){if(!owner())return alert('يجب الدخول بصلاحية المالك أولاً');let panel=document.getElementById(id);
- if(!panel){panel=document.createElement('section');panel.id=id;panel.innerHTML='<div class="f99v7-sheet"><h2>صلاحية أكواد البرونزية</h2><p>مدد صلاحية الأكواد القديمة المسجلة، دون تغيير رموزها. اختر الأكواد غير المستخدمة فقط بشكل افتراضي.</p><div id="f99v7-owner-summary">جار قراءة المخزون...</div><label>آخر يوم للتفعيل <input id="f99v7-owner-date" type="date" value="2027-02-15"></label><label>أكواد محددة (اختياري)؛ كل كود في سطر، واتركها فارغة لتحديث المجموعة غير المستخدمة كلها<textarea id="f99v7-owner-codes" rows="5" placeholder="BR-XXXXX-XXXXX-XXXXX"></textarea></label><label><input type="checkbox" id="f99v7-owner-unused" checked style="display:inline;width:auto"> الأكواد غير المستخدمة فقط (أكثر أماناً)</label><p class="f99v7-status" id="f99v7-owner-status"></p><button id="f99v7-owner-apply">اعتماد التمديد بالمركزية</button><button class="secondary" id="f99v7-owner-close">رجوع</button></div>';document.body.append(panel);
+ if(!panel){panel=document.createElement('section');panel.id=id;panel.innerHTML='<div class="f99v7-sheet"><h2>صلاحية أكواد الذكية</h2><p>مدد صلاحية الأكواد القديمة المسجلة، دون تغيير رموزها. اختر الأكواد غير المستخدمة فقط بشكل افتراضي.</p><div id="f99v7-owner-summary">جار قراءة المخزون...</div><label>آخر يوم للتفعيل <input id="f99v7-owner-date" type="date" value="2027-02-15"></label><label>أكواد محددة (اختياري)؛ كل كود في سطر، واتركها فارغة لتحديث المجموعة غير المستخدمة كلها<textarea id="f99v7-owner-codes" rows="5" placeholder="BR-XXXXX-XXXXX-XXXXX"></textarea></label><label><input type="checkbox" id="f99v7-owner-unused" checked style="display:inline;width:auto"> الأكواد غير المستخدمة فقط (أكثر أماناً)</label><p class="f99v7-status" id="f99v7-owner-status"></p><button id="f99v7-owner-apply">اعتماد التمديد بالمركزية</button><button class="secondary" id="f99v7-owner-close">رجوع</button></div>';document.body.append(panel);
  panel.querySelector('#f99v7-owner-close').onclick=()=>{panel.hidden=true};
  panel.querySelector('#f99v7-owner-apply').onclick=extend;
  }
- panel.hidden=false;const box=panel.querySelector('#f99v7-owner-summary');box.textContent='جار فحص بيانات البرونزية...';
+ panel.hidden=false;const box=panel.querySelector('#f99v7-owner-summary');box.textContent='جار فحص بيانات الذكية...';
  window.finoCentralAdminCall('f99v7_admin_bronze_status').then(r=>{box.textContent=r.ok&&r.data?.ok?'المسجلة: '+r.data.registered+' • لم تُستخدم: '+r.data.not_activated+' • موقوفة: '+r.data.disabled+' • مرات الحسبة المسجلة: '+r.data.total_calculations:'لم تتأكد حالة المجموعة؛ افحص تحديث المركزية V7 أولاً.'}).catch(()=>{box.textContent='تعذر قراءة بيانات المركزية'});
  }
  async function extend(){const panel=document.getElementById(id),date=panel.querySelector('#f99v7-owner-date').value,
@@ -19869,7 +19869,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  }catch(e){out.textContent='تعذر التحديث: '+e.message}
  }
  function install(){const row=document.querySelector('#f99fixAdminPage .f99fix-steps');if(row&&!document.getElementById('f99v7-owner-control')){
- const b=document.createElement('button');b.className='f99fix-btn';b.id='f99v7-owner-control';b.textContent='البرونزية: صلاحية الـ100 كود';b.onclick=open;row.append(b)} }
+ const b=document.createElement('button');b.className='f99fix-btn';b.id='f99v7-owner-control';b.textContent='الذكية: صلاحية الـ100 كود';b.onclick=open;row.append(b)} }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
  window.f99v7OwnerOpenBronze=open;
 })();
@@ -19896,7 +19896,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <script id="f99v8-client-owner">
 (function(){'use strict';
  const $=id=>document.getElementById(id);
- const DEFAULT={ok:true,whatsapp:'',show_public_renewal:true,offers:[{id:'bronze-3d',title:'تجديد البرونزية — 3 أيام',price:17.80,duration_minutes:4320,enabled:true}],contract_accepted:'تم اعتماد العقد بكامل أركانه.',contract_rejected:'تم تسجيل عدم الموافقة على العقد.',contract_expired:'انتهت صلاحية كود العقد.',code_invalid:'رمز الدخول غير صحيح. تأكد من الرمز وحاول مرة أخرى.',renewal_note:'بعد التحقق من الطلب والسداد، يتم تجديد الرمز الحالي دون الحاجة إلى إصدار رمز جديد.'};
+ const DEFAULT={ok:true,whatsapp:'',show_public_renewal:true,offers:[{id:'bronze-3d',title:'تجديد الذكية — 3 أيام',price:17.80,duration_minutes:4320,enabled:true}],contract_accepted:'تم اعتماد العقد بكامل أركانه.',contract_rejected:'تم تسجيل عدم الموافقة على العقد.',contract_expired:'انتهت صلاحية كود العقد.',code_invalid:'رمز الدخول غير صحيح. تأكد من الرمز وحاول مرة أخرى.',renewal_note:'بعد التحقق من الطلب والسداد، يتم تجديد الرمز الحالي دون الحاجة إلى إصدار رمز جديد.'};
  let config={...DEFAULT},currentOwnerReport=null;
  const owner=()=>!!(typeof activeAccess!=='undefined'&&activeAccess?.record?.owner&&typeof finoCentralAdminToken!=='undefined'&&finoCentralAdminToken);
  function extract(s){
@@ -19984,7 +19984,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
    const wa=mkInput(sheet,'واتساب استقبال طلبات التجديد (9665xxxxxxxx)',config.whatsapp);
    const visibleLabel=node('label','', 'إظهار أيقونة التجديد للعملاء');const visible=document.createElement('input');visible.type='checkbox';visible.checked=config.show_public_renewal!==false;visible.style.width='22px';visible.style.minHeight='22px';visibleLabel.append(visible);sheet.append(visibleLabel);
    const o1=(config.offers||[])[0]||DEFAULT.offers[0],o2=(config.offers||[])[1]||{};
-   const n1=mkInput(sheet,'عنوان تجديد البرونزية',o1.title||'تجديد البرونزية — 3 أيام');const p1=mkInput(sheet,'سعر تجديد البرونزية بالريال',String(o1.price??17.8),'number');const d1=mkInput(sheet,'مدة التجديد بالساعات',String(Math.round((o1.duration_minutes||4320)/60)),'number');
+   const n1=mkInput(sheet,'عنوان تجديد الذكية',o1.title||'تجديد الذكية — 3 أيام');const p1=mkInput(sheet,'سعر تجديد الذكية بالريال',String(o1.price??17.8),'number');const d1=mkInput(sheet,'مدة التجديد بالساعات',String(Math.round((o1.duration_minutes||4320)/60)),'number');
    const n2=mkInput(sheet,'اسم باقة ترقية اختيارية (فارغ لإخفائها)',o2.title||'');const p2=mkInput(sheet,'سعر الترقية بالريال',String(o2.price??0),'number');const d2=mkInput(sheet,'مدة الترقية بالساعات',String(Math.round((o2.duration_minutes||4320)/60)),'number');
    const ac=mkTextarea(sheet,'رسالة اعتماد العقد',config.contract_accepted);const re=mkTextarea(sheet,'رسالة رفض العقد',config.contract_rejected);const ex=mkTextarea(sheet,'رسالة انتهاء كود العقد',config.contract_expired);const bad=mkTextarea(sheet,'رسالة الكود غير الصحيح',config.code_invalid);const note=mkTextarea(sheet,'تعليمات التجديد',config.renewal_note);
    const out=node('div','notice','');sheet.append(out);const save=node('button','','حفظ الإعدادات في المركزية');save.type='button';sheet.append(save);
@@ -20151,14 +20151,14 @@ locked=true;$('v9-allocate').disabled=true;flash('جاري التحقق من ت�
  locked=false;$('v9-allocate').disabled=false;}
 async function addMore(){const n=Number($('v9-more').value);if(!Number.isInteger(n)||n<1||n>500)return flash('أدخل بين 1 و500؛ للتزويد بأكثر من 500 كرر العملية.');if(!confirm('إضافة '+n+' رمزاً جديداً غير مخصص إلى مخزون المركزية؟'))return;try{await api('f99v9_admin_add_stock',{p_count:n});await refresh();flash('تمت إضافة '+n+' رموز إلى المخزون غير المخصص.')}catch(ex){flash(ex.message)}}
 function open(preselect=''){if(!owner())return alert('هذه الشاشة للمالك المسجل فقط.');let overlay=$('f99v9-overlay');if(!overlay){overlay=e('div');overlay.id='f99v9-overlay';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');document.body.append(overlay)}overlay.replaceChildren();const wrap=e('main',undefined,'v9-wrap');overlay.append(wrap);const hd=e('div',undefined,'v9-head');hd.append(e('h2','مخزون الأكواد — FINO99'));hd.append(button('إغلاق',()=>{overlay.hidden=true},true));wrap.append(hd);wrap.append(e('p','اختر باقة محفوظة وعدداً حتى 500. المركزية تسحب العدد المحدد من المخزون غير المخصص وتربطه بالباقة وتفعله عند ضغط الاعتماد، ثم تنزّل ملف Excel بنفس الرموز لمنصة الدفع. لا يعتبر التخصيص عملية بيع؛ البيع وإرسال الكود يتمان من منصة الدفع. لا ترفع ملف المخزون الكامل ولا تكرر تحميل نفس الدفعة إلى منصة الدفع.'));
-const metrics=e('div',undefined,'v9-metrics');for(const [id,label] of [['v9-total','المخزون الإجمالي'],['v9-available','جديدة غير مخصصة'],['v9-reserved','محجوزة'],['v9-published','مطروحة'],['v9-old','100 برونزية أصلية']]){const card=e('div',undefined,'v9-stat');const n=e('strong','—');n.id=id;card.append(n,e('small',label));metrics.append(card)}wrap.append(metrics);
+const metrics=e('div',undefined,'v9-metrics');for(const [id,label] of [['v9-total','المخزون الإجمالي'],['v9-available','جديدة غير مخصصة'],['v9-reserved','محجوزة'],['v9-published','مطروحة'],['v9-old','100 ذكية أصلية']]){const card=e('div',undefined,'v9-stat');const n=e('strong','—');n.id=id;card.append(n,e('small',label));metrics.append(card)}wrap.append(metrics);
 wrap.append(e('h3','سحب أكواد لباقة من المخزون'));const l=e('label','اختر الباقة');const s=document.createElement('select');s.id='v9-package';l.append(s);wrap.append(l);
 const pkgCard=e('section',undefined,'v16-package-card');pkgCard.id='v16-package-overview';pkgCard.append(e('strong','اختر الباقة لفحص مخزونها'));
 const grid=e('div',undefined,'v16-grid');for(const [id,label] of [['v16-assigned','كود معتمد'],['v16-used','تم استخدامه'],['v16-unused','لم يستخدم'],['v16-reserved','محجوز'],['v16-disabled','موقوف']]){const block=e('div',undefined,'v16-stat');block.append(e('b','0'),e('small',label));block.querySelector('b').id=id;grid.append(block)}pkgCard.append(grid);
 const archive=e('details',undefined,'v16-archive');archive.append(e('summary','السجل القديم منفصل عن الباقة الجديدة'));const legacyNote=e('p','',undefined);legacyNote.id='v16-old-note';archive.append(legacyNote);pkgCard.append(archive);
 const reportBtn=button('تنزيل تقرير استخدام أكواد الباقة',exportUsageReport,true);reportBtn.id='v16-report-btn';pkgCard.append(reportBtn);
 const reportMsg=e('p','',undefined);reportMsg.id='v16-report-message';pkgCard.append(reportMsg);wrap.append(pkgCard);
-wrap.append(e('label','الخدمات المفعلة لهذه الدفعة'));const services=e('div',undefined,'v9-svcs');services.id='v9-services';wrap.append(services);const qty=field(wrap,'عدد الأكواد (1 إلى 500 لكل ملف)', 'number','100');qty.id='v9-count';qty.min=1;qty.max=500;const minutes=field(wrap,'مدة الاستخدام بعد أول تفعيل (دقائق)', 'number','4320');minutes.id='v9-duration';minutes.min=1;const cap=field(wrap,'حد مرات الحسبة (معمول به حالياً في البرونزية الشخصية)', 'number','3');cap.id='v9-cap';cap.min=1;const date=field(wrap,'آخر يوم لاستخدام الكود (اختياري للباقات الأخرى؛ مطلوب للبرونزية)', 'date','');date.id='v9-expiry';const actions=e('div',undefined,'v9-actions');const create=button('اعتماد الأكواد لهذه الباقة وتنزيل ملف منصة الدفع',allocate);create.id='v9-allocate';actions.append(create);wrap.append(actions);
+wrap.append(e('label','الخدمات المفعلة لهذه الدفعة'));const services=e('div',undefined,'v9-svcs');services.id='v9-services';wrap.append(services);const qty=field(wrap,'عدد الأكواد (1 إلى 500 لكل ملف)', 'number','100');qty.id='v9-count';qty.min=1;qty.max=500;const minutes=field(wrap,'مدة الاستخدام بعد أول تفعيل (دقائق)', 'number','4320');minutes.id='v9-duration';minutes.min=1;const cap=field(wrap,'حد مرات الحسبة (معمول به حالياً في الذكية الشخصية)', 'number','3');cap.id='v9-cap';cap.min=1;const date=field(wrap,'آخر يوم لاستخدام الكود (اختياري للباقات الأخرى؛ مطلوب للذكية)', 'date','');date.id='v9-expiry';const actions=e('div',undefined,'v9-actions');const create=button('اعتماد الأكواد لهذه الباقة وتنزيل ملف منصة الدفع',allocate);create.id='v9-allocate';actions.append(create);wrap.append(actions);
 const repairBox=e('details',undefined,'v9-batch');repairBox.append(e('summary','تصحيح ربط كود مباع بعد التأكد من طلب منصة الدفع'));repairBox.append(e('p','هذه عملية استثنائية. تحقق يدويًا من أن الطلب مدفوع وأن الرمز سُلّم للعميل قبل اعتماد التصحيح. لا تصفّر استخدام الكود ولا تستبدله.'));const repairCode=field(repairBox,'الكود المباع كما ظهر في منصة الدفع','text','');repairCode.id='v13-repair-code';const repairBtn=button('فحص وربط هذا الكود بباقة الاختيار',async()=>{const code=String(repairCode.value||'').trim().toUpperCase(),key=$('v9-package').value;if(!/^[A-Z0-9-]{8,32}$/.test(code)||!key)return flash('أدخل كودًا صحيحًا وحدد الباقة.');if(!confirm('هل تحققت بنفسك من عملية البيع في منصة الدفع، وأن الكود يخص الباقة المحددة؟'))return;try{const r=await api('f99v13_admin_reconcile_sold_code',{p_code:code,p_package_key:key,p_confirm:true});flash('نتيجة المركزية: '+(r.reason||'READY')+' — '+(r.code||code));await refresh()}catch(ex){flash('لا يمكن التصحيح: '+ex.message)}});repairBox.append(repairBtn);wrap.append(repairBox);
 wrap.append(e('p','المخزون المركزي غير المخصص لا يُرفع إلى منصة الدفع. يحتفظ النظام بالأكواد المباعة مسبقًا حتى لا يتعطل العملاء.'));wrap.append(e('h3','الدفعات السابقة'));const batches=e('div');batches.id='v9-batches';wrap.append(batches);const feedback=e('div','', 'v9-alert');feedback.id='v9-feedback';feedback.setAttribute('role','status');wrap.append(feedback);choosePackage();if(preselect&&Array.from($('v9-package').options).some(x=>x.value===preselect)){$('v9-package').value=preselect;$('v9-package').dispatchEvent(new Event('change'))}overlay.hidden=false;refresh().catch(ex=>flash('تعذر قراءة المخزون: '+ex.message));}
 window.F99V17BuildSallaXlsx=sallaXlsx;
@@ -20362,9 +20362,9 @@ async function details(key){if(!owner())return alert('يجب الدخول بصل
  note(form,'بعد الضغط على «اعتماد»، تحجز المركزية نفس الأكواد لهذه الباقة وتفعلها. الأكواد الصغيرة (1–5) تظهر للنسخ، أما الأكبر فتنزل كملف Excel منصة الدفع. البيع لا يثبت من عداد الدخول؛ تقرير البيع في منصة الدفع هو المرجع.');
  const quick=wrap('div','v17-actions');for(const n of [1,3,5,50,70,83,100,115,500])quick.append(btn(n+' أكواد',()=>{count.value=n},'alt'));form.append(quick);
  if(key==='fino99-bronze-buyout-20261107'){
-  form.append(btn('استكمال رصيد البرونزية حتى 115 كودًا — فحص واعتماد',async()=>{
+  form.append(btn('استكمال رصيد الذكية حتى 115 كودًا — فحص واعتماد',async()=>{
    try{const v=await api('f99v38_admin_bronze_target',{p_target:115,p_confirm:false});
-    if(v.already_at_target)return status('يوجد '+v.allocated_current+' كوداً مسجلاً للبرونزية، بينها '+v.legacy_unverified+' كود قديم يحتاج مطابقة مع منصة الدفع. لا يلزم سحب جديد.');
+    if(v.already_at_target)return status('يوجد '+v.allocated_current+' كوداً مسجلاً للذكية، بينها '+v.legacy_unverified+' كود قديم يحتاج مطابقة مع منصة الدفع. لا يلزم سحب جديد.');
     if(!confirm('الحالي '+v.allocated_current+' كود (منها '+v.legacy_unverified+' قديمة)؛ تحتاج '+v.needed+' كود لتصل إلى 115. هل اطلعت على جرد منصة الدفع وتريد اعتماد الدفعة الجديدة فقط؟'))return;
     const d=await api('f99v38_admin_bronze_target',{p_target:115,p_confirm:true});
     status('اعتمدت المركزية '+d.new_codes+' كودًا إضافيًا دون تغيير الأكواد السابقة. جاري تصدير الدفعة...');
@@ -21869,7 +21869,7 @@ async function openStudio(){if(!owner()){toast('هذه الإعدادات متا
  const scaleLabel=el('label','','مقياس الخطوط (90% - 120%)');const scale=el('input');scale.type='range';scale.min='0.9';scale.max='1.2';scale.step='0.05';scale.value=selection.scale;scaleLabel.append(scale);grid.append(scaleLabel);
  const roundLabel=el('label','','استدارة البطاقات');const round=el('input');round.type='range';round.min='10';round.max='26';round.step='2';round.value=selection.round;roundLabel.append(round);grid.append(roundLabel);
  const motionLabel=el('label','','تشغيل الحركة');const motion=el('input');motion.type='checkbox';motion.checked=selection.motion;motionLabel.append(motion);grid.append(motionLabel);
- const sample=el('section','f28-panel');sample.append(el('h3','','المعاينة قبل الاعتماد'));const previewBox=el('div','f28-preview');previewBox.append(el('strong','','FINO99 — نموذج عرض المنتج'));const little=el('div','','المنتج البرونزي • ترشيح مبدئي');little.style.fontWeight='850';previewBox.append(little,el('span','','خطوة سهلة، ونتيجة واضحة.'));sample.append(previewBox);root.append(sample);
+ const sample=el('section','f28-panel');sample.append(el('h3','','المعاينة قبل الاعتماد'));const previewBox=el('div','f28-preview');previewBox.append(el('strong','','FINO99 — نموذج عرض المنتج'));const little=el('div','','المنتج الذكي • ترشيح مبدئي');little.style.fontWeight='850';previewBox.append(little,el('span','','خطوة سهلة، ونتيجة واضحة.'));sample.append(previewBox);root.append(sample);
  const state=el('div','f28-save-state','تغييرات المعاينة لن تظهر عند العملاء حتى تعتمدها.');state.setAttribute('role','status');sample.append(state);
  function redraw(){gallery.replaceChildren();for(const [key,p] of Object.entries(palettes)){const b=el('button','f28-theme-card',p.label);b.type='button';b.dataset.chosen=String(selection.palette===key);const sw=el('span','f28-swatch');sw.style.background=`linear-gradient(110deg,${p.bg} 50%,${p.accent} 50%)`;b.prepend(sw);b.onclick=()=>{selection.palette=key;redraw();update()};gallery.append(b)}}
  function update(){selection={...selection,effect:effect.value,scale:Number(scale.value),round:Number(round.value),motion:motion.checked};preview=normalize(selection);const p=palettes[preview.palette];previewBox.style.background=p.bg;previewBox.style.color=p.ink;previewBox.style.borderRadius=preview.round+'px';little.style.color=p.accent;brandInput.value=brandInput.value.slice(0,70);applyTheme(cfg);state.textContent='معاينة فقط — اضغط اعتماد لنشر التصميم.';state.dataset.ok='false'}
@@ -22438,16 +22438,16 @@ function addOwnerButton(){const root=$('f31-desk');if(!root||!owner()||root.quer
  b.onclick=async()=>{if(!confirm('هل تعتمد تهيئة 3 باقات في المركزية؟ لا تُسحب أكواد ولا تُحذف باقات أخرى.'))return;b.disabled=true;st.textContent='جاري التحقق من المركزية...';try{const r=await window.finoCentralAdminCall('f99v36_admin_apply_catalog',{});if(!r?.ok||r.data?.ok!==true)throw Error(r?.data?.reason||r?.error?.message||'رفضت المركزية التهيئة');await window.F99V33RefreshStorefront?.();const ps=window.FINO99ReadStorefront?.().products||[];if(!['fino99-bronze-buyout-20261107','fino99-compare-offers-v33','fino99-mortgage-coming-v33'].every(k=>ps.some(p=>p.key===k)))throw Error('حُفظت في المركزية لكن إعادة القراءة لم تُثبت كل الباقات');st.textContent='تم اعتماد الباقات والتحقق منها. افتح المتجر لتعديل السعر والروابط، ثم خصص الأكواد من المخزون.';}catch(e){st.textContent='لم تكتمل التهيئة: '+e.message}finally{b.disabled=false}};
  card.append(b,st);head.prepend(card);
  const inv=T('section');inv.className='f31-card';inv.append(T('h3','مطابقة المخزون قبل طلب 100 + 50 كود'));
- inv.append(T('p','فحص 5,000 رمز وسجل البرونزية القديم. لا تُعامل المستخدمة أو المباعة على أنها جديدة، ولا نعيد تفعيلها تلقائيًا.'));
- const v=T('button','فحص المخزون الفعلي');v.type='button';const out=T('p');out.setAttribute('role','status');v.onclick=async()=>{out.textContent='جاري الفحص...';try{const r=await window.finoCentralAdminCall('f99v33_admin_stock_audit',{});if(!r?.ok||r.data?.ok!==true)throw Error(r?.data?.reason||'تعذر الفحص');const d=r.data;out.textContent='الإجمالي: '+d.total+' • المتاح: '+d.available+' • القديم البرونزي: '+d.legacy+' • المحجوز: '+d.reserved+' • المنشور: '+d.published+' • المستخدم/المفعّل: '+d.used_or_activated+' • المعتمد للبرونزية: '+d.bronze_published+' • المقارنات: '+d.comparison_published+'؛ '+(d.ready_for_150_fresh?'متوفر 150 كود جديد للتخصيص':'يلزم تدقيق السجلات قبل التخصيص');}catch(e){out.textContent='لم يكتمل الفحص: '+e.message}};inv.append(v,out);
- for(const [label,key,count] of [['تخصيص 100 كود للبرونزية','fino99-bronze-buyout-20261107',100],['تخصيص 50 كود للمقارنات','fino99-compare-offers-v33',50]]){
+ inv.append(T('p','فحص 5,000 رمز وسجل الذكية القديم. لا تُعامل المستخدمة أو المباعة على أنها جديدة، ولا نعيد تفعيلها تلقائيًا.'));
+ const v=T('button','فحص المخزون الفعلي');v.type='button';const out=T('p');out.setAttribute('role','status');v.onclick=async()=>{out.textContent='جاري الفحص...';try{const r=await window.finoCentralAdminCall('f99v33_admin_stock_audit',{});if(!r?.ok||r.data?.ok!==true)throw Error(r?.data?.reason||'تعذر الفحص');const d=r.data;out.textContent='الإجمالي: '+d.total+' • المتاح: '+d.available+' • القديم الذكي: '+d.legacy+' • المحجوز: '+d.reserved+' • المنشور: '+d.published+' • المستخدم/المفعّل: '+d.used_or_activated+' • المعتمد للذكية: '+d.bronze_published+' • المقارنات: '+d.comparison_published+'؛ '+(d.ready_for_150_fresh?'متوفر 150 كود جديد للتخصيص':'يلزم تدقيق السجلات قبل التخصيص');}catch(e){out.textContent='لم يكتمل الفحص: '+e.message}};inv.append(v,out);
+ for(const [label,key,count] of [['تخصيص 100 كود للذكية','fino99-bronze-buyout-20261107',100],['تخصيص 50 كود للمقارنات','fino99-compare-offers-v33',50]]){
    const action=T('button',label);action.type='button';action.style.margin='6px';action.onclick=async()=>{
      if(!confirm('هل راجعت سجلات منصة الدفع والمخزون وتؤكد حجز '+count+' كود جديد فقط لهذه الباقة؟ لا تُنشر الأكواد قبل اعتماد الدفعة.'))return;
      action.disabled=true;out.textContent='جاري طلب الحجز المركزي...';try{
        const r=await window.finoCentralAdminCall('f99v33_admin_allocate_requested',{p_package_key:key,p_count:count});
        if(!r?.ok||r.data?.ok!==true)throw Error(r?.data?.reason||r?.error?.message||'رفض الحجز');
        out.textContent='حُجزت دفعة '+count+' كود (غير منشورة) في المركزية، المعرف: '+r.data.allocation_id+'؛ افتح مخزون الباقة، راجع الدفعة ثم اعتمد النشر ونزّل ملف XLSX من المركزية.';
-     }catch(e){out.textContent='لم يُحجز شيء: '+e.message+'؛ إذا ظهر PACKAGE_ALREADY_HAS_CODES راجع الـ100 البرونزية القديمة قبل أي توزيع.'}
+     }catch(e){out.textContent='لم يُحجز شيء: '+e.message+'؛ إذا ظهر PACKAGE_ALREADY_HAS_CODES راجع الـ100 الذكية القديمة قبل أي توزيع.'}
      finally{action.disabled=false}};inv.append(action);
  }
  const mortgage=T('section');mortgage.className='f31-card';mortgage.append(T('h3','العقارية — 50 كود للتجهيز في منصة الدفع'));
@@ -22472,7 +22472,7 @@ function addOwnerButton(){const root=$('f31-desk');if(!root||!owner()||root.quer
  }catch(e){out.textContent='لم ينجح تصدير الملف: '+String(e.message||e)}finally{exportMortgage.disabled=false}};
  mortgage.append(exportMortgage);inv.append(mortgage);
  const notices=T('div');notices.className='f31-card';notices.style.marginTop='10px';
- notices.append(T('h4','المئة البرونزية القديمة — تحقق قبل إعادة التصدير'));
+ notices.append(T('h4','المئة الذكية القديمة — تحقق قبل إعادة التصدير'));
  notices.append(T('p','هذه العملية خاصة بـ100 كود قديم. لا تستخدمها إن كان رمز واحد مُباعًا أو مستخدمًا أو لا يزال في منصة الدفع أو لديه حق عميل قائم.'));
  const confirmations=[
   'تحققت من الطلبات وأزلت كامل الأكواد القديمة من منصة الدفع وأي قناة تسليم',
@@ -22486,7 +22486,7 @@ function addOwnerButton(){const root=$('f31-desk');if(!root||!owner()||root.quer
    rebatch.disabled=true;out.textContent='جار تحقق المركزية من حالة كل رمز...';
    try{const r=await window.finoCentralAdminCall('f99v33_admin_rebatch_legacy_bronze',{p_salla_cleared:true,p_no_sales_or_rights:true,p_confirm_again:true});
      if(!r?.ok||r.data?.ok!==true)throw Error(r?.data?.reason||r?.error?.message||'رفضت المركزية');
-     out.textContent='حُجزت المئة البرونزية القديمة، الدفعة: '+r.data.allocation_id+' — اعتمد النشر من صفحة أكواد الباقة ثم نزّل ملف منصة الدفع بعد ذلك.';
+     out.textContent='حُجزت المئة الذكية القديمة، الدفعة: '+r.data.allocation_id+' — اعتمد النشر من صفحة أكواد الباقة ثم نزّل ملف منصة الدفع بعد ذلك.';
    }catch(e){out.textContent='لم تتغير الأكواد: '+e.message}finally{rebatch.disabled=false}
  };notices.append(rebatch);inv.append(notices);
  head.prepend(inv);
@@ -22537,7 +22537,7 @@ document.addEventListener('click',e=>{if(e.target.closest('#f31-desk .f31-nav'))
 #f34-image-preview button{border:0;background:#175f80;color:white;font:700 13px Cairo,system-ui;padding:12px;border-radius:11px}
 
 .f34-owner-prompts{border:1px solid #d5e4eb;background:#f9fcfd;border-radius:12px;padding:8px 12px;margin:12px 0}.f34-owner-prompts summary{cursor:pointer;font:800 13px Cairo,system-ui;color:#17668a;padding:9px 4px}.f34-owner-prompts .f31-field{display:grid;margin:10px 0}.f34-owner-prompts input{width:100%}.f34-owner-prompts[open] summary{margin-bottom:8px}.f34-help .f34-badge{font-size:11px;color:#647c8b;display:block}</style>
-<script id="f99v34-custom-bank">/* FINO99 V34 — العميل يحدد بنكاً ونسبة هامش ربح سنوي تقديري محسوب على أصل التمويل ومدة لحسبة افتراضية بعد ترشيح البرونزية.
+<script id="f99v34-custom-bank">/* FINO99 V34 — العميل يحدد بنكاً ونسبة هامش ربح سنوي تقديري محسوب على أصل التمويل ومدة لحسبة افتراضية بعد ترشيح الذكية.
    لا تضاف إلى نتائج الترشيح، ولا يُزعم أنها نسبة بنك معتمدة. تتطلب الرمز والتفعيل من المالك. */
 (()=>{'use strict';
  const KEY='fino99-bronze-buyout-20261107';
@@ -22554,7 +22554,7 @@ document.addEventListener('click',e=>{if(e.target.closest('#f31-desk .f31-nav'))
  function codeAccess(){try{const a=window.F99V32MainAccess?.();return a?.central===true&&a.owner!==true&&!!a.packageKey&&a.allowedServices?.some(x=>x==='bot_buyout'||x==='buyout')===true&&typeof finoCentralGuard==='function'&&finoCentralGuard()}catch{return false}}
  function allowed(){return codeAccess()&&window.F99V34CustomQuoteAllowed?.()===true}
  async function verify(){
-  if(!codeAccess()){reset();throw Error('الخدمة متاحة فقط لكود برونزي فعّال يشمل شراء المديونية.');}
+  if(!codeAccess()){reset();throw Error('الخدمة متاحة فقط لكود ذكي فعّال يشمل شراء المديونية.');}
   if(typeof window.F99V32Refresh!=='function')throw Error('خدمة تحديث إعدادات المالك غير متاحة.');
   await window.F99V32Refresh(true);
   if(!allowed()){reset();throw Error('الميزة غير مفعلة لهذه الباقة، أو لم تعد صلاحية الكود متاحة.');}
@@ -22739,7 +22739,7 @@ document.addEventListener('click',e=>{if(e.target.closest('#f31-desk .f31-nav'))
     const products=window.FINO99ReadStorefront?.()?.products;
     const keys=['fino99-bronze-buyout-20261107','fino99-compare-offers-v33','fino99-mortgage-coming-v33'];
     const catalog=Array.isArray(products)?keys.every(key=>products.some(p=>p.key===key)):false;
-    show(out,'وجود الباقات الثلاث في المتجر',catalog,catalog?'البرونزية، المقارنات، والعقارية':'يلزم تهيئة المنتجات من المتجر واعتماد المالك');
+    show(out,'وجود الباقات الثلاث في المتجر',catalog,catalog?'الذكية، المقارنات، والعقارية':'يلزم تهيئة المنتجات من المتجر واعتماد المالك');
     if(Array.isArray(products)){
       const visible=products.filter(p=>p&&p.enabled!==false);
       const withImages=visible.filter(p=>typeof(p.image_url||p.image)==='string' && /^(https:\/\/|data:image\/(?:png|jpeg|webp);base64,)/i.test(p.image_url||p.image));
@@ -22753,8 +22753,8 @@ document.addEventListener('click',e=>{if(e.target.closest('#f31-desk .f31-nav'))
       const d=r.data;
       show(out,'سلامة رصيد الأكواد',d.exactly_5000===true&&Number(d.integrity_errors)===0,
         `الفعلي: ${d.registered_total??'?'}، المتاح: ${d.available??'?'}، المحجوز: ${d.reserved??'?'}، المنشور: ${d.published??'?'}، المستخدم/المفعّل: ${d.used_or_activated??'?'}، اختلافات البيانات: ${d.integrity_errors??'?'}`);
-      show(out,'هدف البرونزية (115) والمقارنات (50)',Number(d.bronze_published)===115&&Number(d.comparison_published)===50,
-        `المسجل برونزيًا بحسب التقرير: ${d.bronze_published??'?'} (الهدف 115)، المقارنات: ${d.comparison_published??'?'} (الهدف 50). تُراجع الأكواد القديمة على حدة، ولا يعد الرقم دليلًا على صلاحية إعادة البيع.`);
+      show(out,'هدف الذكية (115) والمقارنات (50)',Number(d.bronze_published)===115&&Number(d.comparison_published)===50,
+        `المسجل ضمن الذكية بحسب التقرير: ${d.bronze_published??'?'} (الهدف 115)، المقارنات: ${d.comparison_published??'?'} (الهدف 50). تُراجع الأكواد القديمة على حدة، ولا يعد الرقم دليلًا على صلاحية إعادة البيع.`);
     }else show(out,'مطابقة المخزون الفعلي',false,r.detail||'لم تؤكد المركزية المخزون');
     show(out,'مطابقة المبيعات الفعلية مع منصة الدفع',null,'لم تُفحص تلقائيًا؛ يلزم مطابقة طلبات منصة الدفع قبل إعادة كود أو نشر دفعة');
     show(out,'اختبارات العقود والتوثيق على المركزية الحية',null,'غير محسومة بهذا الفحص؛ يلزم اختبار منفصل ببيانات تجريبية');
@@ -26818,7 +26818,7 @@ setInterval(()=>{if(!document.hidden)tick()},3000);
 const $=(s,r=document)=>r.querySelector(s), E=(name,text,cls)=>{const x=document.createElement(name);if(text!=null)x.textContent=text;if(cls)x.className=cls;return x};
 const validUrl=u=>{try{const x=new URL(u);return x.protocol==='https:'&&!x.username&&!x.password?x.href:''}catch{return''}};
 const presets=()=>[window.F99V27HeroFallback||'',window.F99V27BronzeImage||'',...(window.F99V28AdImages||[]).slice(0,2)];
-const captions=['صورة الرئيسية الحالية','صورة الباقة البرونزية','الصورة الثالثة الحالية','الصورة الرابعة الحالية'];
+const captions=['صورة الرئيسية الحالية','صورة الباقة الذكية','الصورة الثالثة الحالية','الصورة الرابعة الحالية'];
 const defaultItems=[
  {title:'كل خيارات التمويل في مكان واحد',subtitle:'استكشف الباقات وقارن العروض في خطوات واضحة.',button:'التسوق'},
  {title:'ريح بالك من مشاوير البنوك',subtitle:'قارن خيارات شراء مديونيتك واحسب الصافي والقسط قبل اتخاذ القرار.',button:'التسوق'},
