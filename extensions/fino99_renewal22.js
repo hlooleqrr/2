@@ -92,6 +92,43 @@
       visit(r.detailed_card_snapshot);if(!lines.length)visit(r.compact_card_snapshot);if(!lines.length)visit(r.chat_log);one.append(el('pre',lines.join('\n')));review.append(one);}
     host.append(review);
   }
+  // r26 §4: the renewal card is owner-controlled per package (text, colours, price note, placement).
+  function cardCfg(ctx){const c=(w.F99Settings?.packageOption(ctx.package_key,'renewal_card',{})||{});const client=ctx.client_name||t('client');
+    return {enabled:c.enabled!==false,badge:c.badge||'عرض خاص',title:c.title||t(ctx.status==='expired'?'expiredNotice':'finishedNotice'),
+      body:c.body||t(ctx.status==='expired'?'expired':'invite',{client}),cta:c.cta||t('buy'),later:c.later||t('later'),
+      note:c.note||'',bg:c.bg||'#0b1220',accent:c.accent||'#d4af37',text:c.text||'#ffffff',offerId:c.offer_id||'',
+      placement:c.placement||'overlay'};}
+  function bestOffer(ctx,id){const now=Date.parse(ctx.server_now);const list=(ctx.offers||[]).filter(o=>Number(o.available)>0&&safeURL(o.checkout_url)&&(!o.offer_expires_at||Date.parse(o.offer_expires_at)>now));
+    if(id){const x=list.find(o=>o.id===id);if(x)return x;}
+    return list.slice().sort((a,b)=>Number(a.price_sar)-Number(b.price_sar))[0]||null;}
+  function money2(v){return Number(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+  function overlayCard(ctx,code,options,c){d.getElementById('f99r26Renewal')?.remove();
+    const wrap=el('div');wrap.id='f99r26Renewal';
+    Object.assign(wrap.style,{position:'fixed',top:'0',right:'0',bottom:'0',left:'0',background:'rgba(3,8,16,.74)',display:'flex',alignItems:'center',justifyContent:'center',padding:'16px',zIndex:'99999',direction:'rtl'});
+    const card=el('section');card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');
+    Object.assign(card.style,{width:'100%',maxWidth:'430px',background:c.bg,color:c.text,borderRadius:'22px',padding:'24px 20px',boxShadow:'0 24px 60px rgba(0,0,0,.5)',textAlign:'center',fontFamily:'inherit'});
+    const badge=el('span',c.badge);Object.assign(badge.style,{display:'inline-block',background:c.accent,color:'#111',borderRadius:'999px',padding:'4px 14px',fontSize:'12px',fontWeight:'700'});
+    const h=el('h3',c.title);Object.assign(h.style,{margin:'14px 0 8px',fontSize:'21px',lineHeight:'1.6',color:c.text,fontWeight:'800'});
+    const body=el('p',c.body);Object.assign(body.style,{margin:'0 0 16px',fontSize:'14px',lineHeight:'1.9',opacity:'.88',color:c.text});
+    card.append(badge,h,body);
+    const o=bestOffer(ctx,c.offerId);
+    if(o){const price=el('div');Object.assign(price.style,{fontSize:'36px',fontWeight:'800',color:c.accent,lineHeight:'1.1'});
+      price.textContent=money2(o.price_sar);const cur=el('small',' ريال');Object.assign(cur.style,{fontSize:'15px',color:c.text,fontWeight:'600',marginRight:'4px'});price.append(cur);card.append(price);
+      const terms=el('p',t('terms',{minutes:o.duration_minutes,count:o.max_calculations}));Object.assign(terms.style,{fontSize:'13px',opacity:'.78',margin:'8px 0 18px',color:c.text});card.append(terms);}
+    else{const none=el('p',t('stock'));Object.assign(none.style,{fontSize:'14px',opacity:'.9',margin:'8px 0 18px'});card.append(none);}
+    if(c.note){const n=el('p',c.note);Object.assign(n.style,{fontSize:'12px',opacity:'.7',margin:'-8px 0 14px'});card.append(n);}
+    const say=m=>{let n=card.querySelector('[data-r26-msg]');if(!n){n=el('p');n.dataset.r26Msg='1';Object.assign(n.style,{fontSize:'13px',color:c.accent,margin:'10px 0 0'});card.append(n);}n.textContent=m;};
+    if(o){const buy=el('button',c.cta);buy.type='button';Object.assign(buy.style,{display:'block',width:'100%',background:c.accent,color:'#111',border:'0',borderRadius:'14px',padding:'15px',fontSize:'16px',fontWeight:'800',cursor:'pointer'});
+      buy.onclick=async()=>{buy.disabled=true;try{const latest=await details(code);const lc=latest&&bestOffer(latest,c.offerId);
+        // re-verify stock, price and the checkout link right before leaving; never open a stale or unavailable product.
+        if(!latest||latest.status==='active'||!lc||lc.id!==o.id||Number(lc.price_sar)!==Number(o.price_sar)||safeURL(lc.checkout_url)!==safeURL(o.checkout_url)){say(t('changed'));return;}
+        w.open(safeURL(lc.checkout_url),'_blank','noopener,noreferrer');}catch(_){say(t('failed'));}finally{buy.disabled=false;}};
+      card.append(buy);}
+    const later=el('button',c.later);later.type='button';
+    Object.assign(later.style,{display:'block',width:'100%',background:'transparent',color:c.text,border:'1px solid rgba(255,255,255,.25)',borderRadius:'14px',padding:'12px',fontSize:'14px',marginTop:'10px',cursor:'pointer',opacity:'.85'});
+    later.onclick=()=>{wrap.remove();validUntil=0;current=null;serial++;if(typeof options.onLater==='function')return options.onLater();w.showPage?.('page1');};
+    card.append(later);wrap.append(card);d.body.append(wrap);return true;}
+
   async function open(code,options={}){const id=++serial;let ctx;try{ctx=await details(code);}catch(_){}
     if(id!==serial)return false;
     // r24: a valid code with remaining calculations is never treated as exhausted/expired.
@@ -101,9 +138,13 @@
     if(!ctx){if(active&&host)status(host,'failed');else {validUntil=0;current=null;w.showPage?.('page1');const error=d.getElementById('f99l-error');if(error)error.textContent=t('failed');}return false;}
     // r25: inside the exit sequence a disabled renewal shows no card (the sequence continues).
     if(options.exit===true&&modeFor(ctx)==='off')return false;
+    const cc=cardCfg(ctx);
+    // r26 §3/§4: exhausted or expired entry shows the card immediately, never the old conversation.
+    if(cc.enabled&&(options.entry===true||options.exit===true||cc.placement==='overlay'))return overlayCard(ctx,normalized(code),options,cc);
     if(!active)host.replaceChildren();host.querySelector('.f99r22-renewal')?.remove();
     current={code:normalized(code),ctx};validUntil=Date.now()+600000;
     const card=el('section',null,'f99r22-renewal');card.setAttribute('role','status');host.append(card);
+    if(cc.enabled){card.style.background=cc.bg;card.style.color=cc.text;card.style.borderColor=cc.accent;}
     const client=ctx.client_name||options.clientName||t('client');
     card.append(el('strong',t(ctx.status==='expired'?'expiredNotice':'finishedNotice'),'f99r22-notice'),el('p',t(ctx.status==='expired'?'expired':'invite',{client})));
     const offers=el('div',null,'f99r22-offers');offers.hidden=true;card.append(offers);

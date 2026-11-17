@@ -36,6 +36,10 @@
     ['q_amount','ما بعد النتيجة','طلب تقليل مبلغ التمويل','أبي أقلل مبلغ التمويل.'],
     ['q_next_bank','ما بعد النتيجة','الجهة المرشحة التالية','الجهة المرشحة التالية'],
     ['q_back','ما بعد النتيجة','العودة لمبلغ التمويل السابق','العودة لمبلغ التمويل السابق'],
+    ['q_cash_reduce','ما بعد النتيجة','تقليل مبلغ الكاش','أبي أقلل مبلغ الكاش.'],
+    ['q_max','ما بعد النتيجة','الرجوع لأعلى تمويل','الرجوع لأعلى تمويل'],
+    ['q_summary','ما بعد النتيجة','تلخيص الحسبة','تلخيص الحسبة'],
+    ['q_compare','ما بعد النتيجة','مقارنة الترشيحات','مقارنة الترشيحات'],
     ['new25','ما بعد النتيجة','زر حسبة جديدة','ابدأ حسبة جديدة'],
     ['exit25','ما بعد النتيجة','زر الخروج','الخروج'],
     ['exhausted25','ما بعد النتيجة','انتهاء رصيد الحسبات','انتهى رصيد الحسبات لهذا الكود.'],
@@ -140,7 +144,9 @@
   const apply25=window.F99V37ApplyBotAdjustment;if(typeof apply25==='function')window.F99V37ApplyBotAdjustment=async function(...a){const r=await apply25.apply(this,a);if(r?.ok===true)reduced=true;return r;};
   const reset25=window.F99V37ResetBotAdjustment;if(typeof reset25==='function')window.F99V37ResetBotAdjustment=async function(...a){const r=await reset25.apply(this,a);if(r)reduced=false;return r;};
   const request25=window.F99V82RequestNewCalculation;if(typeof request25==='function')window.F99V82RequestNewCalculation=function(...a){reduced=false;return request25.apply(this,a);};
-  function paintNew(has){const all=[...document.querySelectorAll('#finoBotChat .f25-menu')];all.forEach((menu,n)=>{const last=n===all.length-1;const b=menu.querySelector('[data-r25-new]');if(b)b.hidden=!(has===true&&last);const note=menu.querySelector('.f25-exhausted');if(note){note.hidden=!(has===false&&last);note.textContent=has===false?T('exhausted25'):'';}});
+  function paintNew(has){const all=[...document.querySelectorAll('#finoBotChat .f25-menu')];all.forEach((menu,n)=>{const last=n===all.length-1;const b=menu.querySelector('[data-r25-new]');if(b)b.hidden=!(has===true&&last);const note=menu.querySelector('.f25-exhausted');if(note){note.hidden=!(has===false&&last);note.textContent=has===false?T('exhausted25'):'';}
+    // r26 §3: an exhausted code offers no question, adjustment or comparison — renewal/exit only.
+    if(has===false)menu.querySelectorAll('[data-r25-opt]').forEach(x=>{x.hidden=true;x.disabled=true;});});
     // exhausted: no old/new start buttons stay usable in this conversation (server enforcement is authoritative)
     if(has===false)document.querySelectorAll('#finoBotChat button').forEach(b=>{const a=b.getAttribute('onclick')||'';if(/F99V82RequestNewCalculation|startFINOPortalBuyout/.test(a)||b.textContent.trim()===T('new')){b.disabled=true;b.hidden=true;}});}
   async function refreshNew(tries=0){const id=++newSeq;if(!document.querySelector('#finoBotChat .f25-menu')){if(tries<6)setTimeout(()=>{if(id===newSeq)void refreshNew(tries+1);},tries<2?300:900);return;}
@@ -174,13 +180,18 @@
     const html=originalMenu.apply(this,args);const m=/F99V41Ask\('installment',(\d+)\)/.exec(String(html||''));if(!m)return html;const i=Number(m[1]);
     // r25 (owner order Pasted_23 §2-§3): exactly the approved questions under the original result card,
     // then «ابدأ حسبة جديدة» (only with remaining balance/validity) and «الخروج». No «الخيارات اللي بعدها».
-    const used=bag(i),q=[];
-    if(!used.has('installment'))q.push(btnHtml(T('q_installment'),`F99V41Ask('installment',${i})`));
-    if(!used.has('cash'))q.push(btnHtml(T('q_cash'),`F99V41Ask('cash',${i})`));
-    if(allowed('reduce_installment'))q.push(btnHtml(T('q_lower25'),"F99V37BeginAdjust('installment')"));
-    if(allowed('reduce_amount'))q.push(btnHtml(T('q_amount'),"F99V37BeginAdjust('principal')"));
-    if(window.F99V38HasNextBank?.()===true)q.push(btnHtml(T('q_next_bank'),'F99V38NextBank()'));
-    if(reduced&&(allowed('reduce_installment')||allowed('reduce_amount')))q.push(btnHtml(T('q_back'),'F99V47ResetFinance()'));
+    // r26 (owner order Pasted_25 §1): every approved option returns, each gated by its OWN package/code switch.
+    const used=bag(i),q=[],opt=(label,code)=>q.push(btnHtml(label,code).replace('<button','<button data-r25-opt="1"'));
+    if(!used.has('installment'))opt(T('q_installment'),`F99V41Ask('installment',${i})`);
+    if(!used.has('cash'))opt(T('q_cash'),`F99V41Ask('cash',${i})`);
+    if(allowed('reduce_installment'))opt(T('q_lower25'),"F99V37BeginAdjust('installment')");
+    if(allowed('reduce_amount'))opt(T('q_amount'),"F99V37BeginAdjust('principal')");
+    if(allowed('reduce_amount'))opt(T('q_cash_reduce'),"F99V37BeginAdjust('cash')");
+    if(window.F99V38HasNextBank?.()===true)opt(T('q_next_bank'),'F99V38NextBank()');
+    if(allowed('reduce_installment')||allowed('reduce_amount'))opt(T('q_max'),'F99V37Reset()');
+    if(window.F99V38MenuReady?.(i,'summary')===true)opt(T('q_summary'),`F99V38ShowSummary(${i})`);
+    if(window.F99V38MenuReady?.(i,'compare')===true)opt(T('q_compare'),'F99V38ComparePicker()');
+    if(reduced&&(allowed('reduce_installment')||allowed('reduce_amount')))opt(T('q_back'),'F99V47ResetFinance()');
     setTimeout(()=>{void refreshNew();},0);
     return `<div class="f41-options f47-main-options f49-menu f24-menu f25-menu"><p class="f24-ask">${esc(T('ask',vars()))}</p><div class="f24-questions">${q.join('')}</div><p class="f25-exhausted"${lastHas===false?'':' hidden'}>${lastHas===false?esc(T('exhausted25')):''}</p><div class="f24-yes-no f25-end"><button type="button" class="f41-primary" data-r25-new${lastHas===true?'':' hidden'} onclick="F99V82RequestNewCalculation()">${esc(T('new25'))}</button>${btnHtml(T('exit25'),'F99R24Exit()')}</div></div>`;
   };
@@ -195,7 +206,8 @@
     const box=document.createElement('div');box.id='f24-exit-warning';box.className='f24-exit-warning';box.setAttribute('role','alertdialog');
     const p=document.createElement('p');p.textContent=T('exit_warn');box.append(p);const row=document.createElement('div');row.className='f24-yes-no';box.append(row);
     button(row,T('exit_yes'),()=>{box.remove();void exitFlow();}).className='f24-danger';
-    button(row,T('exit_back'),()=>box.remove());
+    // r26 §3: no «العودة للحسبة» path once the balance is finished.
+    if(lastHas!==false)button(row,T('exit_back'),()=>box.remove());
     chat.append(box);scroll(box);
   };
   window.F99R22Identity=Object.freeze({owner:()=>ownerName(),beneficiary:()=>beneficiary,self:()=>self,saved:()=>JSON.parse(JSON.stringify(saved))});

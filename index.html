@@ -22982,7 +22982,16 @@ async function syncFeatures(force=false){const a=access();if(a.owner)return true
 }
 window.F99V38SyncCodeFeatures=syncFeatures;
 ['startFINOPortalBuyout','startFINOPortalSmart'].forEach(name=>{const prev=window[name];if(typeof prev!=='function')return;window[name]=function(...args){const out=prev.apply(this,args);const a=access();
- if(!a.owner&&a.central)syncFeatures().then(()=>{if(override.calc_service_enabled!==false)return;portalAssistant((window.F99T?.('r25.calcDisabled',{},'خدمة الحسبة غير مفعلة لهذا الكود.')||'خدمة الحسبة غير مفعلة لهذا الكود.'));document.querySelectorAll('#finoBotChat .portal-row button,#finoBotInput,#finoBotSendBtn').forEach(x=>{x.disabled=true})}).catch(()=>{});return out}});
+ if(!a.owner&&a.central)syncFeatures().then(()=>{
+   const stop=msg=>{portalAssistant(msg);document.querySelectorAll('#finoBotChat .portal-row button,#finoBotInput,#finoBotSendBtn').forEach(x=>{x.disabled=true});};
+   if(override.calc_service_enabled===false)return stop(window.F99T?.('r25.calcDisabled',{},'خدمة الحسبة غير مفعلة لهذا الكود.')||'خدمة الحسبة غير مفعلة لهذا الكود.');
+   // r26 §3: exhausted/expired code never reaches the calculator or the old conversation.
+   const st=window.F99SessionSecurity?.context?.()?.state||{};const exp=Date.parse(st.expires_at||'');
+   if(st.calculator_allowed!==true||(Number.isFinite(exp)&&exp<=Date.now())){
+     const chat=document.getElementById('finoBotChat');if(chat)chat.replaceChildren();
+     document.querySelectorAll('#finoBotChat .portal-row button,#finoBotInput,#finoBotSendBtn').forEach(x=>{x.disabled=true});
+     if(window.F99Renewal22?.openCurrent)void window.F99Renewal22.openCurrent({entry:true});}
+  }).catch(()=>{});return out}});
 window.F99V38FeatureAllowed=type=>{
  if(type==='summary_enabled'){const o=window.F99V32GetState?.()?.options?.products?.[k()]||{};return o.summary_enabled!==false&&override.summary_enabled!==false&&window.F99V32Can?.('bot_buyout')===true}
  if(type==='show_completion')return override.show_completion===true||(override.show_completion!==false&&window.F99V32Can?.(type)===true);
@@ -23014,6 +23023,7 @@ function canCompare(){const a=access();const config=window.F99V32GetState?.()?.o
 function completionSwitch(){const o=window.F99V32GetState?.()?.options?.products?.[k()]||{};
  return (o.show_completion===true||window.F99V41OfferExplicit?.()===true)&&window.F99V38FeatureAllowed('show_completion');}
 function promptButton(i){const step=steps.get(i)||0;const [key,label]=questions[Math.min(step,questions.length-1)];return [label,`F99V38Ask('${key}',${i})`]}
+window.F99V38MenuReady=(i,kind)=>kind==='compare'?(canCompare()&&results().length>=2):(steps.get(i)>=questions.length||window.F99V38FeatureAllowed('summary_enabled'));
 window.F99V38BotStepsHtml=i=>{if(!inBot())return '';rememberContext();const t=[promptButton(i)];
  if(steps.get(i)>=questions.length||window.F99V38FeatureAllowed('summary_enabled'))t.push(['تلخيص الحسبة',`F99V38ShowSummary(${i})`]);
  if(window.F99V38FeatureAllowed('reduce_installment'))t.push(['تقليل القسط',"F99V37BeginAdjust('installment')"]);
@@ -24629,7 +24639,7 @@ async function mountCouponButtons(){if(storePending||!experience||!document.quer
 // Manual review of Salla renewal checkout followed by server-enforced single-use voucher redemption.
 async function openRenewalShop(){const p=modal('باقات تجديد الأكواد — FINO99');p.append(E('p','اختر باقة التجديد، أكمل الدفع في منصة الدفع، ثم أدخل رمز التجديد الذي وصلك من منصة الدفع مع كود اشتراكك الأصلي. تجديد الاشتراك يفتح دورة استخدام جديدة؛ قد لا تنتقل مرات الحسبة المتبقية من الدورة السابقة.'));
  try{const [base,x]=await Promise.all([rpc('f99v29_public_renewal_catalog'),refreshExperience()]);const offers=(base.catalog?.offers||[]).filter(o=>o.enabled===true);
- const container=E('div',null,'f50-renew-tiles');for(const o of offers){const card=E('section',null,'f50-renew-tile');card.append(E('strong',o.title||'باقة تجديد'));card.append(E('p',`${fmt(o.price)} ريال • ${o.max_calculations} مرات للاحتساب • ${Math.round(o.duration_minutes/1440)} يوم من أول تفعيل بعد التجديد`));const url=String(x.renew_salla?.[o.id]||'');
+ const container=E('div',null,'f50-renew-tiles');for(const o of offers){const card=E('section',null,'f50-renew-tile');card.append(E('strong',o.title||'باقة تجديد'));card.append(E('p',`${Number(o.price).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} ريال • ${o.max_calculations} مرات للاحتساب • ${Math.round(o.duration_minutes/1440)} يوم من أول تفعيل بعد التجديد`));const url=String(x.renew_salla?.[o.id]||'');
  if(/^https:\/\//i.test(url)){action(card,'الذهاب للدفع في منصة الدفع',()=>{const u=new URL(url);window.open(u.href,'_blank','noopener,noreferrer')},'f50-primary')}else card.append(E('small','هذا العرض لم يُربط بعد بمنتج دفع في منصة الدفع. يمكن طلبه من المالك وفق مسار التجديد اليدوي.'));
  if(Array.isArray(x.coupon_packages)&&x.coupon_packages.includes('renew:'+o.id)){
   const more=E('div',null,'f50-renew-coupon');const inp=E('input');inp.placeholder='لدي كود خصم لهذه الباقة';inp.maxLength=40;
@@ -28785,7 +28795,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <link rel="stylesheet" href="./extensions/fino99_service_tools.css?v=20261115r18">
 <script src="./extensions/fino99_service_tools.js?v=20261116r22INTY"></script>
 <link rel="stylesheet" href="./extensions/fino99_renewal22.css?v=20261117r25b">
-<script src="./extensions/fino99_renewal22.js?v=20261117r25b"></script>
+<script src="./extensions/fino99_renewal22.js?v=20261117r26"></script>
 <!-- F99 owner desktop 13: owner-only, device-local visual approval; load after fee/service modules. -->
 <link rel="stylesheet" href="./extensions/fino99_owner_desktop.css?v=20261115r18">
 <script src="./extensions/fino99_owner_desktop.js?v=20261116r22B"></script>
@@ -28826,8 +28836,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <!-- Round22 A: fixed adjacent iPhone default + owner-only store design portal. -->
 <link rel="stylesheet" href="./extensions/fino99_store_design22.css?v=20261116r22INTY2">
 <script src="./extensions/fino99_store_design22.js?v=20261116r22A"></script>
-<script src="./extensions/fino99_identity22.js?v=20261117r25b"></script>
-<script src="./extensions/fino99_package_options22.js?v=20261116r22C"></script>
+<script src="./extensions/fino99_identity22.js?v=20261117r26"></script>
+<script src="./extensions/fino99_package_options22.js?v=20261117r26"></script>
  <!-- R23 presentation-only enhancement: no calculator, inventory, or session modifications. -->
 </body>
 </html>
