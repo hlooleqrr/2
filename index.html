@@ -28051,7 +28051,7 @@ function attachShop(){
    visibility.set(key,{enabled:d.enabled===true,label:d.label,checkedAt:Date.now()});
    if(!c.isConnected)return;
    let btn=c.querySelector('.f76-client-discount');
-   if(d.enabled===true){if(!btn)btn=createBtn(c,(d.label||'أكواد التجديد')+' • تجديد',()=>void customerOffers(key));btn.classList.add('f76-client-discount');btn.hidden=false;}
+   if(btn)btn.hidden=true;
    else if(btn)btn.hidden=true;
   }).catch(()=>{visibility.delete(key);const btn=c.querySelector('.f76-client-discount');if(btn)btn.hidden=true});
  }
