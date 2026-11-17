@@ -452,7 +452,8 @@
         if (over) say('الحد لكل دفعة 500 كود (حماية المركزية وملف سلة). أجهز لك دفعة 500 الآن، وبعدها اطلب الباقي في دفعة ثانية.');
         const pre = await call('f99v16_owner_preflight');
         const available = pre.ok ? Number(pre.available || 0) : null; const services = Array.isArray(p.services) ? p.services : [];
-        const mins = Number(p.duration_minutes || 4320), cap = Number(p.max_calculations || 3), last = String(p.key || '').includes('bronze') ? (p.redeem_last_day || null) : null;
+        const mins = Number(p.duration_minutes || 4320), cap = Number(p.max_calculations), last = String(p.key || '').includes('bronze') ? (p.redeem_last_day || null) : null;
+        if (!Number.isInteger(cap) || cap < 1) { say('حدد عدد الحسبات لهذه الباقة من إدارة الباقات أولًا؛ لا أفترض عددًا من عندي.'); return; }
         const short = available !== null && available < n;
         card('مسودة تخصيص أكواد', [['الباقة', p.name || p.key], ['العدد المطلوب', String(n)], ['المخزون غير المخصص الآن', available === null ? 'تعذرت القراءة' : String(available)], ['مدة الكود', human(mins)],
           ['الحسبات لكل كود', String(cap)], ['الخدمات', services.join('، ') || 'حسب الباقة'], ['آخر يوم للاستخدام', last || 'لا يوجد']], [],

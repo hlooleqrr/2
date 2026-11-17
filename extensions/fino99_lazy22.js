@@ -43,5 +43,5 @@
     if (!registrations.has(name)) return Promise.reject(Error('F99_LAZY_NOT_REGISTERED'));
     return registrations.get(name)();
   }});
-  register('F99ExecGateway', './extensions/fino99_executive_gateway.js?v=20261116r22J', ['open', 'close', 'send']);
+  register('F99ExecGateway', './extensions/fino99_executive_gateway.js?v=20261117r25', ['open', 'close', 'send']);
 })(window);

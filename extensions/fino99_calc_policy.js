@@ -5,7 +5,7 @@
 (function (win, d) {
   'use strict';
   if (win.F99CalcPolicy) return;
-  const DEFAULT_CAP = 300, ABS_MAX = 1000;
+  const DEFAULT_CAP = 300, ABS_MAX = 100000;
   let cap = DEFAULT_CAP, loaded = false, version = null, loading = null;
   const isOwner = () => { try { return !!activeAccess?.record?.central && !!activeAccess?.record?.owner && !!finoCentralAdminToken; } catch (e) { return false; } };
   const el = (tag, cls, text) => { const x = d.createElement(tag); if (cls) x.className = cls; if (text != null) x.textContent = text; return x; };
