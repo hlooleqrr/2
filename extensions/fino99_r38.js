@@ -159,6 +159,11 @@
         b.dataset.state = k; });
       say(sct, x.service ? 'الإيقاف أو «ستطلق قريبًا» يمنع الشراء الجديد فقط؛ الحجوزات القائمة وتعديلها والتعويض تبقى تعمل.' : '«ستطلق قريبًا» تُظهر الباقة دون شراء، و«موقوفة» تخفيها من المتجر. الأكواد المباعة تبقى صالحة.', 'f38-muted');
     }
+    const lb = el('div', 'f38-sec'); lb.append(el('h4', '', 'نص زر الباقة')); body.append(lb);
+    const lf = field(lb, 'نص زر الباقة', '', {max: 50, wide: 1}); lf.placeholder = 'اشتر الآن'; const lst = el('p', 'f38-muted'); lb.append(lst);
+    say(lb, 'النص الظاهر للعميل على زر هذه الباقة في المتجر (الافتراضي «اشتر الآن»). يمكنك كتابة «تفاصيل الباقة» أو أي نص؛ لا يغيّر الرابط أو وظيفة الزر.', 'f38-muted');
+    Promise.resolve(W.F99V70ButtonLabel?.(key)).then(v => { lf.value = (v && v.value) || 'اشتر الآن'; }).catch(() => { lf.value = 'اشتر الآن'; });
+    btn(lb, 'حفظ نص الزر', async ev => { ev.target.disabled = true; try { const v = await W.F99V70SaveButtonLabel(key, lf.value); lf.value = v; lst.className = 'f38-ok'; lst.textContent = '✓ تم الحفظ: يظهر «' + v + '» على زر هذه الباقة فقط.'; } catch (e) { lst.className = 'f38-err'; lst.textContent = 'تعذر الحفظ: ' + ((e && e.message) || e); } finally { ev.target.disabled = false; } });
     const ed = el('div', 'f38-sec'); ed.append(el('h4', '', 'الإدارة من داخل الباقة')); body.append(ed); const g = el('div', 'f38-list'); ed.append(g);
     const item = (ic, t, sub, path, ...args) => { const fn = ref(path); const b = el('button', 'f38-row-btn'); b.type = 'button'; b.dataset.act = path; b.append(el('span', 'f38-ic', ic), el('b', '', t), el('small', '', fn ? sub : 'غير متاح في هذه الصفحة الآن'));
       b.disabled = !fn; b.onclick = () => runExt(path, ...args); g.append(b); };
