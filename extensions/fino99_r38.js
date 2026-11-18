@@ -136,6 +136,82 @@
     live.forEach(x => list.append(row(x))); if (!live.length) say(list, 'لا توجد باقات.', 'f38-muted');
     if (arch.length) { const d = el('details', 'f38-arch'); d.append(el('summary', '', 'الباقات المحذوفة (محفوظة في الأرشيف): ' + arch.length)); arch.forEach(x => d.append(row(x))); body.append(d); }
   }
+  // r43: sale/renewal preparation for the package managed by f99r43_owner (other packages: nothing rendered).
+  const R43W = {STORE_VERSION_CONFLICT: 'تغيّر المتجر من جهاز آخر؛ أعد فتح الباقة ثم احفظ.', INVALID_PRICE: 'سعر العرض غير صالح.', INVALID_OLD_PRICE: 'السعر الأصلي غير صالح.',
+    OLD_PRICE_MUST_EXCEED_PRICE: 'السعر الأصلي يجب أن يكون أعلى من سعر العرض.', OLD_PRICE_REQUIRED_FOR_OFFER: 'أدخل السعر الأصلي لتفعيل التخفيض.', INVALID_OFFER_FLAG: 'خيار التخفيض غير صالح.',
+    INVALID_BASE_URL: 'رابط الباقة الأساسية يجب أن يكون رابط سلة يبدأ بـ https://salla.sa/', INVALID_RENEWAL_URL: 'رابط التجديد يجب أن يكون رابط سلة يبدأ بـ https://salla.sa/',
+    BASE_AND_RENEWAL_URL_MUST_DIFFER: 'رابط التجديد يجب أن يختلف عن رابط الباقة الأساسية.', INVALID_RENEWAL_PRICE: 'سعر التجديد غير صالح.', WARNING_TOO_LONG: 'التنويه أطول من 600 حرف.',
+    CONFIRM_ACTUAL_SALLA_IMPORT_FIRST: 'أكّد أولًا أنك استوردت ملف أكواد التجديد في منتج التجديد بسلة.', RENEWAL_URL_AND_PRICE_REQUIRED: 'احفظ رابط التجديد وسعره أولًا.',
+    RENEWAL_BIND_FAILED: 'تعذر ربط أكواد التجديد.', OFFER_ALLOCATION_POLICY_OR_SALLA_URL_MISMATCH: 'رابط التجديد أو سياسة الدفعة غير مطابقة.', NO_ACTIVE_CODES: 'لا توجد أكواد فعالة في الدفعة.'};
+  const r43why = r => R43W[r?.reason] || why(r);
+  function r43file(name, text) { const b = new Blob([text], {type: name.endsWith('.csv') ? 'text/csv;charset=utf-8' : 'text/plain;charset=utf-8'}); const a = el('a'); a.href = URL.createObjectURL(b); a.download = name; a.hidden = true; D.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000); }
+  async function mountSale43(body, key, before) {
+    const sec = el('div', 'f38-sec f43-sale'); sec.hidden = true; body.insertBefore(sec, before || null);
+    const g = await adm('f99r43_owner', {p_action: 'get', p_data: {key}});
+    if (!g.ok) { if (!['NOT_MANAGED', 'NOT_CONFIGURED', 'PACKAGE_NOT_FOUND'].includes(g.reason)) { sec.hidden = false; sec.append(el('h4', '', 'البيع والتجديد')); say(sec, r43why(g), 'f38-err'); } return; }
+    render43(sec, key, g);
+  }
+  function render43(sec, key, g, notice) {
+    sec.hidden = false; sec.textContent = ''; const p = g.product || {}, b = g.base || {}, rn = g.renewal || {};
+    sec.append(el('h4', '', 'البيع والتجديد — الأسعار والروابط والتنويه'));
+    say(sec, p.enabled === true ? 'حالة البيع: مفتوح للعملاء.' : 'حالة البيع: مغلق — لا يظهر للعميل سعر أو زر شراء حتى تفتح البيع بنفسك من «تعديل الباقة» بعد اعتماد الحاسبة.', p.enabled === true ? 'f38-ok' : 'f38-muted');
+    const old = field(sec, 'السعر الأصلي (ريال) — يظهر مشطوبًا', p.old_price ?? '', {ltr: 1, max: 8});
+    const price = field(sec, 'سعر العرض الحالي (ريال)', p.price ?? '', {ltr: 1, max: 8});
+    const offer = field(sec, 'تفعيل التخفيض (إظهار السعر الأصلي مشطوبًا)', p.offer_enabled !== false, {type: 'checkbox'});
+    const prev = say(sec, '', 'f43-prev');
+    const upd = () => { const o = Number(old.value), n = Number(price.value); prev.textContent = 'يراه العميل عند فتح البيع: ' + (offer.checked && o > n ? money(o) + ' (مشطوب) ← ' : '') + (n > 0 ? money(n) : '—'); };
+    [old, price].forEach(i => i.addEventListener('input', upd)); offer.addEventListener('change', upd); upd();
+    const url = field(sec, 'رابط شراء الباقة الأساسية (سلة)', p.url || '', {ltr: 1, wide: 1, ph: 'https://salla.sa/…', max: 1000});
+    const rurl = field(sec, 'رابط شراء باقة التجديد (سلة)', rn.url || '', {ltr: 1, wide: 1, ph: 'https://salla.sa/…', max: 1000});
+    const rprice = field(sec, 'سعر التجديد (ريال) — تحدده أنت', rn.price ?? '', {ltr: 1, max: 8, ph: 'غير محدد'});
+    const warn = field(sec, 'التنويه الظاهر في صفحة الباقة (قابل للتعديل أو الاستبدال)', p.warning_text || '', {area: 1, rows: 5, wide: 1, max: 600});
+    say(sec, 'زر الشراء يتحول للرابط المحفوظ عند فتح البيع. لا يُصرف كود قبل تأكيد الدفع في سلة. باقي محتوى الصفحة (الاسم، الوصف التفصيلي — يمكن تركه فارغًا، الأسئلة، الشروط، الصورة) من «تعديل الباقة».', 'f38-muted');
+    const st = el('p', notice ? 'f38-ok f43-st' : 'f38-muted f43-st', notice || ''); sec.append(st);
+    btn(sec, 'حفظ الأسعار والروابط والتنويه', async ev => {
+      ev.target.disabled = true; st.className = 'f38-muted f43-st'; st.textContent = 'جاري الحفظ والتحقق في المركزية…';
+      const r = await adm('f99r43_owner', {p_action: 'save', p_data: {key, expected_version: g.store_version, price: price.value.trim(), old_price: old.value.trim(), offer_enabled: offer.checked,
+        url: url.value.trim(), renewal_url: rurl.value.trim(), renewal_price: rprice.value.trim(), warning_text: warn.value.trim()}});
+      ev.target.disabled = false;
+      if (!r.ok) { st.className = 'f38-err f43-st'; st.textContent = r43why(r); return; }
+      try { W.F99V33RefreshStorefront?.(); } catch (_) {}
+      render43(sec, key, r, '✓ تم الحفظ في المركزية.');
+    }, 'f43-save');
+    const sk = el('div', 'f43-stock'); sec.append(sk); sk.append(el('h4', '', 'مخزون الأكواد (منفصل) — جاهز للاستيراد في سلة'));
+    const stockRow = (title, s, file) => {
+      const row = el('div', 'f43-srow'); row.dataset.kind = file;
+      row.append(el('b', '', title), el('small', '', 'جاهز للبيع: ' + (s.ready ?? 0) + ' من ' + (s.total ?? 0) + (s.used ? ' • مستخدم: ' + s.used : '') + (s.exported_times ? ' • صُدّر ' + s.exported_times + ' مرة' : ' • لم يُصدّر بعد')));
+      const bx = el('div', 'f43-btns'); row.append(bx); const es = el('small', 'f38-muted'); row.append(es);
+      ['txt', 'csv'].forEach(fmt => btn(bx, 'تنزيل ' + fmt.toUpperCase(), async ev => {
+        if (!s.allocation_id || !W.confirm('تنزيل ملف ' + title + ' (' + (s.total || 0) + ' كود) للاستيراد في سلة؟ يُسجَّل التصدير في المركزية، ولا يعني بيعًا.')) return;
+        ev.target.disabled = true; es.textContent = 'جاري التحقق والتصدير…';
+        const r = await adm('f99v17_admin_export_batch', {p_allocation_id: s.allocation_id}); ev.target.disabled = false;
+        const codes = Array.isArray(r.codes) ? r.codes.map(String) : [];
+        if (!r.ok || !codes.length || codes.length !== Number(r.count) || new Set(codes).size !== codes.length) { es.className = 'f38-err'; es.textContent = r.ok ? 'الملف غير مطابق للمركزية؛ لم يُنزّل.' : r43why(r); return; }
+        const day = new Date().toISOString().slice(0, 10), name = 'FINO99_MORTGAGE_' + file + '_' + codes.length + '_' + day + '.' + fmt;
+        r43file(name, fmt === 'csv' ? 'code\n' + codes.join('\n') + '\n' : codes.join('\n') + '\n');
+        es.className = 'f38-ok'; es.textContent = '✓ ' + name + ' — ' + codes.length + ' كود فريد.';
+      }, 'f43-exp'));
+      sk.append(row);
+    };
+    stockRow('الأكواد الأساسية', b, 'BASE'); stockRow('أكواد التجديد', rn, 'RENEWAL');
+    say(sk, 'كل دفعة 500 كود فريد، تبدأ صلاحية الكود من أول تفعيل فعلي، وتعمل على هذه الباقة وحدها. الأساسية لمنتج الباقة في سلة، والتجديد لمنتج التجديد فقط. عند نفاد أكواد منتج في سلة يتوقف بيعه هناك حتى تضيف مخزونًا.', 'f38-muted');
+    const bd = el('div', 'f43-bind'); sec.append(bd); bd.append(el('h4', '', 'ربط أكواد التجديد بعرض التجديد'));
+    if (rn.offer) say(bd, 'مربوط: سعر التجديد ' + money(rn.offer.price) + ' • ' + (rn.offer.visible ? 'ظاهر للعملاء' : 'مخفي عن العملاء') + '. الظهور والإيقاف من «التجديد».', 'f38-ok');
+    else {
+      say(bd, 'غير مربوط بعد. الخطوات: احفظ رابط التجديد وسعره ← نزّل ملف أكواد التجديد واستورده في منتج التجديد بسلة ← أكّد هنا. لا يُعتمد كود تجديد للعميل إلا بعد تأكيد الدفع.', 'f38-muted');
+      const ck = field(bd, 'أؤكد أنني استوردت ملف أكواد التجديد في منتج التجديد بسلة', false, {type: 'checkbox'});
+      const vis = field(bd, 'إظهار عرض التجديد للعملاء بعد الربط', false, {type: 'checkbox'});
+      const bs = el('p', 'f38-muted'); bd.append(bs);
+      btn(bd, 'ربط أكواد التجديد', async ev => {
+        if (!ck.checked) { bs.className = 'f38-err'; bs.textContent = R43W.CONFIRM_ACTUAL_SALLA_IMPORT_FIRST; return; }
+        ev.target.disabled = true; const r = await adm('f99r43_owner', {p_action: 'bind_renewal', p_data: {key, confirm_salla_import: true, visible: vis.checked}}); ev.target.disabled = false;
+        if (!r.ok) { bs.className = 'f38-err'; bs.textContent = r43why(r); return; } render43(sec, key, r, '✓ تم ربط أكواد التجديد بعرض التجديد.');
+      }, 'f43-bind-btn');
+    }
+    const cp = el('button', 'f38-row-btn f43-coupons'); cp.type = 'button';
+    cp.append(el('span', 'f38-ic', '🎟️'), el('b', '', 'إدارة كوبونات الخصم'), el('small', '', ref('F99ServiceTools.openOwnerCoupons') ? 'إنشاء كوبون، نسبته أو مبلغه، تفعيله وإيقافه وصلاحيته — للباقة أو التجديد بشكل مستقل' : 'غير متاح في هذه الصفحة الآن'));
+    cp.disabled = !ref('F99ServiceTools.openOwnerCoupons'); cp.onclick = () => runExt('F99ServiceTools.openOwnerCoupons'); sec.append(cp);
+  }
   async function openPkg(key, notice) {
     const body = sheet('إدارة الباقة', true); const wt = say(body, 'جاري التحميل…');
     const r = await adm('f99r39_owner_pkg', {p_action: 'list', p_data: {}}); wt.remove();
@@ -164,7 +240,7 @@
     say(lb, 'النص الظاهر للعميل على زر هذه الباقة في المتجر (الافتراضي «اشتر الآن»). يمكنك كتابة «تفاصيل الباقة» أو أي نص؛ لا يغيّر الرابط أو وظيفة الزر.', 'f38-muted');
     Promise.resolve(W.F99V70ButtonLabel?.(key)).then(v => { lf.value = (v && v.value) || 'اشتر الآن'; }).catch(() => { lf.value = 'اشتر الآن'; });
     btn(lb, 'حفظ نص الزر', async ev => { ev.target.disabled = true; try { const v = await W.F99V70SaveButtonLabel(key, lf.value); lf.value = v; lst.className = 'f38-ok'; lst.textContent = '✓ تم الحفظ: يظهر «' + v + '» على زر هذه الباقة فقط.'; } catch (e) { lst.className = 'f38-err'; lst.textContent = 'تعذر الحفظ: ' + ((e && e.message) || e); } finally { ev.target.disabled = false; } });
-    const ed = el('div', 'f38-sec'); ed.append(el('h4', '', 'الإدارة من داخل الباقة')); body.append(ed); const g = el('div', 'f38-list'); ed.append(g);
+    const ed = el('div', 'f38-sec'); ed.append(el('h4', '', 'الإدارة من داخل الباقة')); body.append(ed); if (!x.service) void mountSale43(body, key, ed); const g = el('div', 'f38-list'); ed.append(g);
     const item = (ic, t, sub, path, ...args) => { const fn = ref(path); const b = el('button', 'f38-row-btn'); b.type = 'button'; b.dataset.act = path; b.append(el('span', 'f38-ic', ic), el('b', '', t), el('small', '', fn ? sub : 'غير متاح في هذه الصفحة الآن'));
       b.disabled = !fn; b.onclick = () => runExt(path, ...args); g.append(b); };
     if (x.service) {
