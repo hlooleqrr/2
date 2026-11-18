@@ -25488,6 +25488,27 @@ window.F99V57Smoke={normalize,questionContext,defaultKeys,decorateQuestions,getN
 #f58-install-tip button{border:0;border-radius:9px;background:#1d6385;color:#fff;padding:7px;font:800 11px Cairo,system-ui;cursor:pointer}
 #f58-install-tip .f58-dismiss{position:absolute;top:2px;left:3px;background:transparent;color:#597789;padding:1px 6px;font-size:13px;min-width:0;min-height:0}
 #f58-install-tip[hidden]{display:none!important}
+#f58-install-tip{max-width:min(272px,calc(100vw - 24px))!important}
+#f58-install-tip .f41-head{display:flex;align-items:center;gap:7px;padding-left:16px}
+#f58-install-tip .f41-head img{width:26px;height:26px;border-radius:7px;border:1px solid #d3e6ee;flex:none;object-fit:cover}
+#f58-install-tip .f41-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+#f58-install-tip.f41-one .f41-row{grid-template-columns:1fr}
+#f58-install-tip .f41-row button{display:flex;align-items:center;justify-content:center;gap:5px;min-height:40px;padding:6px 7px;border-radius:10px;font:800 11px/1.35 Cairo,system-ui,sans-serif;text-align:center}
+#f58-install-tip .f41-row button[hidden]{display:none!important}
+#f58-install-tip .f41-share-button{background:#1a9e4b}
+#f58-install-tip .f41-share-button svg{width:16px;height:16px;flex:none}
+#f58-install-tip .f41-ic{font-size:14px;line-height:1}
+.f41-toast{position:fixed;z-index:2147483601;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom));width:max-content;max-width:min(360px,92vw);background:#0f3d52;color:#fff;border-radius:12px;padding:10px 14px;font:700 13px/1.7 Cairo,system-ui,sans-serif;box-shadow:0 10px 28px #051c2840;direction:rtl;text-align:center}
+.f41-toast[hidden]{display:none!important}
+#f58-install-help .f41-hd{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+#f58-install-help .f41-hd img{width:44px;height:44px;border-radius:11px;border:1px solid #d3e6ee;flex:none}
+#f58-install-help .f41-hd h3{margin:0;font-size:16px}
+#f58-install-help .f41-steps{margin:6px 0;padding-inline-start:20px}
+#f58-install-help .f41-steps li{margin:3px 0}
+#f58-install-help .f41-warn{background:#fff7e6;border:1px solid #f1d9a6;border-radius:10px;padding:7px 10px;font-size:13px}
+#f58-install-help .f41-note{font-size:12px;color:#4d6b7b}
+#f58-install-help .f41-actions{display:flex;gap:8px;flex-wrap:wrap}
+#f58-install-help .f41-sec{background:#eaf3f7;color:#1c6887}
 #f58-install-help{position:fixed;inset:0;background:#0b2435a8;z-index:2147483600;display:grid;place-items:center;padding:15px;direction:rtl}
 #f58-install-help>section{background:#fff;width:min(460px,96vw);border-radius:17px;padding:19px;color:#193e52;line-height:2;font:14px Cairo,system-ui;box-shadow:0 18px 45px #051c2840}
 #f58-install-help button{background:#1c6887;color:#fff;border:0;border-radius:9px;padding:10px 18px;font:inherit;margin-top:12px}
@@ -25536,26 +25557,71 @@ async function getConfig(force=false){
   finally{loading=null}})();return loading;
 }
 // Add-to-home-screen is a browser shortcut. It is not an offline guarantee or native app.
+// r41: bottom tip = two side-by-side options: install FINO99 (PWA prompt / Safari guide) + share via WhatsApp.
+const F41_URL='https://www.fino99.com';
+const F41_MSG='منصة FINO99 للحلول التمويلية الذكية 👌\nاحسب تمويلك وقارن بين الجهات التمويلية بسهولة:\n'+F41_URL;
+const F41_UA=navigator.userAgent||'';
+const F41_IOS=/iPad|iPhone|iPod/.test(F41_UA)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const F41_ANDROID=/Android/i.test(F41_UA);
+const F41_INAPP=/FBAN|FBAV|Instagram|Line\/|Snapchat|TikTok|musical_ly|WhatsApp|Twitter|MicroMessenger|GSA\//i.test(F41_UA);
+const F41_IOS_OTHER=F41_IOS&&/CriOS|FxiOS|EdgiOS|OPiOS|YaBrowser/i.test(F41_UA);
+const F41_WA='<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.450-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893a11.821 11.821 0 00-3.480-8.413Z"/></svg>';
+let f41Prompt=null,f41Installed=false;
+const f41Standalone=()=>window.matchMedia?.('(display-mode: standalone)')?.matches===true||navigator.standalone===true;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();f41Prompt=e;});
+window.addEventListener('appinstalled',()=>{f41Installed=true;f41Prompt=null;f41Toast('تم تثبيت FINO99 على شاشتك ✓ افتحها من أيقونة FINO99.');});
+function f41Toast(text){let t=$('#f41-toast');if(!t){t=E('div','','f41-toast');t.id='f41-toast';t.setAttribute('role','status');t.setAttribute('aria-live','polite');document.body.append(t)}
+ t.textContent=text;t.hidden=false;clearTimeout(t._h);t._h=setTimeout(()=>{t.hidden=true},6500);}
+async function f41Copy(text,done){try{await navigator.clipboard.writeText(text);f41Toast(done)}catch{f41Toast('الرابط: www.fino99.com')}}
+async function f41Install(){
+ if(f41Standalone()){f41Toast('أنت تستخدم FINO99 من أيقونة الشاشة الرئيسية الآن.');return}
+ const ev=f41Prompt;
+ if(ev&&typeof ev.prompt==='function'){f41Prompt=null;
+  try{await ev.prompt();const choice=await ev.userChoice;
+   if(choice?.outcome==='accepted'){if(!f41Installed)f41Toast('جاري تثبيت FINO99 على شاشتك…')}
+   else f41Toast('لم يتم التثبيت. تقدر تضغط «ثبّت FINO99» متى ما حبيت.');
+  }catch{installHelp()}
+  return}
+ installHelp();
+}
+function f41Share(){
+ const wa='https://wa.me/?text='+encodeURIComponent(F41_MSG);
+ let w=null;try{w=window.open(wa,'_blank')}catch{w=null}
+ if(w){try{w.opener=null}catch{}return}
+ if(navigator.share){navigator.share({title:'FINO99',text:F41_MSG.replace(F41_URL,'').trim(),url:F41_URL}).catch(e=>{if(e?.name!=='AbortError')f41Copy(F41_MSG,'تم نسخ رسالة المشاركة مع الرابط. الصقها في واتساب وأرسلها لمن تختار.')});return}
+ f41Copy(F41_MSG,'تم نسخ رسالة المشاركة مع الرابط. الصقها في واتساب وأرسلها لمن تختار.');
+}
 function installHelp(){let panel=$('#f58-install-help');if(panel)return;
  panel=E('div');panel.id='f58-install-help';panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');
- const card=E('section');card.append(E('h3','أضف FINO99 إلى الشاشة الرئيسية'));
- const ios=/iPad|iPhone|iPod/.test(navigator.userAgent);
- const android=/Android/.test(navigator.userAgent);
- let steps='من قائمة المتصفح اختر «إضافة إلى الشاشة الرئيسية»، ثم اضغط «إضافة». لا يلزم تنزيل برنامج مستقل.';
- if(ios)steps='افتح FINO99 في Safari، واضغط زر المشاركة (مربع وسهم للأعلى)، ثم اختر «إضافة إلى الشاشة الرئيسية». إذا ظهر خيار «فتح كتطبيق ويب» فعّله، واضغط «إضافة». إذا لم يظهر الخيار، مرّر قائمة المشاركة للأسفل.';
- if(android)steps='افتح FINO99 في Chrome، واضغط القائمة ⋮، ثم اختر «إضافة إلى الشاشة الرئيسية» أو «تثبيت التطبيق» إذا ظهر، وأكد الإضافة.';
- card.append(E('p',steps));card.append(E('p','هذا اختصار للموقع على جوالك؛ يلزم الإنترنت لاستخدام مرات الحسبة والخدمات.'));
- B(card,'إغلاق',()=>panel.remove());panel.append(card);panel.addEventListener('click',e=>{if(e.target===panel)panel.remove()});document.body.append(panel);
+ const card=E('section');const hd=E('div','','f41-hd');const lg=E('img');lg.src='./icon-192.png';lg.alt='FINO99';lg.width=44;lg.height=44;
+ hd.append(lg,E('h3','ثبّت FINO99 على شاشتك'));card.append(hd);
+ const ol=E('ol','','f41-steps');const add=t=>ol.append(E('li',t));
+ if(F41_INAPP)card.append(E('p','أنت تتصفح من داخل تطبيق آخر. افتح الصفحة في '+(F41_IOS?'Safari':'Chrome')+' من قائمة ⋯ («فتح في المتصفح»)، ثم اضغط «ثبّت FINO99» مرة ثانية.','f41-warn'));
+ else if(F41_IOS_OTHER)card.append(E('p','على الآيفون تتم الإضافة من Safari: افتح www.fino99.com في Safari ثم اتبع الخطوات.','f41-warn'));
+ if(F41_IOS){add('اضغط زر المشاركة ⬆️ في شريط Safari.');add('اختر «إضافة إلى الشاشة الرئيسية» ➕ (مرّر القائمة للأسفل إذا لم يظهر).');add('اضغط «إضافة» — تظهر أيقونة FINO99 على شاشتك وتفتح المنصة مباشرة.');}
+ else if(F41_ANDROID){add('اضغط قائمة المتصفح ⋮ أعلى الشاشة.');add('اختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».');add('أكّد — تظهر أيقونة FINO99 على شاشتك وتفتح المنصة مباشرة.');}
+ else{add('من قائمة المتصفح اختر «تثبيت FINO99» أو «إضافة إلى الشاشة الرئيسية».');add('أكّد الإضافة لتظهر أيقونة FINO99 وتفتح المنصة مباشرة.');}
+ card.append(ol);card.append(E('p','لا يلزم تنزيل تطبيق من المتجر. يلزم الإنترنت لاستخدام الحسبات والخدمات.','f41-note'));
+ const row=E('div','','f41-actions');
+ if(F41_INAPP||F41_IOS_OTHER)B(row,'نسخ رابط المنصة',()=>f41Copy(F41_URL,'تم نسخ الرابط: www.fino99.com'),'f41-sec');
+ B(row,'تم، فهمت',()=>panel.remove());card.append(row);
+ panel.append(card);panel.addEventListener('click',e=>{if(e.target===panel)panel.remove()});document.body.append(panel);
 }
 function homeTip(){
- let p=$('#f58-install-tip');if(!p){p=E('aside');p.id='f58-install-tip';p.append(E('strong','📱 منصة FINO99 على جوالك'));
- p.append(E('span','','f58-install-message'));B(p,'طريقة الإضافة',installHelp,'f58-install-button');
- B(p,'×',()=>{p.hidden=true;p.dataset.dismissed='true'},'f58-dismiss');document.body.append(p)}
- const c=settings||defaultConfig;
- p.querySelector('.f58-install-message').textContent=c.install?.hint||defaultConfig.install.hint;
- p.querySelector('.f58-install-button').textContent=c.install?.button||defaultConfig.install.button;
- const standalone=window.matchMedia?.('(display-mode: standalone)')?.matches===true||navigator.standalone===true;
- p.hidden=standalone||c.install?.enabled===false||!$('#page1.active')||p.dataset.dismissed==='true';
+ let p=$('#f58-install-tip');if(!p){p=E('aside');p.id='f58-install-tip';p.setAttribute('aria-label','FINO99 على جوالك');
+  const head=E('div','','f41-head');const lg=E('img');lg.src='./icon-192.png';lg.alt='FINO99';lg.width=26;lg.height=26;head.append(lg,E('strong','منصة FINO99 على جوالك'));p.append(head);
+  p.append(E('span','','f58-install-message'));
+  const row=E('div','','f41-row');
+  const ib=B(row,'',f41Install,'f58-install-button');ib.append(E('span','📲','f41-ic'),E('span','','f41-lbl'));
+  const sb=B(row,'',f41Share,'f41-share-button');sb.innerHTML=F41_WA;sb.append(E('span','شارك عبر واتساب','f41-lbl'));sb.setAttribute('aria-label','شارك FINO99 عبر واتساب');
+  p.append(row);
+  B(p,'×',()=>{p.hidden=true;p.dataset.dismissed='true'},'f58-dismiss');document.body.append(p)}
+ const c=settings||defaultConfig;const sa=f41Standalone();
+ const saved=String(c.install?.button||'').trim();
+ p.querySelector('.f58-install-message').textContent=sa?'شارك FINO99 مع أهلك وأصحابك.':(c.install?.hint||defaultConfig.install.hint);
+ p.querySelector('.f58-install-button .f41-lbl').textContent=(!saved||saved==='طريقة الإضافة')?'ثبّت FINO99 على شاشتك':saved;
+ p.querySelector('.f58-install-button').hidden=sa;p.classList.toggle('f41-one',sa);
+ p.hidden=c.install?.enabled===false||!$('#page1.active')||p.dataset.dismissed==='true';
 }
 // Replace only supplemental visual content; do not alter input, contractual, or financing values.
 const rawPrices=new WeakMap();
