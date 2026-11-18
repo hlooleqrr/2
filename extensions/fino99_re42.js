@@ -80,7 +80,7 @@
       const d = S.data; if (Q[k] && Q[k].enabled === false && !['name', 'sector', 'birth', 'net'].includes(k) && !(isMil() && ['rank', 'mil_entity', 'appoint', 'basic'].includes(k))) return false;
       if (['rank', 'mil_entity', 'appoint', 'basic'].includes(k)) return isMil();
       if (k === 'pilot') { const r = rankObj(); return isMil() && r && r.group === 'officer' && Number(r.pilot_age) > 0; }
-      if (k === 'grade') { if (!isMil() || d.basic == null || (cfg.military || {}).expected_basic === false) return false; const sc = E().rankScale(rankObj()); return !!sc && E().gradeOf(sc, d.basic) == null; }
+      if (k === 'grade') { if (!isMil() || d.basic == null || (cfg.military || {}).expected_basic === false) return false; const sc = E().rankScale(rankObj(), cfg.military || {}); return !!sc && E().gradeOf(sc, d.basic) == null; }
       if (k === 'employer') return !!d.sector && !isMil() && d.sector !== 'retired';
       if (k === 'property') return (cfg.properties || []).filter(p => p.enabled !== false).length > 0;
       return true;
@@ -127,7 +127,7 @@
       if (k === 'name') return textIn(k, 'text', v => { if (v.length < 2 || v.length > 40) return 'اكتب اسمك (حرفان على الأقل)'; d.name = v.replace(/[<>]/g, ''); me(d.name); next(); });
       if (k === 'sector') return choice(k, sectors().map(s => ({ label: s.label, value: s.key })), v => { d.sector = v; next(); });
       if (k === 'rank') return choice(k, ((cfg.military || {}).ranks || []).map(r => ({ label: r.name, value: r.key })), v => { d.rank = v; d.pilot = null; d.grade = null; next(); }, { grid: true });
-      if (k === 'grade') { const sc = E().rankScale(rankObj()) || { grades: 0 }; return textIn(k, 'int', v => { const n = money(v); if (!(Number.isInteger(n) && n >= 1 && n <= sc.grades)) return 'اكتب رقم الدرجة من 1 إلى ' + sc.grades; d.grade = n; me('الدرجة ' + n); next(); }, 'رقم الدرجة', { label: 'ما أعرف', fn: () => { d.grade = 0; next(); } }); }
+      if (k === 'grade') { const sc = E().rankScale(rankObj(), cfg.military || {}) || { grades: 0 }; return textIn(k, 'int', v => { const n = money(v); if (!(Number.isInteger(n) && n >= 1 && n <= sc.grades)) return 'اكتب رقم الدرجة من 1 إلى ' + sc.grades; d.grade = n; me('الدرجة ' + n); next(); }, 'رقم الدرجة', { label: 'ما أعرف', fn: () => { d.grade = 0; next(); } }); }
       if (k === 'pilot') return choice(k, [{ label: 'نعم', value: true }, { label: 'لا', value: false }], v => { d.pilot = v; next(); });
       if (k === 'mil_entity' || k === 'employer') {
         const list = entities(k === 'mil_entity' ? 'military' : d.sector);
@@ -224,7 +224,7 @@
         const sc = pr.basicMethod === 'scale' || pr.basicMethod === 'scale_grade';
         if (sc) add('الدرجة الحالية ← عند التقاعد', pr.grade + ' ← ' + pr.gradeAtRet + ' (علاوات دورية: ' + pr.increments + ')');
         add('الراتب الأساسي المتوقع عند التقاعد', fmt2(pr.basic) + ' ريال'); add('المعاش التقاعدي التقديري', fmt2(pr.pension) + ' ريال');
-        info.append(el('p', 're42-muted', sc ? 'الأساسي المتوقع = درجتك الحالية + علاوة دورية واحدة كل 1 محرم حتى تاريخ الإحالة (م15 نظام خدمة الأفراد)، بحد أعلى آخر درجة في رتبتك، دون افتراض ترقية. السلم: ' + pr.scaleSource + (pr.scaleEffective ? ' — ساري من ' + pr.scaleEffective : '') + '.'
+        info.append(el('p', 're42-muted', sc ? 'الأساسي المتوقع = درجتك الحالية + علاوة دورية واحدة كل 1 محرم حتى تاريخ الإحالة (م15 نظام خدمة الأفراد)، بحد أعلى آخر درجة في رتبتك، دون افتراض ترقية. السلم: ' + pr.scaleSource + (pr.scaleEffective ? ' — صادر ' + pr.scaleEffective : '') + (pr.scaleStatus === 'verified' ? '.' : '؛ قيم السلم معتمدة من المنصة وقيد التحقق الرسمي من سريانها.')
           : 'افتراض: المعاش محسوب على راتبك الأساسي الحالي لعدم توفر سلم رواتب رسمي معتمد ' + (pr.basicMethod === 'grade_needed' ? 'أو درجة محددة لحالتك' : 'لرتبتك في إعدادات المنصة') + '؛ لذلك لم تُحتسب العلاوات المستقبلية والنتيجة تقديرية غير مؤكدة.'));
         info.append(el('p', 're42-note', T.pension_note || ''));
         info.append(el('p', 're42-muted', 'وفق نظام التقاعد العسكري (م8): آخر راتب أساسي × أشهر الخدمة المحتسبة ÷ 420، بحد أقصى الراتب الأساسي. لا تدخل فيه البدلات (م2)، ولا يشمل المدد الإضافية (م5) أو التمديد بعد السن (م13).'));
@@ -327,8 +327,8 @@
       show.forEach(s => st.append(el('div', 're42-st', stageLine(s, b.months)))); if (b.stages.length > 5) st.append(el('div', 're42-st', '… ثم ' + stageLine(b.stages[b.stages.length - 1], b.months)));
       c.append(st);
       { // r48: installment now / after obligations end / after retirement
-        const pp = el('div', 're42-pp'); const at = m => fmt(b.pays[Math.min(b.pays.length - 1, m)]) + ' ريال'; pp.append(kv('القسط الشهري', at(0)));
-        const oe = Math.max(0, ...(S.data.obligations || []).map(o => Number(o.months) || 0)); const R0 = (S.last && S.last.profile && S.last.profile.R) || 0;
+        const pp = el('div', 're42-pp'); const at = m => fmt(b.pays[Math.min(b.pays.length - 1, m)]) + ' ريال'; const oe = Math.max(0, ...(S.data.obligations || []).map(o => Number(o.months) || 0));
+        pp.append(kv(oe > 0 && oe < b.months ? 'القسط خلال فترة الالتزامات (الشهر 1–' + oe + ')' : 'القسط الشهري', at(0))); const R0 = (S.last && S.last.profile && S.last.profile.R) || 0;
         if (oe > 0 && oe < b.months) pp.append(kv('القسط بعد انتهاء الالتزامات (من الشهر ' + (oe + 1) + ')', at(oe) + (b.plan === 'fixed' ? ' — ثابت' : '')));
         if (R0 > 0 && R0 < b.months) pp.append(kv('القسط بعد التقاعد (من الشهر ' + (R0 + 1) + ')', at(R0)));
         c.append(pp);
@@ -460,7 +460,7 @@
     }
     const SECT = () => (Wc.sectors || []).map(s => [s.key, s.label]);
     const PLANS = [['any', 'أي نظام'], ['step', 'متزايد'], ['fixed', 'ثابت']], SUP = [['any', 'أي حالة'], ['none', 'غير مدعوم'], ['upfront', 'دعم مقدم'], ['monthly', 'دعم شهري'], ['etizaz', 'اعتزاز']];
-    const TABS = [['general', 'عام'], ['banks', 'البنوك والنسب'], ['limits', 'المدد والاستقطاع'], ['sectors', 'القطاعات والجهات'], ['ranks', 'الرتب والتقاعد'], ['support', 'الدعم والعقارات'], ['questions', 'الأسئلة والنصوص'], ['preview', 'معاينة'], ['log', 'السجل والتراجع'], ['json', 'متقدم']];
+    const TABS = [['general', 'عام'], ['banks', 'البنوك والنسب'], ['limits', 'المدد والاستقطاع'], ['sectors', 'القطاعات والجهات'], ['ranks', 'الرتب والتقاعد'], ['scale', 'سلم الرواتب العسكرية'], ['support', 'الدعم والعقارات'], ['questions', 'الأسئلة والنصوص'], ['preview', 'معاينة'], ['log', 'السجل والتراجع'], ['json', 'متقدم']];
     let cur = 'general'; TABS.forEach(([k, l]) => { const b = btn(tabs, l, () => show(k), 're42-tab'); b.dataset.tab = k; });
     function show(k) {
       cur = k; tabs.querySelectorAll('.re42-tab').forEach(b => b.classList.toggle('on', b.dataset.tab === k)); pane.innerHTML = ''; const P = pane;
@@ -546,6 +546,19 @@
           { k: 'scale_source', label: 'مصدر السلم الرسمي (إلزامي لتفعيله)', type: 'text' }, { k: 'scale_effective', label: 'تاريخ سريان السلم', type: 'text' }],
           { add: () => ({ key: 'r' + Date.now().toString(36), name: '', group: 'nco', age: null }), addLabel: 'إضافة رتبة' });
       }
+      if (k === 'scale') { // r48b: «سلم الرواتب العسكرية» — mortgage calculator only
+        const M = Wc.military = Wc.military || {}; const SS = M.salary_scale = M.salary_scale || { enabled: true, status: 'pending', ranks: [] }; SS.ranks = SS.ranks || [];
+        P.append(el('h4', '', 'سلم الرواتب العسكرية — لتقدير الراتب الأساسي عند التقاعد في الحاسبة العقارية فقط'));
+        field(P, 'استخدام السلم في الحساب', SS, 'enabled', 'bool', { def: true }); field(P, 'اسم السلم', SS, 'name', 'text'); field(P, 'تاريخ الإصدار', SS, 'issued', 'text');
+        field(P, 'المصدر (إلزامي لتفعيله)', SS, 'source', 'textarea', { rows: 2 });
+        field(P, 'حالة التوثيق', SS, 'status', 'select', { options: [['pending', 'معتمد من المالك — قيد التحقق الرسمي'], ['verified', 'موثق رسميًا وساري']], def: 'pending' });
+        field(P, 'ملاحظات', SS, 'note', 'textarea', { rows: 3 });
+        P.append(el('p', 're42-muted', 'لكل رتبة: الراتب الأساسي لكل درجة بالترتيب من الدرجة 1، مفصولة بفواصل. آخر قيمة هي سقف الرتبة ولا تُضاف بعدها علاوات. الحاسبة تضيف علاوة دورية واحدة (الانتقال للدرجة التالية) كل 1 محرم حتى تاريخ الإحالة، دون افتراض ترقية. التعديل والاستبدال يُحفظان كنسخة جديدة قابلة للتراجع.'));
+        list(P, SS.ranks, [{ k: 'key', label: 'الرتبة', type: 'select', options: (M.ranks || []).map(r => [r.key, r.name]) }, { k: 'values', label: 'قيم الدرجات (1 ← الأخيرة)', type: 'csv' }, { k: 'increment', label: 'العلاوة الدورية', type: 'text' }],
+          { extra: (tools, it) => { const v = (it.values || []).map(x => Number(digits(String(x)))); const ok = v.length && v.every((x, i) => x > 0 && (i === 0 || x > v[i - 1]));
+              tools.append(el('small', ok ? 're42-muted' : 're42-err', ok ? v.length + ' درجة — السقف ' + v[v.length - 1].toLocaleString('en-US') : 'قيم غير صالحة (يجب أن تتزايد)')); },
+            add: () => ({ key: ((M.ranks || [])[0] || {}).key || '', values: [], increment: '' }), addLabel: 'إضافة رتبة للسلم' });
+      }
       if (k === 'support') {
         const Sp = Wc.support = Wc.support || {}; P.append(el('h4', '', 'الدعم السكني')); P.append(el('p', 're42-muted', 'الدعم المقدم هو الافتراضي عند اختيار «مدعوم».'));
         field(P, 'مبلغ الدعم المقدم (يضاف لقيمة العقار التقديرية)', Sp, 'upfront_amount', 'num'); field(P, 'تفعيل الدعم الشهري', Sp, 'monthly_enabled', 'bool'); field(P, 'مبلغ الدعم الشهري', Sp, 'monthly_amount', 'num'); field(P, 'عدد أشهر الدعم الشهري (0 = كامل المدة)', Sp, 'monthly_months', 'num');
@@ -604,7 +617,7 @@
     };
     wrap.__re42 = true; W.F99V13RunService = wrap;
   }
-  W.F99RE42 = { openBot, openCenter, isOwner, version: 'r48a' };
+  W.F99RE42 = { openBot, openCenter, isOwner, version: 'r48b' };
   const tick = () => { try { tile(); hookClient(); } catch (e) {} };
   if (D.readyState === 'loading') D.addEventListener('DOMContentLoaded', tick); else tick();
   setInterval(tick, 1500);

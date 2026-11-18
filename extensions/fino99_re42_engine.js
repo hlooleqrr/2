@@ -81,7 +81,7 @@
       const div = num(M.pension_divisor_months, 420) || 420;
       // r48: pension on the EXPECTED last basic at retirement (not today's basic) when the owner entered the rank's official scale
       const eb = expectedBasic(inp, rk, M, today, rd, out.R);
-      Object.assign(out, { basicCurrent: basic, basicMethod: eb.method, grade: eb.grade, gradeAtRet: eb.gradeAtRet, increments: eb.increments, gradesMax: eb.grades, scaleSource: eb.source, scaleEffective: eb.effective });
+      Object.assign(out, { basicCurrent: basic, basicMethod: eb.method, grade: eb.grade, gradeAtRet: eb.gradeAtRet, increments: eb.increments, gradesMax: eb.grades, scaleSource: eb.source, scaleEffective: eb.effective, scaleStatus: eb.status });
       const base = eb.expected;
       let pension = base * out.serviceAtRet / div; if (M.cap_at_basic !== false) pension = Math.min(pension, base);
       out.pension = pension; out.post = pension; out.basic = base;
@@ -101,25 +101,33 @@
     out.monthsToMaxAge = Math.max(0, monthsBetween(today, ageEnd));
     return out;
   }
-  // r48: rank salary scale (owner-entered, must carry its official source). Grades 1..G, basic(g) = first + (g-1)*step.
-  function rankScale(rk) {
-    if (!rk) return null; const first = num(rk.scale_first), step = num(rk.scale_step, NaN), G = Math.floor(num(rk.scale_grades));
+  // r48b: rank salary scale. Preferred: owner-managed «سلم الرواتب العسكرية» (M.salary_scale, explicit basic per grade); legacy: first/step on the rank.
+  const nn = x => { const v = Number(String(x == null ? '' : x).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[^0-9.]/g, '')); return String(x == null ? '' : x).trim() === '' ? NaN : v; };
+  function rankScale(rk, M) {
+    if (!rk) return null; const SS = (M || {}).salary_scale;
+    if (SS && SS.enabled !== false && Array.isArray(SS.ranks) && String(SS.source || '').trim()) {
+      const e = SS.ranks.find(x => x && x.key === rk.key);
+      if (e) { const v = (e.values || []).map(nn); if (!(v.length && v.every((x, i) => x > 0 && (i === 0 || x > v[i - 1])))) return null;
+        return { values: v, grades: v.length, top: v[v.length - 1], source: String(SS.name || SS.source).trim(), effective: String(SS.issued || ''), status: SS.status === 'verified' ? 'verified' : 'pending' }; }
+    }
+    const first = num(rk.scale_first), step = num(rk.scale_step, NaN), G = Math.floor(num(rk.scale_grades));
     if (!(first > 0) || !(step >= 0) || !(G >= 1) || !String(rk.scale_source || '').trim()) return null;
-    return { first, step, grades: G, top: first + (G - 1) * step, source: String(rk.scale_source).trim(), effective: String(rk.scale_effective || '') };
+    const v = []; for (let g = 1; g <= G; g++) v.push(first + (g - 1) * step);
+    return { values: v, grades: G, top: v[G - 1], source: String(rk.scale_source).trim(), effective: String(rk.scale_effective || ''), status: rk.scale_status === 'verified' ? 'verified' : 'pending' };
   }
-  function gradeOf(sc, basic) { if (!sc) return null; for (let g = 1; g <= sc.grades; g++) if (Math.abs(sc.first + (g - 1) * sc.step - num(basic)) < 0.005) return g; return null; }
+  function gradeOf(sc, basic) { if (!sc) return null; for (let g = 1; g <= sc.grades; g++) if (Math.abs(sc.values[g - 1] - num(basic)) < 0.005) return g; return null; }
   // Individuals Service Law art. 15: one periodic increment (next grade in the same rank) on every 1 Muharram; capped at the rank's last grade; no promotion assumed.
   function expectedBasic(inp, rk, M, today, rd, R) {
-    const basic = num(inp.basic); const o = { expected: basic, method: 'current', grade: null, gradeAtRet: null, increments: 0, grades: null, source: '', effective: '' };
+    const basic = num(inp.basic); const o = { expected: basic, method: 'current', grade: null, gradeAtRet: null, increments: 0, grades: null, source: '', effective: '', status: '' };
     if (M.expected_basic === false) { o.method = 'current_rule'; return o; }
-    const sc = rankScale(rk); if (!sc) { o.method = 'no_scale'; return o; }
-    Object.assign(o, { grades: sc.grades, source: sc.source, effective: sc.effective });
+    const sc = rankScale(rk, M); if (!sc) { o.method = 'no_scale'; return o; }
+    Object.assign(o, { grades: sc.grades, source: sc.source, effective: sc.effective, status: sc.status });
     let g = gradeOf(sc, basic), exact = true;
     if (g == null) { const gi = Math.floor(num(inp.grade, 0)); if (!(gi >= 1 && gi <= sc.grades)) { o.method = 'grade_needed'; return o; } g = gi; exact = false; }
     const n = R > 0 ? Math.max(0, toHijri(rd).y - toHijri(today).y) : 0; // 1 Muharram dates after today up to the retirement date
     const gR = Math.min(sc.grades, g + n); o.grade = g; o.gradeAtRet = gR; o.increments = gR - g;
-    if (exact) o.expected = sc.first + (gR - 1) * sc.step;
-    else o.expected = basic > sc.top ? basic : Math.min(sc.top, basic + (gR - g) * sc.step);
+    if (exact) o.expected = sc.values[gR - 1];
+    else o.expected = basic > sc.top ? basic : Math.min(sc.top, basic + sc.values[gR - 1] - sc.values[g - 1]);
     o.method = exact ? 'scale' : 'scale_grade'; return o;
   }
   // max allowed term for the case (global limits); per-bank limits applied later
@@ -235,6 +243,6 @@
     const ok = rank(all.filter(x => x.eligible), cfg); const top = Math.max(1, num(cfg.top_n, 3));
     return { profile: pr, plan, months: opt.months, extend: !!opt.extend, results: ok, top: ok.slice(0, top), rest: ok.slice(top), excluded: all.filter(x => !x.eligible).map(x => ({ id: x.id, name: x.name, reason: x.reason })) };
   }
-  const API = { version: 'r48a', rankScale, gradeOf, expectedBasic, r1, toHijri, fromHijri, addYears, monthsBetween, riyadhToday, validG, profile, durationCard, termCap, schedule, pv, quoteBank, compare, offerMatches, dtiRate, supportKey };
+  const API = { version: 'r48b', rankScale, gradeOf, expectedBasic, r1, toHijri, fromHijri, addYears, monthsBetween, riyadhToday, validG, profile, durationCard, termCap, schedule, pv, quoteBank, compare, offerMatches, dtiRate, supportKey };
   if (typeof module === 'object' && module.exports) module.exports = API; else root.F99RE42Engine = API;
 })(typeof window !== 'undefined' ? window : globalThis);
