@@ -79,8 +79,12 @@
       out.excl = excl; out.serviceNow = svcRaw - excl;
       out.serviceAtRet = out.R > 0 ? Math.max(0, mb(inp.appoint, rd) - excl) : out.serviceNow;
       const div = num(M.pension_divisor_months, 420) || 420;
-      let pension = basic * out.serviceAtRet / div; if (M.cap_at_basic !== false) pension = Math.min(pension, basic);
-      out.pension = pension; out.post = pension; out.basic = basic;
+      // r48: pension on the EXPECTED last basic at retirement (not today's basic) when the owner entered the rank's official scale
+      const eb = expectedBasic(inp, rk, M, today, rd, out.R);
+      Object.assign(out, { basicCurrent: basic, basicMethod: eb.method, grade: eb.grade, gradeAtRet: eb.gradeAtRet, increments: eb.increments, gradesMax: eb.grades, scaleSource: eb.source, scaleEffective: eb.effective });
+      const base = eb.expected;
+      let pension = base * out.serviceAtRet / div; if (M.cap_at_basic !== false) pension = Math.min(pension, base);
+      out.pension = pension; out.post = pension; out.basic = base;
       out.extendAllowed = sc.extend !== false && out.R > 0;
       if (out.R === 0) notes.push('PAST_RETIREMENT_AGE');
     } else if (sector === 'retired') {
@@ -96,6 +100,27 @@
     const ageEnd = addYears(inp.birth, maxAge, L.age_calendar_end || 'gregorian');
     out.monthsToMaxAge = Math.max(0, monthsBetween(today, ageEnd));
     return out;
+  }
+  // r48: rank salary scale (owner-entered, must carry its official source). Grades 1..G, basic(g) = first + (g-1)*step.
+  function rankScale(rk) {
+    if (!rk) return null; const first = num(rk.scale_first), step = num(rk.scale_step, NaN), G = Math.floor(num(rk.scale_grades));
+    if (!(first > 0) || !(step >= 0) || !(G >= 1) || !String(rk.scale_source || '').trim()) return null;
+    return { first, step, grades: G, top: first + (G - 1) * step, source: String(rk.scale_source).trim(), effective: String(rk.scale_effective || '') };
+  }
+  function gradeOf(sc, basic) { if (!sc) return null; for (let g = 1; g <= sc.grades; g++) if (Math.abs(sc.first + (g - 1) * sc.step - num(basic)) < 0.005) return g; return null; }
+  // Individuals Service Law art. 15: one periodic increment (next grade in the same rank) on every 1 Muharram; capped at the rank's last grade; no promotion assumed.
+  function expectedBasic(inp, rk, M, today, rd, R) {
+    const basic = num(inp.basic); const o = { expected: basic, method: 'current', grade: null, gradeAtRet: null, increments: 0, grades: null, source: '', effective: '' };
+    if (M.expected_basic === false) { o.method = 'current_rule'; return o; }
+    const sc = rankScale(rk); if (!sc) { o.method = 'no_scale'; return o; }
+    Object.assign(o, { grades: sc.grades, source: sc.source, effective: sc.effective });
+    let g = gradeOf(sc, basic), exact = true;
+    if (g == null) { const gi = Math.floor(num(inp.grade, 0)); if (!(gi >= 1 && gi <= sc.grades)) { o.method = 'grade_needed'; return o; } g = gi; exact = false; }
+    const n = R > 0 ? Math.max(0, toHijri(rd).y - toHijri(today).y) : 0; // 1 Muharram dates after today up to the retirement date
+    const gR = Math.min(sc.grades, g + n); o.grade = g; o.gradeAtRet = gR; o.increments = gR - g;
+    if (exact) o.expected = sc.first + (gR - 1) * sc.step;
+    else o.expected = basic > sc.top ? basic : Math.min(sc.top, basic + (gR - g) * sc.step);
+    o.method = exact ? 'scale' : 'scale_grade'; return o;
   }
   // max allowed term for the case (global limits); per-bank limits applied later
   function termCap(pr, cfg, extend, bank) {
@@ -180,6 +205,13 @@
     let bankPays = pays.map((p, k) => p + sup(k + 1));
     let P = pv(bankPays, rate, method);
     if (num(bank.max_amount) > 0 && P > num(bank.max_amount)) { const k = num(bank.max_amount) / P; pays = pays.map(p => p * k); bankPays = bankPays.map(p => p * k); P = num(bank.max_amount); res.amountCapped = true; }
+    // r48: client-requested reduction of amount / installment — same term, same rate (PV is linear in the payments)
+    const cut = opt.cut; if (cut && num(cut.value) > 0 && (cut.type === 'amount' || cut.type === 'installment')) {
+      const sp = bankPays.map((x, i) => x - pays[i]); const pvS = sp.some(x => x) ? pv(sp, rate, method) : 0; let k = 1;
+      if (cut.type === 'amount' && P > num(cut.value)) k = Math.max(0, (num(cut.value) - pvS) / (P - pvS));
+      if (cut.type === 'installment') { const mx = Math.max.apply(null, pays); if (mx > num(cut.value)) k = num(cut.value) / mx; }
+      if (k < 1) { pays = pays.map(p => p * k); bankPays = pays.map((p, i) => p + sp[i]); P = pv(bankPays, rate, method); res.reduced = cut.type; }
+    }
     if (!(P > 0)) return Object.assign(res, { reason: 'NO_CAPACITY' });
     const F = bank.fees || {}; const fee = Math.min(P * num(F.admin_pct) / 100, num(F.admin_cap) > 0 ? num(F.admin_cap) : Infinity); const vat = fee * num(F.vat_pct) / 100;
     const totalPays = bankPays.reduce((a, b) => a + b, 0); const profit = totalPays - P;
@@ -198,11 +230,11 @@
   }
   function compare(inp, cfg, opt) {
     opt = opt || {}; const pr = profile(inp, cfg, opt.now); pr.birth = inp.birth;
-    const plan = opt.plan || cfg.default_plan || 'step';
-    const all = (cfg.banks || []).map(b => quoteBank(b, inp, cfg, pr, { plan: (opt.plans || {})[b.id] || plan, months: opt.months, extend: opt.extend, trial: !!opt.trial, offerId: (opt.offers || {})[b.id], entity: opt.entity }));
+    const plan = opt.plan || cfg.default_plan || 'fixed';
+    const all = (cfg.banks || []).map(b => quoteBank(b, inp, cfg, pr, { plan: (opt.plans || {})[b.id] || plan, months: opt.months, extend: opt.extend, trial: !!opt.trial, offerId: (opt.offers || {})[b.id], entity: opt.entity, cut: opt.cut }));
     const ok = rank(all.filter(x => x.eligible), cfg); const top = Math.max(1, num(cfg.top_n, 3));
     return { profile: pr, plan, months: opt.months, extend: !!opt.extend, results: ok, top: ok.slice(0, top), rest: ok.slice(top), excluded: all.filter(x => !x.eligible).map(x => ({ id: x.id, name: x.name, reason: x.reason })) };
   }
-  const API = { version: 'r44a', r1, toHijri, fromHijri, addYears, monthsBetween, riyadhToday, validG, profile, durationCard, termCap, schedule, pv, quoteBank, compare, offerMatches, dtiRate, supportKey };
+  const API = { version: 'r48a', rankScale, gradeOf, expectedBasic, r1, toHijri, fromHijri, addYears, monthsBetween, riyadhToday, validG, profile, durationCard, termCap, schedule, pv, quoteBank, compare, offerMatches, dtiRate, supportKey };
   if (typeof module === 'object' && module.exports) module.exports = API; else root.F99RE42Engine = API;
 })(typeof window !== 'undefined' ? window : globalThis);

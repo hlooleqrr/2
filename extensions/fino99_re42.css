@@ -129,3 +129,11 @@
 .re42-tile{border-color:#bfdbfe!important}
 @media (min-width:700px){.re42-ov{align-items:center}.re42-sheet{border-radius:18px;height:88vh}}
 @media (max-width:360px){.re42-big b{font-size:40px}.re42-amt b{font-size:24px}.re42-choices.grid{grid-template-columns:1fr}}
+
+/* r48 */
+.re42-tag.salary{background:#e8f6ee;color:#0b7a3e;border:1px solid #9fd8b5}
+.re42-rate{display:inline-block;margin-inline-start:6px;font-weight:700;color:#334}
+.re42-seg button.na{opacity:.5}
+.re42-locked{margin:8px 0}
+.re42-cut{flex-wrap:wrap;gap:6px;margin:10px 0}.re42-cut>b{width:100%;font-size:14px}
+.re42-applied .re42-mini{margin-inline-start:8px}
