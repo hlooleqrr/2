@@ -71,8 +71,13 @@
       const basic = num(inp.basic); if (!(basic > 0)) throw Error('BASIC_REQUIRED');
       const rd = addYears(inp.birth, age, M.calendar || 'hijri'); out.retireDate = rd; out.retireAge = age;
       out.R = Math.max(0, monthsBetween(today, rd));
-      out.serviceNow = Math.max(0, monthsBetween(inp.appoint, today));
-      out.serviceAtRet = out.serviceNow + out.R;
+      // r44: counted service (م4/أ، م6): full months only, minus non-counted periods; counted directly appointment -> retirement date
+      const svcCal = M.service_calendar === 'hijri' ? 'hijri' : 'gregorian'; out.serviceCalendar = svcCal;
+      const mb = (a, b) => svcCal === 'hijri' ? monthsBetween(toHijri(a), toHijri(b)) : monthsBetween(a, b);
+      const excl = Math.max(0, Math.floor(num(inp.excludedMonths, 0))); const svcRaw = Math.max(0, mb(inp.appoint, today));
+      if (excl > svcRaw) throw Error('EXCL_INVALID');
+      out.excl = excl; out.serviceNow = svcRaw - excl;
+      out.serviceAtRet = out.R > 0 ? Math.max(0, mb(inp.appoint, rd) - excl) : out.serviceNow;
       const div = num(M.pension_divisor_months, 420) || 420;
       let pension = basic * out.serviceAtRet / div; if (M.cap_at_basic !== false) pension = Math.min(pension, basic);
       out.pension = pension; out.post = pension; out.basic = basic;
@@ -198,6 +203,6 @@
     const ok = rank(all.filter(x => x.eligible), cfg); const top = Math.max(1, num(cfg.top_n, 3));
     return { profile: pr, plan, months: opt.months, extend: !!opt.extend, results: ok, top: ok.slice(0, top), rest: ok.slice(top), excluded: all.filter(x => !x.eligible).map(x => ({ id: x.id, name: x.name, reason: x.reason })) };
   }
-  const API = { version: 'r42a', r1, toHijri, fromHijri, addYears, monthsBetween, riyadhToday, validG, profile, durationCard, termCap, schedule, pv, quoteBank, compare, offerMatches, dtiRate, supportKey };
+  const API = { version: 'r44a', r1, toHijri, fromHijri, addYears, monthsBetween, riyadhToday, validG, profile, durationCard, termCap, schedule, pv, quoteBank, compare, offerMatches, dtiRate, supportKey };
   if (typeof module === 'object' && module.exports) module.exports = API; else root.F99RE42Engine = API;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -19,7 +19,7 @@
   const gStr = g => g ? String(g.d).padStart(2, '0') + '/' + String(g.m).padStart(2, '0') + '/' + g.y : '';
   const tpl = (s, d) => String(s || '').replace(/\{name\}/g, (d && d.name) || '');
   const ERR = { BIRTH_INVALID: 'تاريخ الميلاد غير صحيح', AGE_OUT_OF_RANGE: 'العمر خارج النطاق المسموح للتمويل', NET_REQUIRED: 'أدخل الراتب الصافي', RANK_REQUIRED: 'اختر الرتبة',
-    RANK_AGE_MISSING: 'سن التقاعد لهذه الرتبة غير محدد في الإعدادات', APPOINT_INVALID: 'تاريخ التعيين غير صحيح', BASIC_REQUIRED: 'أدخل الراتب الأساسي' };
+    RANK_AGE_MISSING: 'سن التقاعد لهذه الرتبة غير محدد في الإعدادات', APPOINT_INVALID: 'تاريخ التعيين غير صحيح', BASIC_REQUIRED: 'أدخل الراتب الأساسي', EXCL_INVALID: 'المدة غير المحتسبة أكبر من مدة خدمتك' };
   // ---------- platform access (read-only use of existing globals) ----------
   function isOwner() { try { return !!(typeof activeAccess !== 'undefined' && activeAccess && activeAccess.record && activeAccess.record.owner && typeof finoCentralAdminToken !== 'undefined' && finoCentralAdminToken); } catch (e) { return false; } }
   async function ownerCall(action, data) {
@@ -70,19 +70,20 @@
     const Q = {}; (cfg.questions || []).forEach(q => { Q[q.key] = q; });
     const order = (cfg.questions || []).map(q => q.key);
     const visible = k => {
-      const d = S.data; if (Q[k] && Q[k].enabled === false && !['name', 'sector', 'birth', 'net'].includes(k)) return false;
+      const d = S.data; if (Q[k] && Q[k].enabled === false && !['name', 'sector', 'birth', 'net'].includes(k) && !(isMil() && ['rank', 'mil_entity', 'appoint', 'basic'].includes(k))) return false;
       if (['rank', 'mil_entity', 'appoint', 'basic'].includes(k)) return isMil();
       if (k === 'pilot') { const r = rankObj(); return isMil() && r && r.group === 'officer' && Number(r.pilot_age) > 0; }
       if (k === 'employer') return !!d.sector && !isMil() && d.sector !== 'retired';
       if (k === 'property') return (cfg.properties || []).filter(p => p.enabled !== false).length > 0;
       return true;
     };
-    const answered = k => k === 'obligations' ? !!S.data.obl_done : k === 'support' ? S.data.supported != null : S.data[k] != null && S.data[k] !== '';
+    const answered = k => k === 'appoint' ? (S.data.appoint != null && S.data.excl_months != null) : k === 'obligations' ? !!S.data.obl_done : k === 'support' ? S.data.supported != null : S.data[k] != null && S.data[k] !== '';
     function next() {
       for (const k of order) if (visible(k) && !answered(k)) return ask(k);
       return durationCard();
     }
-    const qText = k => tpl((Q[k] || {}).text || k, S.data);
+    const DEFQ = { appoint_excl: 'هل لديك مدة لا تُحتسب في التقاعد؟ (غياب دون إجازة، أو إجازة بدون راتب عدا المرضية والدراسية، أو حرمان من الراتب) اكتب عدد الأشهر، أو اختر «لا يوجد».' };
+    const qText = k => tpl((Q[k] || {}).text || DEFQ[k] || k, S.data);
     function choice(k, items, onPick, opt2) {
       clearDock(); bot(qText(k)); const wrap = el('div', 're42-choices' + (opt2 && opt2.grid ? ' grid' : ''));
       items.forEach(it => { const b = btn(wrap, '', () => { me(it.label); onPick(it.value); }, 're42-chip'); if (it.logo) b.append(it.logo); b.append(el('span', '', it.label)); });
@@ -96,11 +97,11 @@
       setTimeout(() => { try { i.focus({ preventScroll: true }); } catch (e) {} }, 60); scroll();
     }
     function dateIn(k, onOk) {
-      clearDock(); bot(qText(k)); const wrap = el('div', 're42-date'); let cal = (k === 'birth' && isMil()) ? 'hijri' : 'gregorian';
+      clearDock(); bot(qText(k)); const wrap = el('div', 're42-date'); const src0 = S.data[k + '_src']; let cal = src0 ? src0.cal : (S.calPref || (isMil() ? 'hijri' : 'gregorian'));
       const tabs = el('div', 're42-seg'); const tG = btn(tabs, 'ميلادي', () => setCal('gregorian')); const tH = btn(tabs, 'هجري', () => setCal('hijri'));
       const row = el('div', 're42-drow'); const mk = ph => { const i = el('input'); i.type = 'text'; i.inputMode = 'numeric'; i.placeholder = ph; i.maxLength = 4; row.append(i); return i; };
       const dd = mk('يوم'), mm = mk('شهر'), yy = mk('سنة'); const conv = el('div', 're42-conv'); const err = el('div', 're42-err');
-      const ok = btn(null, 'اعتماد التاريخ', () => { const g = read(); if (!g) { err.textContent = 'تحقق من اليوم والشهر والسنة'; return; } const h = E().toHijri(g); me(gStr(g) + 'م — ' + gStr(h) + 'هـ'); onOk(g); }, 're42-go wide');
+      const ok = btn(null, 'اعتماد التاريخ', () => { const g = read(); if (!g) { err.textContent = 'تحقق من اليوم والشهر والسنة'; return; } const h = E().toHijri(g); S.calPref = cal; S.data[k + '_src'] = { cal, d: parseInt(digits(dd.value), 10), m: parseInt(digits(mm.value), 10), y: parseInt(digits(yy.value), 10) }; me(cal === 'hijri' ? gStr(h) + 'هـ (يوافق ' + gStr(g) + 'م)' : gStr(g) + 'م (يوافق ' + gStr(h) + 'هـ)'); onOk(g); }, 're42-go wide');
       wrap.append(tabs, row, conv, err, ok); dock.append(wrap);
       function read() {
         const d = parseInt(digits(dd.value), 10), m = parseInt(digits(mm.value), 10), y = parseInt(digits(yy.value), 10); if (!(d && m && y)) return null;
@@ -110,7 +111,7 @@
       function setCal(c) { const g = read(); cal = c; tG.classList.toggle('on', c === 'gregorian'); tH.classList.toggle('on', c === 'hijri'); yy.placeholder = c === 'hijri' ? 'سنة (مثل 1410)' : 'سنة (مثل 1990)';
         if (g) { const v = c === 'hijri' ? E().toHijri(g) : g; dd.value = v.d; mm.value = v.m; yy.value = v.y; } show(); }
       [dd, mm, yy].forEach(i => i.addEventListener('input', show)); setCal(cal);
-      const prev = S.data[k]; if (prev) { dd.value = prev.d; mm.value = prev.m; yy.value = prev.y; cal = 'gregorian'; setCal('gregorian'); }
+      if (src0) { dd.value = src0.d; mm.value = src0.m; yy.value = src0.y; show(); } else { const prev = S.data[k]; if (prev) { dd.value = prev.d; mm.value = prev.m; yy.value = prev.y; cal = 'gregorian'; setCal('gregorian'); } }
       scroll();
     }
     function ask(k) {
@@ -125,7 +126,11 @@
         if (!list.length) return other();
         return choice(k, list.map(n => ({ label: n, value: n })).concat([{ label: 'جهة أخرى', value: '__other' }]), v => { if (v === '__other') other(); else { d[k] = v; next(); } });
       }
-      if (k === 'appoint') return dateIn(k, g => { d.appoint = g; next(); });
+      if (k === 'appoint') {
+        const excl = () => textIn('appoint_excl', 'int', v => { const n = money(v); if (!(Number.isInteger(n) && n >= 0 && n <= 600)) return 'اكتب عدد الأشهر (رقم صحيح)'; d.excl_months = n; me(n ? n + ' شهر' : 'لا يوجد'); next(); }, 'عدد الأشهر', { label: 'لا يوجد', fn: () => { d.excl_months = 0; next(); } });
+        if (d.appoint != null && d.excl_months == null) return excl();
+        return dateIn(k, g => { d.appoint = g; d.excl_months = null; excl(); });
+      }
       if (k === 'birth') return dateIn(k, g => { d.birth = g; next(); });
       if (k === 'net' || k === 'basic') return textIn(k, 'money', v => { const n = money(v); if (!(n >= 1000 && n <= 1000000)) return 'أدخل مبلغًا صحيحًا بالريال'; d[k] = n; me(fmt(n) + ' ريال'); next(); }, 'المبلغ بالريال');
       if (k === 'salary_bank') {
@@ -172,7 +177,7 @@
     // ---------- engine input ----------
     function inp() {
       const d = S.data;
-      return { sector: d.sector, rank: d.rank, pilot: !!d.pilot, birth: d.birth, appoint: d.appoint, basic: d.basic, net: d.net,
+      return { sector: d.sector, rank: d.rank, pilot: !!d.pilot, birth: d.birth, appoint: d.appoint, excludedMonths: d.excl_months || 0, basic: d.basic, net: d.net,
         obligations: d.obligations.map(o => ({ type: o.type, amount: o.amount, months: o.months })), supported: !!d.supported, supportType: d.supportType || 'upfront',
         property: d.property || 'ready', entity: (d.mil_entity && d.mil_entity !== '-') ? d.mil_entity : (d.employer && d.employer !== '-' ? d.employer : null), salary_bank: d.salary_bank };
     }
@@ -201,9 +206,11 @@
       const add = (a, b) => { const row = el('div', 're42-kv'); row.append(el('span', '', a), el('b', '', b)); info.append(row); };
       add('العمر الحالي', durTxt(pr.ageMonths));
       if (pr.sector === 'military') {
-        add('مدة الخدمة الحالية', durTxt(pr.serviceNow)); add('سن التقاعد النظامي للرتبة', yearsTxt(pr.retireAge) + ((cfg.military || {}).calendar === 'hijri' ? ' هجرية' : ''));
-        add('المتبقي للتقاعد', pr.R ? durTxt(pr.R) : 'بلغت سن التقاعد'); add('سنوات الخدمة عند التقاعد', durTxt(pr.serviceAtRet)); add('المعاش التقاعدي التقديري', fmt(pr.pension) + ' ريال');
+        add('مدة الخدمة المحتسبة حتى الآن', durTxt(pr.serviceNow)); if (pr.excl) add('مدة غير محتسبة (م6)', durTxt(pr.excl)); add('سن التقاعد النظامي للرتبة', yearsTxt(pr.retireAge) + ((cfg.military || {}).calendar === 'hijri' ? ' هجرية' : ''));
+        if (pr.retireDate) add('تاريخ الإحالة المتوقع', gStr(E().toHijri(pr.retireDate)) + 'هـ — ' + gStr(pr.retireDate) + 'م');
+        add('المتبقي للتقاعد', pr.R ? durTxt(pr.R) : 'بلغت سن التقاعد'); add('الخدمة المحتسبة عند التقاعد', durTxt(pr.serviceAtRet)); add('الراتب الأساسي المعتمد للمعاش', fmt(pr.basic) + ' ريال'); add('المعاش التقاعدي التقديري', fmt(pr.pension) + ' ريال');
         info.append(el('p', 're42-note', T.pension_note || ''));
+        info.append(el('p', 're42-muted', 'وفق نظام التقاعد العسكري (م8): آخر راتب أساسي × أشهر الخدمة المحتسبة ÷ 420، بحد أقصى الراتب الأساسي. محسوب على راتبك الأساسي الحالي دون افتراض زيادات، ودون العلاوات والبدلات (م2)، ولا يشمل المدد الإضافية (م5) أو التمديد بعد السن (م13).'));
       } else if (pr.retireDate) add('المتبقي للتقاعد', pr.R ? durTxt(pr.R) : 'بلغت سن التقاعد');
       durEl.append(info);
       const go = btn(durEl, T.approve_label || 'اعتماد المدة', async () => { S.months = Number(r.value); me('اعتمدت ' + S.months + ' شهر'); await results(true); }, 're42-go wide');
@@ -291,7 +298,7 @@
       const LBL = { name: 'الاسم', sector: 'القطاع', rank: 'الرتبة', pilot: 'طيار', mil_entity: 'الجهة العسكرية', appoint: 'تاريخ التعيين', employer: 'جهة العمل', birth: 'تاريخ الميلاد', net: 'الراتب الصافي', basic: 'الراتب الأساسي', salary_bank: 'بنك الراتب', support: 'الدعم السكني', property: 'نوع العقار', obligations: 'الالتزامات' };
       order.filter(visible).forEach(k => btn(w, LBL[k] || k, () => {
         if (k === 'obligations') { S.data.obligations = []; S.data.obl_done = false; } else if (k === 'support') { S.data.supported = null; S.data.supportType = null; } else S.data[k] = null;
-        if (k === 'sector') { S.extend = null; } S.months = null; S.offers = {}; S.plans = {}; S.history = []; ask(k);
+        if (k === 'appoint') S.data.excl_months = null; if (k === 'sector') { S.extend = null; } S.months = null; S.offers = {}; S.plans = {}; S.history = []; ask(k);
       }, 're42-chip'));
       dock.append(w); scroll();
     }
@@ -454,7 +461,7 @@
         P.append(el('h4', '', 'الجهات (وزارات وجهات عمل)')); list(P, Wc.entities = Wc.entities || [], [{ k: 'name', label: 'اسم الجهة', type: 'text' }, { k: 'sector', label: 'القطاع', type: 'select', options: SECT() }], { add: () => ({ name: '', sector: 'gov' }), addLabel: 'إضافة جهة' });
       }
       if (k === 'ranks') {
-        const M = Wc.military = Wc.military || {}; field(P, 'تقويم سن التقاعد العسكري', M, 'calendar', 'select', { options: [['hijri', 'هجري'], ['gregorian', 'ميلادي']] }); field(P, 'قاسم المعاش بالأشهر (35 سنة = 420)', M, 'pension_divisor_months', 'num');
+        const M = Wc.military = Wc.military || {}; field(P, 'تقويم سن التقاعد العسكري', M, 'calendar', 'select', { options: [['hijri', 'هجري'], ['gregorian', 'ميلادي']] }); field(P, 'قاسم المعاش بالأشهر (35 سنة = 420)', M, 'pension_divisor_months', 'num'); field(P, 'تقويم عدّ أشهر الخدمة', M, 'service_calendar', 'select', { options: [['gregorian', 'ميلادي'], ['hijri', 'هجري']] });
         field(P, 'المعاش لا يتجاوز الراتب الأساسي', M, 'cap_at_basic', 'bool', { def: true }); field(P, 'التمويل بعد التقاعد مفعّل افتراضيًا للعسكري', M, 'extend_default', 'bool', { def: true });
         P.append(el('p', 're42-muted', 'المصدر: نظام التقاعد العسكري — المادة 8 (جزء من 35) والمادة 11 (سن الإحالة حسب الرتبة).'));
         list(P, M.ranks = M.ranks || [], [{ k: 'name', label: 'الرتبة', type: 'text' }, { k: 'group', label: 'الفئة', type: 'select', options: [['nco', 'أفراد'], ['officer', 'ضباط']] }, { k: 'age', label: 'سن التقاعد', type: 'num' }, { k: 'pilot_age', label: 'سن الطيارين', type: 'num' }],
