@@ -137,3 +137,18 @@
 .re42-locked{margin:8px 0}
 .re42-cut{flex-wrap:wrap;gap:6px;margin:10px 0}.re42-cut>b{width:100%;font-size:14px}
 .re42-applied .re42-mini{margin-inline-start:8px}
+
+/* r49: mortgage bot — keyboard/visualViewport, footer dock, safe areas; capacity lines */
+html.re42-lock{overflow:hidden}
+.re42-ov.re42-bot{top:var(--vvt,0);bottom:auto;height:var(--vvh,100%)}
+.re42-bot .re42-sheet{height:calc(var(--vvh,100dvh) * .94);max-height:100%}
+.re42-bot.kb .re42-sheet{height:100%;border-radius:0}
+.re42-bot .re42-body{position:relative;overscroll-behavior:contain}
+.re42-bot .re42-sheet>.re42-dock{margin:0;flex:0 0 auto;max-height:52%;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:10px 14px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--l);background:#fff}
+.re42-bot .re42-sheet>.re42-dock:empty{display:none}
+.re42-bot.kb .re42-sheet>.re42-dock{padding-bottom:10px}
+.re42-hint{font-size:12px}
+.re42-capbox{background:#f1f6ff;border:1px solid #cfe0ff;border-radius:12px;padding:10px 12px;margin:8px 0;display:flex;flex-direction:column;gap:4px}
+.re42-capline{font-weight:800;font-size:16px;color:var(--ok);margin:0}
+.re42-retmsg{background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:8px 12px;margin:8px 0}.re42-retmsg p{margin:4px 0}
+@media (min-width:700px){.re42-bot .re42-sheet{height:calc(var(--vvh,100dvh) * .88)}}

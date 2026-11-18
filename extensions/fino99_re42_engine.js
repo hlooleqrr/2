@@ -52,7 +52,61 @@
   // ---------- config helpers ----------
   const sectorOf = (cfg, k) => (cfg.sectors || []).find(s => s.key === k) || null;
   const rankOf = (cfg, k) => ((cfg.military || {}).ranks || []).find(r => r.key === k) || null;
-  function dtiRate(rule, income) { rule = rule || {}; return income < num(rule.threshold, 15000) ? num(rule.low, 55) : num(rule.high, 65); }
+  function dtiRate(rule, income) { rule = rule || {}; return income < num(rule.threshold, 15000) ? num(rule.low, 55) : num(rule.high, 65); } // legacy (policy disabled)
+  // r49: «سياسة الاستقطاع العقاري» — SAMA Responsible Lending Principles (ch.4, arts 13–17). Income basis: before retirement = net salary as entered
+  // (basic after pension deduction + fixed allowances, before financing instalments); after retirement = (estimated) pension. Tier 1: <= t1_max; 2: < t2_max; 3: >= t2_max.
+  const nv = (x, d) => (x == null || x === '') ? d : num(x, d);
+  function dtiTier(income, DP) { DP = DP || {}; return income <= nv(DP.t1_max, 15000) ? 1 : income < nv(DP.t2_max, 25000) ? 2 : 3; }
+  function dtiInfo(cfg, income, post, inp, bank, trial) {
+    const DP = cfg.dti_policy;
+    if (!DP || DP.enabled === false) { const D = cfg.dti || {}; return { pct: dtiRate(post ? (D.retired || D.salary) : D.salary, income), tier: null, basis: 'legacy' }; }
+    const X = Object.assign({}, DP.pre || {}); if (post) Object.keys(DP.post || {}).forEach(k => { if (DP.post[k] != null && DP.post[k] !== '') X[k] = DP.post[k]; });
+    const tier = dtiTier(income, DP); let pct, basis;
+    if (tier === 1) { pct = nv(X.t1_pct, 55); basis = 't1';
+      if (X.t1_supported_enabled === true && inp && inp.supported && String(DP.t1_supported_source || '').trim() && nv(X.t1_supported_pct, 0) > 0) { pct = nv(X.t1_supported_pct, 65); basis = 't1_supported'; } }
+    else if (tier === 2) { pct = nv(X.t2_pct, 65); basis = 't2'; }
+    else if (bank && bank.dti_t3_approved === true && nv(bank.dti_t3, 0) > 0 && String(bank.dti_t3_source || '').trim()) { pct = nv(bank.dti_t3, 0); basis = 't3_bank'; }
+    else if (trial && DP.t3_test_in_preview === true && nv(DP.t3_test_pct, 0) > 0) { pct = nv(DP.t3_test_pct, 80); basis = 't3_test'; }
+    else { pct = nv(X.t3_fallback_pct, nv(X.t2_pct, 65)); basis = 't3_fallback'; }
+    return { pct: Math.max(1, Math.min(100, pct)), tier, basis };
+  }
+  // r49: art. 13/هـ — an unequal-instalment obligation is assessed at the monthly average of all its instalments. 'origination' (default):
+  // the average step instalment may not exceed the capacity at origination (month 1); upper stages are levelled until it holds. 'stage': stage caps only.
+  function avgRule(pays, cfg) {
+    const mode = (cfg.installments || {}).avg_rule || 'origination'; const n = pays.length; if (!n || mode === 'stage') return { pays, adjusted: false };
+    const A = pays[0]; const avg = a => { let s = 0; for (const x of a) s += x; return s / n; };
+    if (avg(pays) <= A + 1e-9) return { pays, adjusted: false };
+    let lo = Math.min.apply(null, pays), hi = Math.max.apply(null, pays);
+    for (let k = 0; k < 60; k++) { const mid = (lo + hi) / 2; if (avg(pays.map(p => Math.min(p, mid))) <= A + 1e-9) lo = mid; else hi = mid; }
+    return { pays: pays.map(p => Math.min(p, lo)), adjusted: true, level: lo };
+  }
+  // r49: pricing is separate from instalment distribution — the approved margin does not change with the instalment shape unless the bank has its own step rate.
+  function pickRate(bank, inp, cfg, plan, trial) {
+    const RT = bank.rates || {}; const IN = cfg.installments || {}; const sk = supportKey(inp);
+    const get = p => { let r = num((RT[p] || {})[sk], NaN); if (!(r > 0) && sk === 'etizaz') r = num((RT[p] || {}).upfront, NaN); return r; };
+    let r = get(plan); if (r > 0) return { rate: r, source: 'own' };
+    const sim = trial && nv(IN.sim_rate, 0) > 0 ? { rate: nv(IN.sim_rate, 0), source: 'owner_sim' } : null;
+    if (plan === 'step' && bank.plan_pricing === 'separate') return sim || { rate: NaN, reason: 'NO_STEP_RATE' };
+    if (IN.same_margin !== false) { r = get(plan === 'step' ? 'fixed' : 'step'); if (r > 0) return { rate: r, source: 'same_margin' }; }
+    return sim || { rate: NaN, reason: 'NO_RATE' };
+  }
+  // r49: client-level capacity (no bank specifics): stage caps, highest fixed instalment (= lowest cap over the whole term), months before/after retirement.
+  function capInfo(pr, inp, cfg, months, extend, trial) {
+    try {
+      const N = Math.min(num(months), termCap(pr, cfg, extend, null)); if (!(N >= 1)) return null;
+      const rows = schedule(pr, inp, cfg, N, null, trial); const r2 = x => Math.round(x * 100) / 100; const st = [];
+      rows.forEach(r => { const a = r2(r.cap), l = st[st.length - 1]; if (l && l.amount === a && l.post === r.post) l.to = r.m;
+        else st.push({ from: r.m, to: r.m, amount: a, post: r.post, limit: r2(r.limit), ob: r2(r.ob), pct: r.rate, tier: r.tier, basis: r.basis, income: r.income }); });
+      let mn = Infinity, sum = 0; rows.forEach(r => { mn = Math.min(mn, r.cap); sum += r.cap; });
+      const cp = nv((cfg.dti_policy || {}).consumer_pct, 45); const over = rows.find(r => r.income > 0 && r.ob > r.income * cp / 100 + 1e-9);
+      const fp = rows.find(r => !r.post), lp = rows.find(r => r.post);
+      return { months: N, stages: st, fixedMax: mn, first: rows[0].cap, avg: sum / N, avgRule: (cfg.installments || {}).avg_rule || 'origination',
+        preMonths: rows.filter(r => !r.post).length, postMonths: rows.filter(r => r.post).length,
+        pre: fp ? { income: fp.income, pct: fp.rate, tier: fp.tier, basis: fp.basis, limit: r2(fp.limit) } : null,
+        post: lp ? { income: lp.income, pct: lp.rate, tier: lp.tier, basis: lp.basis, limit: r2(lp.limit) } : null,
+        consumerOver: over ? { m: over.m, pct: r2(over.ob / over.income * 100), limit: cp } : null };
+    } catch (e) { return null; }
+  }
   // ---------- profile: age, retirement, pension, term limits ----------
   function profile(inp, cfg, now) {
     const today = inp.today && validG(inp.today) ? inp.today : riyadhToday(now);
@@ -152,13 +206,12 @@
   }
   // ---------- capacity schedule ----------
   function obligationsAt(obl, m) { let s = 0; for (const o of obl || []) if (m <= num(o.months)) s += num(o.amount); return s; }
-  function schedule(pr, inp, cfg, N) {
-    const D = cfg.dti || {}; const rows = new Array(N);
+  function schedule(pr, inp, cfg, N, bank, trial) {
+    const rows = new Array(N);
     for (let m = 1; m <= N; m++) {
       const post = pr.sector === 'retired' || m > pr.R; const income = post ? pr.post : pr.pre;
-      const rule = post && pr.sector !== 'military' ? (D.retired || D.salary) : (post ? (D.retired || D.salary) : D.salary);
-      const rate = dtiRate(rule, income); const limit = income * rate / 100; const ob = obligationsAt(inp.obligations, m);
-      rows[m - 1] = { m, post, income, rate, limit, ob, cap: Math.max(0, limit - ob) };
+      const di = dtiInfo(cfg, income, post, inp, bank, trial); const rate = di.pct; const limit = income * rate / 100; const ob = obligationsAt(inp.obligations, m);
+      rows[m - 1] = { m, post, income, rate, tier: di.tier, basis: di.basis, limit, ob, cap: Math.max(0, limit - ob) };
     }
     return rows;
   }
@@ -197,17 +250,16 @@
     if (num(bank.min_salary) > 0 && pr.pre < num(bank.min_salary)) return Object.assign(res, { reason: 'MIN_SALARY' });
     const N = Math.min(opt.months, termCap(pr, cfg, opt.extend, bank)); res.months = N; res.termCut = N < opt.months;
     if (!(N >= 12)) return Object.assign(res, { reason: 'TERM' });
-    let rate = num(((bank.rates || {})[plan] || {})[supportKey(inp)], NaN);
-    if (!(rate > 0) && supportKey(inp) === 'etizaz') rate = num(((bank.rates || {})[plan] || {}).upfront, NaN);
+    const pk = pickRate(bank, inp, cfg, plan, !!opt.trial); let rate = pk.rate; res.rateSource = pk.source || null;
     let offer = null;
-    if (opt.offerId) { offer = (bank.offers || []).find(o => o.id === opt.offerId) || null; if (!offerMatches(offer, inp, plan, N, opt.entity)) return Object.assign(res, { reason: 'OFFER_NOT_ELIGIBLE' }); rate = num(offer.rate); }
-    if (!(rate > 0)) return Object.assign(res, { reason: 'NO_RATE' });
-    const rows = schedule(pr, inp, cfg, N); let pays;
+    if (opt.offerId) { offer = (bank.offers || []).find(o => o.id === opt.offerId) || null; if (!offerMatches(offer, inp, plan, N, opt.entity)) return Object.assign(res, { reason: 'OFFER_NOT_ELIGIBLE' }); rate = num(offer.rate); res.rateSource = 'offer'; }
+    if (!(rate > 0)) return Object.assign(res, { reason: pk.reason || 'NO_RATE' });
+    const rows = schedule(pr, inp, cfg, N, bank, !!opt.trial); let pays;
     const ms = inp.supported && supportKey(inp) === 'monthly' && (cfg.support || {}).monthly_enabled ? num((cfg.support || {}).monthly_amount) : 0;
     const msMonths = num((cfg.support || {}).monthly_months);
     const sup = m => (ms > 0 && (msMonths <= 0 || m <= msMonths)) ? ms : 0;
     if (plan === 'fixed') { let mn = Infinity; for (const r of rows) mn = Math.min(mn, r.cap); pays = rows.map(() => mn); }
-    else pays = rows.map(r => r.cap);
+    else { pays = rows.map(r => r.cap); const ar = avgRule(pays, cfg); pays = ar.pays; if (ar.adjusted) res.avgAdjusted = true; } // r49: step + 13/هـ
     if (!pays.length || pays.every(p => p <= 0)) return Object.assign(res, { reason: 'NO_CAPACITY' });
     const method = bank.method === 'flat' ? 'flat' : 'annuity';
     let bankPays = pays.map((p, k) => p + sup(k + 1));
@@ -241,8 +293,8 @@
     const plan = opt.plan || cfg.default_plan || 'fixed';
     const all = (cfg.banks || []).map(b => quoteBank(b, inp, cfg, pr, { plan: (opt.plans || {})[b.id] || plan, months: opt.months, extend: opt.extend, trial: !!opt.trial, offerId: (opt.offers || {})[b.id], entity: opt.entity, cut: opt.cut }));
     const ok = rank(all.filter(x => x.eligible), cfg); const top = Math.max(1, num(cfg.top_n, 3));
-    return { profile: pr, plan, months: opt.months, extend: !!opt.extend, results: ok, top: ok.slice(0, top), rest: ok.slice(top), excluded: all.filter(x => !x.eligible).map(x => ({ id: x.id, name: x.name, reason: x.reason })) };
+    return { profile: pr, plan, months: opt.months, extend: !!opt.extend, capacity: capInfo(pr, inp, cfg, opt.months, !!opt.extend, !!opt.trial), results: ok, top: ok.slice(0, top), rest: ok.slice(top), excluded: all.filter(x => !x.eligible).map(x => ({ id: x.id, name: x.name, reason: x.reason })) };
   }
-  const API = { version: 'r48c', rankScale, gradeOf, expectedBasic, r1, toHijri, fromHijri, addYears, monthsBetween, riyadhToday, validG, profile, durationCard, termCap, schedule, pv, quoteBank, compare, offerMatches, dtiRate, supportKey };
+  const API = { version: 'r49', dtiTier, dtiInfo, avgRule, pickRate, capInfo, rankScale, gradeOf, expectedBasic, r1, toHijri, fromHijri, addYears, monthsBetween, riyadhToday, validG, profile, durationCard, termCap, schedule, pv, quoteBank, compare, offerMatches, dtiRate, supportKey };
   if (typeof module === 'object' && module.exports) module.exports = API; else root.F99RE42Engine = API;
 })(typeof window !== 'undefined' ? window : globalThis);
