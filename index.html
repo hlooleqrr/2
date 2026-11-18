@@ -21449,7 +21449,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 const $=id=>document.getElementById(id);
 const DEFAULT_DOCS=['خطاب تحويل المديونية من البنك الحالي','كشف حساب بنكي لآخر 3 أشهر','تعريف حديث بالراتب','الهوية الوطنية'];
 const FALLBACK_PHONE='966506214458';
-const BASE={enabled:false,title:'اطلب إنجاز معاملتك',message:'نتابع معك طلب تحويل المديونية لدى جهة التمويل، ونساعدك على إنجاز معاملتك بأسرع وقت وبدون تعقيدات.',offer_name:'عرض خاص لإنجاز المعاملة',old_price:2000,new_price:1400,whatsapp:FALLBACK_PHONE,show_documents:true,documents:DEFAULT_DOCS,button_text:'أبي أشوف عرض المتابعة',expiry:'',disclaimer:'لا يُعد تقديم الطلب ضمانًا للموافقة أو مدة الإنجاز.'};
+const BASE={enabled:false,title:'اطلب إنجاز معاملتك',message:'نتابع معك طلب تحويل المديونية لدى جهة التمويل، ونساعدك على إنجاز معاملتك بأسرع وقت وبدون تعقيدات.',offer_name:'عرض خاص لإنجاز المعاملة',old_price:2000,new_price:1400,whatsapp:FALLBACK_PHONE,show_documents:true,documents:DEFAULT_DOCS,button_text:'أرغب بذلك',expiry:'',disclaimer:'لا يُعد تقديم الطلب ضمانًا للموافقة أو مدة الإنجاز.'};
 let settings={version:0,packages:{}},loaded=false,working=false,currentBank=null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[x]));
 const normalized=o=>({...BASE,...o,documents:Array.isArray(o?.documents)?o.documents:DEFAULT_DOCS,enabled:o?.enabled===true,show_documents:o?.show_documents!==false,old_price:Number(o?.old_price??BASE.old_price),new_price:Number(o?.new_price??BASE.new_price)});
@@ -23303,7 +23303,7 @@ window.F99V41Pick=async i=>{if(!active())return;const r=results()[i];if(!r)retur
  say(`<div class="f41-offer"><b>عرض المتابعة على ${esc(r.name)} — يا ${esc(who())}</b><p>صافي الكاش التقديري ${money(r.cashAfterDebt)} ريال، والقسط ${money(r.installment)} ريال.</p>
  <p>أتعاب المتابعة: ${q.discount_active&&Number(q.new_price)<Number(q.old_price)?`<s>${money(q.old_price)} ريال</s> <b>${money(q.new_price)} ريال</b> بعد الخصم`:`<b>${money(q.new_price)} ريال</b>`}.</p>
  ${q.valid_until?`<small>ينتهي الخصم: ${esc(new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Riyadh',dateStyle:'short',timeStyle:'short'}).format(new Date(q.valid_until)))}</small>`:''}<p>تُحدد إمكانية إنجاز المعاملة بعد مراجعة البنك والمستندات.</p>
- ${choices([['أبي أشوف عرض المتابعة',`F99V37StartCompletion(${i})`],['ليس الآن','F99V41LeaveOrStay()']])}</div>`);
+ ${choices([['أرغب بذلك',`F99V37StartCompletion(${i})`],['ليس الآن','F99V41LeaveOrStay()']])}</div>`);
  }catch(e){error('تعذر تحميل عرض الإنجاز: '+(e?.message||e))}
 };
 window.F99V41LeaveOrStay=()=>{lastTrigger='';info('على راحتك يا '+who()+'، أبشر.');};
@@ -24425,7 +24425,7 @@ const oldCancel=window.F99V49CompletionCancel;
 if(typeof oldCancel==='function')window.F99V49CompletionCancel=function(...a){currentCompletionPrompt=false;return oldCancel.apply(this,a)};
 async function showEndOffer(){if(!inResult()||currentCompletionPrompt)return;const e=entry();if(!e?.entryToken||!e?.deviceId)return;
  try{const r=await rpc('f99v41_client_completion_status',{p_entry_token:e.entryToken,p_device_id:e.deviceId});if(!inResult()||!r.enabled||!r.has_first_calculation||!r.has_whatsapp||currentCompletionPrompt)return;
- currentCompletionPrompt=true;const btnText=experience?.completion_button||'أبي أشوف عرض المتابعة';const text=withName(experience?.completion_cta||'يا {name}، عندك عرض لمتابعة إجراءات تمويلك الشخصي لدى الجهة المختارة. تحب تشوف التفاصيل؟');
+ currentCompletionPrompt=true;const btnText=experience?.completion_button||'أرغب بذلك';const text=withName(experience?.completion_cta||'يا {name}، عندك عرض لمتابعة إجراءات تمويلك الشخصي لدى الجهة المختارة. تحب تشوف التفاصيل؟');
  const panel=E('section',null,'f50-end-offer');panel.append(E('p',text));action(panel,btnText,()=>window.F99V49CompletionOpen?.());action(panel,'أكمل مراجعة الحسبة',()=>panel.remove(),'f50-muted');
  const chat=$('finoBotChat');if(chat)chat.append(panel)
  }catch(_){/* A missing entitlement must never display an invented price. */}}
@@ -24575,7 +24575,7 @@ async function ownerExperience(){const b=modal('الرسائل والدعم وم
  try{const cfg=await refreshExperience(),s=b.querySelector('.f50-status');s?.remove();const phone=field(b,'جوال الاتصال الظاهر أعلى الموقع',cfg.display_phone||'0506214458');const support=field(b,'جوال الدعم والاستفسار',cfg.support_phone||'0550214756');
  const showSupport=checkbox(b,'إظهار جوال الدعم للعميل تحت المتجر والصفحة الرئيسية',cfg.show_support!==false);
  const cta=field(b,'رسالة عرض المتابعة (اكتب {name} ليظهر اسم العميل)',cfg.completion_cta||'يا {name}، عندك عرض لمتابعة الإجراءات.','textarea');
- const ctab=field(b,'نص زر عرض المتابعة',cfg.completion_button||'أبي أشوف عرض المتابعة');const message=field(b,'نص طلب المتابعة الافتراضي',cfg.completion_message||'أرغب في متابعة إجراءات التمويل الشخصي عن طريقكم.','textarea');
+ const ctab=field(b,'نص زر عرض المتابعة',cfg.completion_button||'أرغب بذلك');const message=field(b,'نص طلب المتابعة الافتراضي',cfg.completion_message||'أرغب في متابعة إجراءات التمويل الشخصي عن طريقكم.','textarea');
  const rights=field(b,'حقوق النشر أسفل البطاقات والموقع',cfg.rights||'جميع الحقوق محفوظة © FINO99');
  const lblDetails=E('details');lblDetails.append(E('summary','تعديل كلمات أزرار الحسبة'));const labelItems={installment:'زر القسط',cash:'زر صافي الكاش',reduce:'زر تقليل القسط',next:'الجهة التالية',other_bank:'جهة بنسبة أخرى',additional:'خيارات إضافية'};const labelControls={};
  for(const [key,title] of Object.entries(labelItems))labelControls[key]=field(lblDetails,title,cfg.labels?.[key]||({installment:'كم القسط؟',cash:'كم يصفّى لي كاش؟',reduce:'أبي أقلّل القسط',next:'الجهة المرشحة التالية',other_bank:'عندي جهة بنسبة أقل',additional:'خيارات إضافية للحسبة'}[key]));b.append(lblDetails);
@@ -24690,7 +24690,7 @@ window.FINO99FormatRiyal=fmtSAR;
 // Only visible finance money is rounded. Bank percentages and exact Salla checkout prices are untouched.
 const moneyRx=/(?<![\d٠-٩,.])([\d٠-٩]{1,3}(?:[,٬][\d٠-٩]{3})*|[\d٠-٩]+)[.٫]([\d٠-٩]{1,2})(?=\s*(?:ريال(?:ًا)?|ر\.س|﷼))/g;
 const euroRx=/(?<![\d٠-٩,.])([\d٠-٩]{1,3}(?:[,٬][\d٠-٩]{3})*|[\d٠-٩]+)[.٫]([\d٠-٩]{1,2})(?![\d٠-٩%.])/g;
-const oldWords=[['نكمل من حيث تختار، بدون إعادة طلب اسمك.',''],['نعم، أبغى إنجاز المعاملة','أبي أشوف عرض المتابعة'],['نعم، أريد الإنجاز','أبي أرسل طلب المتابعة'],['أبي أطلب الإنجاز','أبي أشوف عرض المتابعة'],['هامش الربح السنوي','هامش الربح السنوي'],['هامش الربح السنوي','الهامش السنوي'],['هامش الربح السنوي','هامش الربح السنوي']];
+const oldWords=[['نكمل من حيث تختار، بدون إعادة طلب اسمك.',''],['نعم، أبغى إنجاز المعاملة','أرغب بذلك'],['نعم، أريد الإنجاز','أبي أرسل طلب المتابعة'],['أبي أطلب الإنجاز','أرغب بذلك'],['هامش الربح السنوي','هامش الربح السنوي'],['هامش الربح السنوي','الهامش السنوي'],['هامش الربح السنوي','هامش الربح السنوي']];
 function fixNode(t,parent){if(!t||!parent||parent.closest('input,textarea,select,option,[contenteditable],#f99s-modal,.f50-renew-tiles'))return;
  const toLatin=x=>String(x).replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)));
  let out=t.nodeValue||'';for(const [from,to] of oldWords)out=out.replaceAll(from,to);
@@ -24704,7 +24704,7 @@ function patchChat(){const chat=document.getElementById('finoBotChat');if(!chat)
  const walker=document.createTreeWalker(chat,NodeFilter.SHOW_TEXT);const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
  nodes.forEach(n=>fixNode(n,n.parentElement));
  for(const el of chat.querySelectorAll('button')){
-  if(/^(نعم،?\s*أبغى إنجاز المعاملة|أبي أطلب الإنجاز)$/.test(el.textContent.trim()))el.textContent='أبي أشوف عرض المتابعة';
+  if(/^(نعم،?\s*أبغى إنجاز المعاملة|أبي أطلب الإنجاز)$/.test(el.textContent.trim()))el.textContent='أرغب بذلك';
  }
 }
 let ticking=false;
@@ -28796,7 +28796,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <script src="./extensions/fino99_coupons.js?v=20261115r18"></script>
 <link rel="stylesheet" href="./extensions/fino99_fee_offers.css?v=20261115r18">
 <script src="./extensions/fino99_fee_offers.js?v=20261116r22E"></script>
-<script src="./extensions/fino99_followup22.js?v=20261117r34a"></script>
+<script src="./extensions/fino99_followup22.js?v=20261118r39a"></script>
 <link rel="stylesheet" href="./extensions/fino99_service_tools.css?v=20261115r18">
 <script src="./extensions/fino99_service_tools.js?v=20261116r22INTY"></script>
 <link rel="stylesheet" href="./extensions/fino99_renewal22.css?v=20261118r36a">
@@ -28844,8 +28844,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <script src="./extensions/fino99_identity22.js?v=20261118r36a"></script>
 <script src="./extensions/fino99_package_options22.js?v=20261117r34a"></script>
 <!-- r38: owner desk, appointments board, contracts & payments, client contract gate (additive). -->
-<link rel="stylesheet" href="./extensions/fino99_r38.css?v=20261118r38a">
-<script src="./extensions/fino99_r38.js?v=20261118r38a"></script>
+<link rel="stylesheet" href="./extensions/fino99_r38.css?v=20261118r39a">
+<script src="./extensions/fino99_r38.js?v=20261118r39a"></script>
  <!-- R23 presentation-only enhancement: no calculator, inventory, or session modifications. -->
 </body>
 </html>

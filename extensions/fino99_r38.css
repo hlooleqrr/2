@@ -108,3 +108,30 @@ html.f38-lock,html.f38-lock body{overflow:hidden!important}
 .f38-exit-note{margin:8px 0 4px;padding:8px 10px;border-radius:10px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;font-size:13px;line-height:1.8}
 #f34FeeFront .f49-card{border-radius:18px}
 @media print{html.f38-noprint body{display:none!important}.f38-ov{position:static;background:none}.f38-sheet{box-shadow:none;max-height:none}.f38-head .f38-x,.f38-pnav,.f38-row{display:none!important}}
+/* r39 — owner desk: only the new board in new mode; the previous version shows everything as it was */
+#ownerHub.f38-new:not(.f38-legacy)>:not(.viewport):not(:has(#f99od13-desktop)){display:none!important}
+#ownerHub.f38-new:not(.f38-legacy) .viewport>:not(#f99od13-desktop):not(:has(#f99od13-desktop)){display:none!important}
+#ownerHub.f38-new:not(.f38-legacy) #f99od13-desktop>:not(.f99od13-head):not(.f38-home){display:none!important}
+#ownerHub.f38-new.f38-panel #f99od13-desktop>#f99od13-panel{display:block!important}
+#ownerHub.f38-new.f38-legacy .f38-home .f38-urgent{display:none}
+.f38-home .f38-back{display:inline-flex;width:100%;justify-content:center;font-weight:800}
+.f38-grid .f38-tile.f38-main{min-height:132px}
+.f38-grid .f38-tile.f38-main .f38-ic{font-size:30px}
+.f38-tile:active{transform:scale(.985)}
+.f38-list{display:flex;flex-direction:column;gap:8px;margin:10px 0}
+.f38-row-btn{appearance:none;display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"ic t pill" "ic s pill";align-items:center;column-gap:10px;row-gap:2px;width:100%;text-align:right;border:1px solid var(--f38-line);background:#fff;border-radius:14px;padding:12px;font:inherit;color:var(--f38-ink);cursor:pointer;min-height:58px}
+.f38-row-btn>.f38-ic{grid-area:ic;font-size:22px}.f38-row-btn>b{grid-area:t;font-size:15px;line-height:1.45}.f38-row-btn>small{grid-area:s;color:var(--f38-mut);font-size:12.5px;line-height:1.5}
+.f38-row-btn>.f39-pill{grid-area:pill}
+.f38-row-btn:disabled{opacity:.55;cursor:not-allowed}
+.f38-row-btn.f38-pkg{grid-template-columns:1fr auto;grid-template-areas:"t pill" "s pill"}
+.f39-pill{font-style:normal;font-size:12px;font-weight:800;border-radius:999px;padding:4px 10px;white-space:nowrap;border:1px solid transparent}
+.f39-av{background:#e7f8ef;color:#05663e;border-color:#b8e6cc}.f39-cs{background:#fff6dd;color:#7a5400;border-color:#f1d68b}.f39-st{background:#fdecec;color:#9b1c1c;border-color:#f5c2c2}.f39-ar{background:#eef1f5;color:#4a5668;border-color:#d8dee7}
+.f38-pkg-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.f38-pkg-head h3{margin:4px 0;font-size:18px}
+.f38-sec{border:1px solid var(--f38-line);border-radius:14px;padding:12px;margin:12px 0;background:#fff}.f38-sec h4{margin:0 0 8px;font-size:15px}
+.f38-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.f38-seg .f38-btn{font-size:13px;padding:9px 6px;min-height:44px}
+details.f39-del{border-color:#f5c2c2;background:#fffafa}details.f39-del>summary{cursor:pointer;font-weight:800;color:#9b1c1c}
+.f39-del-btn{background:#b91c1c!important;color:#fff!important;border-color:#b91c1c!important;margin-top:8px}
+details.f38-arch{margin-top:10px}details.f38-arch>summary{cursor:pointer;color:var(--f38-mut);font-weight:700;padding:6px 0}
+/* r39 — rights line inside the existing footer (small, no overlay over buttons) */
+.f39-rights{flex-basis:100%;width:100%;text-align:center;font-size:11.5px;line-height:1.7;color:#7a8794;letter-spacing:0;margin-top:2px;font-weight:600;direction:rtl}
+@media print{.f39-rights{display:none}}

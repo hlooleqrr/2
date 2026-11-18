@@ -24,7 +24,14 @@
   define('discounted_fee', 'الأتعاب بعد الخصم', 'أتعاب المتابعة بعد الخصم: {amount} ريال', ['amount']);
   define('terms', 'الشروط المعتمدة', '{terms}', ['terms']);
   define('expiry', 'صلاحية العرض', 'صلاحية العرض حتى: {expiry} (بتوقيت الرياض)', ['expiry']);
-  define('consent', 'الموافقة الفعلية على المتابعة', 'أبي تتابعون إجراءات تمويلي — فتح واتساب', [], consentCategory);
+  define('consent', 'الموافقة الفعلية على المتابعة', 'أرغب بذلك', [], consentCategory);
+  // r39: the approved marketing card — congratulation first, then the offer; texts editable by the owner.
+  define('congrats', 'عنوان التهنئة في بطاقة العرض', '🎉 مبروك يا {client}!', ['client']);
+  define('congrats_lead', 'نص التهنئة (عند خلو نص العرض المعتمد)', 'حصلت على عرض خاص لمتابعة إجراءات تمويلك لدى الجهات التمويلية.');
+  define('offer_days', 'مدة العرض', 'مدة العرض: {days} أيام من تاريخ ووقت إصدار هذه الحسبة', ['days']);
+  define('offer_ends', 'تاريخ انتهاء العرض', 'ينتهي العرض: {expiry} (بتوقيت الرياض)', ['expiry']);
+  define('offer_expired', 'انتهاء مدة العرض', 'انتهت مدة هذا العرض لهذه الحسبة.', [], consentCategory);
+  define('loading', 'تجهيز العرض', 'جاري تجهيز عرضك الخاص…', [], consentCategory);
   define('close', 'إغلاق بطاقة العرض', 'إغلاق العرض', [], consentCategory);
   define('prepared', 'ملاحظة التجهيز دون إرسال تلقائي', 'جهّزنا رسالتك في واتساب. راجعها وأرسلها بنفسك؛ لا يتم اعتماد أي طلب تلقائيًا.', [], consentCategory);
   define('unavailable', 'تعذر تحميل العرض', 'ما قدرت أجيب عرضًا معتمدًا لهذا الكود الآن. لم يتم إرسال أي طلب.', [], consentCategory);
@@ -118,7 +125,22 @@
     return Number(q.max_calculations) > 0 && Number(q.calculations_remaining) === 0;
   }
   async function quote(r) { return rpc('f99v41_client_completion_quote', { ...args(), p_package_key: packageKey(), p_cash: Number(r.cashAfterDebt || 0), p_principal: Number(r.principalBeforeFees || 0) }); }
-  function expiry(q) { return q.valid_until && Number.isFinite(Date.parse(q.valid_until)) ? new Intl.DateTimeFormat('ar-SA', { timeZone: 'Asia/Riyadh', dateStyle: 'medium', timeStyle: 'short' }).format(new Date(q.valid_until)) : ''; }
+  // r39: 5 days from the actual issue time of this calculation (stored once per calculation; reopening never renews it).
+  const OFFER_DAYS = 5, ISSUED = 'f99r39_fee_issued';
+  const hash = t => { let h = 2166136261; for (const c of String(t)) { h ^= c.codePointAt(0); h = Math.imul(h, 16777619) >>> 0; } return h.toString(36); };
+  function issuedAt() {
+    const marks = chat()?.querySelectorAll('.f85-calc-marker'), last = marks && marks[marks.length - 1];
+    const key = hash(entry()?.entryToken || session() || 'x') + ':' + (last?.dataset.f85CalcIndex || calcSeq);
+    let map = {}; try { map = JSON.parse(w.localStorage.getItem(ISSUED) || '{}') || {}; } catch (_) {}
+    if (!Number.isFinite(map[key])) {
+      map[key] = Date.now(); const ks = Object.keys(map).sort((a, b) => map[a] - map[b]); ks.slice(0, Math.max(0, ks.length - 40)).forEach(k => delete map[k]);
+      try { w.localStorage.setItem(ISSUED, JSON.stringify(map)); } catch (_) {}
+    }
+    return map[key];
+  }
+  function offerEnd(q) { const end = issuedAt() + OFFER_DAYS * 86400000, server = q?.valid_until ? Date.parse(q.valid_until) : NaN; return Number.isFinite(server) ? Math.min(server, end) : end; }
+  const fmtDate = t => new Intl.DateTimeFormat('ar-SA', { timeZone: 'Asia/Riyadh', dateStyle: 'medium', timeStyle: 'short' }).format(new Date(t));
+  function expiry(q) { return fmtDate(offerEnd(q)); }
   async function invitation(i = selected(), opts = {}) {
     if (!active() || postponed.has(session())) return false;
     if (!opts.front && host?.isConnected && displayed === snapshot(rows()[i])) return true;
@@ -127,17 +149,17 @@
     try {
       if (!await allowed()) return false;
       bank().assertIdentity(id); if (!active() || postponed.has(id)) return false;
-      const h = slot('f41-offer f34-invite', opts.front ? 'front' : 'inline');
+      const direct = !!rows()[i];
+      const h = slot(direct ? 'f49-card f49-completion-request f39-fee' : 'f41-offer f34-invite', direct || opts.front ? 'front' : 'inline');
       displayed = snapshot(rows()[i]);
       if (!rows()[i]) {
         h.append(el('p', T('pick'))); const a = el('div', undefined, 'f49-actions'); h.append(a);
         rows().forEach((r, n) => button(a, T('pick_result', { entity: r.name, installment: fmt(r.installment) }), () => { clear(); invitation(n); }));
         button(a, T('postpone'), cancel); return true;
       }
-      h.append(el('b', T('invite', { client: who() })));
-      const a = el('div', undefined, 'f41-options'); h.append(a);
-      const yes = button(a, T('view'), async () => { if (busy) return; busy = true; yes.disabled = true; responded.add(calcKey()); await openCard(Number(i)); });
-      yes.className = 'f41-primary'; button(a, T('postpone'), cancel); return true;
+      // r39: the approved card itself is shown first (owner order), with «أرغب بذلك» and «ليس الآن».
+      h.append(el('p', T('loading'), 'f39-loading')); const a = el('div', undefined, 'f39-actions'); h.append(a); button(a, T('postpone'), cancel).className = 'f39-later';
+      responded.add(calcKey()); issuedAt(); await openCard(Number(i)); return true;
     } catch (_) { return false; }
   }
   function others(h, i) {
@@ -154,39 +176,48 @@
     const g = gateNext; gateNext = null; if (typeof g === 'function') return g();
   }
   function addText(parent, key, vars, tag = 'p', cls) { if (shown(key)) parent.append(el(tag, T(key, vars), cls)); }
+  function congrats(offer) {
+    const name = who().trim(); let head = T('congrats', { client: name }); if (!name) head = head.replace(/\s*يا\s*!/, '!').replace(/يا\s+،/, '');
+    const lines = String(offer?.message || '').split('\n').map(x => x.trim()).filter(x => x && !x.startsWith('⏳'));
+    let lead = lines.join('\n').replace(/^(?:🎉)?\s*مبروك[^!،.]*[!،.]?\s*/u, '').trim();
+    if (!lead) lead = T('congrats_lead');
+    return [head, lead];
+  }
+  const legalText = t => String(t || '').split('\n').filter(x => !x.trim().startsWith('⏳')).join('\n').trim();
   function render(r, q, offer, index, id, prev) {
-    const h = slot(), current = Number(q.new_price), old = Number(q.old_price);
+    const h = slot('f49-card f49-completion-request f39-fee'), current = Number(q.new_price), old = Number(q.old_price);
     if (!Number.isFinite(current) || current < 0) throw Error('FEE_INVALID');
     const discounted = q.discount_active === true && Number.isFinite(old) && old > current;
     pending = { index, key: r.key, quote: q, snapshot: snapshot(r), session: id, offer };
     displayed = pending.snapshot;
-    addText(h, 'entity', { client: who(), entity: r.name }, 'strong');
-    const hero = el('div', undefined, 'f82-fee-hero'); h.append(hero);
-    addText(hero, 'title', { client: who() }, 'strong');
-    if (Number.isFinite(old) && shown('previous')) {
-      const before = el('p'); const text = T('previous', { amount: fmt(old) });
-      const amount = fmt(old) + ' ريال', at = text.indexOf(amount);
-      if (at >= 0) { before.append(document.createTextNode(text.slice(0, at)), el('s', amount), document.createTextNode(text.slice(at + amount.length))); } else before.textContent = text;
-      hero.append(before);
-    }
+    const [head, lead] = congrats(offer);
+    const hero = el('div', undefined, 'f39-hero'); h.append(hero);
+    hero.append(el('div', head, 'f39-congrats'), el('p', lead, 'f39-lead'));
+    if (shown('entity')) hero.append(el('p', 'الجهة المرشحة: ' + r.name, 'f39-entity'));
+    const box = el('div', undefined, 'f39-price'); hero.append(box);
+    if (discounted && shown('previous')) { const was = el('p', undefined, 'f39-was'); was.append(document.createTextNode('السعر السابق: '), el('s', fmt(old) + ' ريال')); box.append(was); }
+    box.append(el('small', discounted ? 'أتعاب المتابعة بعد الخصم' : 'أتعاب المتابعة', 'f39-label'), el('div', fmt(current) + ' ريال', 'f39-now'));
     if (discounted) {
       // r25: the saving shown is exactly the difference between the two approved prices.
       const saving = Math.round((old - current) * 100) / 100;
       if (q.discount_amount != null && Math.abs(Number(q.discount_amount) - saving) > 0.005) console.warn('FINO99 fee: discount_amount differs from price difference');
-      addText(hero, 'saving', { amount: fmt(saving) }, 'div', 'f82-fee-saving');
-      if (q.discount_percent != null && Number.isFinite(Number(q.discount_percent))) addText(hero, 'discount', { percent: fmt(q.discount_percent) }, 'small');
+      const parts = []; if (shown('saving')) parts.push(T('saving', { amount: fmt(saving) }));
+      if (shown('discount') && q.discount_percent != null && Number.isFinite(Number(q.discount_percent))) parts.push(T('discount', { percent: fmt(q.discount_percent) }));
+      if (parts.length) box.append(el('div', parts.join(' • '), 'f39-save'));
     }
-    hero.append(el('div', T(discounted ? 'discounted_fee' : 'fee', { amount: fmt(current) }), 'f82-fee-price'));
-    const terms = offer?.terms || offer?.validTerms || offer?.disclaimer || 'الحسبة مبدئية، والنتيجة النهائية وشروطها لدى الجهة التمويلية.';
-    addText(h, 'terms', { terms });
-    if (offer?.show_documents && offer.documents?.length) addText(h, 'terms', { terms: offer.documents.join('\n') }, 'pre');
-    if (expiry(q)) addText(h, 'expiry', { expiry: expiry(q) });
-    addText(h, 'service_note', {}, 'p', 'f34-service');
-    const actions = el('div', undefined, 'f49-actions'); h.append(actions);
-    button(actions, T('consent', {}, offer?.button_text || 'أبي تتابعون إجراءات تمويلي — فتح واتساب'), send);
-    if (rows().length > 1) button(actions, T('other_bank'), () => pickOther(index));
-    button(actions, T('close'), cancel);
+    const end = offerEnd(q), expired = Date.now() >= end, tm = el('div', undefined, 'f39-time'); h.append(tm);
+    tm.append(el('b', '⏳ ' + T('offer_days', { days: OFFER_DAYS })), el('small', expired ? T('offer_expired') : T('offer_ends', { expiry: fmtDate(end) })));
+    const actions = el('div', undefined, 'f39-actions'); h.append(actions);
+    const yes = button(actions, T('consent'), send); yes.className = 'f39-yes'; yes.disabled = expired;
+    if (rows().length > 1) button(actions, T('other_bank'), () => pickOther(index)).className = 'f39-alt';
+    button(actions, T('postpone'), cancel).className = 'f39-later';
+    const legal = el('div', undefined, 'f39-legal'); h.append(legal);
+    const terms = legalText(offer?.terms || offer?.validTerms || offer?.disclaimer) || 'الحسبة مبدئية، والنتيجة النهائية وشروطها لدى الجهة التمويلية.';
+    addText(legal, 'terms', { terms }, 'p');
+    if (offer?.show_documents && offer.documents?.length) addText(legal, 'terms', { terms: offer.documents.join('\n') }, 'pre');
+    addText(legal, 'service_note', {}, 'p', 'f34-service');
     if (prev && (Number(prev.new_price) !== current || Number(prev.old_price) !== old)) status(T('updated'));
+    try { h.scrollTop = 0; } catch (_) {}
   }
   // r34 §4: only the entities the calculator actually recommended; a new quote, no new calculation or charge.
   function pickOther(i) {
@@ -243,6 +274,7 @@
       if (p.snapshot !== snapshot(rows()[p.index]) || approved(q) !== approved(p.quote) || JSON.stringify(offer) !== JSON.stringify(p.offer)) {
         render(rows()[p.index], q, offer, p.index, p.session); status(T('changed')); return;
       }
+      if (Date.now() >= offerEnd(q)) { status(T('offer_expired')); return; }
       if (!/^9665\d{8}$/.test(q.whatsapp) || (q.valid_until && Date.now() >= Date.parse(q.valid_until))) throw Error('QUOTE_INVALID');
       const msg = message(rows()[p.index], q);
       w.open('https://wa.me/' + q.whatsapp + '?text=' + encodeURIComponent(msg), '_blank', 'noopener,noreferrer');
@@ -265,7 +297,7 @@
   function autoInvite() {
     installGate(); if (!active() || !rows().length || !featureOn() || host?.isConnected || front?.isConnected) return;
     if (!chat()?.querySelector('.f25-menu')) return; const k = calcKey(); if (!k || invitedKey === k || responded.has(k)) return;
-    invitedKey = k; void invitation(selected());
+    invitedKey = k; issuedAt(); setTimeout(() => { if (calcKey() === k && active() && !host?.isConnected && !front?.isConnected) void invitation(selected()); }, 1400);
   }
   function installGate() {
     if (gateInstalled || typeof w.F99V82RequestNewCalculation !== 'function') return; gateInstalled = true;
@@ -289,7 +321,28 @@
       + '#f34FeeFront>section{width:100%;max-width:460px;max-height:88vh;overflow:auto;-webkit-overflow-scrolling:touch;margin:0;background:#fff;border-radius:20px;box-shadow:0 24px 60px rgba(0,0,0,.45);padding:18px;outline:none}'
       + '#finoBotChat .f34-invite>b{display:block;white-space:pre-line;line-height:1.9}#finoBotChat .f34-invite{border:2px solid #d4af37}'
       + '.f99v18-spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;vertical-align:middle;margin-inline-end:6px;animation:f99v18spin .8s linear infinite}@keyframes f99v18spin{to{transform:rotate(360deg)}}'
-      + '#f34FeeFront .f34-service{font-size:13px;color:#526c7f;margin:8px 0}#f34FeeFront .f34-others{margin-top:12px;border-top:1px solid #e3edf3;padding-top:10px}';
+      + '#f34FeeFront .f34-service{font-size:13px;color:#526c7f;margin:8px 0}#f34FeeFront .f34-others{margin-top:12px;border-top:1px solid #e3edf3;padding-top:10px}'
+      + '#f34FeeFront>section.f39-fee{max-width:480px;padding:0;border-radius:22px;border:1px solid #e9d9a6;font-family:Cairo,Tajawal,system-ui,sans-serif;color:#10263d;text-align:center}'
+      + '#f34FeeFront .f39-hero{background:linear-gradient(150deg,#0d2742 0%,#16466c 60%,#1d5a85 100%);color:#fff;padding:24px 18px 20px;border-radius:21px 21px 0 0;position:relative}'
+      + '#f34FeeFront .f39-congrats{font-size:clamp(22px,6.4vw,28px);font-weight:900;line-height:1.5;color:#f6d77a;letter-spacing:0}'
+      + '#f34FeeFront .f39-lead{margin:8px auto 0;max-width:400px;font-size:clamp(15px,4.2vw,17px);line-height:1.9;font-weight:700;color:#fff;white-space:pre-line}'
+      + '#f34FeeFront .f39-entity{margin:10px auto 0;font-size:14px;color:#d6e6f5;font-weight:700}'
+      + '#f34FeeFront .f39-price{margin:16px auto 0;background:rgba(255,255,255,.08);border:1px solid rgba(246,215,122,.55);border-radius:18px;padding:14px 12px;max-width:360px}'
+      + '#f34FeeFront .f39-was{margin:0 0 4px;color:#c9d9ea;font-size:14px}#f34FeeFront .f39-was s{color:#ffb4b4;text-decoration-thickness:2px}'
+      + '#f34FeeFront .f39-label{display:block;color:#d6e6f5;font-size:13px;font-weight:700}'
+      + '#f34FeeFront .f39-now{font-size:clamp(32px,9.5vw,42px);font-weight:900;color:#fff;line-height:1.3;direction:rtl}'
+      + '#f34FeeFront .f39-save{display:inline-block;margin-top:8px;background:#e8fff1;color:#06603a;border-radius:999px;padding:6px 14px;font-size:14px;font-weight:900}'
+      + '#f34FeeFront .f39-time{margin:16px 16px 0;background:#fff8e3;border:1px solid #f0d78c;border-radius:14px;padding:11px 12px;display:flex;flex-direction:column;gap:3px}'
+      + '#f34FeeFront .f39-time b{font-size:15px;color:#6b4b00;line-height:1.7}#f34FeeFront .f39-time small{font-size:13px;color:#7a5d12}'
+      + '#f34FeeFront .f39-actions{display:flex;flex-direction:column;gap:9px;margin:16px 16px 0}'
+      + '#f34FeeFront .f39-actions button{min-height:48px;border-radius:14px;font:800 15px Cairo,Tajawal,system-ui,sans-serif;cursor:pointer;width:100%}'
+      + '#f34FeeFront .f39-yes{background:linear-gradient(135deg,#f3d37a,#d4a72c);color:#1d1400;border:0;font-size:18px!important;min-height:56px!important;box-shadow:0 8px 20px rgba(212,167,44,.35)}'
+      + '#f34FeeFront .f39-yes:disabled{opacity:.55;box-shadow:none}#f34FeeFront .f39-alt{background:#fff;color:#16466c;border:1.5px solid #16466c}'
+      + '#f34FeeFront .f39-later{background:#f3f6f9;color:#40576b;border:1px solid #dbe4ec}'
+      + '#f34FeeFront .f39-legal{margin:16px 16px 0;padding:12px 2px 16px;border-top:1px solid #e7edf2;text-align:right}'
+      + '#f34FeeFront .f39-legal p,#f34FeeFront .f39-legal pre{margin:4px 0;font-size:12.5px;line-height:1.85;color:#5b6b7f;white-space:pre-line;font-family:inherit}'
+      + '#f34FeeFront .f39-fee [data-f22-status]{margin:0 16px 16px;font-size:13px;color:#16466c;font-weight:700}#f34FeeFront .f39-loading{padding:28px 16px 6px;font-weight:800;color:#16466c}'
+      + '#f34FeeFront .f39-fee .f34-others{margin:12px 16px 0}#f34FeeFront .f39-fee .f49-actions{display:flex;flex-direction:column;gap:8px}';
     document.head.append(st);
   })();
   // r34 §5 owner editor: «تسعيرة أتعاب المتابعة» inside each bank's settings. Server validates and resolves.

@@ -40,7 +40,7 @@
     CLOSURE_OVERLAPS_RESERVED_BOOKING: 'الفترة فيها موعد محجوز؛ انقل الموعد أو اعتذر عنه أولًا.', TPL_INVALID: 'النص قصير أو ينقصه {name}.',
     K_DRAFT_CONFLICT: 'تغيّرت المسودة من جلسة أخرى؛ أعد فتحها.', K_TITLE: 'اكتب عنوان العقد.', K_CLIENT_NAME: 'اكتب اسم العميل.', K_CLIENT_ID: 'رقم الهوية يجب أن يكون 10 أرقام ويبدأ بـ1 أو 2.',
     K_CLIENT_PHONE: 'رقم الجوال غير صحيح.', K_OPEN_KEY: 'رمز الفتح غير صالح (4 إلى 80 حرفًا، ولا يبدأ بـ FK).', K_OPEN_KEY_IN_USE: 'رمز الفتح مستخدم في عقد نشط آخر.',
-    K_PIN_FORMAT: 'الرقم السري من 4 إلى 8 أرقام.', K_PIN_REQUIRED_FOR_WEAK_KEY: 'عند الفتح بالجوال أو الهوية أو رمز قصير يلزم رقم سري إضافي حتى لا يُفتح العقد بالتخمين.',
+    K_PIN_FORMAT: 'الرقم السري من 4 إلى 8 أرقام.', K_PIN_REQUIRED_FOR_WEAK_KEY: 'الرقم السري الإضافي إلزامي لكل عقد حتى لا يُفتح بالتخمين.', K_OPEN_KEY_IS_PACKAGE: 'هذا الرمز مستخدم كود باقة؛ اختر رمزًا آخر.', K_OPEN_KIND: 'طريقة الفتح غير متاحة.',
     K_VALIDITY: 'مدة الصلاحية غير صالحة.', K_DEVICES: 'عدد الأجهزة من 1 إلى 5.', K_PAY_URL: 'رابط الدفع يجب أن يبدأ بـ https://', K_AMOUNT_INVALID: 'المبلغ غير صالح.',
     K_TEMPLATE_SINGLE_PARTY_ONLY: 'هذا القالب متعدد الأطراف؛ أنشئه من بوابة العقود الكاملة.', K_TEMPLATE_NOT_FOUND: 'اختر قالبًا.', K_IBAN: 'الآيبان يجب أن يبدأ بـ SA ويتكون من 24 خانة.',
     K_NOTE_REQUIRED: 'اكتب سبب الرفض.', K_PAYMENT_NOT_PENDING: 'الدفعة رُوجعت مسبقًا.', K_CODE_INVALID: 'الرمز غير صحيح.', K_TOO_MANY_ATTEMPTS: 'محاولات كثيرة. انتظر 15 دقيقة ثم حاول.',
@@ -84,29 +84,105 @@
     if (!root || !hub || root.querySelector('.f38-home')) return;
     hub.classList.add('f38-new');
     const home = el('section', 'f38-home'); home.setAttribute('aria-label', 'لوحة المالك');
-    const urgent = el('div', 'f38-urgent'); urgent.setAttribute('role', 'status'); urgent.append(el('b', '', 'التنبيهات العاجلة'), el('span', 'f38-muted', 'جاري التحميل…')); home.append(urgent);
+    const urgent = el('div', 'f38-urgent'); urgent.setAttribute('role', 'status'); urgent.append(el('b', '', 'التنبيهات'), el('span', 'f38-muted', 'جاري التحميل…')); home.append(urgent);
     const grid = el('div', 'f38-grid'); home.append(grid);
     const tile = (k, icon, title, sub, fn, cls) => { const b = el('button', 'f38-tile' + (cls ? ' ' + cls : '')); b.type = 'button'; b.dataset.k = k; b.onclick = fn;
       b.append(el('span', 'f38-ic', icon), el('b', '', title), el('small', '', sub)); grid.append(b); return b; };
-    tile('appts', '🗓️', 'المواعيد', 'قبل تاخذ العقاري: الحجوزات والأوقات والسجل', () => openAppts(), 'f38-main');
+    // r39 order (owner): alerts above, then appointments + contracts side by side, calculator, store packages, codes & settings, previous version.
+    tile('appts', '🗓️', 'المواعيد', '«قبل تاخذ العقاري» وأي باقة مواعيد لاحقة', () => openAppts(), 'f38-main');
     tile('k', '📝', 'العقود والاتفاقات', 'عقود الأتعاب والعقود الحرة والسداد', () => openK(), 'f38-main');
-    tile('buyout', '∑', 'حاسبة شراء المديونية', 'للاستخدام المباشر مع عملائك', () => { if (typeof W.ownerOpenBuyout === 'function') W.ownerOpenBuyout(); else W.F99OwnerDesktop?.openCategory?.('calculators'); });
-    tile('packages', '⌘', 'الباقات والأكواد والتجديد', 'المتجر والمخزون والتجديد', () => W.F99OwnerDesktop?.openCategory?.('packages'));
-    tile('settings', '⚙️', 'الإعدادات والخدمات الإدارية', 'البنوك والأتعاب والمظهر والسياسات', () => openSettings(home));
-    tile('legacy', '🗂️', 'النسخة السابقة', 'كل الأدوات والواجهات القديمة كما هي', () => legacy(true), 'f38-old');
-    const back = btn(home, '↩ الرجوع للواجهة الجديدة', () => legacy(false), 'f38-back'); back.hidden = true;
+    tile('buyout', '∑', 'حاسبة شراء المديونية', 'احسب تمويل عميلك مباشرة', () => { if (typeof W.ownerOpenBuyout === 'function') W.ownerOpenBuyout(); else openCat('calculators'); });
+    tile('packages', '🛍️', 'باقات المتجر', 'كل الباقات: التشغيل والإيقاف والتعديل والأكواد', () => openPkgs());
+    tile('settings', '⚙️', 'الأكواد والإعدادات', 'المخزون والصلاحيات والإعدادات الأساسية', () => openCats());
+    tile('legacy', '🗂️', 'النسخة السابقة', 'واجهة الإدارة السابقة كاملة بكل خدماتها', () => legacy(true), 'f38-old');
+    const back = btn(home, '↩ الرجوع للوحة الجديدة', () => legacy(false), 'f38-back'); back.hidden = true;
     const head = root.querySelector('.f99od13-head'); if (head) head.after(home); else root.prepend(home);
     loadHome(); clearInterval(homeTimer); homeTimer = setInterval(() => { if (!D.getElementById('f99od13-desktop')) { clearInterval(homeTimer); return; } if (D.visibilityState === 'visible') loadHome(); }, 60000);
   }
-  function legacy(on) {
-    const hub = D.getElementById('ownerHub'); if (!hub) return; hub.classList.toggle('f38-legacy', on);
-    const home = D.querySelector('.f38-home'); if (home) { home.querySelector('.f38-grid').hidden = on; home.querySelector('.f38-back').hidden = !on; }
-    if (on) { const lg = D.querySelector('details.f99od13-legacy'); if (lg) lg.open = true; D.querySelector('.f99od13-hero')?.scrollIntoView({block: 'start', behavior: 'smooth'}); }
+  function legacy(on, panel) {
+    const hub = D.getElementById('ownerHub'); if (!hub) return; hub.classList.toggle('f38-legacy', !!on && !panel); hub.classList.toggle('f38-panel', !!panel);
+    const home = D.querySelector('.f38-home'); if (home) { home.querySelector('.f38-grid').hidden = !!on; home.querySelector('.f38-urgent').hidden = !!on && !panel; home.querySelector('.f38-back').hidden = !on; }
+    if (on && !panel) { const lg = D.querySelector('details.f99od13-legacy'); if (lg) lg.open = true; }
+    if (!on) W.F99OwnerDesktop?.openCategory?.('');
+    (home || hub).scrollIntoView({block: 'start', behavior: 'smooth'});
   }
-  function openSettings(home) {
-    let m = home.querySelector('.f38-cats'); if (m) { m.remove(); return; }
-    m = el('div', 'f38-cats'); OCATS.forEach(([k, t]) => btn(m, t, () => { W.F99OwnerDesktop?.openCategory?.(k); D.getElementById('f99od13-panel')?.scrollIntoView({block: 'start', behavior: 'smooth'}); }));
-    home.querySelector('.f38-grid').after(m);
+  // Opens one original category (its original buttons and listeners) on its own, with a way back.
+  function openCat(k) { closeSheet(); legacy(true, true); W.F99OwnerDesktop?.openCategory?.(k); setTimeout(() => D.getElementById('f99od13-panel')?.scrollIntoView({block: 'start', behavior: 'smooth'}), 60); }
+  const CATS2 = [['packages', '🔑', 'الأكواد والمخزون والتجديد', 'إصدار الأكواد ومخزون كل باقة وتجديدها'], ['banks', '🏦', 'البنوك والنسب', 'المصدر الأساسي ومراجعة النسب'],
+    ['fees', '٪', 'عروض الأتعاب', 'أتعاب المتابعة والخصومات ونصوصها'], ['human', '👥', 'الخدمات البشرية', 'الخدمات والحجوزات الأصلية'], ['docs', '§', 'العقود والمستندات السابقة', 'الأنظمة السابقة بقوالبها وأرشيفها'],
+    ['executive', '◎', 'مكتب المدير التنفيذي', 'ملخص المنصة والأولويات'], ['calculators', '∑', 'كل الحاسبات', 'الشخصي وتحويل المديونية والعقاري'], ['extra', '▦', 'الإعدادات الإضافية', 'السياسات والمظهر والصوت والصلاحيات']];
+  function openCats() {
+    const body = sheet('الأكواد والإعدادات'); say(body, 'كل بند يفتح أدواته الأصلية كما هي، دون نسخ أو تغيير بياناتها.', 'f38-muted');
+    const g = el('div', 'f38-list'); body.append(g);
+    CATS2.forEach(([k, ic, t, sub]) => { const b = el('button', 'f38-row-btn'); b.type = 'button'; b.dataset.cat = k; b.append(el('span', 'f38-ic', ic), el('b', '', t), el('small', '', sub)); b.onclick = () => openCat(k); g.append(b); });
+  }
+  /* ================= STORE PACKAGES (r39) ================= */
+  const PST = {available: ['متاحة للشراء', 'f39-av'], coming_soon: ['ستطلق قريبًا', 'f39-cs'], stopped: ['موقوفة (مخفية)', 'f39-st'], archived: ['محذوفة (مؤرشفة)', 'f39-ar']};
+  const PREASON = {CONFIRM_NAME: 'اكتب اسم الباقة كما هو بالضبط لتأكيد الحذف.', PKG_HAS_BOOKINGS: 'لا يمكن حذف باقة لها مواعيد قادمة؛ أوقفها أولًا أو أنهِ الحجوزات.', PRODUCT_NOT_FOUND: 'الباقة غير موجودة في المتجر.', INVALID_STATE: 'حالة غير صحيحة.'};
+  const pwhy = r => PREASON[r?.reason] || why(r);
+  const ref = path => { let o = W; for (const k of String(path).split('.')) { o = o?.[k]; if (o == null) return null; } return typeof o === 'function' ? o : null; };
+  const runExt = (path, ...args) => { const fn = ref(path); if (!fn) return false; closeSheet(); const ks = String(path).split('.'); const self = ks.slice(0, -1).reduce((o, k) => o?.[k], W) || W; try { void fn.apply(self, args); } catch (e) { console.warn(e); } return true; };
+  const money = v => v == null || v === '' ? '' : Number(v).toLocaleString('en-US', {maximumFractionDigits: 2}) + ' ريال';
+  async function openPkgs(notice) {
+    const body = sheet('باقات المتجر', true); const wt = say(body, 'جاري التحميل…');
+    const r = await adm('f99r39_owner_pkg', {p_action: 'list', p_data: {}}); wt.remove();
+    if (!r.ok) { say(body, why(r), 'f38-err'); return; } if (notice) say(body, notice, 'f38-ok');
+    say(body, 'اختر الباقة لإدارتها من داخلها: الحالة، التعديل، الأكواد والمخزون، التجديد، المعاينة، الحذف.', 'f38-muted');
+    const real = r.items.filter(x => !x.fixture), live = real.filter(x => x.state !== 'archived'), arch = real.filter(x => x.state === 'archived');
+    const list = el('div', 'f38-list'); body.append(list);
+    const row = x => { const b = el('button', 'f38-row-btn f38-pkg'); b.type = 'button'; b.dataset.key = x.key; const st = PST[x.state] || [x.state, ''];
+      b.append(el('b', '', x.name || x.key), el('small', '', [money(x.price), x.service ? 'باقة مواعيد' + (x.upcoming ? ' • ' + x.upcoming + ' موعد قادم' : '') : ''].filter(Boolean).join(' • ')), el('i', 'f39-pill ' + st[1], st[0]));
+      b.onclick = () => openPkg(x.key); return b; };
+    live.forEach(x => list.append(row(x))); if (!live.length) say(list, 'لا توجد باقات.', 'f38-muted');
+    if (arch.length) { const d = el('details', 'f38-arch'); d.append(el('summary', '', 'الباقات المحذوفة (محفوظة في الأرشيف): ' + arch.length)); arch.forEach(x => d.append(row(x))); body.append(d); }
+  }
+  async function openPkg(key, notice) {
+    const body = sheet('إدارة الباقة', true); const wt = say(body, 'جاري التحميل…');
+    const r = await adm('f99r39_owner_pkg', {p_action: 'list', p_data: {}}); wt.remove();
+    const x = r.ok ? r.items.find(i => i.key === key) : null; if (!x) { say(body, r.ok ? 'الباقة غير موجودة.' : why(r), 'f38-err'); return; }
+    if (notice) say(body, notice, 'f38-ok');
+    const st = PST[x.state] || [x.state, ''];
+    const top = el('div', 'f38-pkg-head'); top.append(el('h3', '', x.name || x.key), el('i', 'f39-pill ' + st[1], st[0])); body.append(top);
+    const info = el('div', 'f38-money'); [['السعر', money(x.price)], ['قبل الخصم', money(x.old_price)], ['عدد الحسبات', x.max_calculations ?? ''], ['الأسئلة', x.questions || '']].forEach(([a, v]) => { if (v === '' || v == null) return; const d = el('div'); d.append(el('small', '', a), el('b', '', String(v))); info.append(d); }); body.append(info);
+    if (x.url) { const l = el('a', 'f38-muted', 'رابط الشراء: ' + x.url); l.href = x.url; l.target = '_blank'; l.rel = 'noopener'; body.append(l); }
+    const sct = el('div', 'f38-sec'); sct.append(el('h4', '', 'حالة الظهور والبيع')); body.append(sct);
+    if (x.state === 'archived') {
+      say(sct, 'الباقة محذوفة من الواجهة ومحفوظة ببياناتها وأكوادها.', 'f38-muted');
+      btn(sct, 'استرجاع الباقة (تعود موقوفة)', async ev => { ev.target.disabled = true; const q = await adm('f99r39_owner_pkg', {p_action: 'restore', p_data: {key}}); if (q.ok) openPkg(key, 'تم الاسترجاع. الباقة الآن موقوفة؛ فعّلها عند الحاجة.'); else { ev.target.disabled = false; say(sct, pwhy(q), 'f38-err'); } }, 'f38-primary');
+    } else {
+      const seg = el('div', 'f38-seg'); sct.append(seg);
+      [['available', 'متاحة للشراء'], ['coming_soon', 'ستطلق قريبًا'], ['stopped', 'موقوفة']].forEach(([k, t]) => {
+        const b = btn(seg, (x.state === k ? '✓ ' : '') + t, async ev => { if (x.state === k) return;
+          if (!W.confirm('تغيير حالة «' + (x.name || key) + '» إلى «' + t + '»؟' + (x.service ? '\nالحجوزات القائمة وحقوق العملاء الحاليين لا تتأثر.' : ''))) return;
+          seg.querySelectorAll('button').forEach(z => { z.disabled = true; }); const q = await adm('f99r39_owner_pkg', {p_action: 'state', p_data: {key, state: k}});
+          if (q.ok) { try { W.F99V33RefreshStorefront?.(); W.F99Aqari35?.reload?.(); } catch (_) {} openPkg(key, 'تم: الباقة الآن «' + t + '».'); } else { seg.querySelectorAll('button').forEach(z => { z.disabled = false; }); say(sct, pwhy(q), 'f38-err'); } }, x.state === k ? 'f38-primary' : '');
+        b.dataset.state = k; });
+      say(sct, x.service ? 'الإيقاف أو «ستطلق قريبًا» يمنع الشراء الجديد فقط؛ الحجوزات القائمة وتعديلها والتعويض تبقى تعمل.' : '«ستطلق قريبًا» تُظهر الباقة دون شراء، و«موقوفة» تخفيها من المتجر. الأكواد المباعة تبقى صالحة.', 'f38-muted');
+    }
+    const ed = el('div', 'f38-sec'); ed.append(el('h4', '', 'الإدارة من داخل الباقة')); body.append(ed); const g = el('div', 'f38-list'); ed.append(g);
+    const item = (ic, t, sub, path, ...args) => { const fn = ref(path); const b = el('button', 'f38-row-btn'); b.type = 'button'; b.dataset.act = path; b.append(el('span', 'f38-ic', ic), el('b', '', t), el('small', '', fn ? sub : 'غير متاح في هذه الصفحة الآن'));
+      b.disabled = !fn; b.onclick = () => runExt(path, ...args); g.append(b); };
+    if (x.service) {
+      item('✏️', 'المحتوى والأسعار والروابط والكوبونات', 'الاسم والوصف والنصوص والأسئلة والشروط', 'F99Aqari35.openOwner', 'content');
+      item('🗓️', 'الأيام والمواعيد', 'أوقات العمل ومدة الجلسة', 'F99Aqari35.openOwner', 'schedule');
+      item('🔑', 'الأكواد والمخزون', 'دفعات الأكواد الأساسية والتجديد', 'F99Aqari35.openOwner', 'codes');
+      item('📋', 'الحجوزات والتعويض', 'حجوزات العملاء وحالاتها', 'F99Aqari35.openOwner', 'bookings');
+      item('👁️', 'معاينة العميل', 'بطاقة الباقة كما يراها العميل', 'F99Aqari35.openDetail');
+    } else {
+      item('✏️', 'تعديل الباقة', 'الاسم والوصف والنصوص والأسئلة والأسعار والروابط', 'F99SOpenOwner', key);
+      item('🔑', 'الأكواد والمخزون', 'إصدار الأكواد ومراجعة المخزون', 'F99V17OpenInventory', key);
+      item('🔄', 'التجديد', 'عرض التجديد وأكواده وسعره', 'FINO99V76.ownerPackage', key);
+      item('👁️', 'معاينة العميل', 'المتجر كما يراه العميل', 'FINO99OpenStorefront');
+    }
+    if (x.state !== 'archived') {
+      const dl = el('details', 'f38-sec f39-del'); dl.append(el('summary', '', '🗑️ حذف الباقة')); body.append(dl);
+      say(dl, 'الحذف يخفي الباقة نهائيًا من المتجر ويحفظها في الأرشيف مع أكوادها وسجلاتها (لا تُحذف بيانات). الأكواد المباعة تبقى صالحة لأصحابها.' + (x.upcoming ? ' لا يمكن حذفها الآن لوجود ' + x.upcoming + ' موعد قادم.' : ''), 'f38-muted');
+      const cf = field(dl, 'للتأكيد اكتب اسم الباقة: ' + (x.name || ''), '', {max: 200, wide: 1}); const st2 = el('p', 'f38-err'); dl.append(st2);
+      btn(dl, 'حذف الباقة', async ev => { if (cf.value.trim() !== String(x.name || '').trim()) { st2.textContent = PREASON.CONFIRM_NAME; return; } if (!W.confirm('تأكيد حذف «' + x.name + '» من المتجر؟')) return;
+        ev.target.disabled = true; const q = await adm('f99r39_owner_pkg', {p_action: 'archive', p_data: {key, confirm_name: cf.value.trim()}}); ev.target.disabled = false;
+        if (q.ok) { try { W.F99V33RefreshStorefront?.(); } catch (_) {} openPkgs('تم حذف «' + x.name + '» من المتجر (محفوظة في الأرشيف).'); } else st2.textContent = pwhy(q); }, 'f39-del-btn');
+    }
+    btn(body, '↩ كل الباقات', () => openPkgs(), 'f38-back');
   }
   async function loadHome() {
     const box = D.querySelector('.f38-home .f38-urgent'); if (!box) return;
@@ -282,7 +358,7 @@
   /* ================= CONTRACTS (owner) ================= */
   const FEE_KINDS = ['followup_plain', 'followup_deposit', 'deferred_sale'];
   const KST = {active: 'نشط', completed: 'مكتمل', rejected: 'مرفوض', cancelled: 'ملغى'};
-  const OPEN = [['vault', 'كود العقد (FK) فقط'], ['package_code', 'كود باقة العميل'], ['phone', 'جوال العميل + رقم سري'], ['id', 'هوية العميل + رقم سري'], ['custom', 'رمز مخصص (عربي أو إنجليزي)']];
+  const OPEN = [['custom', 'رمز خاص يحدده المالك (أرقام أو أحرف عربية أو إنجليزية)'], ['vault', 'كود العقد (FK)'], ['phone', 'جوال العميل'], ['id', 'هوية العميل'], ['package_code', 'كود باقة (لم يعد متاحًا)']];
   const TXT = {review: 'بعد رفع إيصال التحويل', salla_review: 'بعد بلاغ الدفع عبر سلة', approved_pay: 'بعد اعتماد الدفعة', rejected_pay: 'بعد رفض الدفعة', thanks: 'صفحة الشكر', approved: 'صفحة تم الاعتماد',
     done: 'صفحة تم الانتهاء', rejected: 'بعد رفض العقد', apology: 'رسالة الاعتذار والإغلاق', geo_consent: 'نص طلب مشاركة الموقع'};
   let KL = null;
@@ -391,8 +467,8 @@
     const pb = field(py, 'التحويل البنكي مع إرفاق إيصال', P.bank, {type: 'checkbox'});
     say(py, 'لا يوجد تحقق آلي من سلة: يظهر الدفع «تحت المراجعة» حتى تعتمده يدويًا بعد التأكد من وصول المبلغ.', 'f38-muted');
     const ac = sec('الدخول والحماية'), A = data.access || {};
-    const ok2 = field(ac, 'طريقة فتح العقد', A.open_kind || 'custom', {options: OPEN}), ky = field(ac, 'رمز الفتح (لكود الباقة أو الرمز المخصص)', A.open_key, {max: 80});
-    const pin = field(ac, 'رقم سري إضافي (اختياري، 4–8 أرقام؛ إلزامي مع الجوال أو الهوية)', A.pin, {ltr: 1, max: 8});
+    const ok2 = field(ac, 'طريقة فتح العقد', A.open_kind && A.open_kind !== 'package_code' ? A.open_kind : 'custom', {options: OPEN.filter(o => o[0] !== 'package_code')}), ky = field(ac, 'رمز فتح العقد (يُدخله العميل في خانة «أدخل الكود» نفسها؛ مطابقة كاملة)', A.open_key, {max: 80});
+    const pin = field(ac, 'رقم سري إضافي (إلزامي، 4–8 أرقام) يُطلب بعد الرمز وقبل عرض أي بيانات', A.pin, {ltr: 1, max: 8});
     const vv = field(ac, 'مدة الصلاحية من أول دخول', A.valid_value || 3, {type: 'number'}), vu = field(ac, 'الوحدة', A.valid_unit || 'days', {options: [['minutes', 'دقائق'], ['hours', 'ساعات'], ['days', 'أيام']]});
     const dm = field(ac, 'الأجهزة المسموحة', A.device_mode || 'client', {options: [['client', 'جهاز العميل فقط'], ['client_owner', 'جهاز العميل وجهاز المالك'], ['custom', 'أجهزة مصرح بها (عدد)']]});
     const dl = field(ac, 'عدد الأجهزة (للخيار الأخير)', A.device_limit || 2, {type: 'number'});
@@ -452,7 +528,7 @@
   let clientTimer = 0; function stopClientTimer() { clearInterval(clientTimer); clientTimer = 0; }
   function openEntry(prefill, err) {
     const body = sheet('دخول العقود والاتفاقات'); const f = el('div', 'f38-form'); body.append(f);
-    say(f, 'أدخل رمز فتح العقد الذي وصلك من صاحب العقد (كود العقد، أو كود باقتك، أو جوالك، أو هويتك، أو الرمز المخصص).', 'f38-muted');
+    say(f, 'أدخل رمز فتح العقد الذي وصلك كما هو تمامًا.', 'f38-muted');
     const k = field(f, 'رمز فتح العقد', prefill || '', {wide: 1, max: 120}); k.autocomplete = 'off'; const st = el('p', 'f38-err'); f.append(st); if (err) st.textContent = err;
     const go = async ev => { const v = k.value.trim(); if (!v) return; ev.target.disabled = true; st.textContent = '';
       const r = await pub('f99r38_party_enter', {p_key: v, p_device_id: KDEV()}); ev.target.disabled = false;
@@ -463,11 +539,11 @@
   async function openParty(session, notice) {
     const body = sheet('العقد'); const wt = say(body, 'جاري التحميل…'); const call = (a, d) => pub('f99r38_party', {p_session: session, p_device_id: KDEV(), p_action: a, p_data: d || {}});
     const v = await call('view'); wt.remove(); if (notice) say(body, notice, 'f38-ok');
-    if (v.reason === 'K_PIN_REQUIRED') { const g = v.gate || {}; body.append(el('h3', '', g.title || 'عقد'), el('p', 'f38-muted', 'رقم الاتفاق ' + (g.ref || '')));
+    if (v.reason === 'K_PIN_REQUIRED') { body.append(el('h3', '', 'تحقق إضافي'), el('p', 'f38-muted', 'أدخل الرقم السري الذي وصلك مع رمز العقد. لن تظهر أي بيانات قبل التحقق.'));
       const p = field(body, 'الرقم السري الإضافي', '', {ltr: 1, max: 8, type: 'password'}); p.inputMode = 'numeric'; const st = el('p', 'f38-err'); body.append(st);
       btn(body, 'تحقق', async ev => { ev.target.disabled = true; const r = await call('pin', {pin: p.value.trim()}); ev.target.disabled = false;
         if (r.ok) openParty(session); else st.textContent = why(r) + (r.left ? ' (متبقي ' + r.left + ' محاولات)' : ''); }, 'f38-primary'); return; }
-    if (v.reason === 'K_GEO_REQUIRED') { const g = v.gate || {}; body.append(el('h3', '', g.title || 'عقد'), el('p', '', g.geo_consent || ''));
+    if (v.reason === 'K_GEO_REQUIRED') { const g = v.gate || {}; body.append(el('h3', '', 'تحقق إضافي'), el('p', '', g.geo_consent || ''));
       const ok = field(body, 'أوافق على مشاركة موقعي الحالي لهذا الغرض', false, {type: 'checkbox'}); const city = field(body, 'المدينة (اختياري)', '', {max: 80}), dist = field(body, 'الحي (اختياري)', '', {max: 80});
       const st = el('p', 'f38-err'); body.append(st);
       btn(body, 'مشاركة موقعي', ev => { if (!ok.checked) { st.textContent = REASONS.K_GEO_CONSENT; return; } if (!navigator.geolocation) { st.textContent = 'جهازك لا يدعم تحديد الموقع.'; return; } ev.target.disabled = true; st.textContent = 'جاري قراءة الموقع من جهازك…';
@@ -531,18 +607,36 @@
   }
   /* FK codes typed in the main code box: r38 deals open here; other deals continue to the original portal unchanged. */
   function hookLogin() {
-    const CODE_RE = /^FK-?[A-Z0-9]{5}-?[A-Z0-9]{5}$/i;
-    const handle = ev => { const input = D.getElementById('f99l-code'); if (!input) return; const v = String(input.value || '').trim().toUpperCase().replace(/\s+/g, '');
-      if (!CODE_RE.test(v) || !W.F99KContracts?.partyEnter) return; ev.preventDefault(); ev.stopImmediatePropagation();
-      const err = D.getElementById('f99l-error'); if (err) { err.textContent = 'جاري فتح بوابة العقد...'; err.style.display = 'block'; }
-      void (async () => { const r = await pub('f99r38_party_enter', {p_key: v, p_device_id: KDEV()});
-        if (r.ok) { const s = r.session; const chk = await pub('f99r38_party', {p_session: s, p_device_id: KDEV(), p_action: 'view', p_data: {}});
-          if (chk.r38 || chk.reason === 'K_PIN_REQUIRED' || chk.reason === 'K_GEO_REQUIRED') { if (err) { err.textContent = ''; err.style.display = 'none'; } try { sessionStorage.setItem(SKEY, s); } catch (_) {} openParty(s); return; } }
-        const ok = await W.F99KContracts.partyEnter(v, err); if (ok && err) { err.textContent = ''; err.style.display = 'none'; } })(); };
+    const FK = /^FK-?[A-Z0-9]{5}-?[A-Z0-9]{5}$/i; let pass = false, busy = false;
+    const quick = async (fn, args) => { try { const r = await W.finoRpc(fn, args, 8000); return r?.data && typeof r.data === 'object' ? r.data : {ok: false}; } catch (_) { return {ok: false}; } };
+    const handle = ev => {
+      if (pass) return; const input = D.getElementById('f99l-code'); if (!input) return;
+      const raw = String(input.value || '').trim(); if (raw.length < 4 || raw.length > 120) return;
+      ev.preventDefault(); ev.stopImmediatePropagation(); if (busy) return; busy = true;
+      const err = D.getElementById('f99l-error');
+      void (async () => {
+        try {
+          // r39: one box for packages and contracts. The server matches the contract key exactly; package codes are never contract keys.
+          const r = await quick('f99r38_party_enter', {p_key: raw, p_device_id: KDEV()});
+          if (r.ok && r.session) {
+            const chk = await quick('f99r38_party', {p_session: r.session, p_device_id: KDEV(), p_action: 'view', p_data: {}});
+            if (chk.r38 || chk.reason === 'K_PIN_REQUIRED' || chk.reason === 'K_GEO_REQUIRED') { if (err) { err.textContent = ''; err.style.display = 'none'; } try { sessionStorage.setItem(SKEY, r.session); } catch (_) {} input.value = ''; openParty(r.session); return; }
+            if (W.F99KContracts?.partyEnter) { const ok = await W.F99KContracts.partyEnter(raw.toUpperCase().replace(/\s+/g, ''), err); if (ok && err) { err.textContent = ''; err.style.display = 'none'; } return; }
+          }
+          if (FK.test(raw.replace(/\s+/g, '')) && W.F99KContracts?.partyEnter) { const ok = await W.F99KContracts.partyEnter(raw.toUpperCase().replace(/\s+/g, ''), err); if (ok && err) { err.textContent = ''; err.style.display = 'none'; } return; }
+          pass = true; try { D.getElementById('f99l-enter')?.click(); } finally { pass = false; }
+        } finally { busy = false; }
+      })();
+    };
     W.addEventListener('click', ev => { if (ev.target?.closest?.('#f99l-enter')) handle(ev); }, true);
     W.addEventListener('keydown', ev => { if (ev.key === 'Enter' && ev.target?.id === 'f99l-code') handle(ev); }, true);
   }
-  function entryLink() { const b = D.getElementById('f99l-enter'); if (!b || D.getElementById('f38-klink')) return; const a = el('button', 'f38-klink', '📝 عندك عقد أو اتفاق؟ ادخل من هنا'); a.type = 'button'; a.id = 'f38-klink'; a.onclick = () => openEntry(); b.after(a); }
+  // r39: no separate contract link on the home page (owner order); remove it if an older build added it.
+  function entryLink() { D.getElementById('f38-klink')?.remove(); }
+  function footer() {
+    if (D.getElementById('f39-rights')) return; const f = D.getElementById('f99l-footer'); if (!f) return;
+    const c = el('div', 'f39-rights', '© FINO99 | الحلول التمويلية الذكية — جميع الحقوق محفوظة'); c.id = 'f39-rights'; c.setAttribute('role', 'contentinfo'); f.append(c);
+  }
   /* ================= aqari client notices ================= */
   const noticed = new WeakSet();
   async function aqariNotices(sheetEl) {
@@ -582,7 +676,7 @@
   /* ================= wiring ================= */
   let tick = 0;
   function scan() {
-    tick = 0; desk(); entryLink();
+    tick = 0; desk(); entryLink(); footer();
     const aq = D.getElementById('f35-aqari'); if (aq && !aq.hidden) { const h = aq.querySelector('.f35-head h2'); if (h && /مواعيدي/.test(h.textContent)) aqariNotices(aq.querySelector('.f35-sheet')); }
     const chat = D.getElementById('finoBotChat'); if (chat) { chat.querySelectorAll('.f85-calc-marker:not([data-f38])').forEach(m => { m.dataset.f38 = '1'; void calcStart(m); }); restartBar(chat);
       chat.querySelectorAll('.f82-end-actions:not([data-f38])').forEach(r => { r.dataset.f38 = '1'; void afterEnd(r); }); }
@@ -593,5 +687,5 @@
   const route = () => { if (/^#(contract|k)$/i.test(location.hash)) { let s = null; try { s = sessionStorage.getItem(SKEY); } catch (_) {} if (s) openParty(s); else openEntry(); } };
   W.addEventListener('hashchange', route);
   if (D.readyState === 'loading') D.addEventListener('DOMContentLoaded', () => { scan(); route(); }, {once: true}); else { setTimeout(() => { scan(); route(); }, 0); }
-  W.F99R38 = Object.freeze({version: 'r38a', openAppts, openK, openEntry, openParty, refreshHome: loadHome});
+  W.F99R38 = Object.freeze({version: 'r39a', openAppts, openK, openEntry, openParty, openPkgs, openPkg, openCats, refreshHome: loadHome});
 })();
