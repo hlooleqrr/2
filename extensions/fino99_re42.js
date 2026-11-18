@@ -223,11 +223,25 @@
       if (opt.mode !== 'client') return true; const sig = JSON.stringify([inp(), S.months, S.extend]); if (S.metered[sig]) return true;
       try {
         const e = typeof finoCentralRestoreEntry === 'function' ? finoCentralRestoreEntry() : null; if (!e || !e.entryToken) throw Error('NO_ENTRY');
-        const r = await finoRpc('f99v21_client_use_and_meter', { p_entry_token: e.entryToken, p_device_id: e.deviceId || (typeof finoCentralDeviceId === 'function' ? finoCentralDeviceId() : ''), p_service: 'mortgage_quote',
-          p_request: { months: S.months, supported: !!S.data.supported, engine: 'r42' }, p_request_id: typeof f99v7CreateRequestId === 'function' ? f99v7CreateRequestId() : String(Date.now()) }, 15000);
+        const r = await finoRpc('f99r47_client_meter', { p_entry_token: e.entryToken, p_device_id: e.deviceId || (typeof finoCentralDeviceId === 'function' ? finoCentralDeviceId() : ''),
+          p_request_id: typeof f99v7CreateRequestId === 'function' ? f99v7CreateRequestId() : (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())) }, 15000);
         if (!r || !r.ok || (r.data && r.data.ok === false)) { bot('الكود لا يسمح بهذه العملية أو انتهى الحد.', 'warn'); return false; }
         S.metered[sig] = true; return true;
       } catch (e) { bot('تعذر التأكد من صلاحية الكود؛ لم نعتمد النتيجة.', 'warn'); return false; }
+    }
+    // r47: short client note only when the client's case differs from the reference case of the owner-provided rates.
+    function refNote(R) {
+      const rf = cfg.rate_ref; if (!rf || trial) return '';
+      const d = [];
+      if (rf.plan && S.plan !== rf.plan) d.push(rf.plan === 'fixed' ? 'نوع القسط (النسب الحالية للقسط الثابت)' : 'نوع القسط');
+      let sk = ''; try { sk = E().supportKey(inp()); } catch (e) {}
+      if (rf.support && sk && sk !== rf.support) d.push('نوع الدعم السكني');
+      const ms = R.results.length ? R.results.map(b => Number(b.months)) : [Number(S.months)];
+      if (rf.months && ms.some(m => m !== Number(rf.months))) d.push('مدة التمويل (المرجع ' + rf.months + ' شهرًا)');
+      const hp = (S.data.obligations || []).some(o => o.type === 'personal' && Number(o.amount) > 0 && Number(o.months) > 0);
+      if (rf.personal === 'yes' && !hp) d.push('عدم وجود تمويل شخصي');
+      if (!d.length) return '';
+      return String(T.rate_ref_note || 'تنبيه: النسب الحالية مرجعية لحالة محددة، وحالتك تختلف في: {diff}. لذلك قد تختلف النسبة الفعلية لدى الجهة التمويلية.').replace(/\{diff\}/g, d.join('، '));
     }
     async function results(fresh) {
       if (fresh && !(await meter())) return;
@@ -240,6 +254,7 @@
       resEl.append(el('p', 're42-meta', 'المدة: ' + S.months + ' شهر (' + durTxt(S.months) + ')' + (S.extend ? ' — تمتد بعد التقاعد' : '')));
       if (S.history.length) btn(resEl, T.back_prev || 'الرجوع للحسبة السابقة', () => { const p = S.history.pop(); Object.assign(S, p); results(false); }, 're42-back');
       if (!R.results.length) resEl.append(el('p', 're42-warn', tpl(T.no_banks, S.data)));
+      { const rn = refNote(R); if (rn) resEl.append(el('p', 're42-warn re42-refnote', rn)); }
       R.top.forEach((b, i) => resEl.append(bankCard(b, i)));
       if (R.rest.length) {
         const more = el('div', 're42-more'); more.hidden = !S.showRest; R.rest.forEach((b, i) => more.append(bankCard(b, i + R.top.length)));
