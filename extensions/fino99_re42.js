@@ -34,7 +34,11 @@
   async function pub() {
     if (pubCache && Date.now() - pubAt < 60000) return pubCache;
     if (typeof finoRpc !== 'function') return null;
-    const r = await finoRpc('f99re_public', {}, 12000); if (!r || !r.ok) return null; pubCache = r.data; pubAt = Date.now(); return pubCache;
+    const r = await finoRpc('f99re_public', {}, 12000); if (!r || !r.ok) return null; let d = r.data;
+    // r48c: owner trial code — the bot opens for that code's own session only; public visibility is unchanged.
+    if (d && d.enabled && !d.visible && !isOwner()) { try { const e = typeof finoCentralRestoreEntry === 'function' ? finoCentralRestoreEntry() : null;
+      if (e && e.entryToken) { const t = await finoRpc('f99r48_trial_public', { p_entry_token: e.entryToken, p_device_id: e.deviceId || (typeof finoCentralDeviceId === 'function' ? finoCentralDeviceId() : '') }, 12000); if (t && t.ok && t.data && t.data.visible) d = t.data; } } catch (x) {} }
+    pubCache = d; pubAt = Date.now(); return pubCache;
   }
   function bankLogo(id) { try { if (typeof BANKS !== 'undefined') { const b = BANKS.find(x => x.id === id); if (b && b.logo) return b.logo; } } catch (e) {} return ''; }
   function logoBox(b) {
@@ -224,7 +228,7 @@
         const sc = pr.basicMethod === 'scale' || pr.basicMethod === 'scale_grade';
         if (sc) add('الدرجة الحالية ← عند التقاعد', pr.grade + ' ← ' + pr.gradeAtRet + ' (علاوات دورية: ' + pr.increments + ')');
         add('الراتب الأساسي المتوقع عند التقاعد', fmt2(pr.basic) + ' ريال'); add('المعاش التقاعدي التقديري', fmt2(pr.pension) + ' ريال');
-        info.append(el('p', 're42-muted', sc ? 'الأساسي المتوقع = درجتك الحالية + علاوة دورية واحدة كل 1 محرم حتى تاريخ الإحالة (م15 نظام خدمة الأفراد)، بحد أعلى آخر درجة في رتبتك، دون افتراض ترقية. السلم: ' + pr.scaleSource + (pr.scaleEffective ? ' — صادر ' + pr.scaleEffective : '') + (pr.scaleStatus === 'verified' ? '.' : '؛ قيم السلم معتمدة من المنصة وقيد التحقق الرسمي من سريانها.')
+        info.append(el('p', 're42-muted', sc ? 'الأساسي المتوقع = درجتك الحالية + علاوة دورية واحدة كل 1 محرم حتى تاريخ الإحالة (م15 نظام خدمة الأفراد)، بحد أعلى آخر درجة في رتبتك، دون افتراض ترقية. السلم: ' + pr.scaleSource + (pr.scaleEffective ? ' — صادر ' + pr.scaleEffective : '') + (pr.scaleStatus === 'verified' ? '.' : pr.scaleStatus === 'owner_approved' ? '؛ السلم المعتمد لدى FINO99.' : '؛ قيم السلم معتمدة من المنصة وقيد التحقق الرسمي من سريانها.')
           : 'افتراض: المعاش محسوب على راتبك الأساسي الحالي لعدم توفر سلم رواتب رسمي معتمد ' + (pr.basicMethod === 'grade_needed' ? 'أو درجة محددة لحالتك' : 'لرتبتك في إعدادات المنصة') + '؛ لذلك لم تُحتسب العلاوات المستقبلية والنتيجة تقديرية غير مؤكدة.'));
         info.append(el('p', 're42-note', T.pension_note || ''));
         info.append(el('p', 're42-muted', 'وفق نظام التقاعد العسكري (م8): آخر راتب أساسي × أشهر الخدمة المحتسبة ÷ 420، بحد أقصى الراتب الأساسي. لا تدخل فيه البدلات (م2)، ولا يشمل المدد الإضافية (م5) أو التمديد بعد السن (م13).'));
@@ -551,7 +555,7 @@
         P.append(el('h4', '', 'سلم الرواتب العسكرية — لتقدير الراتب الأساسي عند التقاعد في الحاسبة العقارية فقط'));
         field(P, 'استخدام السلم في الحساب', SS, 'enabled', 'bool', { def: true }); field(P, 'اسم السلم', SS, 'name', 'text'); field(P, 'تاريخ الإصدار', SS, 'issued', 'text');
         field(P, 'المصدر (إلزامي لتفعيله)', SS, 'source', 'textarea', { rows: 2 });
-        field(P, 'حالة التوثيق', SS, 'status', 'select', { options: [['pending', 'معتمد من المالك — قيد التحقق الرسمي'], ['verified', 'موثق رسميًا وساري']], def: 'pending' });
+        field(P, 'حالة التوثيق', SS, 'status', 'select', { options: [['owner_approved', 'معتمد من المالك'], ['pending', 'قيد التحقق الرسمي'], ['verified', 'موثق رسميًا وساري']], def: 'pending' });
         field(P, 'ملاحظات', SS, 'note', 'textarea', { rows: 3 });
         P.append(el('p', 're42-muted', 'لكل رتبة: الراتب الأساسي لكل درجة بالترتيب من الدرجة 1، مفصولة بفواصل. آخر قيمة هي سقف الرتبة ولا تُضاف بعدها علاوات. الحاسبة تضيف علاوة دورية واحدة (الانتقال للدرجة التالية) كل 1 محرم حتى تاريخ الإحالة، دون افتراض ترقية. التعديل والاستبدال يُحفظان كنسخة جديدة قابلة للتراجع.'));
         list(P, SS.ranks, [{ k: 'key', label: 'الرتبة', type: 'select', options: (M.ranks || []).map(r => [r.key, r.name]) }, { k: 'values', label: 'قيم الدرجات (1 ← الأخيرة)', type: 'csv' }, { k: 'increment', label: 'العلاوة الدورية', type: 'text' }],
@@ -617,7 +621,7 @@
     };
     wrap.__re42 = true; W.F99V13RunService = wrap;
   }
-  W.F99RE42 = { openBot, openCenter, isOwner, version: 'r48b' };
+  W.F99RE42 = { openBot, openCenter, isOwner, version: 'r48c' };
   const tick = () => { try { tile(); hookClient(); } catch (e) {} };
   if (D.readyState === 'loading') D.addEventListener('DOMContentLoaded', tick); else tick();
   setInterval(tick, 1500);

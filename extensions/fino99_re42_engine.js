@@ -108,7 +108,7 @@
     if (SS && SS.enabled !== false && Array.isArray(SS.ranks) && String(SS.source || '').trim()) {
       const e = SS.ranks.find(x => x && x.key === rk.key);
       if (e) { const v = (e.values || []).map(nn); if (!(v.length && v.every((x, i) => x > 0 && (i === 0 || x > v[i - 1])))) return null;
-        return { values: v, grades: v.length, top: v[v.length - 1], source: String(SS.name || SS.source).trim(), effective: String(SS.issued || ''), status: SS.status === 'verified' ? 'verified' : 'pending' }; }
+        return { values: v, grades: v.length, top: v[v.length - 1], source: String(SS.name || SS.source).trim(), effective: String(SS.issued || ''), status: (SS.status === 'verified' || SS.status === 'owner_approved') ? SS.status : 'pending' }; }
     }
     const first = num(rk.scale_first), step = num(rk.scale_step, NaN), G = Math.floor(num(rk.scale_grades));
     if (!(first > 0) || !(step >= 0) || !(G >= 1) || !String(rk.scale_source || '').trim()) return null;
@@ -243,6 +243,6 @@
     const ok = rank(all.filter(x => x.eligible), cfg); const top = Math.max(1, num(cfg.top_n, 3));
     return { profile: pr, plan, months: opt.months, extend: !!opt.extend, results: ok, top: ok.slice(0, top), rest: ok.slice(top), excluded: all.filter(x => !x.eligible).map(x => ({ id: x.id, name: x.name, reason: x.reason })) };
   }
-  const API = { version: 'r48b', rankScale, gradeOf, expectedBasic, r1, toHijri, fromHijri, addYears, monthsBetween, riyadhToday, validG, profile, durationCard, termCap, schedule, pv, quoteBank, compare, offerMatches, dtiRate, supportKey };
+  const API = { version: 'r48c', rankScale, gradeOf, expectedBasic, r1, toHijri, fromHijri, addYears, monthsBetween, riyadhToday, validG, profile, durationCard, termCap, schedule, pv, quoteBank, compare, offerMatches, dtiRate, supportKey };
   if (typeof module === 'object' && module.exports) module.exports = API; else root.F99RE42Engine = API;
 })(typeof window !== 'undefined' ? window : globalThis);
