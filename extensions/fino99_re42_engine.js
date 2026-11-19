@@ -342,7 +342,8 @@
     if (!pays.length || pays.every(p => p <= 0)) return Object.assign(res, { reason: 'NO_CAPACITY' });
     { const z = []; pays.forEach((p, k) => { if (!(p > 0.005)) z.push(k + 1); }); if (z.length) return Object.assign(res, { reason: 'ZERO_STAGE', zeroFrom: z[0], zeroTo: z[z.length - 1], zeroPost: !!rows[z[0] - 1].post }); }
     const method = bank.method === 'flat' ? 'flat' : 'annuity';
-    let bankPays = pays.map((p, k) => p + sup(k + 1));
+    const supX = opt.ms ? (m => (m <= num(opt.ms.months) ? num(opt.ms.amount) : 0)) : sup; // r54: transfer — simulated remaining monthly support (owner engine)
+    let bankPays = pays.map((p, k) => p + supX(k + 1));
     let P = pv(bankPays, rate, method);
     if (num(bank.max_amount) > 0 && P > num(bank.max_amount)) { const k = num(bank.max_amount) / P; pays = pays.map(p => p * k); bankPays = bankPays.map(p => p * k); P = num(bank.max_amount); res.amountCapped = true; }
     if (mx && num(mx.row.max_amount) > 0 && P > num(mx.row.max_amount)) { const k = num(mx.row.max_amount) / P; pays = pays.map(p => p * k); bankPays = bankPays.map(p => p * k); P = num(mx.row.max_amount); res.amountCapped = true; }
@@ -377,6 +378,108 @@
     const ok = rank(all.filter(x => x.eligible), cfg); const top = Math.max(1, num(cfg.top_n, 3));
     return { profile: pr, plan, months: opt.months, extend: !!opt.extend, capacity: capInfo(pr, inp, cfg, opt.months, !!opt.extend, !!opt.trial), results: ok, top: ok.slice(0, top), rest: ok.slice(top), excluded: all.filter(x => !x.eligible).map(x => ({ id: x.id, name: x.name, reason: x.reason, zeroFrom: x.zeroFrom, zeroTo: x.zeroTo, zeroPost: x.zeroPost })), etizaz: etizazPlan(inp, cfg), support: supportAmounts(inp, cfg) };
   }
-  const API = { version: 'r51', consumerOverAt, etizazEligible, etizazPlan, etzAt, supportAmounts, feeCalc, matrixRow, ptable, etzInfo, dtiTier, dtiInfo, avgRule, pickRate, capInfo, rankScale, gradeOf, expectedBasic, r1, toHijri, fromHijri, addYears, monthsBetween, riyadhToday, validG, profile, durationCard, termCap, schedule, pv, quoteBank, compare, offerMatches, dtiRate, supportKey };
+  // =====================================================================
+  // r54: «تحويل المديونية العقارية» — refinancing an existing mortgage with another bank. Reuses profile/schedule/quoteBank (same DTI matrix,
+  // stages and retirement). The financed amount is ONLY what the transfer needs (early-settlement amount); any extra capacity is reported
+  // separately and never added. The old mortgage instalment is not counted after the transfer (it is closed by it).
+  // Personal financing (buyout of an existing personal loan / new personal) is a separate product: max 60 months, its own rate, flat method,
+  // its own consumer limit inside the total limit; never merged into the mortgage amount.
+  // =====================================================================
+  const flatInst = (A, r, n) => A * (1 + r / 100 * n / 12) / n;
+  const flatPV = (I, r, n) => I * n / (1 + r / 100 * n / 12);
+  function trCfg(cfg) { return cfg.transfer || {}; }
+  function trBank(cfg, id) { return ((trCfg(cfg).banks || {})[id]) || {}; }
+  // personal rate: owner value per bank, else the bank's approved personal-transfer rate (opt.personalBase); new personal = base + add (default +1 point, assumed)
+  function personalRate(cfg, bank, inp, kind, base) {
+    const TB = trBank(cfg, bank.id), T = trCfg(cfg);
+    if (TB.personal === false) return null;
+    if (kind === 'new' && nv(TB.personal_new_rate, 0) > 0) return { rate: nv(TB.personal_new_rate, 0), source: 'owner' };
+    let b = nv(TB.personal_rate, 0) > 0 ? nv(TB.personal_rate, 0) : NaN, src = 'owner';
+    if (!(b > 0) && typeof base === 'function') { b = num(base(bank.id, inp), NaN); src = 'personal_transfer'; }
+    if (!(b > 0)) return null;
+    return kind === 'new' ? { rate: b + nv(T.personal_new_add, 1), source: 'assumed' } : { rate: b, source: src };
+  }
+  // r54: «محرك الدعم الشهري المتبقي» — internal simulation (owner-editable). Not an official REDF figure or a guarantee.
+  // total estimate (owner value, or schedule = monthly × (paid + left)) − paid (monthly × months paid) = remaining, spread over the eligible new months;
+  // the support base is the profit on at most base_cap (500,000) of the financed amount.
+  function supportRemain(cfg, sup, N, P, profit) {
+    const SR = trCfg(cfg).support_remain || {}; if (!sup || !(num(sup.monthly) > 0)) return null;
+    const paid = num(sup.monthly) * Math.max(0, num(sup.paid));
+    const total = SR.total_mode === 'schedule' ? num(sup.monthly) * (Math.max(0, num(sup.paid)) + Math.max(0, num(sup.left))) : nv(SR.total_est, 200000);
+    const remaining = Math.max(0, total - paid);
+    const left = Math.max(0, Math.floor(num(sup.left))); const months = Math.max(0, Math.min(N, SR.allow_extend === true && String(SR.source || '').trim() ? N : (left || N)));
+    if (!(months > 0) || !(remaining > 0)) return { total, paid, remaining, months: 0, monthly: 0 };
+    let monthly = remaining / months; const capBase = nv(SR.base_cap, 500000);
+    if (profit != null && P > 0) { const cap = Math.max(0, profit) * Math.min(1, capBase / P) / months; if (monthly > cap) monthly = cap; }
+    return { total, paid, remaining, months, monthly: Math.floor(monthly * 100) / 100 };
+  }
+  function transferRate(bank, cfg, inp, plan) { // own transfer rate > bank's approved mortgage rate for the case > (owner fallback) any approved mortgage rate of the bank (estimate)
+    const TB = trBank(cfg, bank.id), T = trCfg(cfg); if (nv(TB.rate, 0) > 0) return { rate: nv(TB.rate, 0), source: 'transfer' };
+    const pk = pickRate(bank, inp, cfg, plan, false); if (pk.rate > 0) return { rate: pk.rate, source: 'mortgage' };
+    if (T.rate_fallback === 'none') return { rate: NaN, reason: 'NO_TRANSFER_RATE' };
+    const RT = bank.rates || {}; for (const p of [plan, plan === 'step' ? 'fixed' : 'step']) for (const k of ['upfront', 'none', 'monthly', 'etizaz']) { const r = num((RT[p] || {})[k], NaN); if (r > 0) return { rate: r, source: 'mortgage_est' }; }
+    return { rate: NaN, reason: 'NO_TRANSFER_RATE' };
+  }
+  function transferQuote(bank, inp, cfg, pr, opt) {
+    const T = trCfg(cfg), TB = trBank(cfg, bank.id), tr = inp.transfer || {}, plan = opt.plan || 'fixed';
+    const res = { id: bank.id, name: bank.name, test: !!bank.test, plan, eligible: false };
+    if (bank.active === false || bank.included === false) return Object.assign(res, { reason: 'INACTIVE' });
+    if (bank.test && !opt.trial) return Object.assign(res, { reason: 'TEST_HIDDEN' });
+    if (TB.enabled !== true) return Object.assign(res, { reason: 'NO_TRANSFER' }); // only banks the owner marked as accepting mortgage transfer
+    if (T.exclude_current !== false && tr.bank && tr.bank === bank.id) return Object.assign(res, { reason: 'CURRENT_BANK' });
+    const need = num(tr.payoff); if (!(need > 0)) return Object.assign(res, { reason: 'PAYOFF_REQUIRED' });
+    // obligations after the transfer: the old mortgage is closed; in «buy» the personal loans with a payoff are closed and replaced by ONE new personal loan
+    const obl = (inp.obligations || []).map(o => Object.assign({}, o)); let pb = null;
+    if (opt.scn === 'buy') {
+      const buy = obl.filter(o => o.type === 'personal' && num(o.payoff) > 0); if (!buy.length) return Object.assign(res, { reason: 'NO_PERSONAL_PAYOFF' });
+      const pr0 = personalRate(cfg, bank, inp, 'buyout', opt.personalBase); if (!pr0) return Object.assign(res, { reason: 'NO_PERSONAL' });
+      const A = buy.reduce((t, o) => t + num(o.payoff), 0); const n = Math.max(1, Math.min(60, Math.floor(nv(T.personal_max_months, 60))));
+      const I = flatInst(A, pr0.rate, n); pb = { amount: A, rate: pr0.rate, source: pr0.source, months: n, inst: I, profit: I * n - A, closed: buy.length };
+      for (let i = obl.length - 1; i >= 0; i--) if (obl[i].type === 'personal' && num(obl[i].payoff) > 0) obl.splice(i, 1);
+      obl.push({ type: 'personal', amount: I, months: n });
+    }
+    const keep = !!(opt.sup && opt.sup.keep && num(opt.sup.monthly) > 0);
+    const inp2 = Object.assign({}, inp, { obligations: obl, supported: keep, supportType: keep ? 'monthly' : null, property: inp.property || 'ready' });
+    const incAt = m => (pr.sector === 'retired' || m > pr.R) ? pr.post : pr.pre; const DP = cfg.dti_policy || {}; const pp = nv(T.personal_dti_pct, nv(DP.consumer_pct, 45));
+    const consAt = m => obl.filter(o => o.type !== 'other' && m <= num(o.months)).reduce((t, o) => t + num(o.amount), 0);
+    if (pb && consAt(1) > incAt(1) * pp / 100 + 1e-9) return Object.assign(res, { reason: 'PERSONAL_DTI', personalPct: pp }); // personal limit inside the total limit
+    const rk = transferRate(bank, cfg, inp2, plan); if (!(rk.rate > 0)) return Object.assign(res, { reason: rk.reason || 'NO_TRANSFER_RATE' });
+    const sk = supportKey(inp2); const b2 = Object.assign({}, bank, { rates: { fixed: { [sk]: rk.rate }, step: { [sk]: rk.rate } }, offers: [], plan_pricing: null });
+    const cfg2 = Object.assign({}, cfg, { product_matrix: [] });
+    const q = (N, cut) => { let s = keep ? supportRemain(cfg, opt.sup, N, need, null) : null;
+      let o = { plan, months: N, extend: opt.extend, trial: opt.trial, cut: cut ? { type: 'amount', value: need } : null, ms: keep ? { amount: s ? s.monthly : 0, months: s ? s.months : 0 } : { amount: 0, months: 0 } };
+      let r = quoteBank(b2, inp2, cfg2, pr, o);
+      if (keep && r.eligible && s) { const s2 = supportRemain(cfg, opt.sup, r.months, need, r.profit); if (s2 && s2.monthly + 0.005 < s.monthly) { s = s2; o = Object.assign({}, o, { ms: { amount: s.monthly, months: s.months } }); r = quoteBank(b2, inp2, cfg2, pr, o); } }
+      r.supRemain = s; return r; };
+    const N0 = Math.floor(num(opt.months)); const full = q(N0, false);
+    if (!full.eligible) return Object.assign(res, { reason: full.reason, zeroFrom: full.zeroFrom, zeroTo: full.zeroTo, zeroPost: full.zeroPost });
+    if (full.amount + 0.5 < need) return Object.assign(res, { reason: 'TRANSFER_SHORT', maxAmount: full.amount, need, months: full.months });
+    const r = q(N0, true); if (!r.eligible) return Object.assign(res, { reason: r.reason });
+    // shortest term that still covers the transfer within all limits (capacity grows with N)
+    let best = r.months; { const okN = N => { const x = q(N, false); return x.eligible && x.amount + 0.5 >= need; };
+      let lo = Math.max(12, Math.min(nv((cfg.limits || {}).min_term, 60), r.months)), hi = r.months; if (okN(lo)) best = lo; else { while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (okN(mid)) hi = mid; else lo = mid; } best = hi; } }
+    // an independent NEW personal financing from the capacity left after the transfer (shown as an option, never added)
+    let pn = null; { const prn = personalRate(cfg, bank, inp, 'new', opt.personalBase);
+      if (prn && T.personal_new !== false) { const rows = schedule(pr, inp2, cfg2, r.months, b2, !!opt.trial); const n = Math.max(1, Math.min(60, Math.floor(nv(T.personal_max_months, 60)), r.months));
+        let sp = Infinity; for (let m = 1; m <= n; m++) { const R0 = rows[m - 1]; sp = Math.min(sp, R0.cap - r.pays[m - 1], R0.income * pp / 100 - consAt(m)); }
+        sp = Math.floor(Math.max(0, sp) * 100) / 100; const minP = nv(T.personal_new_min, 10000);
+        if (sp > 0) { const A = flatPV(sp, prn.rate, n); if (A >= minP) pn = { amount: A, inst: sp, months: n, rate: prn.rate, source: prn.source, profit: sp * n - A }; } } }
+    const out = Object.assign({}, r, { id: bank.id, name: bank.name, rateSource: rk.source, product: 'transfer' }); delete out.supRemain;
+    out.sup = { key: keep ? 'monthly' : 'none', upfront: 0, upfrontCounted: false, monthly: 0 }; out.etz = null; out.propertyValueR = out.amountR; out.offers = []; // r54: no upfront support / Etizaz lines in a transfer
+    out.transfer = { need, maxAmount: full.amount, extra: Math.max(0, full.amount - need), oldBank: tr.bank || null, oldInst: num(tr.inst), oldLeft: num(tr.left),
+      saving: num(tr.inst) > 0 ? num(tr.inst) - r.pays[0] : null, shortest: best, personalBuy: pb, personalNew: pn, support: r.supRemain ? { monthly: r.supRemain.monthly, months: r.supRemain.months } : null, supportInternal: r.supRemain, keep, scn: opt.scn || 'only' };
+    return out;
+  }
+  function transferCompare(inp, cfg, opt) {
+    opt = opt || {}; const pr = profile(inp, cfg, opt.now); pr.birth = inp.birth; const T = trCfg(cfg); const plan = opt.plan || cfg.default_plan || 'fixed';
+    const all = (cfg.banks || []).map(b => transferQuote(b, inp, cfg, pr, { plan: (opt.plans || {})[b.id] || plan, months: opt.months, extend: opt.extend, trial: !!opt.trial, scn: opt.scn || 'only', sup: opt.sup, personalBase: opt.personalBase }));
+    const by = T.ranking || 'amount';
+    const key = { installment: (a, b) => a.firstInstallment - b.firstInstallment || a.profit - b.profit, profit: (a, b) => a.profit - b.profit || a.firstInstallment - b.firstInstallment,
+      amount: (a, b) => b.transfer.maxAmount - a.transfer.maxAmount || a.profit - b.profit, rate: (a, b) => a.rate - b.rate || a.profit - b.profit }[by] || ((a, b) => a.firstInstallment - b.firstInstallment);
+    const ok = all.filter(x => x.eligible).sort(key);
+    return { profile: pr, plan, months: opt.months, extend: !!opt.extend, product: 'transfer', scn: opt.scn || 'only', capacity: null, results: ok, top: ok, rest: [],
+      excluded: all.filter(x => !x.eligible).map(x => ({ id: x.id, name: x.name, reason: x.reason, zeroFrom: x.zeroFrom, zeroTo: x.zeroTo, zeroPost: x.zeroPost, maxAmount: x.maxAmount, need: x.need })), etizaz: null, support: { key: 'none', upfront: 0, monthly: 0 } };
+  }
+  const API = { version: 'r54', transferCompare, transferQuote, supportRemain, personalRate, flatInst, flatPV, consumerOverAt, etizazEligible, etizazPlan, etzAt, supportAmounts, feeCalc, matrixRow, ptable, etzInfo, dtiTier, dtiInfo, avgRule, pickRate, capInfo, rankScale, gradeOf, expectedBasic, r1, toHijri, fromHijri, addYears, monthsBetween, riyadhToday, validG, profile, durationCard, termCap, schedule, pv, quoteBank, compare, offerMatches, dtiRate, supportKey };
   if (typeof module === 'object' && module.exports) module.exports = API; else root.F99RE42Engine = API;
 })(typeof window !== 'undefined' ? window : globalThis);
