@@ -283,9 +283,51 @@
 
   /* ---------- owner ---------- */
   async function ensureS(force) { if (S && G && !force) return true; const r = await adm('get'); if (!r.ok) return r; G = r; S = r.settings || {texts: {}, design: {}}; return true; }
-  function ownerTabs() { return [['tpls', 'القوالب'], ['design', 'التصميم'], ['texts', 'النصوص والأزرار'], ['links', 'ربط العقود'], ['bans', 'الأكواد والحظر'], ['trash', 'المحذوفات']]; }
+  function ownerTabs() { return [['tpls', 'القوالب'], ['rtexts', 'نصوص العقود الجاهزة'], ['design', 'التصميم'], ['texts', 'النصوص والأزرار'], ['links', 'ربط العقود'], ['bans', 'الأكواد والحظر'], ['trash', 'المحذوفات']]; }
+  const T53 = (a, d) => K().adm('f99r53_texts', {p_action: a, p_data: d || {}});
+  const vis = (x, on) => { x.style.display = on ? '' : 'none'; };
+  function readyTexts(host, ta) {
+    const box = el('div', 'f38-sub f53-rt'); host.insertBefore(box, ta.closest ? (ta.closest('label') || ta) : ta);
+    const sel = fld(box, 'اختر من نصوص العقود الجاهزة (اختياري)', '', {options: [['', '— بدون اختيار —']], wide: 1});
+    const row = el('div', 'f38-row'); box.append(row); const note = el('p', 'f38-muted'); box.append(note); let cur = null;
+    const fill = v => { ta.value = v; ta.dispatchEvent(new Event('input')); };
+    btn(row, 'تجاوز واكتب النص بنفسك', () => { if (ta.value.trim() && !W.confirm('سيُفرّغ المحرر لتكتب النص بنفسك. متابعة؟')) return; cur = null; sel.value = ''; vis(upd, false); fill(''); try { ta.focus(); } catch (_) {} note.textContent = 'اكتب النص بنفسك، ويمكنك حفظه لاحقًا ضمن النصوص الجاهزة.'; });
+    btn(row, 'حفظ النص الحالي ضمن النصوص الجاهزة', async ev => { if (!ta.value.trim()) { note.textContent = 'اكتب النص أولًا.'; return; } const name = (W.prompt('اسم النص الجاهز', cur ? cur.name + ' (جديد)' : '') || '').trim(); if (!name) return; ev.target.disabled = true;
+      const q = await T53('save', {name, body: ta.value}); ev.target.disabled = false; if (!q.ok) { note.textContent = why(q); return; }
+      sel.append(new Option(name, q.id)); sel.value = q.id; cur = {id: q.id, name}; vis(upd, true); note.textContent = 'حُفظ «' + name + '» ضمن النصوص الجاهزة.'; });
+    const upd = btn(row, 'تحديث النص الجاهز المختار بهذا النص', async ev => { if (!cur || !W.confirm('سيُستبدل النص المحفوظ «' + cur.name + '» بالنص الحالي للاستخدام القادم فقط؛ العقود الصادرة لا تتأثر. متابعة؟')) return; ev.target.disabled = true;
+      const q = await T53('save', {id: cur.id, name: cur.name, body: ta.value}); ev.target.disabled = false; note.textContent = q.ok ? 'حُدّث النص الجاهز «' + cur.name + '».' : why(q); }); vis(upd, false);
+    sel.addEventListener('change', async () => { const id = sel.value; if (!id) return; if (ta.value.trim() && !W.confirm('سيُستبدل النص الحالي في المحرر بالنص الجاهز المختار. متابعة؟')) { sel.value = cur ? cur.id : ''; return; }
+      const q = await T53('get', {id}); if (!q.ok) { note.textContent = why(q); return; } cur = {id, name: q.item.name}; fill(q.item.body); vis(upd, true);
+      note.textContent = 'حُمّل «' + q.item.name + '». تعديلك هنا لا يغيّر النص المحفوظ إلا إذا ضغطت «تحديث النص الجاهز المختار».'; });
+    T53('list').then(r => { if (!r || !r.ok) return; r.items.forEach(t => sel.append(new Option(t.name, t.id))); if (!r.items.length) note.textContent = 'لا توجد نصوص جاهزة بعد؛ اكتب النص واحفظه بزر «حفظ النص الحالي ضمن النصوص الجاهزة».'; });
+  }
+  function rtextsPane(pane) {
+    say(pane, 'مكتبتك الخاصة من نصوص العقود؛ لا تظهر للعملاء. اختر منها عند إنشاء عقد أو تعديل مسودة («اختر من نصوص العقود الجاهزة»). تعديل النص هنا لا يغيّر أي عقد مرسل أو معتمد.', 'f38-muted');
+    const ed = el('div'), list = el('div'), st = el('p', 'f38-note');
+    const form = it => { ed.textContent = ''; const box = el('div', 'f38-sub'); ed.append(box); box.append(el('b', '', it.id ? 'تعديل نص جاهز' : 'نص جاهز جديد'));
+      const n = fld(box, 'اسم النص (مثل: عقد متابعة، عقد مبايعة، عقد خدمة)', it.name || '', {wide: 1, max: 120}), bd = fld(box, 'نص العقد كاملًا', it.body || '', {area: 1, rows: 14, wide: 1, max: 200000}); toolbar(box, bd);
+      const s2 = el('p', 'f38-note'); box.append(s2); const row = el('div', 'f38-row'); box.append(row);
+      const b = btn(row, 'حفظ النص', () => busy(b, async () => { const q = await T53('save', {id: it.id || '', name: n.value.trim(), body: bd.value}); if (q.ok) { ed.textContent = ''; say(ed, 'حُفظ النص «' + n.value.trim() + '».', 'f38-ok'); load(); } else s2.textContent = why(q); }), 'f38-primary');
+      btn(row, 'إلغاء', () => { ed.textContent = ''; }); try { ed.scrollIntoView({block: 'start'}); } catch (_) {} };
+    btn(pane, '+ نص جاهز جديد', () => form({}), 'f38-primary'); pane.append(ed, list, st);
+    const load = async () => { list.textContent = ''; const r = await T53('list'); if (!r.ok) { say(list, why(r), 'f38-err'); return; }
+      if (!r.items.length) say(list, 'لا توجد نصوص محفوظة بعد. أضف أول نص بزر «+ نص جاهز جديد» أو من محرر أي عقد بزر «حفظ النص الحالي ضمن النصوص الجاهزة».', 'f38-muted');
+      r.items.forEach(t => { const c = el('article', 'f38-card f53-rtc'); c.append(el('b', '', t.name), el('p', 'f38-muted', money(t.len) + ' حرف • آخر تعديل ' + K().when(t.updated_at))); const row = el('div', 'f38-row'); c.append(row); list.append(c);
+        btn(row, 'تعديل', async () => { const q = await T53('get', {id: t.id}); if (q.ok) form(q.item); else st.textContent = why(q); });
+        btn(row, 'إعادة تسمية', async () => { const nm = (W.prompt('الاسم الجديد', t.name) || '').trim(); if (!nm) return; const q = await T53('rename', {id: t.id, name: nm}); if (q.ok) load(); else st.textContent = why(q); });
+        btn(row, 'نسخ', async () => { const q = await T53('copy', {id: t.id}); if (q.ok) load(); else st.textContent = why(q); });
+        btn(row, 'حذف', async () => { if (!W.confirm('حذف النص الجاهز «' + t.name + '»؟ لا يتأثر أي عقد صادر.')) return; const q = await T53('delete', {id: t.id}); if (q.ok) load(); else st.textContent = why(q); }, 'f38-danger'); }); };
+    load();
+  }
+  function hiddenPage(body, m) {
+    const b = m.brand || null; const w = el('div', 'f53-hid'); w.style.cssText = 'position:relative;min-height:62vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:28px 16px;overflow:hidden;border-radius:16px'; body.append(w);
+    if (b && b.bg_src) { const i = el('img'); i.src = b.bg_src; i.alt = ''; i.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:' + (b.size === 'contain' ? 'contain' : b.size === 'auto' ? 'none' : 'cover') + ';object-position:' + ({top: 'top', bottom: 'bottom'}[b.pos] || 'center') + ';opacity:' + Math.min(1, Math.max(0.02, Number(b.opacity) || 0.08)) + ';pointer-events:none'; w.append(i); }
+    if (b && b.logo) { const i = el('img', 'f52-logo'); i.alt = 'FINO99'; i.src = b.fino || !b.logo_src ? FINO_LOGO() : b.logo_src; i.style.cssText = 'position:relative;max-height:96px;max-width:70%;object-fit:contain'; w.append(i); }
+    if (m.t) { const p = el('p', '', m.t); p.style.cssText = 'position:relative;margin:0;font-size:1.15rem;line-height:1.9;font-weight:600;white-space:pre-line;color:' + (/^#[0-9a-fA-F]{3,8}$/.test(m.c || '') ? m.c : '#0f172a'); w.append(p); }
+  }
   function ownerPane(k, pane, KL) {
-    const P = {tpls: tplsPane, design: designPane, texts: textsPane, links: linksPane, bans: bansPane, trash: trashPane}[k]; if (!P) return false; addReasons();
+    const P = {tpls: tplsPane, rtexts: rtextsPane, design: designPane, texts: textsPane, links: linksPane, bans: bansPane, trash: trashPane}[k]; if (!P) return false; addReasons();
     const wt = say(pane, 'جاري التحميل…'); ensureS(true).then(ok => { wt.remove(); if (ok !== true) { say(pane, why(ok), 'f38-err'); return; } P(pane, KL); }); return true;
   }
   const back = (h, tab) => btn(h, '↩︎ رجوع للعقود', () => K().openK(tab));
@@ -435,6 +477,7 @@
     const DOV = fld(ds, 'تصميم خاص لهذا العقد (غير مفعّل = التصميم العام)', !!cfg.design, {type: 'checkbox'});
     const DLO = fld(ds, 'إظهار الشعار / صورة الشركة', DG.logo.on, {type: 'checkbox'}), DLS = fld(ds, 'المصدر', DG.logo.src, {options: [['fino', 'شعار FINO99 الحالي'], ['file', 'صورة مرفوعة']]}), DLF = assetSelect(ds, 'الصورة المرفوعة', DG.logo.file, true);
     const DBO = fld(ds, 'إظهار الخلفية / العلامة المائية', DG.bg.on, {type: 'checkbox'}), DBF = assetSelect(ds, 'صورة الخلفية', DG.bg.file, true), DBP = fld(ds, 'الشفافية (0.02–1؛ القليل = علامة مائية)', DG.bg.opacity, {type: 'number'});
+    const DBS = fld(ds, 'حجم الخلفية', DG.bg.size, {options: [['cover', 'تغطية كاملة'], ['contain', 'احتواء'], ['auto', 'الحجم الأصلي']]}), DBL = fld(ds, 'موقع الخلفية', DG.bg.pos, {options: [['center', 'الوسط'], ['top', 'أعلى'], ['bottom', 'أسفل']]});
     say(ds, 'ترفع الصور من تبويب «التصميم». يظهر التصميم للعميل وفي نسخة PDF، والنسخ المعتمدة سابقًا تبقى بتصميمها وقت الاعتماد.');
     return () => {
       const goods = {}; Object.entries(G2).forEach(([k, i]) => { const v = i.value.trim(); if (k === 'docs') { const L = v.split('\n').map(x => x.trim()).filter(okUrl); if (L.length) goods.docs = L; } else if (v) goods[k] = ['price', 'sale_price', 'buy_price', 'share_price', 'share_count'].includes(k) ? Number(v) : v; });
@@ -444,11 +487,11 @@
       const fields = FR.map((o, i) => ({key: 'q' + (i + 1), label: o.label.value.trim(), type: o.type.value, required: o.required.checked})).filter(x => x.label);
       const reentry = RB.value.split('\n').map(l => { const [a, b] = l.split('|').map(x => (x || '').trim()); return {label: a, url: b}; }).filter(x => x.label && okUrl(x.url));
       const o = {texts, pay, fields, reentry_buttons: reentry, pay_text: pt.value.trim(), hide_body_on_pay: hb.checked, client_upload: cu.checked};
-      if (Object.keys(goods).length) o.goods = goods; if (DOV.checked) o.design = Object.assign({}, cfg.design || {}, {logo: Object.assign({}, DG.logo, {on: DLO.checked, src: DLS.value, file: DLF.value}), bg: Object.assign({}, DG.bg, {on: DBO.checked, file: DBF.value, opacity: Math.min(1, Math.max(0.02, Number(DBP.value) || 0.08))})}); return o;
+      if (Object.keys(goods).length) o.goods = goods; if (DOV.checked) o.design = Object.assign({}, cfg.design || {}, {logo: Object.assign({}, DG.logo, {on: DLO.checked, src: DLS.value, file: DLF.value}), bg: Object.assign({}, DG.bg, {on: DBO.checked, file: DBF.value, opacity: Math.min(1, Math.max(0.02, Number(DBP.value) || 0.08)), size: DBS.value, pos: DBL.value})}); return o;
     };
   }
   function editor(f, sec, data, bodyF, tp, title) {
-    addReasons(); toolbar(f, bodyF);
+    addReasons(); readyTexts(f, bodyF); toolbar(f, bodyF);
     const holder = el('div'); f.append(holder); let col = null;
     const draw = () => { holder.textContent = ''; const sec2 = t => { const s = el('fieldset', 'f38-fs'); s.append(el('legend', '', t)); holder.append(s); return s; }; col = cfgEditor(sec2, data.r52 || {}); };
     ensureS().then(ok => { if (ok !== true) say(holder, why(ok), 'f38-err'); draw(); });
@@ -500,5 +543,5 @@
     });
   }
   W.F99R52K = Object.freeze({version: 'r52a', split, render, decorate, print, party, bodyHost, btnLabel, doneMsg, partyEnd, payPatch, bankExtra, centerExtra,
-    ownerTabs, ownerPane, dealButtons, editor, previewCtx, ownerCtx, _blocks: blocks});
+    ownerTabs, ownerPane, dealButtons, editor, previewCtx, ownerCtx, hiddenPage, _blocks: blocks});
 })(window, document);

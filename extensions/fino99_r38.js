@@ -52,7 +52,7 @@
     K_PAYMENT_PENDING: 'يوجد إيصال تحت المراجعة.', K_PAY_DISABLED: 'طريقة الدفع غير مفعلة لهذا العقد.', K_RECEIPT_INVALID: 'الملف يجب أن يكون صورة JPG/PNG أو PDF.',
     K_RECEIPT_SIZE: 'حجم الإيصال يجب أن يكون بين 1 كيلوبايت و1.5 ميجابايت.', K_IDENTITY_MISMATCH: 'رقم الهوية لا يطابق الهوية المسجلة في العقد.', K_VERSION_CHANGED: 'صدرت نسخة جديدة من العقد؛ راجعها.',
     K_GEO_METHOD: 'هذا الخيار غير متاح لهذا العقد.', K_GEO_MANUAL: 'اكتب المدينة والحي.', K_GEO_MODE: 'اختر إعداد الموقع.', K_RECEIPT_MODE: 'اختر إعداد الإيصال.',
-    K_NOTHING_CHANGED: 'لا يوجد تغيير للحفظ.', K_DEAL_NOT_FOUND: 'العقد غير موجود.', K_HIDDEN: 'الرمز غير صحيح، تأكد من الرمز وأعد المحاولة.'
+    K_NOTHING_CHANGED: 'لا يوجد تغيير للحفظ.', K_DEAL_NOT_FOUND: 'العقد غير موجود.', K_HIDDEN: 'الرمز غير صحيح، تأكد من الرمز وأعد المحاولة.', K_TEXT_NOT_FOUND: 'النص الجاهز غير موجود.', K_TEXT_NAME: 'اكتب اسمًا للنص الجاهز.', K_TEXT_BODY: 'اكتب نص العقد أولًا.', K_TEXT_LONG: 'النص أطول من الحد المسموح (200 ألف حرف).', K_TEXT_LIMIT: 'وصلت إلى الحد الأعلى لعدد النصوص الجاهزة.'
   };
   const why = r => REASONS[r?.reason] || ('تعذر التنفيذ: ' + (r?.reason || 'خطأ غير معروف'));
   /* ---------------- sheet ---------------- */
@@ -530,39 +530,78 @@
   const geoTo = (v, f) => v === 'optional' ? {geo_mode: 'auto', geo_fallback: 'skip'} : {geo_mode: v, geo_fallback: f === 'skip' ? 'retry' : f};
   const HIDE = [['approved', 'بعد اعتماد العقد'], ['cancelled', 'بعد إلغاء العقد أو رفضه'], ['expired', 'بعد انتهاء صلاحية الرمز']];
   const RCPT = [['required', 'إلزامي'], ['optional', 'اختياري'], ['off', 'معطل (إبلاغ بالتحويل دون إيصال)']];
+  let accOpen = 'key';
+  const REM = [['contract', 'عرض العقد'], ['msg', 'إظهار رسالة مخصصة فقط'], ['approval', 'إظهار رسالة الاعتماد'], ['brand', 'إظهار صفحة بالشعار والخلفية'], ['hide', 'إخفاء العقد بعد الموافقة'], ['none', 'عدم عرض رسالة مخصصة']];
+  const DSTAT = {active: 'نشط (بانتظار العميل)', completed: 'مكتمل / معتمد', cancelled: 'ملغي', expired: 'منتهي'};
+  const vis = (x, on) => { x.style.display = on ? '' : 'none'; };
   async function accessPane(out, d, done) {
     out.textContent = ''; const box = el('div', 'f38-sub'); out.append(box); const wt = say(box, 'جاري التحميل…');
     const r = await adm('f99r53_owner', {p_action: 'access_get', p_data: {deal_id: d.id}}); wt.remove(); if (!r.ok) { say(box, why(r), 'f38-err'); return; }
     if (done) say(box, done, 'f38-ok');
     const st = el('p', 'f38-note');
-    const save = async (b, data, ask) => { if (ask && !W.confirm(ask)) return; b.disabled = true; st.className = 'f38-note'; st.textContent = 'جاري الحفظ…';
+    const sec = (key, t) => { const x = el('details', 'f38-fs f53-sec'); x.dataset.k = key; x.open = accOpen === key; const sm = el('summary', '', t); sm.style.cssText = 'cursor:pointer;font-weight:700;padding:8px 2px;min-height:30px'; x.append(sm);
+      x.addEventListener('toggle', () => { if (x.open) accOpen = key; }); box.append(x); return x; };
+    const fail = (b, m) => { st.className = 'f38-note f38-err'; st.textContent = m; (b && b.closest('details') || box).append(st); };
+    const save = async (b, data, ask) => { if (ask && !W.confirm(ask)) return; accOpen = b.closest('details')?.dataset.k || accOpen; b.disabled = true; st.className = 'f38-note'; st.textContent = 'جاري الحفظ…';
       const x = await adm('f99r53_owner', {p_action: 'access_save', p_data: Object.assign({deal_id: d.id}, data)}); b.disabled = false;
-      if (x.ok) accessPane(out, d, 'تم الحفظ. الموافقات والمواقع والإيصالات المسجلة سابقًا لم تتغير.'); else { st.className = 'f38-note f38-err'; st.textContent = why(x); } };
+      if (x.ok) accessPane(out, d, 'تم الحفظ. الموافقات والمواقع والإيصالات المسجلة سابقًا لم تتغير.'); else fail(b, why(x)); };
     const copy = v => { try { navigator.clipboard.writeText(v); } catch (_) {} };
     const line = (h, t, v) => { const p = el('p'); const b = el('b', '', v); b.dir = 'auto'; p.append(el('small', '', t + ': '), b); h.append(p); return p; };
-    const k = el('fieldset', 'f38-fs'); k.append(el('legend', '', 'رمز الدخول')); box.append(k);
+    const H = r.hide || {}, mOf = o => (o && o.m) || (o && o.on ? 'hide' : 'contract');
+    // 1) login & codes
+    const k = sec('key', 'الدخول والأكواد');
     const cp = line(k, 'كود العقد', r.code || '—'); if (r.code) btn(cp, 'نسخ', () => copy(r.code));
     line(k, 'طريقة الفتح', OPEN.find(o => o[0] === r.open_kind)?.[1] || r.open_kind);
     if (r.open_kind !== 'vault' && r.open_key) { const p = line(k, 'رمز الفتح', r.open_key); btn(p, 'نسخ', () => copy(r.open_key)); }
-    say(k, 'يظهر هنا رمز هذا العقد فقط؛ لا تُعرض أي كلمة مرور لحسابات المنصة.', 'f38-muted');
+    say(k, 'يظهر هنا رمز هذا العقد فقط؛ لا تُعرض أي كلمة مرور لحسابات المنصة. يمكن تغييره حتى بعد الإرسال أو الاعتماد دون المساس بالعقد وسجلاته.', 'f38-muted');
     btn(k, 'توليد كود عقد جديد وإبطال السابق', ev => save(ev.target, {key_action: 'new_code'}, 'سيُبطل كود العقد الحالي وتُغلق جلسات العميل، ويلزم إرسال الكود الجديد له. متابعة؟'));
     const okd = field(k, 'تغيير طريقة الفتح', r.open_kind, {options: OPEN.filter(o => o[0] !== 'package_code')}), oky = field(k, 'رمز الفتح الجديد (للرمز الخاص؛ فارغ مع الجوال/الهوية = بيانات العميل)', '', {max: 80});
     btn(k, 'حفظ رمز الفتح وإبطال السابق', ev => save(ev.target, {key_action: 'set', open_kind: okd.value, open_key: oky.value.trim()}, 'سيُبطل رمز الفتح السابق وتُغلق جلسات العميل الحالية. متابعة؟'));
-    const pn = el('fieldset', 'f38-fs'); pn.append(el('legend', '', 'الرقم السري الإضافي')); box.append(pn);
-    say(pn, r.pin ? 'مفعل: يُطلب بعد رمز الدخول.' : 'غير مفعل: الدخول بالرمز فقط.', r.pin ? 'f38-ok' : 'f38-muted');
-    const np = field(pn, r.pin ? 'رقم سري جديد (4–8 أرقام)' : 'تفعيل رقم سري (4–8 أرقام)', '', {ltr: 1, max: 8}); np.inputMode = 'numeric';
-    btn(pn, r.pin ? 'تغيير الرقم السري' : 'تفعيل الرقم السري', ev => save(ev.target, {pin_action: 'set', pin: np.value.trim()}));
-    if (r.pin) btn(pn, 'إلغاء الرقم السري (الدخول بالرمز فقط)', ev => save(ev.target, {pin_action: 'remove'}, 'سيصبح الدخول برمز العقد فقط دون رقم سري. متابعة؟'), 'f38-danger');
-    const gs = el('fieldset', 'f38-fs'); gs.append(el('legend', '', 'موقع العميل وإيصال التحويل')); box.append(gs);
+    k.append(el('b', '', 'الرقم السري الإضافي'));
+    say(k, r.pin ? 'مفعل: يُطلب بعد رمز الدخول.' : 'غير مفعل: الدخول بالرمز فقط.', r.pin ? 'f38-ok' : 'f38-muted');
+    const np = field(k, r.pin ? 'رقم سري جديد (4–8 أرقام)' : 'تفعيل رقم سري (4–8 أرقام)', '', {ltr: 1, max: 8}); np.inputMode = 'numeric';
+    btn(k, r.pin ? 'تغيير الرقم السري' : 'تفعيل الرقم السري', ev => save(ev.target, {pin_action: 'set', pin: np.value.trim()}));
+    if (r.pin) btn(k, 'إلغاء الرقم السري (الدخول بالرمز فقط)', ev => save(ev.target, {pin_action: 'remove'}, 'سيصبح الدخول برمز العقد فقط دون رقم سري. متابعة؟'), 'f38-danger');
+    // 2) location & receipts
+    const gs = sec('geo', 'الموقع والإيصالات');
     const gm = field(gs, 'موقع العميل', geoOf(r.geo_mode, r.geo_fallback), {options: GEOM}), gf = field(gs, 'عند تعذر التحديد التلقائي (للإلزامي)', r.geo_fallback === 'skip' ? 'retry' : r.geo_fallback, {options: GEOF}), rc = field(gs, 'إرفاق إيصال التحويل', r.receipt, {options: RCPT});
     say(gs, 'إذا اعتذر العميل عن مشاركة موقعه أو تعذر على جهازه: اختر «معطل» واحفظ؛ عند دخوله مجددًا بالرمز يفتح العقد مباشرة (ويُطلب الرقم السري فقط إن كان مفعّلًا). لا يتأثر العقد ولا اعتماده.', 'f38-muted');
     say(gs, 'المواقع المسجلة: ' + r.geo_count + '. التغيير يسري على الدخول القادم فقط. عدم اشتراط الإيصال لا يعني اعتماد السداد؛ يبقى أي إبلاغ «تحت المراجعة» حتى تعتمده.', 'f38-muted');
     btn(gs, 'حفظ إعدادات الموقع والإيصال', ev => save(ev.target, Object.assign(geoTo(gm.value, gf.value), {receipt: rc.value})), 'f38-primary');
-    const hs = el('fieldset', 'f38-fs'); hs.append(el('legend', '', 'ما يظهر للعميل بعد الاعتماد أو الإلغاء أو الانتهاء')); box.append(hs); const H = r.hide || {}, HI = {};
-    say(hs, 'عند الإخفاء لا يُعرض العقد إطلاقًا، وتظهر رسالتك فقط عند إعادة الدخول. إذا تركت الرسالة فارغة تظهر: «الرمز غير صحيح، تأكد من الرمز وأعد المحاولة.» ولإظهار العقد مع رسالة معدلة استخدم «تعديل» ← نصوص هذا العقد.', 'f38-muted');
-    HIDE.forEach(([k, t]) => { const o = H[k] || {}; HI[k] = {on: field(hs, 'إخفاء العقد ' + t, !!o.on, {type: 'checkbox'}), t: field(hs, 'الرسالة ' + t + ' (اختياري)', o.t || '', {area: 1, rows: 2, wide: 1, max: 500})}; });
+    // 3) messages & display on re-entry
+    const hs = sec('msg', 'الرسائل والعرض'); const HI = {};
+    hs.append(el('b', '', 'ماذا يظهر للعميل عند الدخول مرة أخرى؟'));
+    HIDE.forEach(([key, t]) => { const o = H[key] || {};
+      const opts = REM.filter(x => key === 'approved' || x[0] !== 'approval').map(x => key !== 'approved' && x[0] === 'hide' ? ['hide', 'إخفاء العقد'] : x);
+      HI[key] = {m: field(hs, t, mOf(o), {options: opts}), t: field(hs, 'الرسالة ' + t + ' (اختياري)', o.t || '', {area: 1, rows: 2, wide: 1, max: 500})};
+      if (key === 'cancelled') HI[key].t.placeholder = 'مثال: نعتذر، تم تأجيل هذا الاتفاق'; });
+    say(hs, 'أي خيار غير «عرض العقد» يخفي تفاصيل العقد وأزرار الموافقة. الرسالة المخصصة وصفحة الشعار تظهر في منتصف الشاشة دون عبارة الإلغاء. إذا لم تكتب رسالة أو اخترت «عدم عرض رسالة مخصصة» تظهر بعد إدخال الكود: «الرمز غير صحيح، تأكد من الرمز وأعد المحاولة.» يمكنك تغيير الرسائل أو حذفها في أي وقت، والحالة الحقيقية تبقى محفوظة في «إدارة العقد».', 'f38-muted');
     const wmk = field(hs, 'علامة مائية باسم العميل على العقد ونسخة PDF', r.watermark !== false, {type: 'checkbox'});
-    btn(hs, 'حفظ ما يظهر للعميل', ev => { const h = {}; Object.entries(HI).forEach(([k, o]) => { h[k] = {on: o.on.checked, t: o.t.value.trim()}; }); save(ev.target, {hide: h, watermark: wmk.checked}); }, 'f38-primary');
+    btn(hs, 'حفظ ما يظهر للعميل', ev => { const h = {}; Object.entries(HI).forEach(([key, o]) => { h[key] = {m: o.m.value, on: o.m.value !== 'contract', t: o.t.value.trim()}; }); save(ev.target, {hide: h, watermark: wmk.checked}); }, 'f38-primary');
+    // 4) ready texts
+    const ts = sec('texts', 'نصوص العقود الجاهزة');
+    say(ts, 'مكتبتك الخاصة من نصوص العقود (لا تظهر للعملاء). تختار منها عند إنشاء عقد أو تعديل مسودة، وتعديلها لا يغيّر العقود المرسلة أو المعتمدة.', 'f38-muted');
+    btn(ts, 'فتح مكتبة النصوص الجاهزة', () => openK('rtexts'));
+    // 5) design
+    const ds = sec('design', 'التصميم والخلفيات');
+    say(ds, 'شعار/صورة الشركة والخلفية أو العلامة المائية لهذا العقد (الإظهار والحجم والشفافية والموقع): تبويب «تعديل» ← «الشعار وصورة الشركة والخلفية لهذا العقد». رفع الصور والشعارات الإضافية والتصميم العام: «التصميم». النسخ المعتمدة سابقًا تبقى بتصميمها.', 'f38-muted');
+    btn(ds, 'تعديل تصميم هذا العقد', () => { const t = [...D.querySelectorAll('#f38-ov .f38-tab')].find(x => x.textContent.trim() === 'تعديل'); if (!t) return; t.click();
+      setTimeout(() => { const lg = [...D.querySelectorAll('#f38-ov legend')].find(x => /الشعار وصورة الشركة/.test(x.textContent)); if (lg) lg.scrollIntoView({block: 'start'}); }, 1200); });
+    btn(ds, 'التصميم العام والصور المرفوعة', () => openK('design'));
+    // 6) contract management
+    const ms = sec('manage', 'إدارة العقد'); const stt = r.status || d.status;
+    line(ms, 'الحالة الحقيقية للعقد', DSTAT[stt] || stt || '—');
+    say(ms, 'الحالة الحقيقية والسجلات والموافقات والإيصالات تبقى محفوظة هنا مهما كان ما يظهر للعميل.', 'f38-muted');
+    if (stt === 'active') {
+      const cm = field(ms, 'رسالة للعميل بعد الإلغاء (اختياري)', (H.cancelled || {}).t || '', {area: 1, rows: 2, wide: 1, max: 500}); cm.placeholder = 'مثال: نعتذر، تم تأجيل هذا الاتفاق';
+      const ch = field(ms, 'إخفاء محتوى العقد عن العميل وإظهار الرسالة فقط', true, {type: 'checkbox'});
+      btn(ms, 'إلغاء العقد', async ev => { if (!W.confirm('إلغاء العقد ' + (d.ref || '') + '؟ يبقى سجل الموافقات السابقة محفوظًا.')) return; accOpen = 'manage'; ev.target.disabled = true;
+        const c = await adm('f99k_owner_act', {p_deal_id: d.id, p_action: 'cancel', p_data: {note: 'إلغاء من إدارة العقد'}}); ev.target.disabled = false;
+        if (!c.ok) { fail(ev.target, why(c)); return; } d.status = 'cancelled'; const tx = cm.value.trim();
+        if (ch.checked) { const h = {}; HIDE.forEach(([key]) => { const o = H[key] || {}; h[key] = {m: mOf(o), on: mOf(o) !== 'contract', t: o.t || ''}; }); h.cancelled = {m: tx ? 'msg' : 'none', on: true, t: tx};
+          const q = await adm('f99r53_owner', {p_action: 'access_save', p_data: {deal_id: d.id, hide: h}}); if (!q.ok) { fail(ev.target, 'أُلغي العقد، لكن تعذر حفظ الرسالة: ' + why(q)); return; } }
+        accessPane(out, d, 'أُلغي العقد.' + (ch.checked ? (tx ? ' يظهر للعميل رسالتك فقط.' : ' يظهر للعميل «الرمز غير صحيح…» فقط.') : '')); }, 'f38-danger');
+    } else say(ms, 'لتغيير ما يظهر للعميل بعد الإلغاء أو الانتهاء أو الاعتماد استخدم «الرسائل والعرض». النسخ والحذف من أزرار بطاقة العقد.', 'f38-muted');
     box.append(st);
   }
   function kSettings(pane, s) {
@@ -659,13 +698,14 @@
     let d = null; try { d = localStorage.getItem('F99K_DEVICE'); } catch (_) {} if (!d) { d = 'k-' + (crypto?.randomUUID?.() || (Date.now().toString(36) + Math.random().toString(36).slice(2))); try { localStorage.setItem('F99K_DEVICE', d); } catch (_) {} } return d; };
   const SKEY = 'F99R38_PARTY';
   let clientTimer = 0; function stopClientTimer() { clearInterval(clientTimer); clientTimer = 0; }
+  function hiddenView(m) { const body = sheet(''); if (W.F99R52K?.hiddenPage) W.F99R52K.hiddenPage(body, m); else { const p = el('p', '', m.t || ''); p.style.cssText = 'text-align:center;font-size:1.1rem;margin:28vh 12px'; body.append(p); } }
   function openEntry(prefill, err) {
     const body = sheet('دخول العقود والاتفاقات'); const f = el('div', 'f38-form'); body.append(f);
     say(f, 'أدخل رمز فتح العقد الذي وصلك كما هو تمامًا.', 'f38-muted');
     const k = field(f, 'رمز فتح العقد', prefill || '', {wide: 1, max: 120}); k.autocomplete = 'off'; const st = el('p', 'f38-err'); f.append(st); if (err) st.textContent = err;
     const go = async ev => { const v = k.value.trim(); if (!v) return; ev.target.disabled = true; st.textContent = '';
       const r = await pub('f99r38_party_enter', {p_key: v, p_device_id: KDEV()}); ev.target.disabled = false;
-      if (!r.ok) { st.textContent = (r.msg && r.msg.t) || why(r); return; } try { sessionStorage.setItem(SKEY, r.session); } catch (_) {} openParty(r.session); };
+      if (!r.ok) { if (r.reason === 'K_HIDDEN' && r.msg && r.msg.custom) { hiddenView(r.msg); return; } st.textContent = (r.msg && r.msg.t) || why(r); return; } try { sessionStorage.setItem(SKEY, r.session); } catch (_) {} openParty(r.session); };
     btn(f, 'دخول', go, 'f38-primary'); k.addEventListener('keydown', e => { if (e.key === 'Enter') go({target: e.target}); });
     setTimeout(() => { try { k.focus(); } catch (_) {} }, 50);
   }
@@ -695,7 +735,7 @@
         if (!pos) { msg(err && err.code === 1 ? 'لم يُسمح بالوصول للموقع. فعّل إذن الموقع للمتصفح (في iPhone: الإعدادات ← الخصوصية ← خدمات الموقع ← Safari) ثم أعد المحاولة.' : 'تعذر تحديد موقعك الآن (ضعف الإشارة أو انتهاء المهلة). أعد المحاولة' + (fb !== 'retry' ? ' أو استخدم الخيار البديل.' : '.')); showAlt(); return; }
         const c = pos.coords; await send({method: 'auto', lat: Number(c.latitude).toFixed(6), lng: Number(c.longitude).toFixed(6), accuracy: String(Math.round(c.accuracy || 0))}, b); };
       btn(body, 'مشاركة موقعي', ev => locate(ev.target), 'f38-primary'); body.append(alt); if (fb === 'skip') btn(alt, 'المتابعة دون مشاركة الموقع', ev => send({method: 'skipped'}, ev.target)); return; }
-    if (!v.ok) { try { sessionStorage.removeItem(SKEY); } catch (_) {} body.textContent = ''; openEntry('', (v.msg && v.msg.t) || why(v)); return; }
+    if (!v.ok) { try { sessionStorage.removeItem(SKEY); } catch (_) {} body.textContent = ''; if (v.reason === 'K_HIDDEN' && v.msg && v.msg.custom) { hiddenView(v.msg); return; } openEntry('', (v.msg && v.msg.t) || why(v)); return; }
     if (!v.r38) { // not an r38 deal: hand over to the original contracts portal unchanged.
       closeSheet(); try { sessionStorage.setItem('F99K_PARTY_SESSION', session); } catch (_) {} return false; }
     const x = v.r38; D.documentElement.classList.toggle('f38-noprint', !x.allow_pdf);
