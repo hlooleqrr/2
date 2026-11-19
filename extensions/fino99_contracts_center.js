@@ -331,7 +331,7 @@
     } else if (st.action === 'complete') {
       const fees = Number(d.terms?.fees || 0), disc = Number(d.terms?.discount || 0);
       const dep = Math.max(0, ...d.stages.filter(s => s.action === 'deposit').map(s => Number(s.state?.amount || 0)));
-      box.append(el('p', 'f99k-calc', 'الأتعاب ' + fees + ' − العربون ' + dep + ' − الخصم ' + disc + ' = المتبقي ' + Math.max(0, fees - dep - disc) + ' ريال'), note, acts);
+      box.append(el('p', 'f99k-calc', 'الأتعاب ' + fees + ' − العربون ' + dep + (d.terms?.discount != null && String(d.terms.discount).trim() !== '' ? ' − الخصم ' + disc : '') + ' = المتبقي ' + Math.max(0, fees - dep - disc) + ' ريال'), note, acts);
       btn(acts, 'تأكيد إنجاز الخدمة', () => act('complete', {note: note.value.trim()}, 'سُجل الإنجاز واكتملت المعاملة.'), 'f99k-btn primary');
     } else if (st.action === 'final') {
       const list = el('div', 'f99k-form'); const checks = (st.checklist || []).map(t => { const l = el('label', 'f99k-field check'); const c = el('input'); c.type = 'checkbox'; l.append(c, el('span', '', t)); list.append(l); return c; });
@@ -395,9 +395,9 @@
       const title = el('input'); title.value = t.name; title.setAttribute('aria-label', 'عنوان العقد');
       const lt = el('label', 'f99k-field'); lt.append(el('span', '', 'عنوان المعاملة'), title); form.append(lt);
       const terms = {}; const tbox = el('div', 'f99k-form');
-      Object.entries(t.terms || {}).forEach(([k, v]) => { const l = el('label', 'f99k-field'); const i = el('input'); i.value = v; i.dataset.term = k; i.setAttribute('aria-label', k);
-        l.append(el('span', '', ({fees: 'الأتعاب (ريال)', deposit: 'العربون (ريال)', discount: 'الخصم (ريال)', service_description: 'وصف الخدمة', start_condition: 'شرط بدء العمل', refund_terms: 'شروط استرداد العربون', payment_terms: 'موعد استحقاق الأتعاب'}[k] || k)), i); tbox.append(l); });
-      if (Object.keys(t.terms || {}).length) form.append(el('h4', '', 'بنود قابلة للتعديل'), tbox);
+      Object.entries(Object.assign({}, t.terms || {}, {discount: ''})).forEach(([k, v]) => { const l = el('label', 'f99k-field'); const i = el('input'); i.value = v; i.dataset.term = k; i.setAttribute('aria-label', k);
+        l.append(el('span', '', ({fees: 'الأتعاب (ريال)', deposit: 'العربون (ريال)', discount: 'الخصم (ريال) — اختياري؛ فارغ = لا يظهر', service_description: 'وصف الخدمة', start_condition: 'شرط بدء العمل', refund_terms: 'شروط استرداد العربون', payment_terms: 'موعد استحقاق الأتعاب'}[k] || k)), i); tbox.append(l); });
+      if (tbox.childElementCount) form.append(el('h4', '', 'بنود قابلة للتعديل'), tbox);
       const body = el('textarea', 'f99k-bodyedit'); body.rows = 12; body.value = t.body; body.setAttribute('aria-label', 'نص العقد');
       const lb = el('label', 'f99k-field'); lb.append(el('span', '', 'نص العقد (قابل للتعديل بالكامل)'), body); form.append(lb);
       const settings = {...(t.settings || {})}; const sbox = el('div', 'f99k-form');

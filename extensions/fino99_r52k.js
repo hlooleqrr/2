@@ -431,6 +431,11 @@
     const ts = sec('نصوص هذا العقد (اختياري؛ فارغ = النص العام)'); say(ts, VARS); const TI = {};
     TXT.forEach(([k, label]) => { const m = T[k] || {}; TI[k] = {t: fld(ts, label, m.t || '', {area: k !== 'btn', rows: 2, wide: 1, max: 4000}), off: fld(ts, 'إخفاء هذه الرسالة', m.on === false, {type: 'checkbox'})}; });
     const rs = sec('أزرار بعد استخدام الكود (دعم/تواصل/صيانة/إجراء جديد)'); const RB = fld(rs, 'زر في كل سطر: النص | الرابط', (cfg.reentry_buttons || []).map(b => b.label + ' | ' + b.url).join('\n'), {area: 1, rows: 3, wide: 1, ph: 'تواصل معنا | https://wa.me/966…'});
+    const ds = sec('الشعار وصورة الشركة والخلفية لهذا العقد'); const DG = merge(DDEF, merge(S?.design || {}, cfg.design || {}));
+    const DOV = fld(ds, 'تصميم خاص لهذا العقد (غير مفعّل = التصميم العام)', !!cfg.design, {type: 'checkbox'});
+    const DLO = fld(ds, 'إظهار الشعار / صورة الشركة', DG.logo.on, {type: 'checkbox'}), DLS = fld(ds, 'المصدر', DG.logo.src, {options: [['fino', 'شعار FINO99 الحالي'], ['file', 'صورة مرفوعة']]}), DLF = assetSelect(ds, 'الصورة المرفوعة', DG.logo.file, true);
+    const DBO = fld(ds, 'إظهار الخلفية / العلامة المائية', DG.bg.on, {type: 'checkbox'}), DBF = assetSelect(ds, 'صورة الخلفية', DG.bg.file, true), DBP = fld(ds, 'الشفافية (0.02–1؛ القليل = علامة مائية)', DG.bg.opacity, {type: 'number'});
+    say(ds, 'ترفع الصور من تبويب «التصميم». يظهر التصميم للعميل وفي نسخة PDF، والنسخ المعتمدة سابقًا تبقى بتصميمها وقت الاعتماد.');
     return () => {
       const goods = {}; Object.entries(G2).forEach(([k, i]) => { const v = i.value.trim(); if (k === 'docs') { const L = v.split('\n').map(x => x.trim()).filter(okUrl); if (L.length) goods.docs = L; } else if (v) goods[k] = ['price', 'sale_price', 'buy_price', 'share_price', 'share_count'].includes(k) ? Number(v) : v; });
       const gi = Object.keys(IM).filter(id => IM[id].checked); if (gi.length) goods.images = gi; else if (!imgs.length && (g.images || []).length) goods.images = g.images;
@@ -439,7 +444,7 @@
       const fields = FR.map((o, i) => ({key: 'q' + (i + 1), label: o.label.value.trim(), type: o.type.value, required: o.required.checked})).filter(x => x.label);
       const reentry = RB.value.split('\n').map(l => { const [a, b] = l.split('|').map(x => (x || '').trim()); return {label: a, url: b}; }).filter(x => x.label && okUrl(x.url));
       const o = {texts, pay, fields, reentry_buttons: reentry, pay_text: pt.value.trim(), hide_body_on_pay: hb.checked, client_upload: cu.checked};
-      if (Object.keys(goods).length) o.goods = goods; if (cfg.design) o.design = cfg.design; return o;
+      if (Object.keys(goods).length) o.goods = goods; if (DOV.checked) o.design = Object.assign({}, cfg.design || {}, {logo: Object.assign({}, DG.logo, {on: DLO.checked, src: DLS.value, file: DLF.value}), bg: Object.assign({}, DG.bg, {on: DBO.checked, file: DBF.value, opacity: Math.min(1, Math.max(0.02, Number(DBP.value) || 0.08))})}); return o;
     };
   }
   function editor(f, sec, data, bodyF, tp, title) {
@@ -457,7 +462,7 @@
     ctx = {design: merge(S?.design || {}, cfg.design || {}), fetch: ownerFetch, ref: d.ref, goods: cfg.goods || null, files: r.ok ? (r.files || []).filter(f => f.printable) : [], bankImage: ''}; srcCache.clear();
   }
   function dealButtons(row, d, out) {
-    btn(row, 'عرض', () => dealSheet(d, 'view')); btn(row, 'تعديل', () => dealSheet(d, 'edit')); btn(row, 'ربط', () => dealSheet(d, 'link')); btn(row, 'الدفعات والمرفقات', () => dealSheet(d, 'pay'));
+    btn(row, 'عرض', () => dealSheet(d, 'view')); btn(row, 'تعديل', () => dealSheet(d, 'edit')); btn(row, 'ربط', () => dealSheet(d, 'link')); btn(row, 'الدفعات والمرفقات', () => dealSheet(d, 'pay')); if (d.r38 && K().accessPane) btn(row, 'الدخول والحماية', () => dealSheet(d, 'access'));
     if (d.status === 'active') btn(row, 'إلغاء', async () => { const note = W.prompt('سبب إلغاء العقد (يبقى سجل الموافقات السابقة محفوظًا)', ''); if (note === null) return;
       const r = await K().adm('f99k_owner_act', {p_deal_id: d.id, p_action: 'cancel', p_data: {note}}); out.textContent = ''; say(out, r.ok ? 'أُلغي العقد وأُوقف التعامل عليه.' : why(r), r.ok ? 'f38-ok' : 'f38-err'); });
     btn(row, 'حذف', async () => { if (!W.confirm('نقل العقد ' + d.ref + ' إلى المحذوفات؟ يمكنك استرجاعه لاحقًا.')) return; const r = await adm('trash', {deal_id: d.id}); if (r.ok) K().openK(); else { out.textContent = ''; say(out, why(r), 'f38-err'); } }, 'f38-danger');
@@ -466,7 +471,8 @@
     addReasons(); const body = K().sheet('العقد ' + d.ref + ' — ' + d.title, true); back(body); const wt = say(body, 'جاري التحميل…');
     const ok = await ensureS(true); const r = await adm('deal_get', {deal_id: d.id}); wt.remove(); if (ok !== true || !r.ok) { say(body, why(ok !== true ? ok : r), 'f38-err'); return; }
     let KL = null; const kl = async () => { if (!KL) { KL = await K().adm('f99r38_owner_k', {p_action: 'list', p_data: {}}); } return KL; };
-    K().tabs(body, [['view', 'عرض'], ['edit', 'تعديل'], ['pay', 'الدفعات'], ['files', 'المرفقات'], ['link', 'ربط']], tab || 'view', async (k, pane) => {
+    K().tabs(body, [['view', 'عرض'], ['edit', 'تعديل']].concat(K().accessPane ? [['access', 'الدخول والحماية']] : [], [['pay', 'الدفعات'], ['files', 'المرفقات'], ['link', 'ربط']]), tab || 'view', async (k, pane) => {
+      if (k === 'access') { await K().accessPane(pane, d); return; }
       if (k === 'view') { pane.append(el('p', 'f38-muted', 'الحالة: ' + ({active: 'نشط', completed: 'مكتمل', rejected: 'مرفوض', cancelled: 'ملغى'}[r.status] || r.status) + ' • الإصدار ' + r.version + ' • سجلات الإصدارات ' + r.hist));
         const m = r.money || {}; const g = el('div', 'f38-money'); [['الإجمالي', m.total], ['المدفوع', m.paid], ['المتبقي', m.remaining], ['المطلوب الآن', m.due_now]].forEach(([t, n]) => { const x = el('div'); x.append(el('small', '', t), el('b', '', money(n) + ' ريال')); g.append(x); }); pane.append(g);
         const od = await K().adm('f99k_owner_deal', {p_deal_id: d.id}); const txt = od?.deal?.body || od?.body || od?.versions?.[0]?.body || '';

@@ -24,6 +24,8 @@
     if (o.ltr) i.dir = 'ltr'; if (o.ph) i.placeholder = o.ph; if (o.max) i.maxLength = o.max; host.append(w); return i;
   };
   const say = (host, t, c) => { const p = el('p', 'f38-note' + (c ? ' ' + c : ''), t); host.append(p); return p; };
+  const discText = (t, v) => { t = String(t || ''); if (v == null || String(v).trim() === '') return t.replace(/[،,]?[ \t]*و?الخصم[ \t]*:?[ \t]*\{\{\s*discount\s*\}\}([ \t]*ريال)?/g, '').replace(/(العربون|الأتعاب)[ \t]*[−–-][ \t]*الخصم/g, '$1').replace(/[^\n]*\{\{\s*discount\s*\}\}[^\n]*\n?/g, '');
+    if (/\{\{\s*discount\s*\}\}/.test(t)) return t; return /\{\{\s*fees\s*\}\}/.test(t) ? t.replace(/(\{\{\s*fees\s*\}\}[^\n]*)/, '$1\nالخصم: {{discount}} ريال') : t + '\n\nالخصم: {{discount}} ريال'; };
   async function pub(fn, args) {
     if (typeof W.finoRpc !== 'function') return {ok: false, reason: 'RPC_UNAVAILABLE'};
     try { const r = await W.finoRpc(fn, args, 25000); return r?.data && typeof r.data === 'object' ? r.data : {ok: false, reason: r?.error?.message || 'RPC_UNAVAILABLE'}; }
@@ -48,7 +50,9 @@
     K_SESSION_INVALID: 'انتهت جلسة العقد. أدخل الرمز مرة أخرى.', K_PIN_INVALID: 'الرقم السري غير صحيح.', K_PIN_LOCKED: 'أُوقف الإدخال 30 دقيقة بسبب محاولات خاطئة.',
     K_GEO_CONSENT: 'يلزم الموافقة على مشاركة الموقع.', K_GEO_INVALID: 'تعذر قراءة الموقع.', K_SIGN_FIRST: 'وافق على العقد أولًا.', K_NOTHING_DUE: 'لا يوجد مبلغ مطلوب حاليًا.',
     K_PAYMENT_PENDING: 'يوجد إيصال تحت المراجعة.', K_PAY_DISABLED: 'طريقة الدفع غير مفعلة لهذا العقد.', K_RECEIPT_INVALID: 'الملف يجب أن يكون صورة JPG/PNG أو PDF.',
-    K_RECEIPT_SIZE: 'حجم الإيصال يجب أن يكون بين 1 كيلوبايت و1.5 ميجابايت.', K_IDENTITY_MISMATCH: 'رقم الهوية لا يطابق الهوية المسجلة في العقد.', K_VERSION_CHANGED: 'صدرت نسخة جديدة من العقد؛ راجعها.'
+    K_RECEIPT_SIZE: 'حجم الإيصال يجب أن يكون بين 1 كيلوبايت و1.5 ميجابايت.', K_IDENTITY_MISMATCH: 'رقم الهوية لا يطابق الهوية المسجلة في العقد.', K_VERSION_CHANGED: 'صدرت نسخة جديدة من العقد؛ راجعها.',
+    K_GEO_METHOD: 'هذا الخيار غير متاح لهذا العقد.', K_GEO_MANUAL: 'اكتب المدينة والحي.', K_GEO_MODE: 'اختر إعداد الموقع.', K_RECEIPT_MODE: 'اختر إعداد الإيصال.',
+    K_NOTHING_CHANGED: 'لا يوجد تغيير للحفظ.', K_DEAL_NOT_FOUND: 'العقد غير موجود.', K_HIDDEN: 'الرمز غير صحيح، تأكد من الرمز وأعد المحاولة.'
   };
   const why = r => REASONS[r?.reason] || ('تعذر التنفيذ: ' + (r?.reason || 'خطأ غير معروف'));
   /* ---------------- sheet ---------------- */
@@ -472,7 +476,8 @@
     if (d.money && Number(d.money.total) > 0) { const m = el('div', 'f38-money'); [['الإجمالي', d.money.total], ['المدفوع', d.money.paid], ['المتبقي', d.money.remaining]].forEach(([t, v]) => { const x = el('div'); x.append(el('small', '', t), el('b', '', num(v) + ' ريال')); m.append(x); }); c.append(m); }
     const row = el('div', 'f38-row'); c.append(row); const out = el('div'); c.append(out);
     if (d.r38) btn(row, 'السداد والإيصالات', () => payPane(out, d), d.receipts_review > 0 ? 'f38-primary' : '');
-    if (d.r38 && d.require_geo) btn(row, 'المواقع المسجلة', () => geoPane(out, d));
+    if (d.r38 && !W.F99R52K?.dealButtons) btn(row, 'الدخول والحماية', () => accessPane(out, d));
+    if (d.r38 && (d.require_geo || Number(d.geo_count) > 0)) btn(row, 'المواقع المسجلة', () => geoPane(out, d));
     if (d.r38) btn(row, 'إلغاء ارتباط الأجهزة', async ev => { if (!W.confirm('سيُلغى ارتباط كل الأجهزة وتُغلق الجلسات، ويستطيع العميل الدخول من جديد. متابعة؟')) return; ev.target.disabled = true;
       const r = await adm('f99r38_owner_k', {p_action: 'reset_devices', p_data: {deal_id: d.id}}); ev.target.disabled = false; out.textContent = ''; say(out, r.ok ? 'تم إلغاء الارتباط.' : why(r), r.ok ? 'f38-ok' : 'f38-err'); });
     btn(row, 'نسخ كعقد جديد', async () => { const r = await adm('f99r38_owner_k', {p_action: 'copy', p_data: {deal_id: d.id}}); if (r.ok) editDraft(r.id); else { out.textContent = ''; say(out, why(r), 'f38-err'); } });
@@ -514,8 +519,51 @@
   async function geoPane(out, d) {
     out.textContent = ''; const box = el('div', 'f38-sub'); out.append(box); const r = await adm('f99r38_owner_k', {p_action: 'geo', p_data: {deal_id: d.id}}); if (!r.ok) { say(box, why(r), 'f38-err'); return; }
     if (!r.items.length) say(box, 'لم يشارك العميل موقعه بعد.', 'f38-muted');
-    r.items.forEach(g => { const it = el('div', 'f38-line'); it.append(el('span', '', when(g.at) + ' • ' + [g.city, g.district].filter(Boolean).join(' / ') + ' • دقة ' + (g.accuracy_m ?? '—') + ' م • ' + g.lat + ', ' + g.lng));
-      const a = el('a', 'f38-btn', 'الخريطة'); a.href = 'https://maps.google.com/?q=' + g.lat + ',' + g.lng; a.target = '_blank'; a.rel = 'noopener'; it.append(a); box.append(it); });
+    r.items.forEach(g => { const it = el('div', 'f38-line'); const gm = g.method === 'manual' ? 'يدوي من العميل' : g.method === 'skipped' ? 'تعذر التحديد — متابعة دون موقع بإذنك' : 'تلقائي';
+      it.append(el('span', '', when(g.at) + ' • ' + gm + ' • ' + [g.city, g.district].filter(Boolean).join(' / ') + (g.lat != null ? ' • دقة ' + (g.accuracy_m ?? '—') + ' م • ' + g.lat + ', ' + g.lng : '')));
+      if (g.lat != null) { const a = el('a', 'f38-btn', 'الخريطة'); a.href = 'https://maps.google.com/?q=' + g.lat + ',' + g.lng; a.target = '_blank'; a.rel = 'noopener'; it.append(a); } box.append(it); });
+  }
+  /* r53: owner access after send — contract code/open key, optional PIN, location mode, receipt mode (f99r53_owner). */
+  const GEOM = [['auto', 'إلزامي — تحديد تلقائي من الجهاز'], ['manual', 'إلزامي — إدخال يدوي من العميل (المدينة والحي)'], ['optional', 'اختياري — يستطيع العميل المتابعة دون الموقع'], ['off', 'معطل — لا يُطلب الموقع']];
+  const GEOF = [['retry', 'إعادة المحاولة فقط'], ['manual', 'إعادة المحاولة أو الإدخال اليدوي']];
+  const geoOf = (m, f, req) => req === false || m === 'off' ? 'off' : (f === 'skip' && m !== 'manual' ? 'optional' : (m || 'auto'));
+  const geoTo = (v, f) => v === 'optional' ? {geo_mode: 'auto', geo_fallback: 'skip'} : {geo_mode: v, geo_fallback: f === 'skip' ? 'retry' : f};
+  const HIDE = [['approved', 'بعد اعتماد العقد'], ['cancelled', 'بعد إلغاء العقد أو رفضه'], ['expired', 'بعد انتهاء صلاحية الرمز']];
+  const RCPT = [['required', 'إلزامي'], ['optional', 'اختياري'], ['off', 'معطل (إبلاغ بالتحويل دون إيصال)']];
+  async function accessPane(out, d, done) {
+    out.textContent = ''; const box = el('div', 'f38-sub'); out.append(box); const wt = say(box, 'جاري التحميل…');
+    const r = await adm('f99r53_owner', {p_action: 'access_get', p_data: {deal_id: d.id}}); wt.remove(); if (!r.ok) { say(box, why(r), 'f38-err'); return; }
+    if (done) say(box, done, 'f38-ok');
+    const st = el('p', 'f38-note');
+    const save = async (b, data, ask) => { if (ask && !W.confirm(ask)) return; b.disabled = true; st.className = 'f38-note'; st.textContent = 'جاري الحفظ…';
+      const x = await adm('f99r53_owner', {p_action: 'access_save', p_data: Object.assign({deal_id: d.id}, data)}); b.disabled = false;
+      if (x.ok) accessPane(out, d, 'تم الحفظ. الموافقات والمواقع والإيصالات المسجلة سابقًا لم تتغير.'); else { st.className = 'f38-note f38-err'; st.textContent = why(x); } };
+    const copy = v => { try { navigator.clipboard.writeText(v); } catch (_) {} };
+    const line = (h, t, v) => { const p = el('p'); const b = el('b', '', v); b.dir = 'auto'; p.append(el('small', '', t + ': '), b); h.append(p); return p; };
+    const k = el('fieldset', 'f38-fs'); k.append(el('legend', '', 'رمز الدخول')); box.append(k);
+    const cp = line(k, 'كود العقد', r.code || '—'); if (r.code) btn(cp, 'نسخ', () => copy(r.code));
+    line(k, 'طريقة الفتح', OPEN.find(o => o[0] === r.open_kind)?.[1] || r.open_kind);
+    if (r.open_kind !== 'vault' && r.open_key) { const p = line(k, 'رمز الفتح', r.open_key); btn(p, 'نسخ', () => copy(r.open_key)); }
+    say(k, 'يظهر هنا رمز هذا العقد فقط؛ لا تُعرض أي كلمة مرور لحسابات المنصة.', 'f38-muted');
+    btn(k, 'توليد كود عقد جديد وإبطال السابق', ev => save(ev.target, {key_action: 'new_code'}, 'سيُبطل كود العقد الحالي وتُغلق جلسات العميل، ويلزم إرسال الكود الجديد له. متابعة؟'));
+    const okd = field(k, 'تغيير طريقة الفتح', r.open_kind, {options: OPEN.filter(o => o[0] !== 'package_code')}), oky = field(k, 'رمز الفتح الجديد (للرمز الخاص؛ فارغ مع الجوال/الهوية = بيانات العميل)', '', {max: 80});
+    btn(k, 'حفظ رمز الفتح وإبطال السابق', ev => save(ev.target, {key_action: 'set', open_kind: okd.value, open_key: oky.value.trim()}, 'سيُبطل رمز الفتح السابق وتُغلق جلسات العميل الحالية. متابعة؟'));
+    const pn = el('fieldset', 'f38-fs'); pn.append(el('legend', '', 'الرقم السري الإضافي')); box.append(pn);
+    say(pn, r.pin ? 'مفعل: يُطلب بعد رمز الدخول.' : 'غير مفعل: الدخول بالرمز فقط.', r.pin ? 'f38-ok' : 'f38-muted');
+    const np = field(pn, r.pin ? 'رقم سري جديد (4–8 أرقام)' : 'تفعيل رقم سري (4–8 أرقام)', '', {ltr: 1, max: 8}); np.inputMode = 'numeric';
+    btn(pn, r.pin ? 'تغيير الرقم السري' : 'تفعيل الرقم السري', ev => save(ev.target, {pin_action: 'set', pin: np.value.trim()}));
+    if (r.pin) btn(pn, 'إلغاء الرقم السري (الدخول بالرمز فقط)', ev => save(ev.target, {pin_action: 'remove'}, 'سيصبح الدخول برمز العقد فقط دون رقم سري. متابعة؟'), 'f38-danger');
+    const gs = el('fieldset', 'f38-fs'); gs.append(el('legend', '', 'موقع العميل وإيصال التحويل')); box.append(gs);
+    const gm = field(gs, 'موقع العميل', geoOf(r.geo_mode, r.geo_fallback), {options: GEOM}), gf = field(gs, 'عند تعذر التحديد التلقائي (للإلزامي)', r.geo_fallback === 'skip' ? 'retry' : r.geo_fallback, {options: GEOF}), rc = field(gs, 'إرفاق إيصال التحويل', r.receipt, {options: RCPT});
+    say(gs, 'إذا اعتذر العميل عن مشاركة موقعه أو تعذر على جهازه: اختر «معطل» واحفظ؛ عند دخوله مجددًا بالرمز يفتح العقد مباشرة (ويُطلب الرقم السري فقط إن كان مفعّلًا). لا يتأثر العقد ولا اعتماده.', 'f38-muted');
+    say(gs, 'المواقع المسجلة: ' + r.geo_count + '. التغيير يسري على الدخول القادم فقط. عدم اشتراط الإيصال لا يعني اعتماد السداد؛ يبقى أي إبلاغ «تحت المراجعة» حتى تعتمده.', 'f38-muted');
+    btn(gs, 'حفظ إعدادات الموقع والإيصال', ev => save(ev.target, Object.assign(geoTo(gm.value, gf.value), {receipt: rc.value})), 'f38-primary');
+    const hs = el('fieldset', 'f38-fs'); hs.append(el('legend', '', 'ما يظهر للعميل بعد الاعتماد أو الإلغاء أو الانتهاء')); box.append(hs); const H = r.hide || {}, HI = {};
+    say(hs, 'عند الإخفاء لا يُعرض العقد إطلاقًا، وتظهر رسالتك فقط عند إعادة الدخول. إذا تركت الرسالة فارغة تظهر: «الرمز غير صحيح، تأكد من الرمز وأعد المحاولة.» ولإظهار العقد مع رسالة معدلة استخدم «تعديل» ← نصوص هذا العقد.', 'f38-muted');
+    HIDE.forEach(([k, t]) => { const o = H[k] || {}; HI[k] = {on: field(hs, 'إخفاء العقد ' + t, !!o.on, {type: 'checkbox'}), t: field(hs, 'الرسالة ' + t + ' (اختياري)', o.t || '', {area: 1, rows: 2, wide: 1, max: 500})}; });
+    const wmk = field(hs, 'علامة مائية باسم العميل على العقد ونسخة PDF', r.watermark !== false, {type: 'checkbox'});
+    btn(hs, 'حفظ ما يظهر للعميل', ev => { const h = {}; Object.entries(HI).forEach(([k, o]) => { h[k] = {on: o.on.checked, t: o.t.value.trim()}; }); save(ev.target, {hide: h, watermark: wmk.checked}); }, 'f38-primary');
+    box.append(st);
   }
   function kSettings(pane, s) {
     const f = el('div', 'f38-sub'); pane.append(f); f.append(el('b', '', 'بيانات الحساب البنكي المعتمد (تظهر للعميل عند التحويل)'));
@@ -538,37 +586,37 @@
     const sec = t => { const s = el('fieldset', 'f38-fs'); s.append(el('legend', '', t)); f.append(s); return s; };
     const cl = sec('بيانات العميل'), C = data.client || {};
     const cn = field(cl, 'الاسم', C.name, {max: 120}), cid = field(cl, 'رقم الهوية (للتحقق عند الموافقة)', C.id, {ltr: 1, max: 10}), cp = field(cl, 'الجوال', C.phone, {ltr: 1, max: 14}), cb = field(cl, 'تاريخ الميلاد (اختياري)', C.birth, {type: 'date'});
-    const tm = sec('بنود القالب والمبالغ'); const TI = {}; const LBL = {fees: 'الأتعاب (ريال)', discount: 'الخصم (ريال)', deposit: 'العربون (ريال)', first_party: 'الطرف الأول', subject: 'موضوع الاتفاق', obligations: 'التزامات الطرفين', agreement_text: 'نص الاتفاق', payment_schedule: 'المبالغ ومواعيد الدفع'};
+    const tm = sec('بنود القالب والمبالغ'); const TI = {}; const LBL = {fees: 'الأتعاب (ريال)', discount: 'الخصم (ريال) — اختياري؛ اتركه فارغًا فلا يظهر في العقد', deposit: 'العربون (ريال)', first_party: 'الطرف الأول', subject: 'موضوع الاتفاق', obligations: 'التزامات الطرفين', agreement_text: 'نص الاتفاق', payment_schedule: 'المبالغ ومواعيد الدفع'};
     const bodyF = field(f, 'نص العقد (يمكن تعديله بلا حد عملي؛ المتغيرات {{...}} تُملأ تلقائيًا)', data.body || '', {area: 1, rows: 14, wide: 1});
-    const drawTerms = () => { const t = KL.templates.find(x => x.id === tp.value) || {}; const T0 = Object.assign({}, t.terms || {}, data.terms || {}); tm.querySelectorAll('label').forEach(x => x.remove());
+    const drawTerms = () => { const t = KL.templates.find(x => x.id === tp.value) || {}; const T0 = Object.assign({}, t.terms || {}, {discount: ''}, data.terms || {}); tm.querySelectorAll('label').forEach(x => x.remove());
       Object.keys(TI).forEach(k => delete TI[k]); Object.keys(T0).filter(k => !/^client_|^issue_date$/.test(k)).forEach(k => { const long = /text|obligations|subject|schedule/.test(k); TI[k] = field(tm, LBL[k] || k, T0[k], {area: long, rows: long ? 4 : 0, wide: long}); });
       if (!bodyF.value || bodyF.dataset.tpl === bodyF.value) { bodyF.value = t.body || ''; bodyF.dataset.tpl = bodyF.value; } };
     tp.onchange = () => { data.terms = {}; drawTerms(); }; drawTerms();
     const py = sec('السداد بعد الموافقة'), P = data.pay || {};
     const pa = field(py, 'المبلغ المطلوب بعد القبول (مثل عربون 500؛ فارغ = العربون أو الإجمالي)', P.amount, {type: 'number'});
     const ps = field(py, 'الدفع المباشر عبر رابط سلة/بوابة', P.salla, {type: 'checkbox'}), pu = field(py, 'رابط الدفع', P.salla_url, {ltr: 1, wide: 1, ph: 'https://salla.sa/...'});
-    const pb = field(py, 'التحويل البنكي مع إرفاق إيصال', P.bank, {type: 'checkbox'});
+    const pb = field(py, 'التحويل البنكي', P.bank, {type: 'checkbox'}), prc = field(py, 'إرفاق إيصال التحويل', P.receipt || 'required', {options: RCPT});
     say(py, 'لا يوجد تحقق آلي من سلة: يظهر الدفع «تحت المراجعة» حتى تعتمده يدويًا بعد التأكد من وصول المبلغ.', 'f38-muted');
     const ac = sec('الدخول والحماية'), A = data.access || {};
     const ok2 = field(ac, 'طريقة فتح العقد', A.open_kind && A.open_kind !== 'package_code' ? A.open_kind : 'custom', {options: OPEN.filter(o => o[0] !== 'package_code')}), ky = field(ac, 'رمز فتح العقد (يُدخله العميل في خانة «أدخل الكود» نفسها؛ مطابقة كاملة)', A.open_key, {max: 80});
-    const pin = field(ac, 'رقم سري إضافي (إلزامي، 4–8 أرقام) يُطلب بعد الرمز وقبل عرض أي بيانات', A.pin, {ltr: 1, max: 8});
+    const pin = field(ac, 'رقم سري إضافي (اختياري، 4–8 أرقام) يُطلب بعد الرمز؛ اتركه فارغًا للدخول بالرمز فقط', A.pin, {ltr: 1, max: 8});
     const vv = field(ac, 'مدة الصلاحية من أول دخول', A.valid_value || 3, {type: 'number'}), vu = field(ac, 'الوحدة', A.valid_unit || 'days', {options: [['minutes', 'دقائق'], ['hours', 'ساعات'], ['days', 'أيام']]});
     const dm = field(ac, 'الأجهزة المسموحة', A.device_mode || 'client', {options: [['client', 'جهاز العميل فقط'], ['client_owner', 'جهاز العميل وجهاز المالك'], ['custom', 'أجهزة مصرح بها (عدد)']]});
     const dl = field(ac, 'عدد الأجهزة (للخيار الأخير)', A.device_limit || 2, {type: 'number'});
-    const FL = data.flags || {}; const geo = field(ac, 'طلب مشاركة الموقع بإذن العميل', FL.require_geo, {type: 'checkbox'}), pdf = field(ac, 'السماح للعميل بتنزيل/طباعة PDF', FL.allow_pdf, {type: 'checkbox'}), wm = field(ac, 'علامة مائية باسم العميل', FL.watermark !== false, {type: 'checkbox'});
+    const FL = data.flags || {}; const geo = field(ac, 'موقع العميل', geoOf(FL.geo_mode, FL.geo_fallback, FL.require_geo), {options: GEOM}), gfb = field(ac, 'عند تعذر التحديد التلقائي (للإلزامي)', FL.geo_fallback === 'skip' ? 'retry' : (FL.geo_fallback || 'retry'), {options: GEOF}), pdf = field(ac, 'السماح للعميل بتنزيل/طباعة PDF', FL.allow_pdf, {type: 'checkbox'}), wm = field(ac, 'علامة مائية باسم العميل', FL.watermark !== false, {type: 'checkbox'});
     const po = sec('صفحة ما بعد انتهاء العقد'), PO = data.post || {};
     const pk = field(po, 'النوع', PO.kind || 'thanks', {options: [['thanks', 'شكر'], ['approved', 'تم الاعتماد'], ['done', 'تم الانتهاء'], ['custom', 'نص خاص']]}), pt = field(po, 'النص الخاص (اختياري)', PO.text, {area: 1, rows: 3, wide: 1, max: 2000});
     const R52E = W.F99R52K?.editor ? W.F99R52K.editor(f, sec, data, bodyF, tp, title) : null;
     const st = el('p', 'f38-note'); const act = el('div', 'f38-row f38-sticky'); const pv = el('div'); body.append(st, act, pv);
     const collect = () => { const terms = {}; Object.keys(TI).forEach(k => { terms[k] = TI[k].value; });
       return {template_id: tp.value, title: title.value.trim(), body: bodyF.value, terms, client: {name: cn.value.trim(), id: cid.value.trim(), phone: cp.value.trim(), birth: cb.value},
-        pay: {amount: pa.value ? String(pa.value) : '', salla: ps.checked, salla_url: pu.value.trim(), bank: pb.checked},
+        pay: {amount: pa.value ? String(pa.value) : '', salla: ps.checked, salla_url: pu.value.trim(), bank: pb.checked, receipt: prc.value},
         access: {open_kind: ok2.value, open_key: ky.value.trim(), pin: pin.value.trim(), valid_value: Number(vv.value), valid_unit: vu.value, device_mode: dm.value, device_limit: Number(dl.value)},
-        flags: {require_geo: geo.checked, allow_pdf: pdf.checked, watermark: wm.checked}, post: {kind: pk.value, text: pt.value}, r52: R52E ? R52E.collect() : (data.r52 || {})}; };
+        flags: {require_geo: geo.value !== 'off', geo_mode: geoTo(geo.value, gfb.value).geo_mode, geo_fallback: geoTo(geo.value, gfb.value).geo_fallback, allow_pdf: pdf.checked, watermark: wm.checked}, post: {kind: pk.value, text: pt.value}, r52: R52E ? R52E.collect() : (data.r52 || {})}; };
     const save = async () => { const r = await adm('f99r38_owner_k', {p_action: 'draft_save', p_data: {id, revision: rev, data: collect()}}); if (r.ok) { id = r.id; rev = r.revision; } return r; };
     btn(act, 'حفظ كمسودة', async ev => { ev.target.disabled = true; const r = await save(); ev.target.disabled = false; st.textContent = r.ok ? 'حُفظت المسودة (غير منشورة).' : why(r); }, '');
     btn(act, 'معاينة الصفحات', () => { const x = collect(); let t = x.body; const vals = Object.assign({}, x.terms, {client_name: x.client.name, client_id_masked: x.client.id ? x.client.id.slice(0, 2) + '******' + x.client.id.slice(-2) : '', issue_date: new Date().toLocaleDateString('en-CA')});
-      t = t.replace(/\{\{\s*([a-z0-9_]+)\s*\}\}/gi, (m, k) => vals[k] != null && vals[k] !== '' ? vals[k] : '…'); pv.textContent = ''; W.F99R52K?.previewCtx?.(pv, x); pages(pv, x.title, t, false); pv.scrollIntoView({block: 'start', behavior: 'smooth'}); });
+      t = discText(t, x.terms.discount); t = t.replace(/\{\{\s*([a-z0-9_]+)\s*\}\}/gi, (m, k) => vals[k] != null && vals[k] !== '' ? vals[k] : '…'); pv.textContent = ''; W.F99R52K?.previewCtx?.(pv, x); pages(pv, x.title, t, false); pv.scrollIntoView({block: 'start', behavior: 'smooth'}); });
     btn(act, 'اعتماد ونشر', async ev => { if (!W.confirm('بعد الاعتماد يُنشر العقد ويُصدر كوده، ولا تتغير النسخة الموافق عليها إلا بإصدار جديد. متابعة؟')) return; ev.target.disabled = true; st.textContent = 'جاري الحفظ والنشر…';
       const s = await save(); if (!s.ok) { ev.target.disabled = false; st.textContent = why(s); return; }
       const r = await adm('f99r38_owner_k', {p_action: 'publish', p_data: {id}}); ev.target.disabled = false; if (!r.ok) { st.textContent = why(r); return; }
@@ -628,13 +676,25 @@
       const p = field(body, 'الرقم السري الإضافي', '', {ltr: 1, max: 8, type: 'password'}); p.inputMode = 'numeric'; const st = el('p', 'f38-err'); body.append(st);
       btn(body, 'تحقق', async ev => { ev.target.disabled = true; const r = await call('pin', {pin: p.value.trim()}); ev.target.disabled = false;
         if (r.ok) openParty(session); else st.textContent = why(r) + (r.left ? ' (متبقي ' + r.left + ' محاولات)' : ''); }, 'f38-primary'); return; }
-    if (v.reason === 'K_GEO_REQUIRED') { const g = v.gate || {}; body.append(el('h3', '', 'تحقق إضافي'), el('p', '', g.geo_consent || ''));
-      const ok = field(body, 'أوافق على مشاركة موقعي الحالي لهذا الغرض', false, {type: 'checkbox'}); const city = field(body, 'المدينة (اختياري)', '', {max: 80}), dist = field(body, 'الحي (اختياري)', '', {max: 80});
-      const st = el('p', 'f38-err'); body.append(st);
-      btn(body, 'مشاركة موقعي', ev => { if (!ok.checked) { st.textContent = REASONS.K_GEO_CONSENT; return; } if (!navigator.geolocation) { st.textContent = 'جهازك لا يدعم تحديد الموقع.'; return; } ev.target.disabled = true; st.textContent = 'جاري قراءة الموقع من جهازك…';
-        navigator.geolocation.getCurrentPosition(async pos => { const r = await call('geo', {consent: true, lat: String(pos.coords.latitude), lng: String(pos.coords.longitude), accuracy: String(Math.round(pos.coords.accuracy || 0)), city: city.value, district: dist.value});
-          ev.target.disabled = false; if (r.ok) openParty(session); else st.textContent = why(r); },
-        () => { ev.target.disabled = false; st.textContent = 'لم يُسمح بالوصول للموقع. فعّل إذن الموقع للمتصفح ثم حاول.'; }, {enableHighAccuracy: true, timeout: 15000, maximumAge: 0}); }, 'f38-primary'); return; }
+    if (v.reason === 'K_GEO_REQUIRED') { const g = v.gate || {}; const mode = g.geo_mode || 'auto', fb = g.geo_fallback || 'retry'; body.append(el('h3', '', 'تحقق إضافي'), el('p', '', g.geo_consent || ''));
+      const ok = field(body, mode === 'manual' ? 'أوافق على تسجيل موقعي (المدينة والحي) لهذا الغرض' : 'أوافق على مشاركة موقعي الحالي لهذا الغرض', false, {type: 'checkbox'});
+      const city = field(body, mode === 'manual' ? 'المدينة' : 'المدينة (اختياري)', '', {max: 80}), dist = field(body, mode === 'manual' ? 'الحي' : 'الحي (اختياري)', '', {max: 80});
+      const st = el('p', 'f38-err'); body.append(st); const alt = el('div', 'f38-row');
+      const msg = (t, c) => { st.className = c || 'f38-err'; st.textContent = t; };
+      const send = async (d, b) => { if (b) b.disabled = true; msg('جاري التسجيل…', 'f38-note'); const r = await call('geo', Object.assign({consent: ok.checked, city: city.value, district: dist.value}, d)); if (b) b.disabled = false;
+        if (r.ok) openParty(session); else msg(why(r)); };
+      const manual = b => { if (!ok.checked) { msg(REASONS.K_GEO_CONSENT); return; } if (city.value.trim().length < 2 || dist.value.trim().length < 2) { msg('اكتب المدينة والحي.'); return; } send({method: 'manual'}, b); };
+      if (mode === 'manual') { btn(body, 'تسجيل موقعي', ev => manual(ev.target), 'f38-primary'); return; }
+      const showAlt = () => { alt.textContent = ''; btn(alt, 'إعادة المحاولة', ev => locate(ev.target)); if (fb === 'manual') btn(alt, 'إدخال الموقع يدويًا (المدينة والحي)', ev => manual(ev.target));
+        if (fb === 'skip') btn(alt, 'المتابعة دون الموقع', ev => send({method: 'skipped'}, ev.target)); };
+      const read = o => new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, o));
+      const locate = async b => { if (!ok.checked) { msg(REASONS.K_GEO_CONSENT); return; } if (!navigator.geolocation) { msg('جهازك لا يدعم تحديد الموقع.'); showAlt(); return; }
+        b.disabled = true; msg('جاري قراءة الموقع من جهازك…', 'f38-note'); let pos = null, err = null;
+        try { pos = await read({enableHighAccuracy: true, timeout: 10000, maximumAge: 60000}); } catch (e) { err = e; if (!e || e.code !== 1) { try { pos = await read({enableHighAccuracy: false, timeout: 20000, maximumAge: 300000}); } catch (e2) { err = e2; } } }
+        b.disabled = false;
+        if (!pos) { msg(err && err.code === 1 ? 'لم يُسمح بالوصول للموقع. فعّل إذن الموقع للمتصفح (في iPhone: الإعدادات ← الخصوصية ← خدمات الموقع ← Safari) ثم أعد المحاولة.' : 'تعذر تحديد موقعك الآن (ضعف الإشارة أو انتهاء المهلة). أعد المحاولة' + (fb !== 'retry' ? ' أو استخدم الخيار البديل.' : '.')); showAlt(); return; }
+        const c = pos.coords; await send({method: 'auto', lat: Number(c.latitude).toFixed(6), lng: Number(c.longitude).toFixed(6), accuracy: String(Math.round(c.accuracy || 0))}, b); };
+      btn(body, 'مشاركة موقعي', ev => locate(ev.target), 'f38-primary'); body.append(alt); if (fb === 'skip') btn(alt, 'المتابعة دون مشاركة الموقع', ev => send({method: 'skipped'}, ev.target)); return; }
     if (!v.ok) { try { sessionStorage.removeItem(SKEY); } catch (_) {} body.textContent = ''; openEntry('', (v.msg && v.msg.t) || why(v)); return; }
     if (!v.r38) { // not an r38 deal: hand over to the original contracts portal unchanged.
       closeSheet(); try { sessionStorage.setItem('F99K_PARTY_SESSION', session); } catch (_) {} return false; }
@@ -684,9 +744,11 @@
       btn(s, 'دفعت — أبلغ صاحب العقد للمراجعة', async ev => { ev.target.disabled = true; const r = await call('pay_notice', {}); if (r.ok) openParty(session); else { ev.target.disabled = false; st.textContent = why(r); } }); }
     if (x.pay?.bank) { const s = el('div', 'f38-sub'); box.append(s); s.append(el('b', '', 'التحويل البنكي'));
       const b = x.pay.bank; [['البنك', b.bank_name], ['اسم الحساب', b.holder], ['الآيبان', b.iban]].forEach(([k, val]) => { if (val) { const p = el('p'); p.append(el('small', '', k + ': '), el('b', '', val)); s.append(p); } }); W.F99R52K?.bankExtra?.(s, b);
-      const fi = el('input'); fi.type = 'file'; fi.accept = 'image/jpeg,image/png,application/pdf'; const lb = el('label', 'f38-field f38-wide'); lb.append(el('span', '', 'إرفاق إيصال التحويل (إلزامي، صورة أو PDF حتى 1.5 ميجابايت)'), fi); s.append(lb);
+      const rm = x.pay.receipt || 'required'; let fi = null;
+      if (rm !== 'off') { fi = el('input'); fi.type = 'file'; fi.accept = 'image/jpeg,image/png,application/pdf'; const lb = el('label', 'f38-field f38-wide'); lb.append(el('span', '', 'إرفاق إيصال التحويل (' + (rm === 'required' ? 'إلزامي' : 'اختياري') + '، صورة أو PDF حتى 1.5 ميجابايت)'), fi); s.append(lb); }
       const nt = field(s, 'ملاحظة (اختياري)', '', {max: 500});
-      btn(s, 'إرسال الإيصال', async ev => { const file = fi.files?.[0]; if (!file) { st.textContent = 'أرفق صورة الإيصال.'; return; }
+      btn(s, rm === 'off' ? 'حوّلت — أبلغ صاحب العقد للمراجعة' : 'إرسال الإيصال', async ev => { const file = fi?.files?.[0]; if (!file && rm === 'required') { st.textContent = 'أرفق صورة الإيصال.'; return; }
+        if (!file) { ev.target.disabled = true; st.textContent = 'جاري الإرسال…'; const r = await call('receipt', {note: nt.value}); ev.target.disabled = false; if (r.ok) openParty(session); else st.textContent = why(r); return; }
         if (!['image/jpeg', 'image/png', 'application/pdf'].includes(file.type)) { st.textContent = REASONS.K_RECEIPT_INVALID; return; } if (file.size > 1600000 || file.size < 1000) { st.textContent = REASONS.K_RECEIPT_SIZE; return; }
         ev.target.disabled = true; st.textContent = 'جاري الرفع…'; const b64 = await new Promise(res => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(',')[1] || ''); fr.onerror = () => res(''); fr.readAsDataURL(file); });
         const r = await call('receipt', {mime: file.type, b64, note: nt.value}); ev.target.disabled = false; if (r.ok) openParty(session); else st.textContent = why(r); }, 'f38-primary'); }
@@ -775,6 +837,6 @@
   const route = () => { if (/^#(contract|k)$/i.test(location.hash)) { let s = null; try { s = sessionStorage.getItem(SKEY); } catch (_) {} if (s) openParty(s); else openEntry(); } };
   W.addEventListener('hashchange', route);
   if (D.readyState === 'loading') D.addEventListener('DOMContentLoaded', () => { scan(); route(); }, {once: true}); else { setTimeout(() => { scan(); route(); }, 0); }
-  W.F99R38K = {el, btn, field, say, adm, pub, why, REASONS, sheet, closeSheet, tabs, num, when, pages, printDoc, editDraft, openK, openParty, KDEV, SKEY};
+  W.F99R38K = {accessPane, el, btn, field, say, adm, pub, why, REASONS, sheet, closeSheet, tabs, num, when, pages, printDoc, editDraft, openK, openParty, KDEV, SKEY};
   W.F99R38 = Object.freeze({version: 'r39a', openAppts, openK, openEntry, openParty, openPkgs, openPkg, openCats, refreshHome: loadHome});
 })();
