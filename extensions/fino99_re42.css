@@ -152,3 +152,4 @@ html.re42-lock{overflow:hidden}
 .re42-capline{font-weight:800;font-size:16px;color:var(--ok);margin:0}
 .re42-retmsg{background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:8px 12px;margin:8px 0}.re42-retmsg p{margin:4px 0}
 @media (min-width:700px){.re42-bot .re42-sheet{height:calc(var(--vvh,100dvh) * .88)}}
+.re42-tag.est{background:#fff7e6;color:#8a5a00;border:1px solid #f3d28b}

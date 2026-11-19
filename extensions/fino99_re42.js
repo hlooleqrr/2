@@ -319,7 +319,7 @@
             if (R.results.some(b => b.avgAdjusted)) cb.append(el('p', 're42-note', 'وفق المادة 13/هـ من مبادئ التمويل المسؤول تُقيَّم الأقساط غير المتساوية بمتوسطها عند المنح؛ لذلك ضبطنا الأقساط العليا حتى لا يتجاوز متوسط القسط قدرتك الحالية (' + fmt2(C.first) + ' ريال).')); }
           if (C.consumerOver) cb.append(el('p', 're42-warn', 'التزاماتك غير العقارية تتجاوز ' + C.consumerOver.limit + '% من دخلك (م15/ب)؛ قد تطلب الجهة سداد بعضها.'));
           resEl.append(cb); } }
-      { const rs = new Set(R.results.map(b => b.rateSource)); if (S.plan === 'step' && rs.has('same_margin')) resEl.append(el('p', 're42-muted', T.same_margin_note || 'هامش الربح هو الهامش المعتمد للبنك نفسه؛ تغيير شكل القسط لا يغيّر الهامش. إتاحة القسط المتزايد تخضع لموافقة البنك.'));
+      { const rs = new Set(R.results.map(b => b.rateSource)); if (S.plan === 'step' && rs.has('same_margin')) resEl.append(el('p', 're42-muted', T.same_margin_note || 'تقدير: حسبنا القسط المتزايد بهامش القسط الثابت المعتمد لكل بنك، وليس عرضًا متزايدًا مؤكدًا من البنوك؛ إتاحته وشروطه ونسبته تخضع لاعتماد البنك.'));
         if (rs.has('owner_sim')) resEl.append(el('p', 're42-trialnote', 'محاكاة داخلية للمالك: النسبة غير معتمدة — ليست عرض بنك.')); }
       if (S.cut) { const cw = el('div', 're42-applied'); cw.append(el('span', '', 'مطبّق: ' + (S.cut.type === 'amount' ? 'مبلغ تمويل حتى ' : 'قسط شهري حتى ') + fmt(S.cut.value) + ' ريال — نفس المدة والنسبة ')); btn(cw, 'إلغاء التقليل', () => { S.history.push(snapshot()); S.cut = null; results(false); }, 're42-mini'); resEl.append(cw); }
       if (S.history.length) btn(resEl, T.back_prev || 'الرجوع للحسبة السابقة', () => { const p = S.history.pop(); Object.assign(S, p); results(false); }, 're42-back');
@@ -353,7 +353,7 @@
     function bankCard(b, i) {
       const c = el('div', 're42-bank' + (i === 0 ? ' best' : '')); c.dataset.bank = b.id;
       const h = el('div', 're42-bh'); h.append(logoBox(b)); const nm = el('div', 're42-bn'); nm.append(el('b', '', b.name)); if (i === 0) nm.append(el('small', 're42-tag', 'الأفضل لحالتك')); if (S.data.salary_bank && S.data.salary_bank === b.id) nm.append(el('small', 're42-tag salary', 'بنك نزول راتبك'));
-      nm.append(el('small', 're42-rate', (b.rateSource === 'owner_sim' ? 'نسبة محاكاة ' : 'النسبة المعتمدة ') + pct(b.rate))); if (b.rateSource === 'owner_sim') nm.append(el('small', 're42-tag test', 'محاكاة داخلية للمالك — ليست عرض بنك'));
+      nm.append(el('small', 're42-rate', (b.rateSource === 'owner_sim' ? 'نسبة محاكاة ' : b.rateSource === 'same_margin' ? 'هامش الثابت المعتمد ' : 'النسبة المعتمدة ') + pct(b.rate))); if (b.rateSource === 'same_margin') nm.append(el('small', 're42-tag est', 'تقدير — المتزايد غير معتمد من البنك')); if (b.rateSource === 'owner_sim') nm.append(el('small', 're42-tag test', 'محاكاة داخلية للمالك — ليست عرض بنك'));
       if (b.test) nm.append(el('small', 're42-tag test', 'بنك اختبار — نسبة تجريبية غير معتمدة')); h.append(nm); c.append(h);
       const amt = el('div', 're42-amt'); amt.append(el('small', '', 'مبلغ التمويل العقاري التقديري'), el('b', '', fmt(b.amount) + ' ريال')); c.append(amt);
       const st = el('div', 're42-stages'); st.append(el('small', '', 'القسط الشهري')); const show = b.stages.length > 5 ? b.stages.slice(0, 4) : b.stages;
@@ -434,11 +434,11 @@
       const card = (bg, bd, fn) => { const y0 = y; gap(22); fn(); gap(22); ops.push({ k: 'c', y0, y1: y, bg, bd }); gap(18); };
       gap(150); const panel0 = y; gap(26);
       text(tpl(T.duration_title || 'مدة التمويل لك يا {name}', S.data), 42, 700); text(S.months + ' شهر — ' + durTxt(S.months) + (S.extend ? ' — تمتد بعد التقاعد' : ''), 32, 400, '#334');
-      text(S.plan === 'fixed' ? 'نوع القسط: ثابت' : 'نوع القسط: متزايد', 30, 400, '#334'); gap(14);
+      text(S.plan === 'fixed' ? 'نوع القسط: ثابت' : 'نوع القسط: متزايد' + (list.some(b => b.rateSource === 'same_margin') ? ' (تقديري — غير معتمد من البنوك)' : ''), 30, 400, '#334'); gap(14);
       if (list.length) list.forEach((b, i) => card(i === 0 ? '#eef7f1' : '#f3f6fb', i === 0 ? '#9fd8b5' : '#dbe3f0', () => {
           text((i + 1) + '. ' + b.name + (S.data.salary_bank && S.data.salary_bank === b.id ? ' — بنك نزول راتبك' : '') + (b.test ? ' (اختبار)' : ''), 36, 700, '#13315c');
           text('مبلغ التمويل التقديري', 26, 400, '#556'); text(fmt(b.amount) + ' ريال', 60, 800, '#0a7a4f');
-          text('هامش الربح ' + pct(b.rate) + ' — القسط الأول ' + fmt(b.pays[0]) + ' ريال — ' + b.months + ' شهر', 28, 400, '#334');
+          text((b.rateSource === 'same_margin' ? 'هامش الثابت المعتمد ' : 'هامش الربح ') + pct(b.rate) + ' — القسط الأول ' + fmt(b.pays[0]) + ' ريال — ' + b.months + ' شهر', 28, 400, '#334');
           const stg = b.stages.length > 3 ? b.stages.slice(0, 2).concat([b.stages[b.stages.length - 1]]) : b.stages; if (b.stages.length > 1) stg.forEach(s => text(stageLine(s, b.months) + (s.post ? ' (بعد التقاعد)' : ''), 26, 400, '#223'));
           text('إجمالي الأرباح التقديرية: ' + fmt(b.profit) + ' ريال', 26, 400, '#334'); }));
       else card('#fff4f4', '#f3c2c2', () => { text('لا توجد جهة مؤهلة حاليًا', 38, 700, '#a00'); text(R ? whyNone(R) : tpl(T.no_banks, S.data), 30, 400, '#7a1d1d'); text('تقدر تعدّل البيانات أو المدة وتعيد الحسبة.', 28, 400, '#556'); });
