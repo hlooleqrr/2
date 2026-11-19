@@ -327,10 +327,13 @@
     { const ep0 = etizazPlan(inp, cfg), Z = cfg.etizaz || {}; if (ep0 && ((Array.isArray(Z.banks) && Z.banks.length && !Z.banks.includes(bank.id)) || (Array.isArray(Z.properties) && Z.properties.length && !Z.properties.includes(inp.property)))) return Object.assign(res, { reason: 'ETIZAZ_BANK' }); }
     const N = Math.min(opt.months, termCap(pr, cfg, opt.extend, bank)); res.months = N; res.termCut = N < opt.months;
     if (!(N >= 12)) return Object.assign(res, { reason: 'TERM' });
+    { const FT = num(opt.fixedTerm); if (FT > 0 && N < FT) { const gc = termCap(pr, cfg, opt.extend, null); // r55: fixed package term — never shortened automatically
+      return Object.assign(res, { reason: gc < FT ? (pr.monthsToMaxAge < FT ? 'AGE' : 'TERM') : (num(bank.max_term) > 0 && num(bank.max_term) < FT ? 'BANK_TERM' : 'BANK_AGE') }); } }
     const mx = matrixRow(bank, inp, cfg, plan, N, pr); if (mx && mx.blocked) return Object.assign(res, { reason: mx.blocked });
     const pk = mx ? { rate: num(mx.row.rate), source: 'matrix' } : pickRate(bank, inp, cfg, plan, !!opt.trial); if (mx) res.matrixRow = mx.row.id || null; let rate = pk.rate; res.rateSource = pk.source || null;
     let offer = null;
     if (opt.offerId) { offer = (bank.offers || []).find(o => o.id === opt.offerId) || null; if (!offerMatches(offer, inp, plan, N, opt.entity)) return Object.assign(res, { reason: 'OFFER_NOT_ELIGIBLE' }); rate = num(offer.rate); res.rateSource = 'offer'; }
+    if (!mx && !offer && num(opt.rateTerm) > 0 && N !== num(opt.rateTerm) && res.rateSource !== 'owner_sim') return Object.assign(res, { reason: 'NO_TERM_RATE' }); // r55: a 240-month rate is never reused for another term
     if (!(rate > 0)) return Object.assign(res, { reason: pk.reason || 'NO_RATE' });
     const rows = schedule(pr, inp, cfg, N, bank, !!opt.trial); let pays;
     if ((cfg.dti_policy || {}).consumer_over_exclude !== false && consumerOverAt(rows, cfg)) return Object.assign(res, { reason: 'CONSUMER_OVER' }); // r51
@@ -374,7 +377,7 @@
   function compare(inp, cfg, opt) {
     opt = opt || {}; const pr = profile(inp, cfg, opt.now); pr.birth = inp.birth;
     const plan = opt.plan || cfg.default_plan || 'fixed';
-    const all = (cfg.banks || []).map(b => quoteBank(b, inp, cfg, pr, { plan: (opt.plans || {})[b.id] || plan, months: opt.months, extend: opt.extend, trial: !!opt.trial, offerId: (opt.offers || {})[b.id], entity: opt.entity, cut: opt.cut }));
+    const all = (cfg.banks || []).map(b => quoteBank(b, inp, cfg, pr, { plan: (opt.plans || {})[b.id] || plan, months: opt.months, extend: opt.extend, trial: !!opt.trial, offerId: (opt.offers || {})[b.id], entity: opt.entity, cut: opt.cut, fixedTerm: opt.fixedTerm, rateTerm: opt.rateTerm }));
     const ok = rank(all.filter(x => x.eligible), cfg); const top = Math.max(1, num(cfg.top_n, 3));
     return { profile: pr, plan, months: opt.months, extend: !!opt.extend, capacity: capInfo(pr, inp, cfg, opt.months, !!opt.extend, !!opt.trial), results: ok, top: ok.slice(0, top), rest: ok.slice(top), excluded: all.filter(x => !x.eligible).map(x => ({ id: x.id, name: x.name, reason: x.reason, zeroFrom: x.zeroFrom, zeroTo: x.zeroTo, zeroPost: x.zeroPost })), etizaz: etizazPlan(inp, cfg), support: supportAmounts(inp, cfg) };
   }

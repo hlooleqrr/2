@@ -239,3 +239,14 @@ html.re42-lock{overflow:hidden}
 .re54-pn{display:flex;flex-direction:column;gap:4px;margin-top:6px}
 .re54-pick .re42-body{display:flex;flex-direction:column;gap:10px}
 .re54-pre{white-space:pre-wrap;word-break:break-word;font-size:12px;max-height:320px;overflow:auto;direction:ltr;text-align:left;background:#f5f8fc;padding:8px;border-radius:8px}
+
+/* r55: products, compact bank cards, multi-select closing */
+.re42-props .re42-chip.na{flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px}
+.re42-props .re42-chip.na .re42-soon{margin:0;white-space:normal;line-height:1.45;font-size:11px}
+.re42-bank .re55-q{margin-top:8px}
+.re42-bank .re55-act{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+.re42-bank .re55-act .re42-mini{margin:0;width:100%}
+.re42-bank .re55-det{margin-top:10px;border-top:1px dashed #d5e2ec;padding-top:8px}
+.re42-bank{cursor:pointer}
+.re55-multi .re42-chip.on{background:var(--p);color:#fff;border-color:var(--p)}
+.re55-diff{margin:8px 0}
