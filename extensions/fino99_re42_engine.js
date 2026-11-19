@@ -91,6 +91,9 @@
     return sim || { rate: NaN, reason: 'NO_RATE' };
   }
   // r49: client-level capacity (no bank specifics): stage caps, highest fixed instalment (= lowest cap over the whole term), months before/after retirement.
+  // r51: SAMA RLP art. 15/ب & 16/ب — current non-real-estate obligations (month 1, as entered; Etizaz excluded) above consumer_pct% of income, income < t2_max
+  function consumerOverAt(rows, cfg) { const DP = cfg.dti_policy || {}; const r = rows && rows[0]; if (!r || !(r.income > 0)) return null; const cp = nv(DP.consumer_pct, 45);
+    if (dtiTier(r.income, DP) >= 3 || !(r.ob0 > r.income * cp / 100 + 1e-9)) return null; return { m: 1, pct: Math.round(r.ob0 / r.income * 10000) / 100, limit: cp, ob: r.ob0, income: r.income }; }
   function capInfo(pr, inp, cfg, months, extend, trial) {
     try {
       const N = Math.min(num(months), termCap(pr, cfg, extend, null)); if (!(N >= 1)) return null;
@@ -98,13 +101,13 @@
       rows.forEach(r => { const a = r2(r.cap), l = st[st.length - 1]; if (l && l.amount === a && l.post === r.post) l.to = r.m;
         else st.push({ from: r.m, to: r.m, amount: a, post: r.post, limit: r2(r.limit), ob: r2(r.ob), ez: r2(r.ez || 0), pct: r.rate, tier: r.tier, basis: r.basis, income: r.income }); });
       let mn = Infinity, sum = 0; rows.forEach(r => { mn = Math.min(mn, r.cap); sum += r.cap; });
-      const cp = nv((cfg.dti_policy || {}).consumer_pct, 45); const over = rows.find(r => r.income > 0 && r.ob > r.income * cp / 100 + 1e-9);
+      const over0 = consumerOverAt(rows, cfg);
       const fp = rows.find(r => !r.post), lp = rows.find(r => r.post);
       return { months: N, stages: st, fixedMax: mn, first: rows[0].cap, avg: sum / N, avgRule: (cfg.installments || {}).avg_rule || 'origination',
         preMonths: rows.filter(r => !r.post).length, postMonths: rows.filter(r => r.post).length,
         pre: fp ? { income: fp.income, pct: fp.rate, tier: fp.tier, basis: fp.basis, limit: r2(fp.limit) } : null,
         post: lp ? { income: lp.income, pct: lp.rate, tier: lp.tier, basis: lp.basis, limit: r2(lp.limit) } : null,
-        consumerOver: over ? { m: over.m, pct: r2(over.ob / over.income * 100), limit: cp } : null };
+        consumerOver: over0 };
     } catch (e) { return null; }
   }
   // ---------- profile: age, retirement, pension, term limits ----------
@@ -121,10 +124,12 @@
       const M = cfg.military || {}; const rk = rankOf(cfg, inp.rank); if (!rk) throw Error('RANK_REQUIRED');
       const age = inp.pilot && rk.group === 'officer' && num(rk.pilot_age) > 0 ? num(rk.pilot_age) : num(rk.age);
       if (!(age > 0)) throw Error('RANK_AGE_MISSING');
-      if (!validG(inp.appoint) || cmp(inp.appoint, today) > 0 || cmp(inp.appoint, inp.birth) <= 0) throw Error('APPOINT_INVALID');
-      const basic = num(inp.basic); if (!(basic > 0)) throw Error('BASIC_REQUIRED');
       const rd = addYears(inp.birth, age, M.calendar || 'hijri'); out.retireDate = rd; out.retireAge = age;
       out.R = Math.max(0, monthsBetween(today, rd));
+      // r51: appointment date + basic are asked only when the financing reaches retirement; without them no pension / extension is modelled
+      if (inp.appoint == null && inp.basic == null) { out.pensionSkipped = true; if (out.R === 0) notes.push('PAST_RETIREMENT_AGE'); } else {
+      if (!validG(inp.appoint) || cmp(inp.appoint, today) > 0 || cmp(inp.appoint, inp.birth) <= 0) throw Error('APPOINT_INVALID');
+      const basic = num(inp.basic); if (!(basic > 0)) throw Error('BASIC_REQUIRED');
       // r44: counted service (م4/أ، م6): full months only, minus non-counted periods; counted directly appointment -> retirement date
       const svcCal = M.service_calendar === 'hijri' ? 'hijri' : 'gregorian'; out.serviceCalendar = svcCal;
       const mb = (a, b) => svcCal === 'hijri' ? monthsBetween(toHijri(a), toHijri(b)) : monthsBetween(a, b);
@@ -141,6 +146,7 @@
       out.pension = pension; out.post = pension; out.basic = base;
       out.extendAllowed = sc.extend !== false && out.R > 0;
       if (out.R === 0) notes.push('PAST_RETIREMENT_AGE');
+      }
     } else if (sector === 'retired') {
       out.R = 0; out.post = net; out.extendAllowed = false;
     } else {
@@ -201,7 +207,7 @@
     const extend = inp.extend == null ? extendDefault : !!inp.extend;
     const cap = termCap(pr, cfg, extend, null); const want = num(inp.months, num(L.default_term, 300));
     const months = Math.max(0, Math.min(want, cap));
-    return { profile: pr, extend, extendShown: pr.extendAllowed, cap, capWithExtend: termCap(pr, cfg, true, null), capNoExtend: termCap(pr, cfg, false, null),
+    return { profile: pr, extend, extendShown: pr.extendAllowed && pr.R < Math.max(want, num(L.default_term, 300)), cap, capWithExtend: termCap(pr, cfg, true, null), capNoExtend: termCap(pr, cfg, false, null),
       months, corrected: months < want, minTerm: Math.min(num(L.min_term, 60), cap) };
   }
   // ---------- capacity schedule ----------
@@ -222,10 +228,10 @@
   function etzAt(ep, m) { if (!ep) return 0; const k = m + ep.offset; if (k <= ep.grace || k > ep.grace + ep.months) return 0; return k === ep.grace + ep.months ? ep.last : ep.inst; }
   // r50: support amounts — the owner values are used; the uploaded support-matrix rows are a reference until the owner switches them on.
   function supportAmounts(inp, cfg) {
-    const Sp = cfg.support || {}, MX = cfg.support_matrix || {}, sk = supportKey(inp), inc = Math.floor(num(inp.net));
+    const Sp = cfg.support || {}, MX = cfg.support_matrix || {}, sk = supportKey(inp), inc = num(inp.net); // r51: the actual net (no rounding down)
     const band = rows => (rows || []).find(r => inc >= num(r.from) && (r.to == null || r.to === '' || inc <= num(r.to)));
     let up = 0, upSrc = null, mo = 0, moMonths = num(Sp.monthly_months), moSrc = null;
-    if (inp.supported && sk === 'upfront') { if (MX.use_packages === true) { const b = band(MX.packages); if (b) { up = num(b.amount); upSrc = 'matrix'; } } else if (num(Sp.upfront_amount) > 0) { up = num(Sp.upfront_amount); upSrc = 'owner'; } }
+    if (inp.supported && sk === 'upfront') { if (MX.use_packages === true) { const b = (Array.isArray(MX.properties) && MX.properties.length && !MX.properties.includes(inp.property || 'ready')) ? null : band(MX.packages); if (b) { up = num(b.amount); upSrc = 'matrix'; } } else if (num(Sp.upfront_amount) > 0) { up = num(Sp.upfront_amount); upSrc = 'owner'; } }
     if (inp.supported && sk === 'monthly' && Sp.monthly_enabled) { if (MX.use_monthly === true) { const b = band(MX.monthly); if (b) { mo = num(b.amount); moMonths = num(b.months, moMonths); moSrc = 'matrix'; } } else if (num(Sp.monthly_amount) > 0) { mo = num(Sp.monthly_amount); moSrc = 'owner'; } }
     const ep = etizazPlan(inp, cfg); const C = (cfg.etizaz || {}).combine || {}; let upCounted = up > 0; const blocked = [];
     if (ep) { if (up > 0 && C.upfront !== true) { upCounted = false; blocked.push('upfront'); } if (mo > 0 && C.monthly !== true) { mo = 0; blocked.push('monthly'); } }
@@ -327,6 +333,7 @@
     if (opt.offerId) { offer = (bank.offers || []).find(o => o.id === opt.offerId) || null; if (!offerMatches(offer, inp, plan, N, opt.entity)) return Object.assign(res, { reason: 'OFFER_NOT_ELIGIBLE' }); rate = num(offer.rate); res.rateSource = 'offer'; }
     if (!(rate > 0)) return Object.assign(res, { reason: pk.reason || 'NO_RATE' });
     const rows = schedule(pr, inp, cfg, N, bank, !!opt.trial); let pays;
+    if ((cfg.dti_policy || {}).consumer_over_exclude !== false && consumerOverAt(rows, cfg)) return Object.assign(res, { reason: 'CONSUMER_OVER' }); // r51
     const SA = supportAmounts(inp, cfg); const ms = SA.monthly;
     const msMonths = SA.monthlyMonths;
     const sup = m => (ms > 0 && (msMonths <= 0 || m <= msMonths)) ? ms : 0;
@@ -370,6 +377,6 @@
     const ok = rank(all.filter(x => x.eligible), cfg); const top = Math.max(1, num(cfg.top_n, 3));
     return { profile: pr, plan, months: opt.months, extend: !!opt.extend, capacity: capInfo(pr, inp, cfg, opt.months, !!opt.extend, !!opt.trial), results: ok, top: ok.slice(0, top), rest: ok.slice(top), excluded: all.filter(x => !x.eligible).map(x => ({ id: x.id, name: x.name, reason: x.reason, zeroFrom: x.zeroFrom, zeroTo: x.zeroTo, zeroPost: x.zeroPost })), etizaz: etizazPlan(inp, cfg), support: supportAmounts(inp, cfg) };
   }
-  const API = { version: 'r50', etizazEligible, etizazPlan, etzAt, supportAmounts, feeCalc, matrixRow, ptable, etzInfo, dtiTier, dtiInfo, avgRule, pickRate, capInfo, rankScale, gradeOf, expectedBasic, r1, toHijri, fromHijri, addYears, monthsBetween, riyadhToday, validG, profile, durationCard, termCap, schedule, pv, quoteBank, compare, offerMatches, dtiRate, supportKey };
+  const API = { version: 'r51', consumerOverAt, etizazEligible, etizazPlan, etzAt, supportAmounts, feeCalc, matrixRow, ptable, etzInfo, dtiTier, dtiInfo, avgRule, pickRate, capInfo, rankScale, gradeOf, expectedBasic, r1, toHijri, fromHijri, addYears, monthsBetween, riyadhToday, validG, profile, durationCard, termCap, schedule, pv, quoteBank, compare, offerMatches, dtiRate, supportKey };
   if (typeof module === 'object' && module.exports) module.exports = API; else root.F99RE42Engine = API;
 })(typeof window !== 'undefined' ? window : globalThis);
