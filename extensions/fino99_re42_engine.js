@@ -96,7 +96,7 @@
       const N = Math.min(num(months), termCap(pr, cfg, extend, null)); if (!(N >= 1)) return null;
       const rows = schedule(pr, inp, cfg, N, null, trial); const r2 = x => Math.round(x * 100) / 100; const st = [];
       rows.forEach(r => { const a = r2(r.cap), l = st[st.length - 1]; if (l && l.amount === a && l.post === r.post) l.to = r.m;
-        else st.push({ from: r.m, to: r.m, amount: a, post: r.post, limit: r2(r.limit), ob: r2(r.ob), pct: r.rate, tier: r.tier, basis: r.basis, income: r.income }); });
+        else st.push({ from: r.m, to: r.m, amount: a, post: r.post, limit: r2(r.limit), ob: r2(r.ob), ez: r2(r.ez || 0), pct: r.rate, tier: r.tier, basis: r.basis, income: r.income }); });
       let mn = Infinity, sum = 0; rows.forEach(r => { mn = Math.min(mn, r.cap); sum += r.cap; });
       const cp = nv((cfg.dti_policy || {}).consumer_pct, 45); const over = rows.find(r => r.income > 0 && r.ob > r.income * cp / 100 + 1e-9);
       const fp = rows.find(r => !r.post), lp = rows.find(r => r.post);
@@ -205,13 +205,81 @@
       months, corrected: months < want, minTerm: Math.min(num(L.min_term, 60), cap) };
   }
   // ---------- capacity schedule ----------
+  // r50: «اعتزاز» — an independent qard-hasan loan (default simulation 160,000 / 24 grace / 216 instalments), NOT part of the bank principal.
+  // Its instalment is an obligation of every month it is due (also after retirement); start_offset = months already elapsed in the Etizaz loan at mortgage month 1.
+  function etizazEligible(inp, cfg) {
+    const Z = cfg.etizaz || {}; if (Z.enabled !== true) return false;
+    const sec = Array.isArray(Z.sectors) && Z.sectors.length ? Z.sectors : ['military']; if (!sec.includes(inp.sector)) return false;
+    if (Z.require_supported !== false && inp.supported !== true) return false;
+    const ents = Array.isArray(Z.entities) && Z.entities.length ? Z.entities : ['وزارة الدفاع']; const e = inp.mil_entity || inp.entity; return !!e && ents.includes(e);
+  }
+  function etizazPlan(inp, cfg) {
+    if (!inp || inp.etizaz !== true || !etizazEligible(inp, cfg)) return null; const Z = cfg.etizaz || {};
+    const amount = nv(Z.amount, 160000), grace = Math.max(0, Math.floor(nv(Z.grace_months, 24))), n = Math.max(1, Math.floor(nv(Z.months, 216))), offset = Math.max(0, Math.floor(nv(Z.start_offset, 0)));
+    if (!(amount > 0)) return null; const inst = Math.floor(amount / n * 100 + 1e-7) / 100; const last = Math.round((amount - inst * (n - 1)) * 100) / 100;
+    return { amount, grace, months: n, offset, inst, last, raw: amount / n, firstPay: grace + 1 - offset, lastPay: grace + n - offset };
+  }
+  function etzAt(ep, m) { if (!ep) return 0; const k = m + ep.offset; if (k <= ep.grace || k > ep.grace + ep.months) return 0; return k === ep.grace + ep.months ? ep.last : ep.inst; }
+  // r50: support amounts — the owner values are used; the uploaded support-matrix rows are a reference until the owner switches them on.
+  function supportAmounts(inp, cfg) {
+    const Sp = cfg.support || {}, MX = cfg.support_matrix || {}, sk = supportKey(inp), inc = Math.floor(num(inp.net));
+    const band = rows => (rows || []).find(r => inc >= num(r.from) && (r.to == null || r.to === '' || inc <= num(r.to)));
+    let up = 0, upSrc = null, mo = 0, moMonths = num(Sp.monthly_months), moSrc = null;
+    if (inp.supported && sk === 'upfront') { if (MX.use_packages === true) { const b = band(MX.packages); if (b) { up = num(b.amount); upSrc = 'matrix'; } } else if (num(Sp.upfront_amount) > 0) { up = num(Sp.upfront_amount); upSrc = 'owner'; } }
+    if (inp.supported && sk === 'monthly' && Sp.monthly_enabled) { if (MX.use_monthly === true) { const b = band(MX.monthly); if (b) { mo = num(b.amount); moMonths = num(b.months, moMonths); moSrc = 'matrix'; } } else if (num(Sp.monthly_amount) > 0) { mo = num(Sp.monthly_amount); moSrc = 'owner'; } }
+    const ep = etizazPlan(inp, cfg); const C = (cfg.etizaz || {}).combine || {}; let upCounted = up > 0; const blocked = [];
+    if (ep) { if (up > 0 && C.upfront !== true) { upCounted = false; blocked.push('upfront'); } if (mo > 0 && C.monthly !== true) { mo = 0; blocked.push('monthly'); } }
+    return { key: sk, upfront: up, upfrontSrc: upSrc, upfrontCounted: upCounted, monthly: mo, monthlyMonths: moMonths, monthlySrc: moSrc, etizaz: ep, combineBlocked: blocked };
+  }
+  // r50: administrative fee on granting real-estate finance = the lower of pct% of the amount or the cap (default 1% / 5,000), before VAT where applicable.
+  // Per bank: standard | lower (own pct/cap, never above the ceiling) | exempt; a valuation part is split INSIDE the same ceiling (no double charging).
+  function feeCalc(P, bank, cfg) {
+    const G = cfg.mortgage_fees || {}; const F = (bank && bank.fees) || {};
+    const vatPct = nv(F.vat_pct != null && F.vat_pct !== '' ? F.vat_pct : G.vat_pct, G.enabled === false ? 0 : 15);
+    if (G.enabled === false) { const T = Math.min(P * num(F.admin_pct) / 100, num(F.admin_cap) > 0 ? num(F.admin_cap) : Infinity); return { mode: 'legacy', ceiling: T, admin: T, valuation: 0, fee: T, vat: T * vatPct / 100, vatPct, total: T * (1 + vatPct / 100) }; }
+    const pctG = nv(G.pct, 1), capG = nv(G.cap, 5000); const ceiling = Math.min(P * pctG / 100, capG > 0 ? capG : Infinity);
+    const mode = F.mode || (num(F.admin_pct) > 0 ? 'lower' : 'standard'); let T;
+    if (mode === 'exempt') T = 0;
+    else if (mode === 'lower') { const lp = nv(F.lower_pct, nv(F.admin_pct, pctG)), lc = nv(F.lower_cap, nv(F.admin_cap, 0)); T = Math.min(ceiling, P * lp / 100, lc > 0 ? lc : Infinity); }
+    else T = ceiling;
+    const val = Math.min(Math.max(0, num(F.valuation)), T); const r2 = x => Math.round(x * 100) / 100; const fee = r2(T), vat = r2(T * vatPct / 100);
+    return { mode, ceiling: r2(ceiling), admin: r2(T - val), valuation: r2(val), fee, vat, vatPct, total: r2(fee + vat) };
+  }
+  // r50: «مصفوفة المنتجات والدعم العقاري» — owner rows keyed by bank x sector/entity x product x support x plan x term (+ salary band, age, amount limits).
+  // A matching row prices the bank; with no matching row the bank's base rates are used exactly as before (never another bank's or product's rate).
+  function matrixRow(bank, inp, cfg, plan, N, pr) {
+    const any = v => v == null || v === '' || v === 'any'; const sk = supportKey(inp);
+    const cand = (cfg.product_matrix || []).filter(r => r && r.active !== false && r.bank === bank.id && num(r.rate) > 0
+      && (any(r.sector) || r.sector === inp.sector) && (any(r.entity) || r.entity === inp.entity) && (any(r.property) || r.property === inp.property)
+      && (any(r.support) || r.support === sk) && (any(r.plan) || r.plan === plan) && !(num(r.term_min) > 0 && N < num(r.term_min)) && !(num(r.term_max) > 0 && N > num(r.term_max)));
+    if (!cand.length) return null; let why = null;
+    for (const r of cand) {
+      if (num(r.min_salary) > 0 && pr.pre < num(r.min_salary)) { why = why || 'MIN_SALARY'; continue; }
+      if (num(r.max_salary) > 0 && pr.pre > num(r.max_salary)) { why = why || 'MAX_SALARY'; continue; }
+      if (num(r.max_age_end) > 0 && pr.birth && monthsBetween(pr.today, addYears(pr.birth, num(r.max_age_end), 'gregorian')) < N) { why = why || 'AGE'; continue; }
+      return { row: r };
+    }
+    return { blocked: why || 'NO_RATE' };
+  }
+  // r50: instalment table per period — mortgage instalment, other obligations, Etizaz, total deduction, income (before/after retirement).
+  function ptable(pays, rows) {
+    const r2 = x => Math.round(x * 100) / 100; const out = [];
+    for (let i = 0; i < pays.length; i++) { const R = rows[i]; const o = { pay: r2(pays[i]), ob: r2(R.ob0 || 0), ez: r2(R.ez || 0), post: !!R.post, income: r2(R.income), limit: r2(R.limit), pct: R.rate }; const l = out[out.length - 1];
+      if (l && l.pay === o.pay && l.ob === o.ob && l.ez === o.ez && l.post === o.post && l.income === o.income) l.to = i + 1; else out.push(Object.assign({ from: i + 1, to: i + 1 }, o)); }
+    out.forEach(t => { t.total = r2(t.pay + t.ob + t.ez); }); return out;
+  }
+  function etzInfo(ep, rows, N) {
+    if (!ep) return null; const r2 = x => Math.round(x * 100) / 100; const cap = m => (m >= 1 && m <= rows.length) ? r2(rows[m - 1].cap) : null;
+    return { amount: ep.amount, grace: ep.grace, months: ep.months, inst: ep.inst, last: ep.last, offset: ep.offset, start: Math.max(1, ep.firstPay), end: ep.lastPay, beyond: ep.lastPay > N,
+      capBefore: ep.firstPay > 1 ? cap(ep.firstPay - 1) : null, capDuring: cap(Math.max(1, ep.firstPay)), capAfter: ep.lastPay < N ? cap(ep.lastPay + 1) : null };
+  }
   function obligationsAt(obl, m) { let s = 0; for (const o of obl || []) if (m <= num(o.months)) s += num(o.amount); return s; }
   function schedule(pr, inp, cfg, N, bank, trial) {
-    const rows = new Array(N);
+    const rows = new Array(N); const ep = etizazPlan(inp, cfg);
     for (let m = 1; m <= N; m++) {
       const post = pr.sector === 'retired' || m > pr.R; const income = post ? pr.post : pr.pre;
-      const di = dtiInfo(cfg, income, post, inp, bank, trial); const rate = di.pct; const limit = income * rate / 100; const ob = obligationsAt(inp.obligations, m);
-      rows[m - 1] = { m, post, income, rate, tier: di.tier, basis: di.basis, limit, ob, cap: Math.max(0, limit - ob) };
+      const di = dtiInfo(cfg, income, post, inp, bank, trial); const rate = di.pct; const limit = income * rate / 100; const ob0 = obligationsAt(inp.obligations, m); const ez = etzAt(ep, m); const ob = ob0 + ez;
+      rows[m - 1] = { m, post, income, rate, tier: di.tier, basis: di.basis, limit, ob, ob0, ez, cap: Math.max(0, limit - ob) };
     }
     return rows;
   }
@@ -248,23 +316,30 @@
     if (Array.isArray(bank.sectors) && bank.sectors.length && !bank.sectors.includes(inp.sector)) return Object.assign(res, { reason: 'SECTOR' });
     if (Array.isArray(bank.properties) && bank.properties.length && !bank.properties.includes(inp.property)) return Object.assign(res, { reason: 'PROPERTY' });
     if (num(bank.min_salary) > 0 && pr.pre < num(bank.min_salary)) return Object.assign(res, { reason: 'MIN_SALARY' });
+    if (Array.isArray(bank.supports) && bank.supports.length && !bank.supports.includes(supportKey(inp))) return Object.assign(res, { reason: 'SUPPORT' });
+    if (Array.isArray(bank.entities) && bank.entities.length && !bank.entities.includes(inp.entity)) return Object.assign(res, { reason: 'ENTITY' });
+    { const ep0 = etizazPlan(inp, cfg), Z = cfg.etizaz || {}; if (ep0 && ((Array.isArray(Z.banks) && Z.banks.length && !Z.banks.includes(bank.id)) || (Array.isArray(Z.properties) && Z.properties.length && !Z.properties.includes(inp.property)))) return Object.assign(res, { reason: 'ETIZAZ_BANK' }); }
     const N = Math.min(opt.months, termCap(pr, cfg, opt.extend, bank)); res.months = N; res.termCut = N < opt.months;
     if (!(N >= 12)) return Object.assign(res, { reason: 'TERM' });
-    const pk = pickRate(bank, inp, cfg, plan, !!opt.trial); let rate = pk.rate; res.rateSource = pk.source || null;
+    const mx = matrixRow(bank, inp, cfg, plan, N, pr); if (mx && mx.blocked) return Object.assign(res, { reason: mx.blocked });
+    const pk = mx ? { rate: num(mx.row.rate), source: 'matrix' } : pickRate(bank, inp, cfg, plan, !!opt.trial); if (mx) res.matrixRow = mx.row.id || null; let rate = pk.rate; res.rateSource = pk.source || null;
     let offer = null;
     if (opt.offerId) { offer = (bank.offers || []).find(o => o.id === opt.offerId) || null; if (!offerMatches(offer, inp, plan, N, opt.entity)) return Object.assign(res, { reason: 'OFFER_NOT_ELIGIBLE' }); rate = num(offer.rate); res.rateSource = 'offer'; }
     if (!(rate > 0)) return Object.assign(res, { reason: pk.reason || 'NO_RATE' });
     const rows = schedule(pr, inp, cfg, N, bank, !!opt.trial); let pays;
-    const ms = inp.supported && supportKey(inp) === 'monthly' && (cfg.support || {}).monthly_enabled ? num((cfg.support || {}).monthly_amount) : 0;
-    const msMonths = num((cfg.support || {}).monthly_months);
+    const SA = supportAmounts(inp, cfg); const ms = SA.monthly;
+    const msMonths = SA.monthlyMonths;
     const sup = m => (ms > 0 && (msMonths <= 0 || m <= msMonths)) ? ms : 0;
     if (plan === 'fixed') { let mn = Infinity; for (const r of rows) mn = Math.min(mn, r.cap); pays = rows.map(() => mn); }
     else { pays = rows.map(r => r.cap); const ar = avgRule(pays, cfg); pays = ar.pays; if (ar.adjusted) res.avgAdjusted = true; } // r49: step + 13/هـ
     if (!pays.length || pays.every(p => p <= 0)) return Object.assign(res, { reason: 'NO_CAPACITY' });
+    { const z = []; pays.forEach((p, k) => { if (!(p > 0.005)) z.push(k + 1); }); if (z.length) return Object.assign(res, { reason: 'ZERO_STAGE', zeroFrom: z[0], zeroTo: z[z.length - 1], zeroPost: !!rows[z[0] - 1].post }); }
     const method = bank.method === 'flat' ? 'flat' : 'annuity';
     let bankPays = pays.map((p, k) => p + sup(k + 1));
     let P = pv(bankPays, rate, method);
     if (num(bank.max_amount) > 0 && P > num(bank.max_amount)) { const k = num(bank.max_amount) / P; pays = pays.map(p => p * k); bankPays = bankPays.map(p => p * k); P = num(bank.max_amount); res.amountCapped = true; }
+    if (mx && num(mx.row.max_amount) > 0 && P > num(mx.row.max_amount)) { const k = num(mx.row.max_amount) / P; pays = pays.map(p => p * k); bankPays = bankPays.map(p => p * k); P = num(mx.row.max_amount); res.amountCapped = true; }
+    if (mx && num(mx.row.min_amount) > 0 && P < num(mx.row.min_amount)) return Object.assign(res, { reason: 'MIN_AMOUNT' });
     // r48: client-requested reduction of amount / installment — same term, same rate (PV is linear in the payments)
     const cut = opt.cut; if (cut && num(cut.value) > 0 && (cut.type === 'amount' || cut.type === 'installment')) {
       const sp = bankPays.map((x, i) => x - pays[i]); const pvS = sp.some(x => x) ? pv(sp, rate, method) : 0; let k = 1;
@@ -273,7 +348,7 @@
       if (k < 1) { pays = pays.map(p => p * k); bankPays = pays.map((p, i) => p + sp[i]); P = pv(bankPays, rate, method); res.reduced = cut.type; }
     }
     if (!(P > 0)) return Object.assign(res, { reason: 'NO_CAPACITY' });
-    const F = bank.fees || {}; const fee = Math.min(P * num(F.admin_pct) / 100, num(F.admin_cap) > 0 ? num(F.admin_cap) : Infinity); const vat = fee * num(F.vat_pct) / 100;
+    const FE = feeCalc(P, bank, cfg); const fee = FE.fee, vat = FE.vat;
     const totalPays = bankPays.reduce((a, b) => a + b, 0); const profit = totalPays - P;
     const st = stages(pays, rows); const pre = st.filter(s => !s.post), post = st.filter(s => s.post);
     const offersAvail = (bank.offers || []).filter(o => o.active !== false && num(o.rate) > 0).map(o => ({ id: o.id, title: o.title, kind: (o.entities && o.entities.length) ? 'entity' : (o.plan === 'fixed' ? 'fixed' : 'general'), entities: o.entities || [], plan: o.plan || 'any',
@@ -281,7 +356,7 @@
     return Object.assign(res, { eligible: true, rate, method, offer: offer ? { id: offer.id, title: offer.title } : null, amount: P, amountR: r1(P), pays, clientPays: pays, monthlySupport: ms,
       stages: st, preStages: pre, postStages: post, firstInstallment: r1(pays[0]), maxInstallment: r1(Math.max.apply(null, pays)),
       profit, profitR: r1(profit), fee, vat, feeR: r1(fee + vat), totalDue: totalPays + fee + vat, totalDueR: r1(totalPays + fee + vat),
-      propertyValueR: r1(P + (inp.supported && supportKey(inp) === 'upfront' ? num((cfg.support || {}).upfront_amount) : 0)), offers: offersAvail, recommended: !!bank.recommended });
+      propertyValueR: r1(P + (SA.upfrontCounted ? SA.upfront : 0) + (SA.etizaz ? SA.etizaz.amount : 0)), sup: SA, fees: FE, table: ptable(pays, rows), etz: etzInfo(SA.etizaz, rows, N), offers: offersAvail, recommended: !!bank.recommended });
   }
   function rank(list, cfg) {
     const by = cfg.ranking || 'amount';
@@ -293,8 +368,8 @@
     const plan = opt.plan || cfg.default_plan || 'fixed';
     const all = (cfg.banks || []).map(b => quoteBank(b, inp, cfg, pr, { plan: (opt.plans || {})[b.id] || plan, months: opt.months, extend: opt.extend, trial: !!opt.trial, offerId: (opt.offers || {})[b.id], entity: opt.entity, cut: opt.cut }));
     const ok = rank(all.filter(x => x.eligible), cfg); const top = Math.max(1, num(cfg.top_n, 3));
-    return { profile: pr, plan, months: opt.months, extend: !!opt.extend, capacity: capInfo(pr, inp, cfg, opt.months, !!opt.extend, !!opt.trial), results: ok, top: ok.slice(0, top), rest: ok.slice(top), excluded: all.filter(x => !x.eligible).map(x => ({ id: x.id, name: x.name, reason: x.reason })) };
+    return { profile: pr, plan, months: opt.months, extend: !!opt.extend, capacity: capInfo(pr, inp, cfg, opt.months, !!opt.extend, !!opt.trial), results: ok, top: ok.slice(0, top), rest: ok.slice(top), excluded: all.filter(x => !x.eligible).map(x => ({ id: x.id, name: x.name, reason: x.reason, zeroFrom: x.zeroFrom, zeroTo: x.zeroTo, zeroPost: x.zeroPost })), etizaz: etizazPlan(inp, cfg), support: supportAmounts(inp, cfg) };
   }
-  const API = { version: 'r49', dtiTier, dtiInfo, avgRule, pickRate, capInfo, rankScale, gradeOf, expectedBasic, r1, toHijri, fromHijri, addYears, monthsBetween, riyadhToday, validG, profile, durationCard, termCap, schedule, pv, quoteBank, compare, offerMatches, dtiRate, supportKey };
+  const API = { version: 'r50', etizazEligible, etizazPlan, etzAt, supportAmounts, feeCalc, matrixRow, ptable, etzInfo, dtiTier, dtiInfo, avgRule, pickRate, capInfo, rankScale, gradeOf, expectedBasic, r1, toHijri, fromHijri, addYears, monthsBetween, riyadhToday, validG, profile, durationCard, termCap, schedule, pv, quoteBank, compare, offerMatches, dtiRate, supportKey };
   if (typeof module === 'object' && module.exports) module.exports = API; else root.F99RE42Engine = API;
 })(typeof window !== 'undefined' ? window : globalThis);

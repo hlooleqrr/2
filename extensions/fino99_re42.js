@@ -37,7 +37,7 @@
     const r = await finoRpc('f99re_public', {}, 12000); if (!r || !r.ok) return null; let d = r.data;
     // r48c: owner trial code — the bot opens for that code's own session only; public visibility is unchanged.
     if (d && d.enabled && !d.visible && !isOwner()) { try { const e = typeof finoCentralRestoreEntry === 'function' ? finoCentralRestoreEntry() : null;
-      if (e && e.entryToken) { const t = await finoRpc('f99r48_trial_public', { p_entry_token: e.entryToken, p_device_id: e.deviceId || (typeof finoCentralDeviceId === 'function' ? finoCentralDeviceId() : '') }, 12000); if (t && t.ok && t.data && t.data.visible) d = t.data; } } catch (x) {} }
+      if (e && e.entryToken) { const t = await finoRpc('f99r50_client_public', { p_entry_token: e.entryToken, p_device_id: e.deviceId || (typeof finoCentralDeviceId === 'function' ? finoCentralDeviceId() : '') }, 12000); if (t && t.ok && t.data && t.data.visible) d = t.data; } } catch (x) {} }
     pubCache = d; pubAt = Date.now(); return pubCache;
   }
   function bankLogo(id) { try { if (typeof BANKS !== 'undefined') { const b = BANKS.find(x => x.id === id); if (b && b.logo) return b.logo; } } catch (e) {} return ''; }
@@ -53,6 +53,96 @@
     const x = btn(head, '✕', () => ov.remove(), 're42-x'); x.setAttribute('aria-label', 'إغلاق');
     const body = el('div', 're42-body'); box.append(head, body); ov.append(box); D.body.append(ov); return { ov, box, body, head };
   }
+  // ---------- r50: result image — same values as the screen; sensitive client data hidden by default; official FINO99 icon; optional QR ----------
+  const DESIGN_DEF = { name: false, rank: false, employer: false, birth: false, appoint: false, salary: false, retirement: false, salary_bank: false, bank_name: true, rates: true, contact: true, qr: true };
+  const loadImg = src => new Promise(res => { if (!src) return res(null); const i = new Image(); if (/^https?:/i.test(src) && !src.startsWith(location.origin)) i.crossOrigin = 'anonymous'; i.onload = () => res(i); i.onerror = () => res(null); i.src = src; setTimeout(() => res(null), 4000); });
+  let qrP = null; const loadQR = () => qrP || (qrP = new Promise(res => { if (W.qrcode) return res(W.qrcode); const sc = D.createElement('script'); sc.src = './vendor/qrcode-gen-1.4.4.js'; sc.onload = () => res(W.qrcode || null); sc.onerror = () => { qrP = null; res(null); }; D.head.append(sc); setTimeout(() => res(W.qrcode || null), 5000); }));
+  function chipsFor(b, d, cfg) { const pr = (cfg.properties || []).find(p => p.key === (d.property || 'ready')); const sa = b.sup || {}; const out = [pr ? pr.label : 'وحدة جاهزة'];
+    out.push(d.supported ? 'مدعوم سكنيًا' : 'غير مدعوم'); if (d.supported) out.push(sa.key === 'monthly' ? 'دعم شهري' : 'دعم مقدم'); if (b.etz) out.push('اعتزاز');
+    out.push(b.months + ' شهرًا (' + durTxt(b.months) + ')'); out.push(b.plan === 'fixed' ? 'قسط ثابت' : 'قسط متزايد'); return out; }
+  function supportKV(b, d) { const sa = b.sup || {}; const out = [];
+    if (d.supported && sa.key === 'upfront') out.push(['الدعم المقدم', sa.upfront > 0 ? fmt(sa.upfront) + ' ريال' + (sa.upfrontCounted ? '' : ' (غير مجموع مع اعتزاز)') : 'حسب أهليتك — غير مضاف للحسبة']);
+    if (sa.monthly > 0) out.push(['الدعم الشهري', fmt(sa.monthly) + ' ريال' + (sa.monthlyMonths > 0 ? ' لمدة ' + sa.monthlyMonths + ' شهرًا' : '')]);
+    if (b.etz) out.push(['قرض اعتزاز الحسن (دفعة مقدمة)', fmt(b.etz.amount) + ' ريال']);
+    if (b.propertyValueR > b.amountR) out.push(['قيمة الشراء التقديرية (التمويل + ' + [sa.upfrontCounted && sa.upfront > 0 ? 'الدعم' : '', b.etz ? 'اعتزاز' : ''].filter(Boolean).join(' + ') + ')', fmt(b.propertyValueR) + ' ريال']);
+    return out; }
+  async function drawResult(X) {
+    const R = X.R, T = X.T || {}, cfg = X.cfg || {}, d = X.data || {}; const DZ = Object.assign({}, DESIGN_DEF, cfg.card_design || {}, X.design || {});
+    const list = R ? R.results.slice(0, 3) : []; const WD = 1080, M = 36, IN = 30, CW = WD - 2 * M - 2 * IN, XR = WD - M - IN, XL = M + IN;
+    const font = (getComputedStyle(D.body).fontFamily || 'sans-serif'); const mc = D.createElement('canvas').getContext('2d'); mc.direction = 'rtl';
+    const wrapT = (t, sz, wt, w) => { const lim = w || CW; mc.font = (wt || 400) + ' ' + sz + 'px ' + font; const out = [];
+      String(t || '').split('\n').forEach(par => { let cur = ''; par.split(/\s+/).filter(Boolean).forEach(w0 => { let wd = w0;
+          while (mc.measureText(wd).width > lim) { let k = wd.length - 1; while (k > 1 && mc.measureText(wd.slice(0, k)).width > lim) k--; if (cur) { out.push(cur); cur = ''; } out.push(wd.slice(0, k)); wd = wd.slice(k); }
+          const tt = cur ? cur + ' ' + wd : wd; if (cur && mc.measureText(tt).width > lim) { out.push(cur); cur = wd; } else cur = tt; }); if (cur) out.push(cur); });
+      return out; };
+    const ops = []; let y = 0; const LH = sz => Math.round(sz * 1.5); const gap = h => { y += h; };
+    const text = (t, sz, wt, col) => { wrapT(t, sz, wt).forEach(l => { y += LH(sz); ops.push({ k: 't', t: l, sz, wt: wt || 400, col: col || '#0b2545', x: XR, y: y - Math.round(sz * .42) }); }); };
+    const pairs = (arr, sz) => { const half = CW / 2 - 14; for (let k = 0; k < arr.length; k += 2) { const a = arr[k], b = arr[k + 1];
+        const la = wrapT(a[0] + ': ' + a[1], sz, 400, half), lb = b ? wrapT(b[0] + ': ' + b[1], sz, 400, half) : []; const n = Math.max(la.length, lb.length);
+        for (let j = 0; j < n; j++) { y += LH(sz); const yy = y - Math.round(sz * .42); if (la[j]) ops.push({ k: 't', t: la[j], sz, wt: 400, col: '#223', x: XR, y: yy }); if (lb[j]) ops.push({ k: 't', t: lb[j], sz, wt: 400, col: '#223', x: XR - CW / 2 - 14, y: yy }); } gap(4); } };
+    const card = (bg, bd, fn) => { const y0 = y; gap(20); fn(); gap(22); ops.push({ k: 'c', y0, y1: y, bg, bd }); gap(16); };
+    const table = (rowsAll) => { const ez = rowsAll.some(r => r.ez > 0), post = rowsAll.some(r => r.post); const rows = rowsAll.length > 8 ? rowsAll.slice(0, 7).concat([rowsAll[rowsAll.length - 1]]) : rowsAll;
+      const cols = ['الفترة (شهر)', 'القسط العقاري', 'التزامات أخرى'].concat(ez ? ['اعتزاز'] : []).concat(['إجمالي الاستقطاع']).concat(DZ.salary ? ['الدخل'] : []); const n = cols.length, cw = (CW - 8) / n, rh = 52;
+      const row = (vals, bg, col, wt, sz) => { const y0 = y; ops.push({ k: 'r', x0: XL + 4, y0, w: CW - 8, h: rh, bg }); vals.forEach((v, j) => ops.push({ k: 't', t: v, sz, wt, col, x: XR - 4 - cw * j - cw / 2, y: y0 + rh / 2 + sz * .36, al: 'center', max: cw - 8 })); y += rh; };
+      text('تفاصيل الأقساط', 24, 700, '#34506b'); gap(6); row(cols, '#e6eef7', '#34506b', 700, 21);
+      rows.forEach((r, k) => row([(r.from === r.to ? String(r.from) : r.from + '–' + r.to) + (r.post ? ' تقاعد' : ''), fmt(r.pay), r.ob > 0 ? fmt(r.ob) : '—'].concat(ez ? [r.ez > 0 ? fmt(r.ez) : '—'] : []).concat([fmt(r.total)]).concat(DZ.salary ? [fmt(r.income)] : []), r.post ? '#fbf3e4' : (k % 2 ? '#f5f8fc' : '#ffffff'), '#1d2b3a', 400, 23));
+      if (rowsAll.length > 8) text('… عرضنا أول 7 فترات وآخر فترة', 19, 400, '#667'); if (post) text(DZ.salary ? '«تقاعد» = بعد التقاعد، والدخل فيها هو المعاش التقاعدي التقديري' : '«تقاعد» = بعد التقاعد', 19, 400, '#8a5a00'); };
+    gap(196); const panel0 = y; gap(14);
+    const info = []; const rk = ((cfg.military || {}).ranks || []).find(r => r.key === d.rank); const sb = (cfg.banks || []).find(b => b.id === d.salary_bank); const pr = R && R.profile;
+    if (DZ.name && d.name) info.push(['الاسم', d.name]); if (DZ.rank && rk) info.push(['الرتبة', rk.name]); if (DZ.employer && (d.mil_entity || d.employer) && (d.mil_entity || d.employer) !== '-') info.push(['جهة العمل', d.mil_entity || d.employer]);
+    if (DZ.birth && d.birth) info.push(['تاريخ الميلاد', gStr(d.birth) + 'م']); if (DZ.appoint && d.appoint) info.push(['تاريخ التعيين', gStr(d.appoint) + 'م']);
+    if (DZ.salary && d.net) info.push(['الراتب الصافي', fmt(d.net) + ' ريال']); if (DZ.salary && d.basic) info.push(['الراتب الأساسي', fmt(d.basic) + ' ريال']);
+    if (DZ.retirement && pr && pr.sector === 'military' && pr.R > 0) { info.push(['التقاعد', 'بعد ' + pr.R + ' شهرًا']); if (pr.pension != null) info.push(['المعاش التقديري', fmt2(pr.pension) + ' ريال']); }
+    if (DZ.salary_bank && sb) info.push(['بنك الراتب', sb.name]);
+    text(tpl(T.duration_title || 'مدة التمويل لك يا {name}', DZ.name ? d : {}).replace(/\s+يا\s*$/, ''), 38, 700); text(X.months + ' شهرًا — ' + durTxt(X.months) + (X.extend ? ' — تمتد بعد التقاعد' : ''), 28, 400, '#334');
+    text(X.plan === 'fixed' ? 'نوع القسط: ثابت' : 'نوع القسط: متزايد' + (list.some(b => b.rateSource === 'same_margin') ? ' (تقديري على هامش الثابت — غير معتمد من البنوك)' : ''), 26, 400, '#334'); gap(10);
+    if (info.length) card('#f7f9fc', '#e1e8f0', () => pairs(info, 24));
+    if (R && R.etizaz) { const ep = R.etizaz, ez = list[0] && list[0].etz; card('#f3f8ff', '#c9dcf3', () => { text('قرض اعتزاز الحسن ' + fmt(ep.amount) + ' ريال', 32, 800, '#13315c');
+        const a = [['القسط الشهري', fmt2(ep.inst) + ' ريال'], ['فترة السماح', monthsTxt(ep.grace)], ['السداد', 'الشهر ' + Math.max(1, ep.firstPay) + ' – ' + ep.lastPay], ['مدة السداد', ep.months + ' شهرًا']];
+        if (ez && ez.capBefore != null) a.push(['القدرة قبل قسط اعتزاز', fmt2(ez.capBefore) + ' ريال']); if (ez && ez.capDuring != null) a.push(['القدرة أثناء اعتزاز', fmt2(ez.capDuring) + ' ريال']); if (ez && ez.capAfter != null) a.push(['القدرة بعد انتهاء اعتزاز', fmt2(ez.capAfter) + ' ريال']);
+        pairs(a, 23); text(T.etizaz_note || 'احتساب اعتزاز تقديري، وتخضع أهلية المبادرة وقسطها ومدة سدادها لشروط الجهة المختصة', 20, 400, '#4a5a6a'); }); }
+    if (list.length) list.forEach((b, i) => card(i === 0 ? '#f1f8f4' : '#f7f9fc', i === 0 ? '#8fd0a8' : '#dbe3ee', () => {
+        text('الترشيح ' + (i + 1) + (i === 0 ? ' — ' + (T.best_tag || 'الأفضل لحسبتك') : '') + (DZ.salary_bank && d.salary_bank === b.id ? ' — بنك نزول راتبك' : ''), 23, 700, '#0a7a4f');
+        text((DZ.bank_name ? b.name : 'جهة تمويلية ' + (i + 1)) + (b.test ? ' (اختبار)' : ''), 36, 800, '#13315c'); text(chipsFor(b, d, cfg).join(' • '), 21, 400, '#4a5a6a');
+        text('مبلغ التمويل العقاري التقديري', 23, 400, '#556'); text(fmt(b.amount) + ' ريال', 58, 800, '#0a7a4f');
+        const FE = b.fees || {}; const a = supportKV(b, d);
+        if (DZ.rates) a.push([b.method === 'flat' ? 'هامش الربح الثابت' : 'هامش الربح (APR)', (b.rateSource === 'same_margin' ? 'هامش الثابت ' : '') + pct(b.rate)]);
+        a.push(['القسط الأول', fmt2(b.pays[0]) + ' ريال'], ['إجمالي الأرباح', fmt(b.profit) + ' ريال'], ['إجمالي السداد', fmt(b.totalDue) + ' ريال'], ['الرسوم الإدارية', FE.fee > 0 ? fmt2(FE.fee) + ' ريال' : (FE.mode === 'exempt' ? 'معفاة' : 'لا توجد')]);
+        if (FE.fee > 0) a.push(['ضريبة القيمة المضافة', fmt2(FE.vat) + ' ريال'], ['إجمالي الرسوم', fmt2(FE.total) + ' ريال']);
+        pairs(a, 23); gap(8); table(b.table || []); }));
+    else card('#fff4f4', '#f3c2c2', () => { text('لا توجد جهة مؤهلة حاليًا', 36, 700, '#a00'); text(X.why || tpl(T.no_banks, d), 28, 400, '#7a1d1d'); text('تقدر تعدّل البيانات أو المدة وتعيد الحسبة.', 26, 400, '#556'); });
+    text((X.trial ? 'تجربة داخلية — نسب اختبار غير معتمدة. ' : '') + (T.disclaimer || ''), 21, 400, '#555'); gap(20); const panel1 = y;
+    const QR = DZ.qr ? await loadQR() : null; const foot = QR ? 210 : 86; gap(foot); const H = Math.ceil(y);
+    const logo = await loadImg(W.F99_APP_ICON || './icon-192.png');
+    const paint = lg => { const cv = D.createElement('canvas'); cv.width = WD; cv.height = H; const x = cv.getContext('2d'); x.direction = 'rtl'; x.textAlign = 'right';
+      const rr = (x0, y0, w, h, r) => { x.beginPath(); x.moveTo(x0 + r, y0); x.arcTo(x0 + w, y0, x0 + w, y0 + h, r); x.arcTo(x0 + w, y0 + h, x0, y0 + h, r); x.arcTo(x0, y0 + h, x0, y0, r); x.arcTo(x0, y0, x0 + w, y0, r); x.closePath(); };
+      x.fillStyle = '#eef3f8'; x.fillRect(0, 0, WD, H); const gr = x.createLinearGradient(0, 0, WD, 180); gr.addColorStop(0, '#0b2545'); gr.addColorStop(1, '#134074'); x.fillStyle = gr; x.fillRect(0, 0, WD, 180);
+      let tx = WD - M; if (lg) { x.save(); rr(WD - M - 112, 34, 112, 112, 24); x.clip(); x.drawImage(lg, WD - M - 112, 34, 112, 112); x.restore(); tx = WD - M - 136; }
+      x.fillStyle = '#ffffff'; x.font = '800 60px ' + font; x.fillText('FINO99', tx, 98); x.font = '400 30px ' + font; x.fillText('حسبة تمويل عقاري مبدئية', tx, 142);
+      x.fillStyle = '#ffffff'; rr(M, panel0, WD - 2 * M, panel1 - panel0, 24); x.fill();
+      ops.filter(o => o.k === 'c').forEach(o => { x.fillStyle = o.bg; rr(M + 16, o.y0, WD - 2 * M - 32, o.y1 - o.y0, 18); x.fill(); x.strokeStyle = o.bd; x.lineWidth = 2; x.stroke(); });
+      ops.filter(o => o.k === 'r').forEach(o => { x.fillStyle = o.bg; x.fillRect(o.x0, o.y0, o.w, o.h); x.fillStyle = '#e3e9f1'; x.fillRect(o.x0, o.y0 + o.h - 1, o.w, 1); });
+      ops.filter(o => o.k === 't').forEach(o => { let sz = o.sz; x.font = o.wt + ' ' + sz + 'px ' + font; while (o.max && x.measureText(o.t).width > o.max && sz > 13) { sz--; x.font = o.wt + ' ' + sz + 'px ' + font; }
+        x.textAlign = o.al || 'right'; x.fillStyle = o.col; x.fillText(o.t, o.x, o.y); });
+      x.textAlign = 'right'; const fy = panel1 + 20;
+      if (QR) { try { const q = QR(0, 'M'); q.addData('https://www.fino99.com'); q.make(); const n = q.getModuleCount(), cs = Math.floor(160 / n), qs = cs * n, qx = M + 6, qy = fy + 10; x.fillStyle = '#ffffff'; x.fillRect(qx - 8, qy - 8, qs + 16, qs + 16); x.fillStyle = '#0b2545';
+          for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) x.fillRect(qx + c * cs, qy + r * cs, cs, cs); } catch (e) {} }
+      if (DZ.contact) { x.fillStyle = '#0b2545'; x.font = '700 32px ' + font; x.fillText('www.fino99.com', WD - M - 10, fy + (QR ? 84 : 46)); x.font = '400 22px ' + font; x.fillStyle = '#556'; x.fillText('FINO99 | للحلول التمويلية الذكية', WD - M - 10, fy + (QR ? 122 : 76)); }
+      return cv; };
+    let cv = paint(logo), url; try { url = cv.toDataURL('image/png'); } catch (e) { cv = paint(null); url = cv.toDataURL('image/png'); }
+    return { cv, url, H };
+  }
+  function imgSheet(r, title) { const s2 = sheet(title || 'صورة النتيجة', 're42-img'); const im = el('img'); im.alt = 'صورة نتيجة الحسبة'; im.src = r.url; im.dataset.h = String(r.H); s2.body.append(im);
+    const row = el('div', 're42-actions'); const a = el('a', 're42-btn', 'حفظ الصورة'); a.href = r.url; a.download = 'FINO99-mortgage.png'; row.append(a);
+    if (navigator.canShare) btn(row, 'مشاركة الصورة', () => { r.cv.toBlob(bl => { const f = new File([bl], 'FINO99-mortgage.png', { type: 'image/png' }); if (navigator.canShare({ files: [f] })) navigator.share({ files: [f], text: 'https://www.fino99.com' }).catch(() => {}); else a.click(); }); });
+    s2.body.append(row); return s2; }
+  function sampleCase(c) { const RK = (c.military || {}).ranks || []; const rk = RK.find(r => r.name === 'عريف') || RK[0] || {}; const sb = (c.banks || [])[0];
+    const data = { name: 'عميل تجريبي', sector: 'military', rank: rk.key, mil_entity: 'وزارة الدفاع', birth: { y: 1990, m: 3, d: 10 }, appoint: { y: 2011, m: 6, d: 1 }, basic: 6215, net: 9500, salary_bank: sb ? sb.id : null, supported: true, supportType: 'upfront', property: 'ready', obligations: [] };
+    const inp = { sector: 'military', rank: rk.key, pilot: false, birth: data.birth, appoint: data.appoint, excludedMonths: 0, basic: 6215, grade: null, net: 9500, obligations: [], supported: true, supportType: 'upfront', property: 'ready', entity: 'وزارة الدفاع', mil_entity: 'وزارة الدفاع', etizaz: false, salary_bank: data.salary_bank };
+    const dc = E().durationCard(inp, c); const plan = c.default_plan || 'fixed'; const R = E().compare(inp, c, { plan, months: dc.months, extend: dc.extend });
+    return { R, data, months: dc.months, extend: dc.extend, plan, cfg: c, T: c.texts || {}, trial: false, why: R.results.length ? '' : 'لا توجد جهة مؤهلة في الحالة التجريبية' }; }
+  async function launchCall(action, data) { if (typeof finoCentralAdminCall !== 'function') throw Error('اتصال المركزية غير متاح'); const r = await finoCentralAdminCall('f99r50_launch_owner', { p_action: action, p_data: data || {} });
+    if (!r || !r.ok) throw Error((r && (r.reason || r.error)) || 'تعذر الاتصال بالمركزية'); if (r.data && r.data.ok === false) throw Error(r.data.reason || 'رفض الطلب'); return r.data; }
   function toast(msg, bad) { const t = el('div', 're42-toast' + (bad ? ' bad' : ''), msg); D.body.append(t); setTimeout(() => t.remove(), 3200); }
 
   // =====================================================================
@@ -92,21 +182,24 @@
     const Q = {}; (cfg.questions || []).forEach(q => { Q[q.key] = q; });
     const order = (cfg.questions || []).map(q => q.key);
     if (!order.includes('grade')) { const i = order.indexOf('basic'); order.splice(i < 0 ? order.length : i + 1, 0, 'grade'); } // r48
+    { const si = order.indexOf('support'), ci = order.indexOf('sector'); if (ci > -1 && si > ci + 1 && cfg.support_first !== false) { order.splice(si, 1); order.splice(ci + 1, 0, 'support'); } } // r50
+    { const ei = order.indexOf('etizaz'); if (ei > -1) order.splice(ei, 1); const at = Math.max(order.indexOf('support'), order.indexOf('mil_entity')); order.splice(at < 0 ? order.length : at + 1, 0, 'etizaz'); } // r50: after sector+support+entity
     const visible = k => {
       const d = S.data; if (Q[k] && Q[k].enabled === false && !['name', 'sector', 'birth', 'net'].includes(k) && !(isMil() && ['rank', 'mil_entity', 'appoint', 'basic'].includes(k))) return false;
       if (['rank', 'mil_entity', 'appoint', 'basic'].includes(k)) return isMil();
       if (k === 'pilot') { const r = rankObj(); return isMil() && r && r.group === 'officer' && Number(r.pilot_age) > 0; }
       if (k === 'grade') { if (!isMil() || d.basic == null || (cfg.military || {}).expected_basic === false) return false; const sc = E().rankScale(rankObj(), cfg.military || {}); return !!sc && E().gradeOf(sc, d.basic) == null; }
+      if (k === 'etizaz') return !!E().etizazEligible({ sector: d.sector, supported: d.supported === true, mil_entity: d.mil_entity, entity: d.mil_entity }, cfg); // r50: military + supported + MoD only
       if (k === 'employer') return !!d.sector && !isMil() && d.sector !== 'retired';
       if (k === 'property') return (cfg.properties || []).filter(p => p.enabled !== false).length > 0;
       return true;
     };
-    const answered = k => k === 'appoint' ? (S.data.appoint != null && S.data.excl_months != null) : k === 'obligations' ? !!S.data.obl_done : k === 'support' ? S.data.supported != null : S.data[k] != null && S.data[k] !== '';
+    const answered = k => k === 'appoint' ? (S.data.appoint != null && S.data.excl_months != null) : k === 'obligations' ? !!S.data.obl_done : k === 'support' ? S.data.supported != null : k === 'etizaz' ? S.data.etizaz != null : S.data[k] != null && S.data[k] !== '';
     function next() {
       for (const k of order) if (visible(k) && !answered(k)) return ask(k);
       return durationCard();
     }
-    const DEFQ = { grade: 'كم رقم درجتك الحالية في رتبتك حسب سلم الرواتب؟ (نحتاجها لتقدير راتبك الأساسي عند التقاعد)', appoint_excl: 'هل لديك مدة لا تُحتسب في التقاعد؟ (غياب دون إجازة، أو إجازة بدون راتب عدا المرضية والدراسية، أو حرمان من الراتب) اكتب عدد الأشهر، أو اختر «لا يوجد».' };
+    const DEFQ = { etizaz: 'هل أنت مستفيد من مبادرة اعتزاز السكنية؟', grade: 'كم رقم درجتك الحالية في رتبتك حسب سلم الرواتب؟ (نحتاجها لتقدير راتبك الأساسي عند التقاعد)', appoint_excl: 'هل لديك مدة لا تُحتسب في التقاعد؟ (غياب دون إجازة، أو إجازة بدون راتب عدا المرضية والدراسية، أو حرمان من الراتب) اكتب عدد الأشهر، أو اختر «لا يوجد».' };
     const qText = k => tpl((Q[k] || {}).text || DEFQ[k] || k, S.data);
     function choice(k, items, onPick, opt2) {
       clearDock(); bot(qText(k)); const wrap = el('div', 're42-choices' + (opt2 && opt2.grid ? ' grid' : ''));
@@ -166,16 +259,17 @@
         return choice(k, items, v => { d.salary_bank = v; next(); }, { grid: true });
       }
       if (k === 'support') {
-        const items = [{ label: 'مدعوم', value: 'yes' }, { label: 'غير مدعوم', value: 'no' }];
-        if (isMil() && (cfg.support || {}).etizaz_enabled) items.splice(1, 0, { label: 'اعتزاز', value: 'etizaz' });
+        const items = [{ label: 'نعم، مدعوم', value: 'yes' }, { label: 'لا، غير مدعوم', value: 'no' }];
+        // r50: «اعتزاز» is its own question (3 conditions), no longer a support type
         return choice(k, items, v => {
           if (v === 'no') { d.supported = false; d.supportType = null; return next(); }
           if (v === 'etizaz') { d.supported = true; d.supportType = 'etizaz'; return next(); }
           d.supported = true; d.supportType = 'upfront';
-          if ((cfg.support || {}).monthly_enabled) { clearDock(); bot('وش نوع الدعم؟'); const w = el('div', 're42-choices'); btn(w, 'دعم مقدم', () => { me('دعم مقدم'); d.supportType = 'upfront'; next(); }, 're42-chip'); btn(w, 'دعم شهري', () => { me('دعم شهري'); d.supportType = 'monthly'; next(); }, 're42-chip'); dock.append(w); scroll(); return; }
+          if ((cfg.support || {}).monthly_enabled && !((cfg.support_options || []).some(o => o.key === 'monthly' && o.enabled === false))) { clearDock(); bot('وش نوع الدعم؟'); const w = el('div', 're42-choices'); btn(w, 'دعم مقدم', () => { me('دعم مقدم'); d.supportType = 'upfront'; next(); }, 're42-chip'); btn(w, 'دعم شهري', () => { me('دعم شهري'); d.supportType = 'monthly'; next(); }, 're42-chip'); dock.append(w); scroll(); return; }
           next();
         });
       }
+      if (k === 'etizaz') return choice(k, [{ label: 'نعم، مستفيد', value: true }, { label: 'لا، لست مستفيدًا', value: false }], v => { d.etizaz = v; next(); });
       if (k === 'property') return choice(k, (cfg.properties || []).filter(p => p.enabled !== false).map(p => ({ label: p.label, value: p.key })), v => { d.property = v; next(); });
       if (k === 'obligations') return obligations();
       next();
@@ -205,7 +299,7 @@
       const d = S.data;
       return { sector: d.sector, rank: d.rank, pilot: !!d.pilot, birth: d.birth, appoint: d.appoint, excludedMonths: d.excl_months || 0, basic: d.basic, grade: d.grade || null, net: d.net,
         obligations: d.obligations.map(o => ({ type: o.type, amount: o.amount, months: o.months })), supported: !!d.supported, supportType: d.supportType || 'upfront',
-        property: d.property || 'ready', entity: (d.mil_entity && d.mil_entity !== '-') ? d.mil_entity : (d.employer && d.employer !== '-' ? d.employer : null), salary_bank: d.salary_bank };
+        property: d.property || 'ready', entity: (d.mil_entity && d.mil_entity !== '-') ? d.mil_entity : (d.employer && d.employer !== '-' ? d.employer : null), salary_bank: d.salary_bank, mil_entity: (d.mil_entity && d.mil_entity !== '-') ? d.mil_entity : null, etizaz: d.etizaz === true };
     }
     // ---------- duration card ----------
     let durEl = null, resEl = null;
@@ -272,6 +366,9 @@
       if (has('PROPERTY')) out.push('نوع العقار المختار غير مشمول بالنسب المعتمدة حاليًا');
       if (has('SECTOR')) out.push('قطاعك غير مشمول لدى الجهات المفعّلة');
       if (has('MIN_SALARY')) out.push('راتبك أقل من الحد الأدنى لدى الجهات');
+      if (has('ZERO_STAGE')) { const z = R.excluded.find(x => x.reason === 'ZERO_STAGE'); out.push('في ' + (z.zeroFrom === z.zeroTo ? 'الشهر ' + z.zeroFrom : 'الأشهر ' + z.zeroFrom + '–' + z.zeroTo) + (z.zeroPost ? ' (بعد التقاعد)' : '') + ' لا يتبقى من حد الاستقطاع قسط عقاري بعد التزاماتك، ولا نفترض فترة سماح غير معتمدة؛ تقدر تعدّل الالتزامات أو المدة' + (S.extend ? ' أو توقف التمويل عند التقاعد' : '')); }
+      if (has('SUPPORT')) out.push('نوع الدعم غير مشمول لدى الجهات المفعّلة'); if (has('ENTITY')) out.push('جهة عملك غير مشمولة لدى الجهات المفعّلة'); if (has('ETIZAZ_BANK')) out.push('الجهات المفعّلة لا تشمل اعتزاز لهذا المنتج حاليًا');
+      if (has('AGE')) out.push('العمر عند نهاية التمويل يتجاوز حد المنتج'); if (has('MIN_AMOUNT')) out.push('المبلغ أقل من الحد الأدنى للمنتج'); if (has('MAX_SALARY')) out.push('الراتب خارج فئة المنتج');
       if (has('NO_RATE') && !out.length) out.push('لا توجد نسب معتمدة لحالتك');
       return 'ما فيه بنك مؤهل لحالتك حاليًا، والسبب: ' + out.join('، و') + '.';
     }
@@ -281,7 +378,7 @@
         const e = typeof finoCentralRestoreEntry === 'function' ? finoCentralRestoreEntry() : null; if (!e || !e.entryToken) throw Error('NO_ENTRY');
         const r = await finoRpc('f99r47_client_meter', { p_entry_token: e.entryToken, p_device_id: e.deviceId || (typeof finoCentralDeviceId === 'function' ? finoCentralDeviceId() : ''),
           p_request_id: typeof f99v7CreateRequestId === 'function' ? f99v7CreateRequestId() : (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())) }, 15000);
-        if (!r || !r.ok || (r.data && r.data.ok === false)) { bot('الكود لا يسمح بهذه العملية أو انتهى الحد.', 'warn'); return false; }
+        if (!r || !r.ok || (r.data && r.data.ok === false)) { bot(r && r.data && r.data.reason === 'LAUNCH_FULL' ? 'اكتمل عدد مستخدمي الإطلاق المحدود حاليًا، ولم تُخصم أي حسبة.' : 'الكود لا يسمح بهذه العملية أو انتهى الحد.', 'warn'); return false; }
         S.metered[sig] = true; return true;
       } catch (e) { bot('تعذر التأكد من صلاحية الكود؛ لم نعتمد النتيجة.', 'warn'); return false; }
     }
@@ -312,19 +409,20 @@
       resEl.append(el('p', 're42-meta', 'المدة: ' + S.months + ' شهر (' + durTxt(S.months) + ')' + (S.extend ? ' — تمتد بعد التقاعد' : '')));
       if (S.extend && R.profile && R.profile.sector === 'military' && R.profile.pension != null && R.profile.R < S.months) resEl.append(el('p', 're42-meta', 'المعاش التقاعدي التقديري: ' + fmt2(R.profile.pension) + ' ريال' + (R.profile.basicMethod === 'scale' || R.profile.basicMethod === 'scale_grade' ? ' (على الأساسي المتوقع عند التقاعد)' : ' (تقديري على الأساسي الحالي)')));
       { const C = R.capacity; if (C && C.stages.some(s => s.amount > 0)) { const cb = el('div', 're42-capbox'); // r49: capacity lines
-          if (S.plan === 'fixed') { cb.append(el('p', 're42-capline', 'أعلى قسط ثابت متاح لك: ' + fmt2(C.fixedMax) + ' ريال شهريًا'),
+          if (S.plan === 'fixed') { cb.append(el('p', 're42-capline', C.fixedMax > 0 ? 'أعلى قسط ثابت متاح لك: ' + fmt2(C.fixedMax) + ' ريال شهريًا' : 'لا يتوفر قسط ثابت على كامل المدة: في بعض الأشهر لا يتبقى حد استقطاع بعد التزاماتك'),
               el('p', 're42-muted', 'قسط واحد من أول شهر حتى نهاية التمويل، وهو أقل قدرة سداد بين مراحل التمويل' + (C.postMonths ? ' قبل التقاعد وبعده' : '') + '. تقدر تختار قسطًا أقل من «تقليل القسط».')); }
           else { cb.append(el('b', '', 'أقصى قسط عقاري مبدئي حسب المراحل'));
-            C.stages.forEach(s => cb.append(el('div', 're42-st', (s.from === s.to ? 'الشهر ' + s.from : 'الأشهر ' + s.from + '–' + s.to) + ': ' + fmt2(s.amount) + ' ريال' + (s.post ? ' (بعد التقاعد)' : ''))));
+            C.stages.forEach(s => cb.append(el('div', 're42-st', (s.from === s.to ? 'الشهر ' + s.from : 'الأشهر ' + s.from + '–' + s.to) + ': ' + (s.amount > 0 ? fmt2(s.amount) + ' ريال' : 'لا تتوفر قدرة لقسط عقاري') + (s.post ? ' (بعد التقاعد)' : ''))));
             if (R.results.some(b => b.avgAdjusted)) cb.append(el('p', 're42-note', 'وفق المادة 13/هـ من مبادئ التمويل المسؤول تُقيَّم الأقساط غير المتساوية بمتوسطها عند المنح؛ لذلك ضبطنا الأقساط العليا حتى لا يتجاوز متوسط القسط قدرتك الحالية (' + fmt2(C.first) + ' ريال).')); }
           if (C.consumerOver) cb.append(el('p', 're42-warn', 'التزاماتك غير العقارية تتجاوز ' + C.consumerOver.limit + '% من دخلك (م15/ب)؛ قد تطلب الجهة سداد بعضها.'));
           resEl.append(cb); } }
+      if (R.etizaz) resEl.append(etzBox(R)); // r50
       { const rs = new Set(R.results.map(b => b.rateSource)); if (S.plan === 'step' && rs.has('same_margin')) resEl.append(el('p', 're42-muted', T.same_margin_note || 'تقدير: حسبنا القسط المتزايد بهامش القسط الثابت المعتمد لكل بنك، وليس عرضًا متزايدًا مؤكدًا من البنوك؛ إتاحته وشروطه ونسبته تخضع لاعتماد البنك.'));
         if (rs.has('owner_sim')) resEl.append(el('p', 're42-trialnote', 'محاكاة داخلية للمالك: النسبة غير معتمدة — ليست عرض بنك.')); }
       if (S.cut) { const cw = el('div', 're42-applied'); cw.append(el('span', '', 'مطبّق: ' + (S.cut.type === 'amount' ? 'مبلغ تمويل حتى ' : 'قسط شهري حتى ') + fmt(S.cut.value) + ' ريال — نفس المدة والنسبة ')); btn(cw, 'إلغاء التقليل', () => { S.history.push(snapshot()); S.cut = null; results(false); }, 're42-mini'); resEl.append(cw); }
       if (S.history.length) btn(resEl, T.back_prev || 'الرجوع للحسبة السابقة', () => { const p = S.history.pop(); Object.assign(S, p); results(false); }, 're42-back');
       if (!R.results.length) { resEl.append(el('p', 're42-warn', whyNone(R))); // r49: real reason per bank for the owner only
-        if (opt.mode === 'owner' || trial) { const RSN = { NO_RATE: 'لا توجد نسبة معتمدة لنوع القسط/الدعم', NO_STEP_RATE: 'تسعير المتزايد مستقل ولم تُدخل نسبته', NO_CAPACITY: 'لا تتبقى قدرة سداد بعد الالتزامات', TERM: 'المدة أقل من حد الجهة', PROPERTY: 'نوع العقار غير مشمول', SECTOR: 'القطاع غير مشمول', MIN_SALARY: 'أقل من حد الراتب', INACTIVE: 'غير مفعّل', TEST_HIDDEN: 'بنك اختبار مخفي', OFFER_NOT_ELIGIBLE: 'العرض لا ينطبق' }; const dt = el('details', 're42-info'); dt.append(el('summary', '', 'السبب لكل جهة (للمالك فقط)')); R.excluded.forEach(z => dt.append(kv(z.name, RSN[z.reason] || z.reason))); resEl.append(dt); } }
+        if (opt.mode === 'owner' || trial) { const RSN = { NO_RATE: 'لا توجد نسبة معتمدة لنوع القسط/الدعم', NO_STEP_RATE: 'تسعير المتزايد مستقل ولم تُدخل نسبته', NO_CAPACITY: 'لا تتبقى قدرة سداد بعد الالتزامات', ZERO_STAGE: 'قسط صفري في مرحلة (لا قدرة) — مستبعد', SUPPORT: 'الدعم غير مشمول', ENTITY: 'الجهة غير مشمولة', ETIZAZ_BANK: 'لا يشمل اعتزاز', AGE: 'تجاوز حد العمر', MIN_AMOUNT: 'أقل من حد المبلغ', MAX_SALARY: 'خارج فئة الراتب', TERM: 'المدة أقل من حد الجهة', PROPERTY: 'نوع العقار غير مشمول', SECTOR: 'القطاع غير مشمول', MIN_SALARY: 'أقل من حد الراتب', INACTIVE: 'غير مفعّل', TEST_HIDDEN: 'بنك اختبار مخفي', OFFER_NOT_ELIGIBLE: 'العرض لا ينطبق' }; const dt = el('details', 're42-info'); dt.append(el('summary', '', 'السبب لكل جهة (للمالك فقط)')); R.excluded.forEach(z => dt.append(kv(z.name, RSN[z.reason] || z.reason))); resEl.append(dt); } }
       { const rn = refNote(R); if (rn) resEl.append(el('p', 're42-warn re42-refnote', rn)); }
       R.top.forEach((b, i) => resEl.append(bankCard(b, i)));
       if (R.rest.length) {
@@ -350,30 +448,22 @@
       const act = resEl.querySelector('.re42-actions'); resEl.insertBefore(f, act); setTimeout(() => { try { i.focus({ preventScroll: true }); } catch (e) {} }, 60);
     }
     function stageLine(s, N) { return (s.from === s.to ? 'الشهر ' + s.from : 'من الشهر ' + s.from + (s.to === N ? ' حتى نهاية التمويل' : ' إلى ' + s.to)) + ': ' + s.amount.toLocaleString('en-US') + ' ريال'; }
-    function bankCard(b, i) {
-      const c = el('div', 're42-bank' + (i === 0 ? ' best' : '')); c.dataset.bank = b.id;
-      const h = el('div', 're42-bh'); h.append(logoBox(b)); const nm = el('div', 're42-bn'); nm.append(el('b', '', b.name)); if (i === 0) nm.append(el('small', 're42-tag', 'الأفضل لحالتك')); if (S.data.salary_bank && S.data.salary_bank === b.id) nm.append(el('small', 're42-tag salary', 'بنك نزول راتبك'));
-      nm.append(el('small', 're42-rate', (b.rateSource === 'owner_sim' ? 'نسبة محاكاة ' : b.rateSource === 'same_margin' ? 'هامش الثابت المعتمد ' : 'النسبة المعتمدة ') + pct(b.rate))); if (b.rateSource === 'same_margin') nm.append(el('small', 're42-tag est', 'تقدير — المتزايد غير معتمد من البنك')); if (b.rateSource === 'owner_sim') nm.append(el('small', 're42-tag test', 'محاكاة داخلية للمالك — ليست عرض بنك'));
-      if (b.test) nm.append(el('small', 're42-tag test', 'بنك اختبار — نسبة تجريبية غير معتمدة')); h.append(nm); c.append(h);
+    function bankCard(b, i) { // r50: personal-results style; class top1 (the personal calculator's global .best rule no longer hits this card)
+      const c = el('div', 're42-bank' + (i === 0 ? ' top1' : '')); c.dataset.bank = b.id;
+      const h = el('div', 're42-bh'); h.append(logoBox(b)); const nm = el('div', 're42-bn'); nm.append(el('b', '', b.name));
+      const tg = el('div', 're42-tags'); tg.append(el('small', 're42-tag rk', 'الترشيح ' + (i + 1))); if (i === 0) tg.append(el('small', 're42-tag', T.best_tag || 'الأفضل لحسبتك')); if (S.data.salary_bank && S.data.salary_bank === b.id) tg.append(el('small', 're42-tag salary', 'بنك نزول راتبك'));
+      if (b.rateSource === 'same_margin') tg.append(el('small', 're42-tag est', 'تقدير — المتزايد غير معتمد من البنك')); if (b.rateSource === 'owner_sim') tg.append(el('small', 're42-tag test', 'محاكاة داخلية للمالك — ليست عرض بنك')); if (b.test) tg.append(el('small', 're42-tag test', 'بنك اختبار — نسبة تجريبية غير معتمدة'));
+      nm.append(tg); h.append(nm); c.append(h);
+      const ch = el('div', 're42-chips'); chipsFor(b, S.data, cfg).forEach(t => ch.append(el('span', '', t))); c.append(ch);
       const amt = el('div', 're42-amt'); amt.append(el('small', '', 'مبلغ التمويل العقاري التقديري'), el('b', '', fmt(b.amount) + ' ريال')); c.append(amt);
-      const st = el('div', 're42-stages'); st.append(el('small', '', 'القسط الشهري')); const show = b.stages.length > 5 ? b.stages.slice(0, 4) : b.stages;
-      show.forEach(s => st.append(el('div', 're42-st', stageLine(s, b.months)))); if (b.stages.length > 5) st.append(el('div', 're42-st', '… ثم ' + stageLine(b.stages[b.stages.length - 1], b.months)));
-      c.append(st);
-      { // r48: installment now / after obligations end / after retirement
-        const pp = el('div', 're42-pp'); const at = m => fmt(b.pays[Math.min(b.pays.length - 1, m)]) + ' ريال'; const oe = Math.max(0, ...(S.data.obligations || []).map(o => Number(o.months) || 0));
-        pp.append(kv(oe > 0 && oe < b.months ? 'القسط خلال فترة الالتزامات (الشهر 1–' + oe + ')' : 'القسط الشهري', at(0))); const R0 = (S.last && S.last.profile && S.last.profile.R) || 0;
-        if (oe > 0 && oe < b.months) pp.append(kv('القسط بعد انتهاء الالتزامات (من الشهر ' + (oe + 1) + ')', at(oe) + (b.plan === 'fixed' ? ' — ثابت' : '')));
-        if (R0 > 0 && R0 < b.months) pp.append(kv('القسط بعد التقاعد (من الشهر ' + (R0 + 1) + ')', at(R0)));
-        c.append(pp);
-      }
-      const g = el('div', 're42-grid');
-      g.append(kv(b.method === 'flat' ? 'هامش الربح السنوي الثابت' : 'هامش الربح السنوي (APR)', pct(b.rate)), kv('مدة التمويل', b.months + ' شهر'), kv('إجمالي الأرباح التقديرية', fmt(b.profit) + ' ريال'),
-        kv('الرسوم المطبقة', b.feeR ? fmt(b.fee + b.vat) + ' ريال' : 'لا توجد'), kv('إجمالي المبالغ المستحقة', fmt(b.totalDue) + ' ريال'));
-      if (b.termCut) g.append(kv('ملاحظة', 'مدة هذا البنك أقصر حسب حدوده'));
-      if (b.amountCapped) g.append(kv('ملاحظة', 'المبلغ محدود بالحد الأعلى لدى البنك'));
-      if (b.reduced) g.append(kv('ملاحظة', b.reduced === 'amount' ? 'المبلغ مخفّض حسب طلبك بنفس المدة والنسبة' : 'القسط مخفّض حسب طلبك بنفس المدة والنسبة'));
-      if (b.monthlySupport > 0) g.append(kv('الدعم الشهري', fmt(b.monthlySupport) + ' ريال'));
-      c.append(g);
+      { const sv = supportKV(b, S.data); if (sv.length) { const sp = el('div', 're42-pp'); sv.forEach(([a, v]) => sp.append(kv(a, v))); c.append(sp); } }
+      const g = el('div', 're42-grid'); const FE = b.fees || {};
+      g.append(kv(b.method === 'flat' ? 'هامش الربح السنوي الثابت' : 'هامش الربح السنوي (APR)', (b.rateSource === 'same_margin' ? 'هامش الثابت ' : '') + pct(b.rate)), kv('القسط الأول', fmt2(b.pays[0]) + ' ريال'), kv('إجمالي الأرباح التقديرية', fmt(b.profit) + ' ريال'), kv('إجمالي السداد (أقساط + رسوم)', fmt(b.totalDue) + ' ريال'),
+        kv('الرسوم الإدارية', FE.fee > 0 ? fmt2(FE.fee) + ' ريال' : (FE.mode === 'exempt' ? 'معفاة' : 'لا توجد')));
+      if (FE.fee > 0) g.append(kv('ضريبة القيمة المضافة (' + FE.vatPct + '%)', fmt2(FE.vat) + ' ريال'), kv('إجمالي الرسوم', fmt2(FE.total) + ' ريال'));
+      c.append(g, ptableEl(b));
+      const nt = []; if (b.termCut) nt.push('مدة هذا البنك أقصر حسب حدوده'); if (b.amountCapped) nt.push('المبلغ محدود بالحد الأعلى لدى البنك'); if (b.reduced) nt.push(b.reduced === 'amount' ? 'المبلغ مخفّض حسب طلبك بنفس المدة والنسبة' : 'القسط مخفّض حسب طلبك بنفس المدة والنسبة');
+      if (nt.length) c.append(el('p', 're42-muted', nt.join(' — ')));
       if (b.offer) c.append(el('div', 're42-applied', 'مطبّق: ' + b.offer.title));
       const offs = el('div', 're42-offers');
       (b.offers || []).forEach(o => {
@@ -384,6 +474,24 @@
       });
       if (offs.childNodes.length) c.append(offs);
       return c;
+    }
+    function ptableEl(b) { // r50: period | mortgage instalment | other obligations | Etizaz | total deduction | income (before/after retirement)
+      const t = b.table || []; const ez = t.some(r => r.ez > 0), post = t.some(r => r.post); const w = el('div', 're42-tw'); w.append(el('small', '', 'تفاصيل الأقساط'));
+      const tb = el('table', 're42-pt'); const hr = el('tr'); ['الفترة (شهر)', 'القسط العقاري', 'التزامات أخرى'].concat(ez ? ['اعتزاز'] : []).concat(['إجمالي الاستقطاع', post ? 'الدخل (قبل/بعد التقاعد)' : 'الدخل']).forEach(x => hr.append(el('th', '', x))); tb.append(hr);
+      const rows = t.length > 8 ? t.slice(0, 7).concat([t[t.length - 1]]) : t;
+      rows.forEach((r, k) => { if (t.length > 8 && k === 7) { const sk = el('tr', 'gap'); const td = el('td', '', '…'); td.colSpan = ez ? 6 : 5; sk.append(td); tb.append(sk); }
+        const tr = el('tr', r.post ? 'post' : ''); const per = el('td', '', r.from === r.to ? String(r.from) : r.from + '–' + r.to); if (r.post) per.append(el('em', '', 'بعد التقاعد'));
+        tr.append(per, el('td', '', fmt(r.pay)), el('td', '', r.ob > 0 ? fmt(r.ob) : '—')); if (ez) tr.append(el('td', '', r.ez > 0 ? fmt(r.ez) : '—')); tr.append(el('td', '', fmt(r.total)), el('td', '', fmt(r.income))); tb.append(tr); });
+      w.append(tb); return w;
+    }
+    function etzBox(R) { // r50: Etizaz qard hasan — its own line, never mixed with housing support or the bank principal
+      const ep = R.etizaz, b0 = R.results[0], ez = b0 && b0.etz; const w = el('div', 're42-etz'); w.append(el('b', '', 'قرض اعتزاز الحسن ' + fmt(ep.amount) + ' ريال'));
+      w.append(kv('القسط الشهري', fmt2(ep.inst) + ' ريال' + (Math.abs(ep.last - ep.inst) >= 0.005 ? ' (الأخير ' + fmt2(ep.last) + ')' : '')), kv('فترة السماح', monthsTxt(ep.grace)), kv('مدة السداد', ep.months + ' شهرًا (' + durTxt(ep.months) + ')'),
+        kv('بداية ونهاية السداد', 'الشهر ' + Math.max(1, ep.firstPay) + ' – ' + ep.lastPay + (ez && ez.beyond ? ' (يمتد بعد نهاية التمويل)' : '')));
+      if (ez) { if (ez.capBefore != null) w.append(kv('قدرتك الشهرية قبل بدء قسط اعتزاز', fmt2(ez.capBefore) + ' ريال')); if (ez.capDuring != null) w.append(kv('قدرتك أثناء سداد اعتزاز', fmt2(ez.capDuring) + ' ريال')); if (ez.capAfter != null) w.append(kv('قدرتك بعد انتهاء اعتزاز', fmt2(ez.capAfter) + ' ريال')); }
+      if (R.support && R.support.combineBlocked && R.support.combineBlocked.length) w.append(el('p', 're42-muted', 'لم نجمع اعتزاز مع ' + R.support.combineBlocked.map(x => x === 'upfront' ? 'الدعم المقدم' : 'الدعم الشهري').join(' و') + ' لعدم اعتماد سياسة الجمع.'));
+      w.append(el('p', 're42-note', T.etizaz_note || 'احتساب اعتزاز تقديري، وتخضع أهلية المبادرة وقسطها ومدة سدادها لشروط الجهة المختصة'));
+      return w;
     }
     function kv(a, b) { const r = el('div', 're42-kv'); r.append(el('span', '', a), el('b', '', b)); return r; }
     function tryOffer(b, o, entity, plan) {
@@ -401,7 +509,7 @@
       if (compact) { const w = el('div', 're42-choices'); btn(w, 'تعديل البيانات', () => editMenu(false, true), 're42-chip end'); dock.append(w); return; }
       if (!open) { clearDock(); const w = el('div', 're42-choices'); btn(w, 'تعديل البيانات', () => editMenu(false, true), 're42-chip end'); dock.append(w); return; }
       clearDock(); bot('وش تبي تعدّل؟ بياناتك الباقية محفوظة.'); const w = el('div', 're42-choices');
-      const LBL = { name: 'الاسم', sector: 'القطاع', rank: 'الرتبة', pilot: 'طيار', mil_entity: 'الجهة العسكرية', appoint: 'تاريخ التعيين', employer: 'جهة العمل', birth: 'تاريخ الميلاد', net: 'الراتب الصافي', basic: 'الراتب الأساسي', grade: 'الدرجة', salary_bank: 'بنك الراتب', support: 'الدعم السكني', property: 'نوع العقار', obligations: 'الالتزامات' };
+      const LBL = { name: 'الاسم', sector: 'القطاع', rank: 'الرتبة', pilot: 'طيار', mil_entity: 'الجهة العسكرية', appoint: 'تاريخ التعيين', employer: 'جهة العمل', birth: 'تاريخ الميلاد', net: 'الراتب الصافي', basic: 'الراتب الأساسي', grade: 'الدرجة', etizaz: 'مبادرة اعتزاز', salary_bank: 'بنك الراتب', support: 'الدعم السكني', property: 'نوع العقار', obligations: 'الالتزامات' };
       order.filter(visible).forEach(k => btn(w, LBL[k] || k, () => {
         if (k === 'obligations') { S.data.obligations = []; S.data.obl_done = false; } else if (k === 'support') { S.data.supported = null; S.data.supportType = null; } else S.data[k] = null;
         if (k === 'appoint') S.data.excl_months = null; if (k === 'sector') { S.extend = null; } S.months = null; S.offers = {}; S.plans = {}; S.history = []; S.cut = null; ask(k);
@@ -413,6 +521,7 @@
       const R = S.last; const b = R && R.top[0]; const lines = [T.share_intro || 'ملخص حسبتي العقارية المبدئية من FINO99', 'الاسم: ' + (S.data.name || ''), 'مدة التمويل: ' + S.months + ' شهر (' + durTxt(S.months) + ')'];
       if (b) { lines.push('أفضل نتيجة: ' + b.name + ' — مبلغ تمويل تقديري ' + fmt(b.amount) + ' ريال', 'هامش الربح: ' + pct(b.rate) + ' — ' + (S.plan === 'fixed' ? 'قسط ثابت' : 'قسط متزايد'));
         b.stages.slice(0, 4).forEach(s => lines.push('• ' + stageLine(s, b.months))); lines.push('إجمالي الأرباح التقديرية: ' + fmt(b.profit) + ' ريال'); }
+      if (R && R.etizaz) lines.push('قرض اعتزاز الحسن (تقديري): ' + fmt(R.etizaz.amount) + ' ريال — قسط ' + fmt2(R.etizaz.inst) + ' ريال من الشهر ' + Math.max(1, R.etizaz.firstPay) + ' إلى ' + R.etizaz.lastPay);
       if (trial) lines.push('(تجربة داخلية — نسب اختبار غير معتمدة)');
       lines.push(T.disclaimer || '', 'https://www.fino99.com'); return lines.join('\n');
     }
@@ -420,40 +529,8 @@
       const txt = summary(); const url = 'https://wa.me/?text=' + encodeURIComponent(txt);
       const w = W.open(url, '_blank', 'noopener'); if (!w && navigator.share) navigator.share({ text: txt }).catch(() => {});
     }
-    function image() { // r49: content-sized canvas, wrapped Arabic lines, up to 3 banks, styled apology card (no fixed height, no overflow)
-      const R = S.last; const list = R ? R.results.slice(0, 3) : []; const WD = 1080, M = 40, IN = 36, CW = WD - 2 * M - 2 * IN; const XR = WD - M - IN;
-      const font = (getComputedStyle(D.body).fontFamily || 'sans-serif'); const mc = D.createElement('canvas').getContext('2d'); mc.direction = 'rtl';
-      const wrapT = (t, sz, wt) => { mc.font = (wt || 400) + ' ' + sz + 'px ' + font; const out = [];
-        String(t || '').split('\n').forEach(par => { let cur = ''; par.split(/\s+/).filter(Boolean).forEach(w0 => { let wd = w0;
-            while (mc.measureText(wd).width > CW) { let k = wd.length - 1; while (k > 1 && mc.measureText(wd.slice(0, k)).width > CW) k--; if (cur) { out.push(cur); cur = ''; } out.push(wd.slice(0, k)); wd = wd.slice(k); }
-            const tt = cur ? cur + ' ' + wd : wd; if (cur && mc.measureText(tt).width > CW) { out.push(cur); cur = wd; } else cur = tt; }); if (cur) out.push(cur); });
-        return out; };
-      const ops = []; let y = 0; const LH = sz => Math.round(sz * 1.5);
-      const text = (t, sz, wt, col) => { wrapT(t, sz, wt).forEach(l => { y += LH(sz); ops.push({ k: 't', t: l, sz, wt: wt || 400, col: col || '#0b2545', y: y - Math.round(sz * .42) }); }); };
-      const gap = h => { y += h; };
-      const card = (bg, bd, fn) => { const y0 = y; gap(22); fn(); gap(22); ops.push({ k: 'c', y0, y1: y, bg, bd }); gap(18); };
-      gap(150); const panel0 = y; gap(26);
-      text(tpl(T.duration_title || 'مدة التمويل لك يا {name}', S.data), 42, 700); text(S.months + ' شهر — ' + durTxt(S.months) + (S.extend ? ' — تمتد بعد التقاعد' : ''), 32, 400, '#334');
-      text(S.plan === 'fixed' ? 'نوع القسط: ثابت' : 'نوع القسط: متزايد' + (list.some(b => b.rateSource === 'same_margin') ? ' (تقديري — غير معتمد من البنوك)' : ''), 30, 400, '#334'); gap(14);
-      if (list.length) list.forEach((b, i) => card(i === 0 ? '#eef7f1' : '#f3f6fb', i === 0 ? '#9fd8b5' : '#dbe3f0', () => {
-          text((i + 1) + '. ' + b.name + (S.data.salary_bank && S.data.salary_bank === b.id ? ' — بنك نزول راتبك' : '') + (b.test ? ' (اختبار)' : ''), 36, 700, '#13315c');
-          text('مبلغ التمويل التقديري', 26, 400, '#556'); text(fmt(b.amount) + ' ريال', 60, 800, '#0a7a4f');
-          text((b.rateSource === 'same_margin' ? 'هامش الثابت المعتمد ' : 'هامش الربح ') + pct(b.rate) + ' — القسط الأول ' + fmt(b.pays[0]) + ' ريال — ' + b.months + ' شهر', 28, 400, '#334');
-          const stg = b.stages.length > 3 ? b.stages.slice(0, 2).concat([b.stages[b.stages.length - 1]]) : b.stages; if (b.stages.length > 1) stg.forEach(s => text(stageLine(s, b.months) + (s.post ? ' (بعد التقاعد)' : ''), 26, 400, '#223'));
-          text('إجمالي الأرباح التقديرية: ' + fmt(b.profit) + ' ريال', 26, 400, '#334'); }));
-      else card('#fff4f4', '#f3c2c2', () => { text('لا توجد جهة مؤهلة حاليًا', 38, 700, '#a00'); text(R ? whyNone(R) : tpl(T.no_banks, S.data), 30, 400, '#7a1d1d'); text('تقدر تعدّل البيانات أو المدة وتعيد الحسبة.', 28, 400, '#556'); });
-      text((trial ? 'تجربة داخلية — نسب اختبار غير معتمدة. ' : '') + (T.disclaimer || ''), 22, 400, '#666'); gap(26); const panel1 = y; gap(90); const H = Math.ceil(y);
-      const cv = D.createElement('canvas'); cv.width = WD; cv.height = H; const x = cv.getContext('2d'); x.direction = 'rtl'; x.textAlign = 'right';
-      const rr = (x0, y0, w, h, r) => { x.beginPath(); x.moveTo(x0 + r, y0); x.arcTo(x0 + w, y0, x0 + w, y0 + h, r); x.arcTo(x0 + w, y0 + h, x0, y0 + h, r); x.arcTo(x0, y0 + h, x0, y0, r); x.arcTo(x0, y0, x0 + w, y0, r); x.closePath(); };
-      x.fillStyle = '#0b2545'; x.fillRect(0, 0, WD, H); x.fillStyle = '#ffffff'; x.font = '700 64px ' + font; x.fillText('FINO99', WD - M, 92); x.font = '400 32px ' + font; x.fillText('حسبة تمويل عقاري مبدئية', WD - M, 136);
-      x.fillStyle = '#ffffff'; rr(M, panel0, WD - 2 * M, panel1 - panel0, 24); x.fill();
-      ops.filter(o => o.k === 'c').forEach(o => { x.fillStyle = o.bg; rr(M + 18, o.y0, WD - 2 * M - 36, o.y1 - o.y0, 18); x.fill(); x.strokeStyle = o.bd; x.lineWidth = 2; x.stroke(); });
-      ops.filter(o => o.k === 't').forEach(o => { x.font = o.wt + ' ' + o.sz + 'px ' + font; x.fillStyle = o.col; x.fillText(o.t, XR, o.y); });
-      x.fillStyle = '#ffffff'; x.font = '400 28px ' + font; x.textAlign = 'center'; x.fillText('www.fino99.com', WD / 2, H - 34);
-      const s2 = sheet('صورة النتيجة', 're42-img'); const im = el('img'); im.alt = 'صورة نتيجة الحسبة'; im.src = cv.toDataURL('image/png'); im.dataset.h = String(H); s2.body.append(im);
-      const row = el('div', 're42-actions'); const a = el('a', 're42-btn', 'حفظ الصورة'); a.href = im.src; a.download = 'FINO99-mortgage.png'; row.append(a);
-      if (navigator.canShare) btn(row, 'مشاركة الصورة', () => { cv.toBlob(bl => { const f = new File([bl], 'FINO99-mortgage.png', { type: 'image/png' }); if (navigator.canShare({ files: [f] })) navigator.share({ files: [f], text: 'https://www.fino99.com' }).catch(() => {}); else a.click(); }); });
-      s2.body.append(row);
+    async function image() { // r50: shared renderer (same R as the screen)
+      const R = S.last; try { imgSheet(await drawResult({ R, data: S.data, months: S.months, extend: S.extend, plan: S.plan, cfg, T, trial, why: R && !R.results.length ? whyNone(R) : '' })); } catch (e) { toast('تعذر إنشاء الصورة', true); }
     }
     // start
     bot(T.greeting || 'أهلًا بك'); next();
@@ -479,6 +556,10 @@
         for (const sct of ['pre', 'post']) { const Xp = DP[sct] || {}; for (const kk of ['t1_pct', 't1_supported_pct', 't2_pct', 't3_fallback_pct']) if (!ok(Xp[kk])) return 'نسبة استقطاع غير صالحة (1–100%)';
           if (Xp.t1_supported_enabled && !String(DP.t1_supported_source || '').trim()) return 'أدخل مصدر قاعدة الدعم قبل تفعيل حد المدعوم'; }
         if (!ok(DP.t3_test_pct) || !ok(DP.consumer_pct)) return 'نسبة غير صالحة (1–100%)'; }
+      const Z = c.etizaz; if (Z) { if (!(Number(Z.amount) > 0)) return 'مبلغ اعتزاز غير صالح'; if (!(Number(Z.months) >= 1 && Number(Z.months) <= 360)) return 'مدة سداد اعتزاز بين 1 و360 شهرًا'; if (!(Number(Z.grace_months) >= 0 && Number(Z.grace_months) <= 120)) return 'فترة سماح اعتزاز بين 0 و120 شهرًا'; if (Z.start_offset != null && !(Number(Z.start_offset) >= 0)) return 'إزاحة بداية اعتزاز غير صالحة'; } // r50
+      const MF = c.mortgage_fees; if (MF && MF.enabled !== false) { if (!(Number(MF.pct) > 0 && Number(MF.pct) <= 1)) return 'نسبة الرسوم العقارية بين 0 و1%'; if (!(Number(MF.cap) > 0 && Number(MF.cap) <= 5000)) return 'سقف الرسوم العقارية حتى 5,000 ريال قبل الضريبة'; }
+      for (const b of c.banks || []) { const F = b.fees || {}; if (F.mode === 'lower' && MF && ((F.lower_pct != null && Number(F.lower_pct) > Number(MF.pct)) || (F.lower_cap != null && Number(F.lower_cap) > Number(MF.cap)))) return 'الرسم الأقل لـ' + b.name + ' يتجاوز السقف'; if (F.valuation != null && !(Number(F.valuation) >= 0)) return 'رسوم التقييم غير صالحة'; }
+      for (const r of c.product_matrix || []) { if (!r.bank) return 'اختر البنك لكل صف في المصفوفة'; if (r.rate != null && r.rate !== '' && !(Number(r.rate) > 0 && Number(r.rate) <= 30)) return 'نسبة في المصفوفة خارج النطاق (0–30%)'; }
       const INs = c.installments || {}; if (INs.sim_rate != null && INs.sim_rate !== '' && !(Number(INs.sim_rate) >= 0 && Number(INs.sim_rate) <= 30)) return 'نسبة المحاكاة بين 0 و30%';
       for (const b of c.banks || []) { if (!ok(b.dti_t3)) return 'نسبة استقطاع ' + b.name + ' غير صالحة'; if (b.dti_t3_approved && !(Number(b.dti_t3) > 0 && String(b.dti_t3_source || '').trim())) return 'أدخل نسبة ومصدر سياسة ' + b.name + ' قبل اعتمادها'; }
       return null;
@@ -520,7 +601,7 @@
     }
     const SECT = () => (Wc.sectors || []).map(s => [s.key, s.label]);
     const PLANS = [['any', 'أي نظام'], ['step', 'متزايد'], ['fixed', 'ثابت']], SUP = [['any', 'أي حالة'], ['none', 'غير مدعوم'], ['upfront', 'دعم مقدم'], ['monthly', 'دعم شهري'], ['etizaz', 'اعتزاز']];
-    const TABS = [['general', 'عام'], ['dti', 'سياسة الاستقطاع العقاري'], ['plans', 'طريقة الأقساط'], ['banks', 'إعدادات البنوك'], ['limits', 'المدد والترشيح'], ['sectors', 'القطاعات والجهات'], ['ranks', 'الرتب والتقاعد'], ['scale', 'سلم الرواتب العسكرية'], ['support', 'الدعم والعقارات'], ['questions', 'الأسئلة والنصوص'], ['preview', 'معاينة الحسبة'], ['log', 'السجل والتراجع'], ['json', 'متقدم']];
+    const TABS = [['general', 'عام'], ['dti', 'سياسة الاستقطاع العقاري'], ['plans', 'طريقة الأقساط'], ['banks', 'إعدادات البنوك'], ['limits', 'المدد والترشيح'], ['sectors', 'القطاعات والجهات'], ['ranks', 'الرتب والتقاعد'], ['scale', 'سلم الرواتب العسكرية'], ['support', 'الدعم والعقارات'], ['matrix', 'مصفوفة المنتجات والدعم'], ['etizaz', 'اعتزاز'], ['fees', 'الرسوم العقارية'], ['design', 'تصميم بطاقة النتيجة'], ['launch', 'الإطلاق المحدود'], ['questions', 'الأسئلة والنصوص'], ['preview', 'معاينة الحسبة'], ['log', 'السجل والتراجع'], ['json', 'متقدم']];
     let cur = 'general'; TABS.forEach(([k, l]) => { const b = btn(tabs, l, () => show(k), 're42-tab'); b.dataset.tab = k; });
     function show(k) {
       cur = k; tabs.querySelectorAll('.re42-tab').forEach(b => b.classList.toggle('on', b.dataset.tab === k)); pane.innerHTML = ''; const P = pane;
@@ -645,9 +726,68 @@
       if (k === 'support') {
         const Sp = Wc.support = Wc.support || {}; P.append(el('h4', '', 'الدعم السكني')); P.append(el('p', 're42-muted', 'الدعم المقدم هو الافتراضي عند اختيار «مدعوم».'));
         field(P, 'مبلغ الدعم المقدم (يضاف لقيمة العقار التقديرية)', Sp, 'upfront_amount', 'num'); field(P, 'تفعيل الدعم الشهري', Sp, 'monthly_enabled', 'bool'); field(P, 'مبلغ الدعم الشهري', Sp, 'monthly_amount', 'num'); field(P, 'عدد أشهر الدعم الشهري (0 = كامل المدة)', Sp, 'monthly_months', 'num');
-        field(P, 'إظهار «اعتزاز» للعسكري', Sp, 'etizaz_enabled', 'bool');
-        P.append(el('h4', '', 'المنتجات العقارية')); list(P, Wc.properties = Wc.properties || [], [{ k: 'label', label: 'الاسم', type: 'text' }, { k: 'enabled', label: 'مفعّل', type: 'bool' }], { remove: false });
+        P.append(el('p', 're42-muted', 'اعتزاز طبقة مستقلة تُدار من تبويب «اعتزاز». مصفوفة الدعم وخياراته في تبويب «مصفوفة المنتجات والدعم».'));
+        P.append(el('h4', '', 'المنتجات العقارية')); list(P, Wc.properties = Wc.properties || [], [{ k: 'label', label: 'الاسم', type: 'text' }, { k: 'enabled', label: 'مفعّل', type: 'bool' }], { remove: false, add: () => ({ key: 'p' + Date.now().toString(36), label: 'منتج جديد', enabled: false }), addLabel: 'إضافة منتج' });
         P.append(el('h4', '', 'بنك الراتب')); Wc.salary_other = Wc.salary_other || {}; field(P, 'إظهار «بنك آخر»', Wc.salary_other, 'enabled', 'bool'); field(P, 'نسبة مخصصة لـ«بنك آخر» (اختياري)', Wc.salary_other, 'rate', 'num');
+      }
+      if (k === 'matrix') { // r50
+        P.append(el('p', 're42-note', 'كل صف يسعّر بنكًا لمنتج ودعم ونوع قسط ومدة محددة (مع القطاع/الجهة وفئة الراتب والعمر والحدود). الصف المطابق يُستخدم أولًا، وإن لم يوجد صف مطابق تُستخدم نسب البنك الأساسية كما هي. لا تُستخدم نسبة منتج أو بنك آخر تلقائيًا. نسب الصفوف الحالية هي نسب المالك المرجعية (240 شهرًا، ثابت، دعم مقدم) للمحاكاة وليست عروضًا مصرفية مؤكدة لكل نوع.'));
+        const BK = (Wc.banks || []).map(b => [b.id, b.name]); const PRP = [['any', 'أي منتج']].concat((Wc.properties || []).map(p => [p.key, p.label])); const SC = [['any', 'أي قطاع']].concat(SECT());
+        list(P, Wc.product_matrix = Wc.product_matrix || [], [{ k: 'bank', label: 'البنك', type: 'select', options: BK }, { k: 'sector', label: 'القطاع', type: 'select', options: SC, def: 'any' }, { k: 'entity', label: 'الجهة (فارغ = الكل)', type: 'text' }, { k: 'property', label: 'المنتج', type: 'select', options: PRP, def: 'any' },
+          { k: 'support', label: 'الدعم', type: 'select', options: SUP, def: 'any' }, { k: 'plan', label: 'القسط', type: 'select', options: PLANS, def: 'any' }, { k: 'term_min', label: 'أقل مدة', type: 'num' }, { k: 'term_max', label: 'أعلى مدة', type: 'num' }, { k: 'rate', label: 'النسبة %', type: 'num' },
+          { k: 'min_salary', label: 'راتب من', type: 'num' }, { k: 'max_salary', label: 'راتب إلى', type: 'num' }, { k: 'max_age_end', label: 'أقصى عمر عند النهاية', type: 'num' }, { k: 'min_amount', label: 'أقل تمويل', type: 'num' }, { k: 'max_amount', label: 'أعلى تمويل', type: 'num' }, { k: 'conditions', label: 'الشروط/المصدر', type: 'text' }, { k: 'active', label: 'مفعّل', type: 'bool', def: true }],
+          { add: () => ({ id: 'mx' + Date.now().toString(36), bank: (BK[0] || [''])[0], sector: 'any', entity: '', property: 'ready', support: 'upfront', plan: 'fixed', term_min: 240, term_max: 240, active: false }), addLabel: 'إضافة صف للمصفوفة' });
+        P.append(el('h4', '', 'نطاق كل مصرف')); P.append(el('p', 're42-muted', 'فارغ = بدون قيد. القيود تستبعد البنك من الحالات غير المشمولة ولا تغيّر نسبه.'));
+        (Wc.banks || []).filter(b => !b.test).forEach(b => { const bx = el('div', 're42-row'); bx.append(el('b', '', b.name)); P.append(bx);
+          list(bx, [b], [{ k: 'properties', label: 'المنتجات المفعّلة', type: 'multi', options: (Wc.properties || []).map(p => [p.key, p.label]) }, { k: 'supports', label: 'الدعم', type: 'multi', options: SUP.filter(x => x[0] !== 'any' && x[0] !== 'etizaz') }, { k: 'entities', label: 'جهات العمل (فارغ = الكل)', type: 'csv' }, { k: 'min_salary', label: 'أقل راتب', type: 'num' }], { remove: false, reorder: false }); });
+        P.append(el('h4', '', 'خيارات الدعم السكني')); P.append(el('p', 're42-muted', 'الدعم المقدم مفعّل. الدعم الشهري موجود ومعطّل للعملاء (يتطلب أيضًا تفعيله في «الدعم والعقارات»). الدعم العيني والبرامج الأخرى خيارات مستقبلية لا تظهر للعميل حتى تُعتمد نسبها وشروطها.'));
+        list(P, Wc.support_options = Wc.support_options || [], [{ k: 'label', label: 'الخيار', type: 'text' }, { k: 'enabled', label: 'مفعّل للعملاء', type: 'bool' }, { k: 'note', label: 'ملاحظة', type: 'text' }], { remove: false, reorder: false });
+        const MX = Wc.support_matrix = Wc.support_matrix || {}; P.append(el('h4', '', 'مرجع مصفوفة الدعم (غير مفعّل افتراضيًا)')); P.append(el('p', 're42-muted', MX.source || ''));
+        field(P, 'استخدام باقات الدعم المقدم حسب الدخل (غير مفعّل = مبلغ الدعم المقدم في «الدعم والعقارات»)', MX, 'use_packages', 'bool');
+        list(P, MX.packages = MX.packages || [], [{ k: 'from', label: 'الدخل من', type: 'num' }, { k: 'to', label: 'إلى (فارغ = فأعلى)', type: 'num' }, { k: 'amount', label: 'مبلغ الباقة', type: 'num' }], { add: () => ({ from: 0, to: null, amount: 0 }), addLabel: 'إضافة فئة' });
+        field(P, 'استخدام الدعم الشهري حسب الدخل (يتطلب تفعيل الدعم الشهري)', MX, 'use_monthly', 'bool');
+        list(P, MX.monthly = MX.monthly || [], [{ k: 'from', label: 'الدخل من', type: 'num' }, { k: 'to', label: 'إلى (فارغ = فأعلى)', type: 'num' }, { k: 'amount', label: 'الدعم الشهري', type: 'num' }, { k: 'months', label: 'الأشهر', type: 'num' }], { add: () => ({ from: 0, to: null, amount: 0, months: 240 }), addLabel: 'إضافة فئة' });
+      }
+      if (k === 'etizaz') { // r50
+        const Z = Wc.etizaz = Wc.etizaz || {}; Z.combine = Z.combine || {};
+        P.append(el('p', 're42-note', 'اعتزاز قرض حسن مستقل للدفعة المقدمة، لا يُخلط بالدعم السكني ولا بأصل التمويل البنكي. يظهر سؤاله فقط عند اجتماع: القطاع المسموح + «مدعوم سكنيًا» + الجهة المسموحة (الافتراضي: عسكري / وزارة الدفاع). اختيار «نعم» لا يُعد إثبات أهلية. القيم محاكاة قابلة للتعديل وليست قسطًا مصرفيًا موحدًا مؤكدًا.'));
+        field(P, 'تفعيل حساب اعتزاز', Z, 'enabled', 'bool'); field(P, 'مبلغ القرض الحسن (ريال)', Z, 'amount', 'num'); field(P, 'فترة السماح (شهر)', Z, 'grace_months', 'num'); field(P, 'مدة السداد (شهر)', Z, 'months', 'num');
+        field(P, 'الأشهر المنقضية من قرض اعتزاز عند بدء العقاري (0 = يبدآن معًا)', Z, 'start_offset', 'num'); field(P, 'يتطلب أن يكون مدعومًا سكنيًا', Z, 'require_supported', 'bool', { def: true });
+        list(P, [Z], [{ k: 'sectors', label: 'القطاعات المسموحة', type: 'multi', options: SECT() }, { k: 'entities', label: 'الجهات المسموحة', type: 'csv' }, { k: 'banks', label: 'البنوك التي تسمح به (فارغ = الكل)', type: 'multi', options: (Wc.banks || []).filter(b => !b.test).map(b => [b.id, b.name]) }, { k: 'properties', label: 'المنتجات (فارغ = الكل)', type: 'multi', options: (Wc.properties || []).map(p => [p.key, p.label]) }], { remove: false, reorder: false });
+        P.append(el('h4', '', 'مصفوفة توافق الجمع')); field(P, 'يُجمع مع الدعم المقدم', Z.combine, 'upfront', 'bool'); field(P, 'يُجمع مع الدعم الشهري', Z.combine, 'monthly', 'bool');
+        P.append(el('p', 're42-muted', 'لا تفعّل الجمع إلا بعد التحقق من سياسة الجهة المختصة. عند عدم الجمع يظهر كل مبلغ في خانته مع توضيح أنه غير مجموع.'));
+        field(P, 'المصدر/الملاحظة', Z, 'source', 'textarea', { rows: 2 }); const Tx = Wc.texts = Wc.texts || {}; field(P, 'تنويه اعتزاز للعميل', Tx, 'etizaz_note', 'textarea', { rows: 2 });
+        const e0 = (Z.entities || [])[0] || 'وزارة الدفاع'; const ex = E().etizazPlan({ etizaz: true, sector: (Z.sectors || [])[0] || 'military', supported: true, mil_entity: e0, entity: e0 }, Object.assign({}, Wc, { etizaz: Object.assign({}, Z, { enabled: true }) }));
+        if (ex) P.append(el('p', 're42-capline', 'مثال: القسط ' + fmt2(ex.inst) + ' ريال (الأخير ' + fmt2(ex.last) + ') — السداد من الشهر ' + Math.max(1, ex.firstPay) + ' إلى ' + ex.lastPay));
+      }
+      if (k === 'fees') { // r50
+        const G = Wc.mortgage_fees = Wc.mortgage_fees || {}; P.append(el('p', 're42-note', 'الرسوم الإدارية عند منح التمويل العقاري: الأقل من النسبة أو السقف، قبل ضريبة القيمة المضافة عند انطباقها. لا تُحسب رسوم على قرض اعتزاز، ولا تتكرر التكاليف: رسوم التقييم تُحسب ضمن السقف نفسه.'));
+        field(P, 'تطبيق قاعدة الرسوم العقارية', G, 'enabled', 'bool', { def: true }); field(P, 'النسبة القصوى %', G, 'pct', 'num'); field(P, 'السقف قبل الضريبة (ريال)', G, 'cap', 'num'); field(P, 'ضريبة القيمة المضافة %', G, 'vat_pct', 'num'); field(P, 'المصدر', G, 'source', 'textarea', { rows: 2 });
+        const exb = el('div', 're42-capbox'); [200000, 500000].forEach(a => { const f = E().feeCalc(a, {}, Wc); exb.append(el('div', 're42-st', fmt(a) + ' ريال ← رسوم ' + fmt2(f.fee) + ' + ضريبة ' + fmt2(f.vat) + ' = ' + fmt2(f.total) + ' ريال')); }); P.append(exb);
+        P.append(el('h4', '', 'رسوم كل بنك')); (Wc.banks || []).filter(b => !b.test).forEach(b => { b.fees = b.fees || {}; const r = el('div', 're42-row'); r.append(el('b', '', b.name));
+          field(r, 'النوع', b.fees, 'mode', 'select', { options: [['standard', 'وفق القاعدة'], ['lower', 'رسم أقل'], ['exempt', 'إعفاء']], def: 'standard' }); field(r, 'نسبة أقل %', b.fees, 'lower_pct', 'num'); field(r, 'سقف أقل (ريال)', b.fees, 'lower_cap', 'num'); field(r, 'منها رسوم تقييم (ضمن السقف)', b.fees, 'valuation', 'num'); P.append(r); });
+      }
+      if (k === 'design') { // r50
+        const DZ = Wc.card_design = Object.assign({}, DESIGN_DEF, Wc.card_design || {}); P.append(el('p', 're42-note', 'ما يظهر في صورة النتيجة المشتركة. البيانات الشخصية مخفية افتراضيًا. المعاينة تستخدم الإعدادات الحالية (حتى غير المحفوظة) وحالة تجريبية دون استهلاك أي كود.'));
+        [['name', 'الاسم'], ['rank', 'الرتبة'], ['employer', 'جهة العمل'], ['birth', 'تاريخ الميلاد'], ['appoint', 'تاريخ التعيين'], ['salary', 'الراتب'], ['retirement', 'التقاعد والمعاش'], ['salary_bank', 'بنك الراتب'], ['bank_name', 'اسم البنك'], ['rates', 'النسب'], ['contact', 'التواصل (الموقع)'], ['qr', 'رمز QR للموقع']].forEach(([kk, l]) => field(P, 'إظهار ' + l, DZ, kk, 'bool'));
+        const row = el('div', 're42-actions'); btn(row, 'معاينة حقيقية للصورة', async () => { try { const c = clone(Wc); c.banks = (c.banks || []).filter(b => !b.test && b.approved && b.active !== false && b.included !== false); imgSheet(await drawResult(sampleCase(c)), 'معاينة صورة النتيجة'); } catch (e) { toast('تعذر المعاينة: ' + e.message, true); } }, 're42-go'); P.append(row);
+      }
+      if (k === 'launch') { // r50: limited launch — server-side counter (successful calculations only), no sale opened, no codes generated
+        P.append(el('p', 're42-note', 'الإطلاق المحدود يفتح البوت العقاري لأصحاب أكواد الباقة العقارية الأساسية والتجديد فقط، حتى الحد المحدد. يُحتسب المستخدم عند أول حسبة ناجحة فقط (المحاولات الفاشلة لا تُحتسب). البيع العام وحالة المتجر والأكواد والمخزون لا تتغير.'));
+        const box = el('div'); P.append(box);
+        const act = async (a, dd) => { try { await launchCall(a, dd); toast('تم الحفظ'); pubCache = null; await load(); } catch (e) { toast('لم يتم: ' + e.message, true); } };
+        const load = async () => { box.innerHTML = ''; let L; try { L = await launchCall('get'); } catch (e) { box.append(el('p', 're42-err', 'تعذر التحميل: ' + e.message)); return; }
+          const sts = el('div', 're42-status'); const pill = (t, ok) => sts.append(el('span', 're42-pill ' + (ok ? 'ok' : 'off'), t));
+          pill(L.enabled ? 'الإطلاق المحدود مفعّل' : 'الإطلاق المحدود متوقف', L.enabled); pill(!L.accept_new ? 'لا يقبل مستخدمين جددًا' : L.count >= L.limit ? 'اكتمل العدد' : 'يقبل مستخدمين جددًا', L.enabled && L.accept_new && L.count < L.limit); pill('المستخدمون: ' + L.count + ' من ' + L.limit, true); box.append(sts);
+          const row = el('div', 're42-actions');
+          btn(row, L.enabled ? 'إيقاف الإطلاق المحدود' : 'تفعيل الإطلاق المحدود', () => { if (!L.enabled && !confirm('سيُفتح البوت العقاري لأصحاب أكواد الباقة العقارية فقط حتى ' + L.limit + ' مستخدمًا. البيع العام والمتجر لا يتغيران. متأكد؟')) return; act('set', { enabled: !L.enabled }); }, L.enabled ? 'danger' : 're42-go');
+          btn(row, L.accept_new ? 'إيقاف قبول مستخدمين جدد' : 'استئناف قبول مستخدمين جدد', () => act('set', { accept_new: !L.accept_new })); box.append(row);
+          const lf = el('form', 're42-input'); const li = el('input'); li.inputMode = 'numeric'; li.value = String(L.limit); const lb = btn(null, 'حفظ الحد', null, 're42-go'); lb.type = 'submit'; lf.append(el('span', '', 'الحد الأقصى للمستخدمين'), li, lb);
+          lf.onsubmit = ev => { ev.preventDefault(); const n = Number(digits(li.value)); if (!(Number.isInteger(n) && n >= 1 && n <= 1000)) { toast('الحد بين 1 و1000', true); return; } act('set', { limit: n }); }; box.append(lf);
+          box.append(el('h4', '', 'المستخدمون المقبولون')); if (!(L.users || []).length) box.append(el('p', 're42-muted', 'لا يوجد بعد.'));
+          (L.users || []).forEach((u, i) => box.append(kv((i + 1) + '. ' + u.code + (u.stock === 'renewal' ? ' (تجديد)' : ''), new Date(u.first_at).toLocaleString('ar-SA-u-nu-latn'))));
+          if ((L.log || []).length) { box.append(el('h4', '', 'سجل التغييرات')); L.log.slice(0, 10).forEach(g => box.append(el('div', 're42-muted', new Date(g.at).toLocaleString('ar-SA-u-nu-latn') + ' — ' + JSON.stringify(g.change)))); } };
+        load();
       }
       if (k === 'questions') {
         P.append(el('h4', '', 'ترتيب الأسئلة ونصوصها')); P.append(el('p', 're42-muted', 'استخدم {name} لاسم العميل. أسئلة الرتبة والجهة العسكرية والتعيين والراتب الأساسي تظهر للعسكري فقط.'));
@@ -700,7 +840,7 @@
     };
     wrap.__re42 = true; W.F99V13RunService = wrap;
   }
-  W.F99RE42 = { openBot, openCenter, isOwner, version: 'r48c' };
+  W.F99RE42 = { openBot, openCenter, isOwner, version: 'r50' };
   const tick = () => { try { tile(); hookClient(); } catch (e) {} };
   if (D.readyState === 'loading') D.addEventListener('DOMContentLoaded', tick); else tick();
   setInterval(tick, 1500);
