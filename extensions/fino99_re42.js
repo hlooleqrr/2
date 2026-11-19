@@ -189,7 +189,20 @@
     const MG = PROD !== 'transfer'; const TP = cfg.term_policy || {}; const FIX = MG && TP.client_change !== true ? Math.max(12, Math.floor(Number(TP.fixed) || 240)) : 0; // r55: fixed package term for the client (owner may allow changes later)
     const fixMsg = () => tpl(String(T.term_fixed_msg || 'باقتك تدعم حاليًا مدة {months} شهرًا فقط، ولا تشمل تغيير المدة.').replace(/\{months\}/g, String(FIX)), S.data);
     const PLN = p => p === 'fixed' ? 'قسط ثابت' : (MG ? 'قسط متغير' : 'قسط متزايد'); const upOf = b => { const sa = b.sup || {}; return MG && sa.upfrontCounted && sa.upfront > 0 ? Number(sa.upfront) : 0; };
+    D.querySelectorAll('.re42-ov.re42-bot').forEach(o => o.remove()); // r59: one chat only — a new chat never opens over an old one
     const sh = sheet(PROD === 'transfer' ? (TRC.title || 'تحويل المديونية العقارية') : 'احتساب التمويل العقاري فورًا', 're42-bot' + (PROD === 'transfer' ? ' re54-tr' : '')); const log = el('div', 're42-log'); const dock = el('div', 're42-dock'); sh.body.append(log); sh.box.append(dock); // r49: dock = footer above the keyboard
+    const ST = el('div', 're59-st'); ST.hidden = true; sh.head.after(ST); const STAT = new WeakMap(); // r59: package bar (calculations / validity) on top of the chat
+    const stDraw = d => { if (!d || d.ok !== true) return; const mx = Number(d.max_calculations) || 0, du = Number(d.duration_minutes) || 0, left = Math.max(0, Number(d.calculations_remaining) || 0); if (!mx && !du) return;
+      const DA = typeof W.F99DurationAr === 'function' ? W.F99DurationAr : (m => m + ' دقيقة'), CA = typeof W.F99CalcCountAr === 'function' ? W.F99CalcCountAr : (n => n + ' حسبات'); if (!STAT.has(d)) STAT.set(d, Date.now());
+      let ms = null; if (d.expires_at) { const st = Date.parse(d.server_time || '') || STAT.get(d); ms = Date.parse(d.expires_at) - (st + (Date.now() - STAT.get(d))); }
+      const ratio = Math.max(0, Math.min(1, mx ? left / mx : 1, ms != null && du ? Math.max(0, ms) / (du * 60000) : 1)); ST.innerHTML = ''; ST.hidden = false;
+      ST.append(el('span', 're59-st-t', (du ? 'صلاحية الباقة: ' + DA(du) : '') + (du && mx ? ' | ' : '') + (mx ? 'عدد الحسبات: ' + CA(mx) : '')));
+      const bar = el('span', 're59-st-m'); const fi = el('i'); fi.style.width = Math.round(ratio * 100) + '%'; bar.append(fi); ST.append(bar);
+      if (mx) ST.append(el('span', 're59-st-l', left <= 0 ? 'انتهت الحسبات: 0 من ' + mx : 'المتبقي: ' + CA(left) + ' من ' + mx));
+      if (ms != null && ms > 0) { const t = Math.floor(ms / 60000), h = Math.floor(t / 60), m = t % 60; ST.append(el('span', 're59-st-l', 'الوقت المتبقي: ' + (h ? h + ' ساعة' + (m ? ' و' : '') : '') + (m || !h ? m + ' دقيقة' : ''))); }
+      ST.dataset.level = (mx && left <= 0) || (ms != null && ms <= 0) ? 'danger' : ratio < .34 ? 'warning' : 'normal'; };
+    const stRefresh = () => { if (opt.mode !== 'client') return; try { const p = typeof W.F99V22RefreshStatus === 'function' ? W.F99V22RefreshStatus() : null; Promise.resolve(p).then(d => stDraw(d || W.F99V22LatestStatus)).catch(() => {}); } catch (e) {} };
+    stRefresh(); { const iv = setInterval(() => { if (!sh.ov.isConnected) return clearInterval(iv); stDraw(W.F99V22LatestStatus); }, 30000); }
     if (trial) sh.head.append(el('span', 're42-trial', 'وضع التجربة'));
     if (opt.preview) sh.head.append(el('span', 're42-trial alt', opt.preview));
     applyTheme(sh.ov, cfg.theme); // r51
@@ -203,7 +216,7 @@
       const fit = ev => { if (!ov.isConnected) return cleanup(); const h = vv ? vv.height : W.innerHeight; ov.style.setProperty('--vvh', h + 'px'); ov.style.setProperty('--vvt', (vv ? vv.offsetTop : 0) + 'px');
         ov.classList.toggle('kb', !!vv && (W.innerHeight - vv.height) > 120); if (Math.abs(h - lastH) > 40) { lastH = h; scroll(); } };
       const mo = new MutationObserver(() => { if (!ov.isConnected) cleanup(); });
-      function cleanup() { if (vv) { vv.removeEventListener('resize', fit); vv.removeEventListener('scroll', fit); } W.removeEventListener('resize', fit); D.documentElement.classList.remove('re42-lock'); mo.disconnect(); }
+      function cleanup() { if (vv) { vv.removeEventListener('resize', fit); vv.removeEventListener('scroll', fit); } W.removeEventListener('resize', fit); if (!D.querySelector('.re42-ov.re42-bot')) D.documentElement.classList.remove('re42-lock'); mo.disconnect(); }
       mo.observe(D.body, { childList: true }); if (vv) { vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); } W.addEventListener('resize', fit);
       D.documentElement.classList.add('re42-lock'); fit(); dock.addEventListener('focusin', () => setTimeout(() => { lastH = 0; fit(); }, 320)); }
     const greetWord = () => { try { if (typeof W.F99SaudiGreetingWord === 'function') return W.F99SaudiGreetingWord(); } catch (e) {} let h = 0; try { h = Number(new Intl.DateTimeFormat('en-GB', { hour: '2-digit', hourCycle: 'h23', timeZone: 'Asia/Riyadh' }).format(new Date())) || 0; } catch (e) { h = new Date().getHours(); } return h < 12 ? 'صباح الخير' : 'مساء الخير'; }; // r58
@@ -490,6 +503,38 @@
       if (!out.length) out.push('لا تنطبق شروط الجهات المفعّلة على حالتك');
       return 'ما فيه بنك مؤهل لتحويل تمويلك حاليًا، والسبب: ' + out.join('، و') + '.';
     }
+    function monthRows(R) { try { const N = R.capacity && R.capacity.months ? R.capacity.months : S.months; return E().schedule(R.profile, inpScn(), cfg, N, null, trial) || []; } catch (e) { return []; } } // r59: the engine's own monthly rows
+    function noBox(R) { // r59: short respectful reason, month-by-month audit, review obligations / hypothetical early payoff (separate scenario, never treated as paid)
+      const d = S.data; const w = el('div', 're59-no'); const z = R.excluded.find(x => x.reason === 'ZERO_STAGE'); const rs = R.excluded.map(x => x.reason);
+      const span = z ? (z.zeroFrom === z.zeroTo ? 'الشهر ' + z.zeroFrom : 'الأشهر ' + z.zeroFrom + '–' + z.zeroTo) : ''; let why = '';
+      if (z && z.zeroPost) why = 'لأن بعض التزاماتك تستمر بعد تقاعدك، والمعاش التقديري ما يكفي لأقساطها مع قسط عقاري في ' + span + ' من التمويل.';
+      else if (z) why = 'لأن التزاماتك الحالية تستهلك حد الاستقطاع المسموح من دخلك في ' + span + ' من التمويل.';
+      else if (rs.includes('NO_CAPACITY')) why = 'لأن التزاماتك الحالية تستهلك حد الاستقطاع المسموح من دخلك.';
+      w.append(el('p', 're59-no-t', tpl('يا {name}، حاليًا ما فيه بنك مؤهل لحالتك' + (why ? '، ' + why : '.'), d))); if (!why) w.append(el('p', 're42-muted', whyNone(R)));
+      const rows = monthRows(R); if (z && rows.length) { const a = Math.max(1, z.zeroFrom - 2), b2 = Math.min(rows.length, z.zeroTo + 1);
+        const dt = el('details', 're42-info re59-mt'); dt.append(el('summary', '', 'ليش؟ الحساب شهرًا بشهر')); const hd = el('div', 're59-mr hd'); ['الشهر', 'الدخل', 'الالتزامات', 'الحد المسموح', 'المتبقي للقسط العقاري'].forEach(t => hd.append(el('span', '', t))); dt.append(hd);
+        rows.filter(r => r.m >= a && r.m <= b2).forEach(r => { const left = r.limit - r.ob; const ln = el('div', 're59-mr' + (left <= 0 ? ' bad' : '')); ln.dataset.m = r.m;
+          [String(r.m) + (r.post ? ' (معاش)' : ''), fmt2(r.income), fmt2(r.ob), fmt2(r.limit) + (OWN ? ' (' + r.rate + '%)' : ''), left > 0 ? fmt2(left) : 'عجز ' + fmt2(-left)].forEach(t => ln.append(el('span', '', t))); dt.append(ln); });
+        dt.append(el('p', 're42-muted', 'الدخل قبل التقاعد = راتبك الصافي، وبعده = المعاش التقديري. الالتزامات محسوبة حتى نهاية مدتها اللي أدخلتها. ما نفترض فترة سماح ولا قسطًا عقاريًا صفريًا في أي شهر.')); w.append(dt); }
+      if (d.obligations.length) { w.append(el('p', 're42-muted', 'تقدر تراجع التزاماتك وتصحح مدتها، أو تشوف حسبة افتراضية منفصلة لو سددت التزامًا مبكرًا (لا تعني أنه سُدد فعلًا).'));
+        const ac = el('div', 're42-actions re59-na'); btn(ac, 'مراجعة الالتزامات', reviewObl, 're42-go'); btn(ac, 'احسب لو سددت التزامًا مبكرًا', payoffSim); w.append(ac); }
+      return w; }
+    function reviewObl() { const d = S.data; const L = d.obligations; clearDock(); // r59: correct one obligation (months / amount / remove) and recalculate
+      bot('التزاماتك المسجلة:\n' + L.map((o, i) => (i + 1) + ') ' + o.label + ' — ' + fmt(o.amount) + ' ريال شهريًا — متبقي ' + monthsTxt(o.months)).join('\n'));
+      const done = () => { d.close = null; d.close_done = false; S.scn = 'now'; S.offers = {}; S.plans = {}; S.cut = null; S.history = []; results(true); };
+      choice('#وش الالتزام اللي تبي تصححه؟', L.map((o, i) => ({ label: (i + 1) + ') ' + o.label, value: i })).concat([{ label: 'إعادة إدخال الالتزامات', value: 'all' }]), v => {
+        if (v === 'all') { d.obligations = []; d.obl_done = false; d.close = null; d.close_done = false; S.scn = 'now'; S.months = null; S.offers = {}; S.plans = {}; S.history = []; S.cut = null; return ask('obligations'); }
+        const o = L[v]; choice('#«' + o.label + '» — ' + fmt(o.amount) + ' ريال، متبقي ' + monthsTxt(o.months) + '. وش التصحيح؟', [{ label: 'تصحيح المدة المتبقية', value: 'm' }, { label: 'تصحيح القسط الشهري', value: 'a' }, { label: 'حذف الالتزام (انتهى أو سُدد)', value: 'x' }], t => {
+          if (t === 'x') { L.splice(v, 1); return done(); }
+          if (t === 'm') return textIn('#كم شهر متبقي فعليًا على «' + o.label + '»؟', 'int', x => { const m = parseInt(digits(x), 10); if (!(m >= 1 && m <= 600)) return 'أدخل عدد الأشهر (1 إلى 600)'; me(monthsTxt(m)); o.months = m; done(); }, 'عدد الأشهر المتبقية');
+          textIn('#كم القسط الشهري الصحيح لـ«' + o.label + '»؟', 'money', x => { const a = money(x); if (!(a > 0 && a <= 500000)) return 'أدخل قيمة القسط الشهري'; me(fmt(a) + ' ريال'); o.amount = a; done(); }, 'قيمة القسط الشهري بالريال'); }); }); }
+    function payoffSim() { const d = S.data; clearDock(); // r59: hypothetical early payoff → separate conditional scenario (same calculation, no extra count)
+      bot('اختر الالتزام اللي تبي نحسب لو سددته مبكرًا. هذي حسبة افتراضية منفصلة، ولا تعني أنه سُدد فعلًا. تقدر تختار أكثر من التزام.');
+      const w = el('div', 're42-choices grid re55-multi'); const sel = new Set(); let fin = false; const born = Date.now();
+      const ok = btn(null, 'احسب السيناريو', () => { if (fin || !sel.size) return; fin = true; w.querySelectorAll('button').forEach(z => { z.disabled = true; }); ok.disabled = true; me([...sel].map(i => d.obligations[i].label).join('، '));
+        d.close = [...sel].map(i => ({ i, entity: '', payoff: 0 })); d.close_done = true; S.history.push(snapshot()); S.scn = 'closed'; S.offers = {}; S.plans = {}; S.cut = null; results(false); }, 're42-go wide'); ok.disabled = true;
+      d.obligations.forEach((o, k) => { const b = btn(w, '', () => { if (fin || Date.now() - born < 400) return; if (sel.has(k)) sel.delete(k); else sel.add(k); b.classList.toggle('on', sel.has(k)); b.setAttribute('aria-pressed', sel.has(k) ? 'true' : 'false'); ok.disabled = !sel.size; }, 're42-chip'); b.setAttribute('aria-pressed', 'false'); b.append(el('span', '', (k + 1) + ') ' + o.label + ' — ' + fmt(o.amount) + ' ريال — ' + monthsTxt(o.months))); });
+      const back = btn(null, 'رجوع', () => { if (fin) return; fin = true; clearDock(); results(false); }, 're42-skip'); dock.append(w, ok, back); scroll(); }
     function whyNone(R) {
       if (PROD === 'transfer') return whyNoneT(R);
       const rs = R.excluded.map(x => x.reason).filter(r => r !== 'INACTIVE' && r !== 'TEST_HIDDEN'); if (!rs.length) return tpl(T.no_banks, S.data);
@@ -544,7 +589,7 @@
           for (let k = 0; k < 2; k++) { r = await finoRpc(PROD === 'transfer' ? 'f99r54_client_meter' : 'f99r47_client_meter', { p_entry_token: e.entryToken, p_device_id: dev, p_request_id: rid }, 15000); if (!(r && r.network)) break; }
           if (r && r.network) { bot(meterMsg('NETWORK'), 'warn'); return false; }
           if (!r || !r.ok || (r.data && r.data.ok === false)) { bot(meterMsg((r && r.data && r.data.reason) || (r && (r.reason || r.error)) || 'REFUSED'), 'warn'); return false; }
-          S.metered[sig] = true; return true;
+          S.metered[sig] = true; setTimeout(stRefresh, 1700); return true; // r59: refresh the bar after a counted calculation
         } catch (x) { bot(meterMsg('NETWORK'), 'warn'); return false; } finally { delete S.meterP[sig]; }
       })(); S.meterP[sig] = pr; return pr;
     }
@@ -597,7 +642,8 @@
       if (MG && (S.data.close || []).length) { const db = diffBox(); if (db) resEl.append(db); } // r55
       if (MG && S.scn !== 'closed') { const oi = overInfo(); if (oi) { const lim = oi.net * oi.cp / 100; const dt = el('details', 're42-info re55-over'); dt.append(el('summary', '', 'تفاصيل الالتزامات المرتفعة'));
           dt.append(kv('مجموع التزاماتك غير العقارية', fmt2(oi.ob) + ' ريال'), kv('الحد المسموح لشريحة دخلك', fmt2(lim) + ' ريال (' + oi.cp + '% من دخلك)'), kv('مقدار التجاوز', fmt2(oi.ob - lim) + ' ريال')); resEl.append(dt); } }
-      if (MG) resEl.append(el('p', 're42-muted re55-pdef', S.plan === 'fixed' ? 'القسط الثابت: قيمة ثابتة طوال المدة إذا سمحت القدرة التمويلية بذلك.' : 'القسط المتغير: أقساط تختلف بين مراحل التمويل صعودًا أو هبوطًا حسب الراتب والالتزامات والتقاعد.'));
+      { const flat = MG && S.plan === 'step' && R.results.length && R.results.every(b => new Set((b.stages || []).map(x => Math.round(x.amount))).size <= 1); // r59
+        if (MG) resEl.append(el('p', 're42-muted re55-pdef' + (flat ? ' re59-flat' : ''), S.plan === 'fixed' ? 'القسط الثابت: قيمة ثابتة طوال المدة إذا سمحت القدرة التمويلية بذلك.' : flat ? 'في حالتك القسط المتغير يطلع بنفس قيمة القسط الثابت طوال المدة، لأن أقل قدرة سداد عندك في أول الأشهر، وما نرفع الأقساط اللاحقة فوق متوسط قدرتك الحالية (مبادئ التمويل المسؤول م13/هـ).' : 'القسط المتغير: أقساط تختلف بين مراحل التمويل صعودًا أو هبوطًا حسب الراتب والالتزامات والتقاعد.')); }
       if (S.extend && R.profile && R.profile.sector === 'military' && R.profile.pension != null && R.profile.R < S.months) resEl.append(el('p', 're42-meta', 'المعاش التقاعدي التقديري: ' + fmt2(R.profile.pension) + ' ريال (تقديري)'));
       { const C = R.capacity; if (C && C.consumerOver && R.results.length && S.scn !== 'closed') resEl.append(el('p', 're42-warn', tpl(T.consumer_over_warn || 'يا {name}، التزاماتك الحالية تتجاوز الحد المسموح به، وقد تؤثر على إمكانية حصولك على التمويل العقاري.', S.data)));
         if (C && OWN && C.stages.some(s => s.amount > 0)) { const cb = el('div', 're42-capbox'); // r49: capacity lines (r51: owner only)
@@ -613,9 +659,9 @@
         if (rs.has('owner_sim')) resEl.append(el('p', 're42-trialnote', 'محاكاة داخلية للمالك: النسبة غير معتمدة — ليست عرض بنك.')); }
       if (S.cut) { const cw = el('div', 're42-applied'); cw.append(el('span', '', 'مطبّق: ' + (S.cut.type === 'amount' ? 'مبلغ تمويل حتى ' : 'قسط شهري حتى ') + fmt(S.cut.value) + ' ريال — نفس المدة والنسبة ')); btn(cw, 'إلغاء التقليل', () => { S.history.push(snapshot()); S.cut = null; results(false); }, 're42-mini'); resEl.append(cw); }
       if (S.history.length) btn(resEl, T.back_prev || 'الرجوع للحسبة السابقة', () => { const p = S.history.pop(); Object.assign(S, p); results(false); }, 're42-back');
-      if (!R.results.length) { resEl.append(el('p', 're42-warn', whyNone(R))); // r49: real reason per bank for the owner only
+      if (!R.results.length) { resEl.append(MG ? noBox(R) : el('p', 're42-warn', whyNone(R))); // r59 // r49: real reason per bank for the owner only
         if (opt.mode === 'owner' || trial) { const RSN = { NO_RATE: 'لا توجد نسبة معتمدة لنوع القسط/الدعم', NO_STEP_RATE: 'تسعير المتزايد مستقل ولم تُدخل نسبته', NO_CAPACITY: 'لا تتبقى قدرة سداد بعد الالتزامات', ZERO_STAGE: 'قسط صفري في مرحلة (لا قدرة) — مستبعد', SUPPORT: 'الدعم غير مشمول', ENTITY: 'الجهة غير مشمولة', ETIZAZ_BANK: 'لا يشمل اعتزاز', AGE: 'تجاوز حد العمر', MIN_AMOUNT: 'أقل من حد المبلغ', MAX_SALARY: 'خارج فئة الراتب', TERM: 'المدة أقل من حد الجهة', PROPERTY: 'نوع العقار غير مشمول', SECTOR: 'القطاع غير مشمول', MIN_SALARY: 'أقل من حد الراتب', INACTIVE: 'غير مفعّل', TEST_HIDDEN: 'بنك اختبار مخفي', OFFER_NOT_ELIGIBLE: 'العرض لا ينطبق', BANK_AGE: 'العمر عند نهاية المدة يتجاوز حد البنك', BANK_TERM: 'المدة أطول من حد البنك', NO_TERM_RATE: 'لا توجد نسبة معتمدة لهذه المدة', CONSUMER_OVER: 'الالتزامات غير العقارية فوق الحد' }; const dt = el('details', 're42-info'); dt.append(el('summary', '', 'السبب لكل جهة (للمالك فقط)')); R.excluded.forEach(z => dt.append(kv(z.name, RSN[z.reason] || z.reason))); resEl.append(dt); } }
-      { const rn = refNote(R); if (rn) resEl.append(el('p', 're42-warn re42-refnote', rn)); }
+      { const rn = (R.results.length || !MG) ? refNote(R) : ''; if (rn) resEl.append(el('p', 're42-warn re42-refnote', rn)); } // r59: no extra red notice without banks
       const ALL = cfg.results_show_all !== false; // r54: every eligible bank as its own card (3, 5 or 10), ranked by the owner's criterion
       if (R.results.length) resEl.append(el('p', 're42-muted re54-tap', MG ? 'اضغط على أي بنك لعرض تفاصيله.' : 'اضغط على أي بنك لعرض التفاصيل نصيًا أو صورة النتيجة.'));
       (ALL ? R.results : R.top).forEach((b, i) => resEl.append(bankCard(b, i)));
@@ -626,7 +672,7 @@
       }
       const act = el('div', 're42-actions'); // r55: no merged multi-bank share/image unless the owner enables «مشاركة مقارنة جميع البنوك»
       if (!MG || !R.results.length) { btn(act, 'مشاركة عبر واتساب', share, 're42-wa'); btn(act, 'صورة النتيجة', image); } else if (cfg.share_compare === true) { btn(act, 'مشاركة مقارنة جميع البنوك', () => shareTxt(compareTxt()), 're42-wa'); btn(act, 'صورة مقارنة البنوك', image); }
-      btn(act, 'تعديل المدة', () => FIX ? toast(fixMsg()) : durationCard()); btn(act, 'تعديل البيانات', () => editMenu(false, true));
+      if (!FIX) btn(act, 'تعديل المدة', () => durationCard()); // r59: hidden while the package term is locked by the owner btn(act, 'تعديل البيانات', () => editMenu(false, true));
       if (R.results.length && PROD !== 'transfer') { if (cutOn('amount')) btn(act, 'تقليل مبلغ التمويل', () => cutForm('amount', R)); if (cutOn('installment')) btn(act, 'تقليل القسط', () => cutForm('installment', R)); }
       if (FF() && R.results.length) btn(act, S.feeOk ? 'أتعاب المتابعة معروضة في البطاقات' : (T.follow_cta || 'خدمة متابعة إجراءات التمويل'), () => { if (S.feeOk) return; // r51: shown only after consent
           const s2 = sheet('خدمة متابعة إجراءات التمويل', 're42-pick'); applyTheme(s2.ov, cfg.theme); s2.body.append(el('p', 're42-note', (cfg.follow_fee || {}).terms || 'أتعاب متابعة إجراءات تمويلك لدى الجهة التمويلية، بند مستقل لا يُخصم من التمويل أو الدعم.'));
@@ -665,7 +711,7 @@
       c.addEventListener('keydown', ev => { if ((ev.key === 'Enter' || ev.key === ' ') && ev.target === c) { ev.preventDefault(); if (MG) togDet(c); else pickBank(b, i); } });
       const rk = el('div', 're42-rk'); rk.append(el('span', 're42-rkl', ORD[i] || ('الترشيح ' + (i + 1)))); if (S.data.salary_bank && S.data.salary_bank === b.id) rk.append(el('span', 're42-tag salary', 'بنك نزول راتبك')); c.append(rk);
       const h = el('div', 're42-bh'); h.append(logoBox(b)); const nm = el('div', 're42-bn'); nm.append(el('b', '', b.name));
-      const tg = el('div', 're42-tags'); if (!MG && b.rateSource === 'same_margin') tg.append(el('small', 're42-tag est', 'تقديري — المتزايد غير معتمد من البنك')); if (b.rateSource === 'owner_sim') tg.append(el('small', 're42-tag test', 'محاكاة داخلية للمالك')); if (b.test) tg.append(el('small', 're42-tag test', 'بنك اختبار')); if (tg.childNodes.length) nm.append(tg);
+      const tg = el('div', 're42-tags'); if (!MG && b.rateSource === 'same_margin') tg.append(el('small', 're42-tag est', 'تقديري — المتزايد غير معتمد من البنك')); if (MG && b.rateSource !== 'owner_sim') tg.append(el('small', 're42-tag est', 'نسبة تقديرية')); /* r59 */ if (b.rateSource === 'owner_sim') tg.append(el('small', 're42-tag test', 'محاكاة داخلية للمالك')); if (b.test) tg.append(el('small', 're42-tag test', 'بنك اختبار')); if (tg.childNodes.length) nm.append(tg);
       const rt = el('div', 're42-rate'); rt.append(el('b', '', pct(b.rate)), el('small', '', b.method === 'flat' ? 'هامش ربح ثابت' : 'هامش الربح السنوي')); h.append(nm, rt); c.append(h);
       const amt = el('div', 're42-amt'); amt.append(el('small', '', PROD === 'transfer' ? 'مبلغ التمويل اللازم للتحويل' : (upOf(b) ? (T.total_with_support || 'إجمالي التمويل المتاح مع الدعم') : 'مبلغ التمويل العقاري من البنك')), el('b', '', fmt(b.amount + upOf(b)) + ' ريال')); c.append(amt); // r55
       { const tb = trBox(b); if (tb) c.append(tb); } // r54
@@ -797,7 +843,19 @@
       const R = S.last; try { imgSheet(await drawResult({ R, data: S.data, months: S.months, extend: S.extend, plan: S.plan, cfg, T, trial, why: R && !R.results.length ? whyNone(R) : '', scn: S.scn, product: PROD, trScn: S.trScn })); } catch (e) { toast('تعذر إنشاء الصورة', true); }
     }
     // start
-    if (!(Q.name && Q.name.enabled !== false)) bot(T.greeting || 'أهلًا بك'); next(); // r58: with a name question the chat starts with the introduction
+    // r59: the introduction is a separate card shown before any chat message (like «اختصر مشاويرك»); the full compound name is kept as typed
+    if (!(Q.name && Q.name.enabled !== false)) { bot(T.greeting || 'أهلًا بك'); next(); } else nameCard();
+    function nameCard() {
+      const NK = (() => { try { const e = ENT0 || (typeof finoCentralRestoreEntry === 'function' ? finoCentralRestoreEntry() : null); return e && e.entryToken ? 'f99re59n:' + PROD + ':' + String(e.entryToken).slice(-16) : ''; } catch (x) { return ''; } })();
+      const cd = el('section', 're59-name'); cd.append(el('div', 're59-eye', 'FINO99 • البداية'), el('h2', '', 'نتعرف عليك، وش اسمك الكريم؟'));
+      const inn = el('input'); inn.type = 'text'; inn.placeholder = 'اسمك الكريم'; inn.maxLength = 40; inn.autocomplete = 'given-name'; inn.setAttribute('aria-label', 'اسم العميل'); inn.dir = 'rtl';
+      try { const sv = NK && W.sessionStorage.getItem(NK); if (sv) inn.value = sv; } catch (x) {}
+      const er = el('div', 're59-err'); er.setAttribute('role', 'status'); let done = false;
+      const go = () => { if (done) return; const v = String(inn.value || '').replace(/[<>`]/g, '').replace(/\s+/g, ' ').trim().slice(0, 40); if (v.length < 2) { er.textContent = 'اكتب اسمك الكريم للمتابعة.'; inn.focus(); return; }
+        done = true; S.data.name = v; try { if (NK) W.sessionStorage.setItem(NK, v); } catch (x) {} cd.remove(); log.hidden = false; bot(greetWord() + ' يا ' + first(S.data) + '، حياك الله.'); next(); };
+      inn.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); go(); } });
+      cd.append(inn, er); btn(cd, 'متابعة', go, 're42-go wide'); log.hidden = true; sh.body.prepend(cd); setTimeout(() => { try { inn.focus(); } catch (x) {} }, 60);
+    }
     W.F99RE42._bot = { S, cfg, results, durationCard, compute, PROD, pickBank, bankText };
     return sh;
   }

@@ -250,3 +250,24 @@ html.re42-lock{overflow:hidden}
 .re42-bank{cursor:pointer}
 .re55-multi .re42-chip.on{background:var(--p);color:#fff;border-color:var(--p)}
 .re55-diff{margin:8px 0}
+
+/* r59: introduction card, package bar, ineligibility box */
+.re59-name{margin:18px 2px;padding:22px 16px 18px;background:#fff;border:1px solid var(--l);border-radius:18px;box-shadow:0 8px 24px rgba(15,31,61,.08);display:flex;flex-direction:column;gap:10px;text-align:center}
+.re59-eye{font-size:12px;font-weight:700;color:var(--m)}
+.re59-name h2{margin:0;font-size:19px;line-height:1.6;color:var(--k)}
+.re59-name input{width:100%;box-sizing:border-box;height:50px;border:1.5px solid var(--l);border-radius:14px;padding:0 14px;font:inherit;font-size:16px;text-align:right;background:var(--bg);color:var(--k)}
+.re59-name input:focus{outline:none;border-color:var(--p)}
+.re59-err{min-height:18px;font-size:13px;color:var(--bad)}
+.re59-st{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;margin:0 12px 6px;padding:7px 11px;border:1px solid #d5e6e6;background:#f4fbfa;border-radius:10px;color:#174c58;font-size:11.5px;font-weight:700;line-height:1.55}
+.re59-st[hidden]{display:none}
+.re59-st-m{height:6px;min-width:60px;flex:1;max-width:140px;background:#d8e9e6;border-radius:99px;overflow:hidden}
+.re59-st-m i{display:block;height:100%;background:#258c79;border-radius:99px}
+.re59-st[data-level="warning"]{background:#fff9e9;border-color:#f5d99d;color:#88540f}
+.re59-st[data-level="warning"] .re59-st-m i{background:#d88b23}
+.re59-st[data-level="danger"]{background:#fff0f0;border-color:#efb5b5;color:#a62c3a}
+.re59-st[data-level="danger"] .re59-st-m i{background:#cc4455}
+.re59-no{border:1px solid #f1d3a6;background:#fffaf2;border-radius:14px;padding:12px;margin:8px 0;display:flex;flex-direction:column;gap:8px}
+.re59-no-t{margin:0;font-weight:700;color:#7a4a06;line-height:1.8;font-size:14px}
+.re59-mt .re59-mr{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1.1fr;gap:4px;font-size:11px;padding:5px 0;border-bottom:1px solid var(--l);align-items:center}
+.re59-mt .re59-mr.hd{font-weight:700;color:var(--m)}
+.re59-mt .re59-mr.bad span:last-child{color:var(--bad);font-weight:700}
