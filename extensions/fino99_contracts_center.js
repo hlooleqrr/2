@@ -24,6 +24,7 @@
     K_CODE_INVALID: 'الكود غير صحيح أو غير مفعل.', K_CODE_EXPIRED: 'انتهت صلاحية الكود. تواصل مع إدارة FINO99 لتمديده.',
     K_DEVICE_LIMIT: 'استُخدم هذا الكود على العدد المسموح من الأجهزة.', K_TOO_MANY_ATTEMPTS: 'محاولات كثيرة. انتظر 15 دقيقة ثم حاول.',
     K_DEVICE_INVALID: 'تعذر تعريف هذا الجهاز. حدّث الصفحة وحاول.', K_SESSION_INVALID: 'انتهت الجلسة على هذا الجهاز. أدخل الكود من جديد.',
+    K_BANNED: 'تعذر الدخول بهذا الكود.', K_BANNED_NEW: 'لا يمكن تنفيذ طلب جديد حاليًا. تواصل مع الإدارة.', K_DEAL_CLOSED: 'تم إغلاق هذا الطلب.', K_OFFER_EXPIRED: 'انتهت مدة صلاحية هذا العرض.',
     K_CODE_REVOKED: 'أُوقف هذا الكود وصدر كود بديل من الإدارة.', K_VERSION_CHANGED: 'صدرت نسخة أحدث من العقد؛ حُدّثت الصفحة فاقرأ النسخة الجديدة.',
     K_NOT_YOUR_STAGE: 'ليست مرحلتك الآن.', K_DEAL_CLOSED: 'هذه المعاملة مغلقة.', K_IDENTITY_MISMATCH: 'رقم الهوية المدخل للتحقق لا يطابق المسجل.',
     K_DEFER_RANGE: 'مدة التأجيل خارج الحد المسموح.', K_OPTION_INVALID: 'الخيار غير متاح.', K_NOTE_REQUIRED: 'اكتب السبب أو الملاحظة أولًا.',
@@ -141,7 +142,7 @@
   async function partyEnter(code, errorEl) {
     const c = String(code || '').toUpperCase().replace(/\s+/g, '');
     const r = await pcall('f99k_party_enter', {p_code: c, p_device_id: deviceId()});
-    if (r.ok !== true) { if (errorEl) { errorEl.textContent = reason(r.reason); errorEl.style.display = 'block'; } return false; }
+    if (r.ok !== true) { if (errorEl) { errorEl.textContent = (r.msg && r.msg.t) || reason(r.reason); errorEl.style.display = 'block'; } return false; }
     try { sessionStorage.setItem(PKEY, r.session); } catch (e) { /* ignore */ }
     if (errorEl) { errorEl.textContent = ''; }
     await partyOpen(r.session);
@@ -153,7 +154,7 @@
     async function load() {
       const r = await pcall('f99k_party_view', {p_session: session, p_device_id: deviceId()});
       if (!sheetRoot) return;
-      if (r.ok !== true) { ui.status.textContent = reason(r.reason); if (/SESSION|REVOKED|EXPIRED/.test(String(r.reason))) { try { sessionStorage.removeItem(PKEY); } catch (e) { /* ignore */ } } return; }
+      if (r.ok !== true) { ui.status.textContent = (r.msg && r.msg.t) || reason(r.reason); if (/SESSION|REVOKED|EXPIRED/.test(String(r.reason))) { try { sessionStorage.removeItem(PKEY); } catch (e) { /* ignore */ } } return; }
       view = r; draw();
     }
     function draw() {
@@ -161,7 +162,7 @@
       (v.stage?.fields || []).forEach(f => { labelOf[f.key] = f.label; });
       const card = el('section', 'f99k-card'); card.append(el('h3', '', v.title), el('p', 'f99k-muted', 'المرجع ' + v.ref + ' • ' + (KINDS[v.kind] || '') + ' • صفتك: ' + v.role_label + ' • الحالة: ' + (STATUS[v.status] || v.status)));
       card.append(el('p', 'f99k-muted', 'النسخة ' + v.version + ' • بصمة النص ' + short(v.body_sha256) + (v.code_expires_at ? ' • صلاحية الكود حتى ' + fmtDate(v.code_expires_at) : '')));
-      card.append(el('p', 'f99k-notice', v.notice)); b.append(card);
+      if (v.notice) card.append(el('p', 'f99k-notice', v.notice)); b.append(card); W.F99R52K?.centerExtra?.(b, v, {session, dev: deviceId()});
       const tl = el('section', 'f99k-card'); tl.append(el('h3', '', 'مراحل المعاملة')); timeline(tl, v.timeline); b.append(tl);
       const shared = Object.values(v.shared || {}); if (shared.length) { const sc = el('section', 'f99k-card'); sc.append(el('h3', '', 'بيانات المعاملة'));
         const dl = el('dl', 'f99k-dl'); shared.forEach(x => dl.append(el('dt', '', x.label), el('dd', '', x.value))); sc.append(dl); b.append(sc); }
@@ -192,7 +193,7 @@
         const acts = el('div', 'f99k-actions'); box.append(acts);
         if (st.action === 'submit') btn(acts, 'إرسال', () => run('submit', collect(form)), 'f99k-btn primary');
         else {
-          btn(acts, 'أوافق على النسخة ' + v.version, () => run('approve', collect(form)), 'f99k-btn primary');
+          btn(acts, W.F99R52K?.btnLabel ? W.F99R52K.btnLabel(v, {action: 'sign'}) : 'أوافق على ' + v.title, () => run('approve', collect(form)), 'f99k-btn primary');
           const note = el('textarea', 'f99k-note-input'); note.rows = 2; note.placeholder = 'اكتب السبب أو الاستفسار هنا'; note.setAttribute('aria-label', 'السبب أو الاستفسار'); box.insertBefore(note, acts);
           btn(acts, 'استفسار', () => run('clarify', {reason: note.value.trim()}), 'f99k-btn');
           if (st.allow_change_request) btn(acts, 'طلب تعديل', () => run('request_change', {reason: note.value.trim()}), 'f99k-btn');

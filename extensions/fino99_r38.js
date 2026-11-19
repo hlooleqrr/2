@@ -448,14 +448,15 @@
     if (!r.ok) { say(body, why(r), 'f38-err'); return; } KL = r;
     const fee = r.deals.filter(d => FEE_KINDS.includes(d.kind)), free = r.deals.filter(d => !FEE_KINDS.includes(d.kind));
     const badge = list => list.filter(d => d.owner_turn || d.receipts_review > 0).length || '';
-    tabs(body, [['fee', 'عقود الأتعاب', badge(fee)], ['free', 'العقود الحرة والاتفاقات', badge(free)], ['drafts', 'المسودات', r.drafts.length || ''], ['settings', 'السداد والنصوص']], tab || 'fee', (k, pane) => {
+    tabs(body, [['fee', 'عقود الأتعاب', badge(fee)], ['free', 'العقود الحرة والاتفاقات', badge(free)], ['drafts', 'المسودات', r.drafts.length || ''], ['settings', 'السداد والنصوص']].concat(W.F99R52K?.ownerTabs?.() || []), tab || 'fee', (k, pane) => {
+      if (W.F99R52K?.ownerPane?.(k, pane, r)) return;
       if (k === 'settings') return kSettings(pane, r.settings);
       if (k === 'drafts') { if (!r.drafts.length) say(pane, 'لا توجد مسودات.', 'f38-muted');
         r.drafts.forEach(x => { const c = el('article', 'f38-card'); c.append(el('b', '', x.title), el('p', 'f38-muted', (x.client || '—') + ' • آخر حفظ ' + when(x.updated_at) + ' • مراجعة ' + x.revision));
           const row = el('div', 'f38-row'); c.append(row); btn(row, 'فتح وتعديل', () => editDraft(x.id), 'f38-primary');
           btn(row, 'أرشفة', async () => { if (!W.confirm('أرشفة المسودة؟ (تبقى محفوظة في المركزية)')) return; await adm('f99r38_owner_k', {p_action: 'draft_archive', p_data: {id: x.id}}); openK('drafts'); }); pane.append(c); }); return; }
       const grp = k === 'fee' ? FEE_KINDS : null; const row = el('div', 'f38-row'); pane.append(row);
-      btn(row, '+ عقد جديد', () => editDraft(null, k), 'f38-primary'); btn(row, 'بوابة العقود الكاملة (المراحل والأرشيف)', () => W.F99KContracts?.openOwner?.());
+      btn(row, '+ إنشاء عقد جديد / عقد حر', () => editDraft(null, k), 'f38-primary'); btn(row, 'بوابة العقود الكاملة (المراحل والأرشيف)', () => W.F99KContracts?.openOwner?.());
       if (k === 'fee') say(pane, 'عقد البيع بالأجل متعدد الأطراف يُنشأ من «بوابة العقود الكاملة».', 'f38-muted');
       const list = k === 'fee' ? fee : free; if (!list.length) say(pane, 'لا توجد عقود بعد.', 'f38-muted'); list.forEach(d => pane.append(dealCard(d)));
       void grp;
@@ -477,10 +478,11 @@
     btn(row, 'نسخ كعقد جديد', async () => { const r = await adm('f99r38_owner_k', {p_action: 'copy', p_data: {deal_id: d.id}}); if (r.ok) editDraft(r.id); else { out.textContent = ''; say(out, why(r), 'f38-err'); } });
     btn(row, 'PDF للمالك', () => ownerPdf(d));
     btn(row, 'إدارة المراحل', () => W.F99KContracts?.openOwner?.());
+    W.F99R52K?.dealButtons?.(row, d, out);
     return c;
   }
   async function ownerPdf(d) {
-    const r = await adm('f99k_owner_deal', {p_deal_id: d.id});
+    await W.F99R52K?.ownerCtx?.(d); const r = await adm('f99k_owner_deal', {p_deal_id: d.id});
     const body = r?.deal?.body || r?.body || r?.versions?.[0]?.body || '';
     printDoc(d.title, d.ref + ' • النسخة ' + d.version, body || 'افتح «إدارة المراحل» لعرض نص العقد.', 'نسخة المالك • ' + d.ref);
   }
@@ -556,20 +558,22 @@
     const FL = data.flags || {}; const geo = field(ac, 'طلب مشاركة الموقع بإذن العميل', FL.require_geo, {type: 'checkbox'}), pdf = field(ac, 'السماح للعميل بتنزيل/طباعة PDF', FL.allow_pdf, {type: 'checkbox'}), wm = field(ac, 'علامة مائية باسم العميل', FL.watermark !== false, {type: 'checkbox'});
     const po = sec('صفحة ما بعد انتهاء العقد'), PO = data.post || {};
     const pk = field(po, 'النوع', PO.kind || 'thanks', {options: [['thanks', 'شكر'], ['approved', 'تم الاعتماد'], ['done', 'تم الانتهاء'], ['custom', 'نص خاص']]}), pt = field(po, 'النص الخاص (اختياري)', PO.text, {area: 1, rows: 3, wide: 1, max: 2000});
+    const R52E = W.F99R52K?.editor ? W.F99R52K.editor(f, sec, data, bodyF, tp, title) : null;
     const st = el('p', 'f38-note'); const act = el('div', 'f38-row f38-sticky'); const pv = el('div'); body.append(st, act, pv);
     const collect = () => { const terms = {}; Object.keys(TI).forEach(k => { terms[k] = TI[k].value; });
       return {template_id: tp.value, title: title.value.trim(), body: bodyF.value, terms, client: {name: cn.value.trim(), id: cid.value.trim(), phone: cp.value.trim(), birth: cb.value},
         pay: {amount: pa.value ? String(pa.value) : '', salla: ps.checked, salla_url: pu.value.trim(), bank: pb.checked},
         access: {open_kind: ok2.value, open_key: ky.value.trim(), pin: pin.value.trim(), valid_value: Number(vv.value), valid_unit: vu.value, device_mode: dm.value, device_limit: Number(dl.value)},
-        flags: {require_geo: geo.checked, allow_pdf: pdf.checked, watermark: wm.checked}, post: {kind: pk.value, text: pt.value}}; };
+        flags: {require_geo: geo.checked, allow_pdf: pdf.checked, watermark: wm.checked}, post: {kind: pk.value, text: pt.value}, r52: R52E ? R52E.collect() : (data.r52 || {})}; };
     const save = async () => { const r = await adm('f99r38_owner_k', {p_action: 'draft_save', p_data: {id, revision: rev, data: collect()}}); if (r.ok) { id = r.id; rev = r.revision; } return r; };
     btn(act, 'حفظ كمسودة', async ev => { ev.target.disabled = true; const r = await save(); ev.target.disabled = false; st.textContent = r.ok ? 'حُفظت المسودة (غير منشورة).' : why(r); }, '');
     btn(act, 'معاينة الصفحات', () => { const x = collect(); let t = x.body; const vals = Object.assign({}, x.terms, {client_name: x.client.name, client_id_masked: x.client.id ? x.client.id.slice(0, 2) + '******' + x.client.id.slice(-2) : '', issue_date: new Date().toLocaleDateString('en-CA')});
-      t = t.replace(/\{\{\s*([a-z0-9_]+)\s*\}\}/gi, (m, k) => vals[k] != null && vals[k] !== '' ? vals[k] : '…'); pv.textContent = ''; pages(pv, x.title, t, false); pv.scrollIntoView({block: 'start', behavior: 'smooth'}); });
+      t = t.replace(/\{\{\s*([a-z0-9_]+)\s*\}\}/gi, (m, k) => vals[k] != null && vals[k] !== '' ? vals[k] : '…'); pv.textContent = ''; W.F99R52K?.previewCtx?.(pv, x); pages(pv, x.title, t, false); pv.scrollIntoView({block: 'start', behavior: 'smooth'}); });
     btn(act, 'اعتماد ونشر', async ev => { if (!W.confirm('بعد الاعتماد يُنشر العقد ويُصدر كوده، ولا تتغير النسخة الموافق عليها إلا بإصدار جديد. متابعة؟')) return; ev.target.disabled = true; st.textContent = 'جاري الحفظ والنشر…';
       const s = await save(); if (!s.ok) { ev.target.disabled = false; st.textContent = why(s); return; }
       const r = await adm('f99r38_owner_k', {p_action: 'publish', p_data: {id}}); ev.target.disabled = false; if (!r.ok) { st.textContent = why(r); return; }
       published(body, r, collect()); }, 'f38-primary');
+    R52E?.acts?.(act, collect, st);
   }
   function published(body, r, x) {
     body.textContent = ''; const c = el('div', 'f38-card f38-pub'); body.append(c); c.append(el('h3', '', '✅ تم اعتماد العقد ونشره'));
@@ -584,18 +588,18 @@
   /* ---------------- paged document + print ---------------- */
   function pages(host, title, text, protect, wm) {
     const paras = String(text || '').split(/\n{2,}/); const P = []; let cur = '';
-    paras.forEach(p => { if ((cur + p).length > 1700 && cur) { P.push(cur); cur = ''; } cur += (cur ? '\n\n' : '') + p; }); if (cur || !P.length) P.push(cur);
-    const box = el('div', 'f38-doc' + (protect ? ' f38-protect' : '')); host.append(box); const pg = el('div', 'f38-page'); const nav = el('div', 'f38-row f38-pnav'); box.append(pg, nav);
+    paras.forEach(p => { if ((cur + p).length > 1700 && cur) { P.push(cur); cur = ''; } cur += (cur ? '\n\n' : '') + p; }); if (cur || !P.length) P.push(cur); if (W.F99R52K?.split) P.splice(0, P.length, ...W.F99R52K.split(text));
+    const box = el('div', 'f38-doc' + (protect ? ' f38-protect' : '')); host.append(box); const pg = el('div', 'f38-page'); const nav = el('div', 'f38-row f38-pnav'); box.append(pg, nav); W.F99R52K?.decorate?.(box, pg);
     if (wm) { pg.dataset.wm = wm; pg.classList.add('f38-wm'); }
     let i = 0; const state = {last: P.length === 1, onLast: null};
-    const draw = () => { pg.textContent = ''; if (i === 0) pg.append(el('h3', '', title)); pg.append(el('div', 'f38-pre', P[i])); info.textContent = 'صفحة ' + (i + 1) + ' من ' + P.length; prev.disabled = i === 0; next.disabled = i === P.length - 1;
+    const draw = () => { pg.textContent = ''; if (i === 0) pg.append(el('h3', '', title)); if (W.F99R52K?.render) pg.append(W.F99R52K.render(P[i], i, P.length)); else pg.append(el('div', 'f38-pre', P[i])); info.textContent = 'صفحة ' + (i + 1) + ' من ' + P.length; prev.disabled = i === 0; next.disabled = i === P.length - 1;
       if (i === P.length - 1 && !state.last) { state.last = true; state.onLast?.(); } };
     const prev = btn(nav, 'السابقة', () => { i--; draw(); }), info = el('span', 'f38-muted'), next = btn(nav, 'التالية', () => { i++; draw(); box.scrollIntoView({block: 'start'}); }, 'f38-primary'); nav.insertBefore(info, next);
     if (protect) { box.addEventListener('contextmenu', e => e.preventDefault()); box.addEventListener('copy', e => e.preventDefault()); }
     draw(); return state;
   }
   function printDoc(title, sub, text, wm) {
-    const wdw = W.open('', '_blank'); if (!wdw) { W.alert('اسمح بالنوافذ المنبثقة لفتح PDF.'); return; }
+    if (W.F99R52K?.print) { W.F99R52K.print(title, sub, text, wm); return; } const wdw = W.open('', '_blank'); if (!wdw) { W.alert('اسمح بالنوافذ المنبثقة لفتح PDF.'); return; }
     const esc = s => String(s || '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
     wdw.document.write('<!doctype html><html dir="rtl" lang="ar"><meta charset="utf-8"><title>' + esc(title) + '</title><style>body{font:15px/2 Tahoma,Arial,sans-serif;margin:24mm 18mm;color:#111}h1{font-size:20px;margin:0 0 4px}small{color:#555}pre{white-space:pre-wrap;font:inherit}'
       + '.wm{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;font-size:42px;color:rgba(0,0,0,.07);transform:rotate(-28deg);pointer-events:none;z-index:9}@page{size:A4;margin:16mm}</style>'
@@ -613,7 +617,7 @@
     const k = field(f, 'رمز فتح العقد', prefill || '', {wide: 1, max: 120}); k.autocomplete = 'off'; const st = el('p', 'f38-err'); f.append(st); if (err) st.textContent = err;
     const go = async ev => { const v = k.value.trim(); if (!v) return; ev.target.disabled = true; st.textContent = '';
       const r = await pub('f99r38_party_enter', {p_key: v, p_device_id: KDEV()}); ev.target.disabled = false;
-      if (!r.ok) { st.textContent = why(r); return; } try { sessionStorage.setItem(SKEY, r.session); } catch (_) {} openParty(r.session); };
+      if (!r.ok) { st.textContent = (r.msg && r.msg.t) || why(r); return; } try { sessionStorage.setItem(SKEY, r.session); } catch (_) {} openParty(r.session); };
     btn(f, 'دخول', go, 'f38-primary'); k.addEventListener('keydown', e => { if (e.key === 'Enter') go({target: e.target}); });
     setTimeout(() => { try { k.focus(); } catch (_) {} }, 50);
   }
@@ -631,7 +635,7 @@
         navigator.geolocation.getCurrentPosition(async pos => { const r = await call('geo', {consent: true, lat: String(pos.coords.latitude), lng: String(pos.coords.longitude), accuracy: String(Math.round(pos.coords.accuracy || 0)), city: city.value, district: dist.value});
           ev.target.disabled = false; if (r.ok) openParty(session); else st.textContent = why(r); },
         () => { ev.target.disabled = false; st.textContent = 'لم يُسمح بالوصول للموقع. فعّل إذن الموقع للمتصفح ثم حاول.'; }, {enableHighAccuracy: true, timeout: 15000, maximumAge: 0}); }, 'f38-primary'); return; }
-    if (!v.ok) { try { sessionStorage.removeItem(SKEY); } catch (_) {} body.textContent = ''; openEntry('', why(v)); return; }
+    if (!v.ok) { try { sessionStorage.removeItem(SKEY); } catch (_) {} body.textContent = ''; openEntry('', (v.msg && v.msg.t) || why(v)); return; }
     if (!v.r38) { // not an r38 deal: hand over to the original contracts portal unchanged.
       closeSheet(); try { sessionStorage.setItem('F99K_PARTY_SESSION', session); } catch (_) {} return false; }
     const x = v.r38; D.documentElement.classList.toggle('f38-noprint', !x.allow_pdf);
@@ -639,14 +643,16 @@
     if (v.code_expires_at) { const t = el('p', 'f38-muted'); head.append(t); const tick = () => { const s = Math.max(0, Math.floor((Date.parse(v.code_expires_at) - Date.now()) / 1000));
       t.textContent = s > 0 ? 'ينتهي الدخول بعد ' + Math.floor(s / 3600) + ' ساعة و' + Math.floor(s % 3600 / 60) + ' دقيقة' : 'انتهت صلاحية الدخول.'; if (s <= 0) { stopClientTimer(); closeSheet(); openEntry('', REASONS.K_CODE_EXPIRED); } };
       tick(); stopClientTimer(); clientTimer = setInterval(tick, 30000); }
+    W.F99R52K?.party?.(body, v, session, notice);
     if (x.post) { const c = el('div', 'f38-post f38-post-' + x.post.kind); c.append(el('b', '', x.post.text)); body.append(c); }
-    if (v.body) { const stv = pages(body, v.title, v.body, !x.allow_pdf, x.watermark ? x.wm : '');
+    if (v.body) { const bh = W.F99R52K?.bodyHost ? W.F99R52K.bodyHost(body, v) : body; const stv = pages(bh, v.title, v.body, !x.allow_pdf, x.watermark ? x.wm : '');
       if (x.allow_pdf) btn(body, 'تنزيل / طباعة PDF', () => printDoc(v.title, 'رقم الاتفاق ' + v.ref + ' • النسخة ' + v.version, v.body, x.watermark ? x.wm : ''));
       const stg = v.stage; if (stg && (stg.action === 'sign' || stg.action === 'submit')) signForm(body, v, stg, stv, session); }
     else if (v.waiting_for) say(body, 'العقد الآن بانتظار: ' + v.waiting_for + '. سيظهر لك هنا عند جاهزيته.', 'f38-muted');
     if (v.stage && !v.body && (v.stage.action === 'submit')) signForm(body, v, v.stage, {last: true}, session);
     if (x.signed && Number(x.money?.total) > 0) payBox(body, v, x, call, session);
-    say(body, v.notice || '', 'f38-muted');
+    W.F99R52K?.partyEnd?.(body, v, session);
+    if (v.notice) say(body, v.notice, 'f38-muted');
   }
   function signForm(body, v, stg, pagesState, session) {
     const box = el('div', 'f38-sign'); body.append(box); box.append(el('b', '', stg.label || 'الموافقة'));
@@ -657,15 +663,15 @@
     const st = el('p', 'f38-err'); box.append(st); const row = el('div', 'f38-row'); box.append(row);
     const data = () => { const o = {}; Object.entries(inputs).forEach(([k, i]) => { o[k] = i.type === 'checkbox' ? i.checked : i.value.trim(); }); return o; };
     const run = async (a, d) => { st.textContent = ''; const r = await pub('f99k_party_act', {p_session: session, p_device_id: KDEV(), p_action: a, p_data: d, p_version: v.version});
-      if (r.ok !== true) { st.textContent = why(r); return; } openParty(session, a === 'approve' ? 'تم حفظ موافقتك على النسخة ' + v.version + ' بتاريخها ووقتها.' : 'تم الإرسال.'); };
-    const main = btn(row, stg.action === 'sign' ? 'أوافق على النسخة ' + v.version : 'إرسال', () => {
+      if (r.ok !== true) { st.textContent = why(r); return; } openParty(session, (W.F99R52K?.doneMsg?.(v, a)) || (a === 'approve' ? 'تم حفظ موافقتك على ' + v.title + ' بتاريخها ووقتها.' : 'تم الإرسال.')); };
+    const main = btn(row, (W.F99R52K?.btnLabel ? W.F99R52K.btnLabel(v, stg) : (stg.action === 'sign' ? 'أوافق على ' + v.title : 'إرسال')), () => {
       const d = data(); if (stg.action === 'sign' && d.read_ack === false) { st.textContent = 'أكّد أنك قرأت العقد.'; return; } run(stg.action === 'sign' ? 'approve' : 'submit', d); }, 'f38-primary');
     if (stg.action === 'sign') { main.disabled = !pagesState.last; if (!pagesState.last) { const h = say(box, 'اقرأ العقد حتى الصفحة الأخيرة ليتفعل زر الموافقة.', 'f38-muted'); pagesState.onLast = () => { main.disabled = false; h.remove(); }; }
       const note = field(box, 'استفسار أو سبب الرفض (اختياري)', '', {area: 1, rows: 2, wide: 1});
       btn(row, 'استفسار', () => run('clarify', {reason: note.value.trim()})); btn(row, 'رفض', () => { if (W.confirm('تأكيد رفض العقد؟ ستُغلق المعاملة.')) run('reject', {reason: note.value.trim()}); }, 'f38-danger'); }
   }
   function payBox(body, v, x, call, session) {
-    const m = x.money, box = el('div', 'f38-paybox'); body.append(box); box.append(el('h3', '', 'السداد'));
+    const m = x.money, box = el('div', 'f38-paybox'); body.append(box); box.append(el('h3', '', 'السداد')); W.F99R52K?.payPatch?.(v, x, box);
     const g = el('div', 'f38-money'); [['الإجمالي', m.total], ['المدفوع', m.paid], ['المتبقي', m.remaining], ['المطلوب الآن', m.due_now]].forEach(([t, n]) => { const d = el('div'); d.append(el('small', '', t), el('b', '', num(n) + ' ريال')); g.append(d); }); box.append(g);
     const pend = (x.payments || []).find(p => p.status === 'review'); const lastRej = (x.payments || []).find(p => p.status === 'rejected');
     (x.payments || []).forEach(p => box.append(el('p', 'f38-muted', when(p.at) + ' • ' + num(p.amount) + ' ريال • ' + (p.status === 'review' ? 'تحت المراجعة' : p.status === 'approved' ? 'معتمد' : 'مرفوض') + (p.owner_note ? ' — ' + p.owner_note : ''))));
@@ -677,7 +683,7 @@
       const a = el('a', 'f38-btn f38-primary', 'ادفع ' + num(m.due_now) + ' ريال'); a.href = x.pay.salla_url; a.target = '_blank'; a.rel = 'noopener'; s.append(a);
       btn(s, 'دفعت — أبلغ صاحب العقد للمراجعة', async ev => { ev.target.disabled = true; const r = await call('pay_notice', {}); if (r.ok) openParty(session); else { ev.target.disabled = false; st.textContent = why(r); } }); }
     if (x.pay?.bank) { const s = el('div', 'f38-sub'); box.append(s); s.append(el('b', '', 'التحويل البنكي'));
-      const b = x.pay.bank; [['البنك', b.bank_name], ['اسم الحساب', b.holder], ['الآيبان', b.iban]].forEach(([k, val]) => { if (val) { const p = el('p'); p.append(el('small', '', k + ': '), el('b', '', val)); s.append(p); } });
+      const b = x.pay.bank; [['البنك', b.bank_name], ['اسم الحساب', b.holder], ['الآيبان', b.iban]].forEach(([k, val]) => { if (val) { const p = el('p'); p.append(el('small', '', k + ': '), el('b', '', val)); s.append(p); } }); W.F99R52K?.bankExtra?.(s, b);
       const fi = el('input'); fi.type = 'file'; fi.accept = 'image/jpeg,image/png,application/pdf'; const lb = el('label', 'f38-field f38-wide'); lb.append(el('span', '', 'إرفاق إيصال التحويل (إلزامي، صورة أو PDF حتى 1.5 ميجابايت)'), fi); s.append(lb);
       const nt = field(s, 'ملاحظة (اختياري)', '', {max: 500});
       btn(s, 'إرسال الإيصال', async ev => { const file = fi.files?.[0]; if (!file) { st.textContent = 'أرفق صورة الإيصال.'; return; }
@@ -704,6 +710,7 @@
             if (chk.r38 || chk.reason === 'K_PIN_REQUIRED' || chk.reason === 'K_GEO_REQUIRED') { if (err) { err.textContent = ''; err.style.display = 'none'; } try { sessionStorage.setItem(SKEY, r.session); } catch (_) {} input.value = ''; openParty(r.session); return; }
             if (W.F99KContracts?.partyEnter) { const ok = await W.F99KContracts.partyEnter(raw.toUpperCase().replace(/\s+/g, ''), err); if (ok && err) { err.textContent = ''; err.style.display = 'none'; } return; }
           }
+          if (!r.ok && r.msg && r.msg.t && r.reason !== 'K_CODE_INVALID' && err) { err.textContent = r.msg.t; err.style.display = 'block'; return; }
           if (FK.test(raw.replace(/\s+/g, '')) && W.F99KContracts?.partyEnter) { const ok = await W.F99KContracts.partyEnter(raw.toUpperCase().replace(/\s+/g, ''), err); if (ok && err) { err.textContent = ''; err.style.display = 'none'; } return; }
           pass = true; try { D.getElementById('f99l-enter')?.click(); } finally { pass = false; }
         } finally { busy = false; }
@@ -768,5 +775,6 @@
   const route = () => { if (/^#(contract|k)$/i.test(location.hash)) { let s = null; try { s = sessionStorage.getItem(SKEY); } catch (_) {} if (s) openParty(s); else openEntry(); } };
   W.addEventListener('hashchange', route);
   if (D.readyState === 'loading') D.addEventListener('DOMContentLoaded', () => { scan(); route(); }, {once: true}); else { setTimeout(() => { scan(); route(); }, 0); }
+  W.F99R38K = {el, btn, field, say, adm, pub, why, REASONS, sheet, closeSheet, tabs, num, when, pages, printDoc, editDraft, openK, openParty, KDEV, SKEY};
   W.F99R38 = Object.freeze({version: 'r39a', openAppts, openK, openEntry, openParty, openPkgs, openPkg, openCats, refreshHome: loadHome});
 })();
