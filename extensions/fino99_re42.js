@@ -18,7 +18,7 @@
   const yearsTxt = n => n === 1 ? 'سنة واحدة' : n === 2 ? 'سنتان' : (n >= 3 && n <= 10) ? n + ' سنوات' : n + ' سنة';
   const durTxt = m => { const y = Math.floor(m / 12), r = m % 12; if (!y) return monthsTxt(r); if (!r) return yearsTxt(y); return yearsTxt(y) + ' و' + monthsTxt(r); };
   const gStr = g => g ? String(g.d).padStart(2, '0') + '/' + String(g.m).padStart(2, '0') + '/' + g.y : '';
-  const first = d => String((d && d.name) || '').trim().split(/\s+/)[0] || ''; // r51: the client's first name
+  const first = d => String((d && d.name) || '').replace(/[<>`]/g, '').replace(/\s+/g, ' ').trim().slice(0, 40) // r58: full (compound) name; // r51: the client's first name
   const tpl = (s, d) => String(s || '').replace(/\{name\}/g, first(d));
   const ERR = { BIRTH_INVALID: 'تاريخ الميلاد غير صحيح', AGE_OUT_OF_RANGE: 'العمر خارج النطاق المسموح للتمويل', NET_REQUIRED: 'أدخل الراتب الصافي', RANK_REQUIRED: 'اختر الرتبة',
     RANK_AGE_MISSING: 'سن التقاعد لهذه الرتبة غير محدد في الإعدادات', APPOINT_INVALID: 'تاريخ التعيين غير صحيح', BASIC_REQUIRED: 'أدخل الراتب الأساسي', EXCL_INVALID: 'المدة غير المحتسبة أكبر من مدة خدمتك' };
@@ -70,7 +70,7 @@
   const loadImg = src => new Promise(res => { if (!src) return res(null); const i = new Image(); if (/^https?:/i.test(src) && !src.startsWith(location.origin)) i.crossOrigin = 'anonymous'; i.onload = () => res(i); i.onerror = () => res(null); i.src = src; setTimeout(() => res(null), 4000); });
   let qrP = null; const loadQR = () => qrP || (qrP = new Promise(res => { if (W.qrcode) return res(W.qrcode); const sc = D.createElement('script'); sc.src = './vendor/qrcode-gen-1.4.4.js'; sc.onload = () => res(W.qrcode || null); sc.onerror = () => { qrP = null; res(null); }; D.head.append(sc); setTimeout(() => res(W.qrcode || null), 5000); }));
   function chipsFor(b, d, cfg) { const pr = (cfg.properties || []).find(p => p.key === (d.property || 'ready')); const sa = b.sup || {}; const out = [pr ? pr.label : 'وحدة جاهزة'];
-    out.push(d.supported ? 'مدعوم سكنيًا' : 'غير مدعوم'); if (d.supported) out.push(sa.key === 'monthly' ? 'دعم شهري' : 'دعم مقدم'); if (b.etz) out.push('اعتزاز');
+    out.push(d.supported ? 'مدعوم سكنيًا' : 'غير مدعوم'); if (d.supported && (sa.key === 'monthly' ? sa.monthly > 0 : (sa.upfront > 0 && sa.upfrontCounted))) out.push(sa.key === 'monthly' ? 'دعم شهري' : 'دعم مقدم'); // r58 if (b.etz) out.push('اعتزاز');
     out.push(b.months + ' شهرًا (' + durTxt(b.months) + ')'); out.push(b.plan === 'fixed' ? 'قسط ثابت' : 'قسط متغير'); return out; } // r55
   function supportKV(b, d) { const sa = b.sup || {}; const out = [];
     if (d.supported && sa.key === 'upfront') out.push(['الدعم المقدم', sa.upfront > 0 ? fmt(sa.upfront) + ' ريال' + (sa.upfrontCounted ? '' : ' (غير مجموع مع اعتزاز)') : 'حسب أهليتك — غير مضاف للحسبة']);
@@ -206,6 +206,7 @@
       function cleanup() { if (vv) { vv.removeEventListener('resize', fit); vv.removeEventListener('scroll', fit); } W.removeEventListener('resize', fit); D.documentElement.classList.remove('re42-lock'); mo.disconnect(); }
       mo.observe(D.body, { childList: true }); if (vv) { vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); } W.addEventListener('resize', fit);
       D.documentElement.classList.add('re42-lock'); fit(); dock.addEventListener('focusin', () => setTimeout(() => { lastH = 0; fit(); }, 320)); }
+    const greetWord = () => { try { if (typeof W.F99SaudiGreetingWord === 'function') return W.F99SaudiGreetingWord(); } catch (e) {} let h = 0; try { h = Number(new Intl.DateTimeFormat('en-GB', { hour: '2-digit', hourCycle: 'h23', timeZone: 'Asia/Riyadh' }).format(new Date())) || 0; } catch (e) { h = new Date().getHours(); } return h < 12 ? 'صباح الخير' : 'مساء الخير'; }; // r58
     const bot = (txt, cls) => { const b = el('div', 're42-msg bot' + (cls ? ' ' + cls : '')); if (txt) b.textContent = txt; log.append(b); scroll(); return b; };
     const me = txt => { const b = el('div', 're42-msg me', txt); log.append(b); scroll(); };
     const clearDock = () => { dock.innerHTML = ''; };
@@ -282,7 +283,7 @@
     }
     function ask(k) {
       const d = S.data;
-      if (k === 'name') return textIn(k, 'text', v => { if (v.length < 2 || v.length > 40) return 'اكتب اسمك (حرفان على الأقل)'; d.name = v.replace(/[<>]/g, ''); me(d.name); next(); });
+      if (k === 'name') return textIn(k, 'text', v => { if (v.length < 2 || v.length > 40) return 'اكتب اسمك (حرفان على الأقل)'; d.name = v.replace(/[<>]/g, ''); me(d.name); bot(greetWord() + ' يا ' + first(d) + '، حياك الله.'); next(); }); // r58
       if (k === 'sector') return choice(k, sectors().map(s => ({ label: s.label, value: s.key })), v => { d.sector = v; next(); });
       if (k === 'rank') return choice(k, ((cfg.military || {}).ranks || []).map(r => ({ label: r.name, value: r.key })), v => { d.rank = v; d.pilot = null; d.grade = null; next(); }, { grid: true });
       if (k === 'grade') { const sc = E().rankScale(rankObj(), cfg.military || {}) || { grades: 0 }; return textIn(k, 'int', v => { const n = money(v); if (!(Number.isInteger(n) && n >= 1 && n <= sc.grades)) return 'اكتب رقم الدرجة من 1 إلى ' + sc.grades; d.grade = n; me('الدرجة ' + n); next(); }, 'رقم الدرجة', { label: 'ما أعرف', fn: () => { d.grade = 0; next(); } }); }
@@ -440,7 +441,7 @@
       const steps = el('div', 're42-steps'); const upd = v => { v = Math.max(Number(r.min), Math.min(Number(r.max), v)); r.value = String(v); bm.textContent = String(v); yr.textContent = durTxt(v); };
       btn(steps, '−12', () => upd(Number(r.value) - 12), 're42-mini'); btn(steps, '−1', () => upd(Number(r.value) - 1), 're42-mini'); btn(steps, '+1', () => upd(Number(r.value) + 1), 're42-mini'); btn(steps, '+12', () => upd(Number(r.value) + 12), 're42-mini');
       r.oninput = () => upd(Number(r.value)); sl.append(r, steps);
-      if (termOn() && !FIX) durEl.append(sl); else { const lk = el('div', 're42-locked'); btn(lk, FIX ? 'تغيير المدة' : (T.reduce_label || 'تقليل المدة'), () => { lk.querySelector('p') || lk.append(el('p', 're42-note', FIX ? fixMsg() : termMsg)); }, 're42-mini'); durEl.append(lk); }
+      if (termOn() && !FIX) durEl.append(sl); else if (!FIX) { const lk = el('div', 're42-locked'); btn(lk, FIX ? 'تغيير المدة' : (T.reduce_label || 'تقليل المدة'), () => { lk.querySelector('p') || lk.append(el('p', 're42-note', FIX ? fixMsg() : termMsg)); }, 're42-mini'); durEl.append(lk); }
       if (dc.corrected && !FIX) durEl.append(el('p', 're42-note', 'عدّلنا المدة تلقائيًا لتناسب عمرك وحالتك الوظيفية.'));
       if (dc.keepCut) durEl.append(el('p', 're42-note', 'مع استمرار الدعم لا تتجاوز مدة التمويل الجديد المدة المتبقية لعقدك الحالي (' + monthsTxt(dc.keepCut) + ').'));
       const pr = dc.profile; const info = el('details', 're42-info'); info.append(el('summary', '', 'تفاصيل حالتك'));
@@ -448,7 +449,7 @@
       add('العمر الحالي', durTxt(pr.ageMonths));
       if (pr.retireDate) add('تاريخ التقاعد المتوقع', gStr(E().toHijri(pr.retireDate)) + 'هـ — ' + gStr(pr.retireDate) + 'م');
       if (pr.retireDate || pr.sector === 'military') add('المتبقي للتقاعد', pr.R ? durTxt(pr.R) : 'بلغت سن التقاعد');
-      if (pr.sector === 'military' && pr.pension != null && S.extend && pr.R < dc.months) { add('أشهر التمويل قبل التقاعد / بعده', pr.R + ' / ' + (dc.months - pr.R)); add('الراتب الأساسي المتوقع عند التقاعد', fmt2(pr.basic) + ' ريال'); add('المعاش التقاعدي التقديري', fmt2(pr.pension) + ' ريال'); }
+      if (pr.sector === 'military' && pr.pension != null && S.extend && pr.R < dc.months) { add('أشهر التمويل قبل التقاعد / بعده', pr.R + ' / ' + (dc.months - pr.R)); if (OWN) { add('الراتب الأساسي المتوقع عند التقاعد', fmt2(pr.basic) + ' ريال'); add('المعاش التقاعدي التقديري', fmt2(pr.pension) + ' ريال'); } } // r58
       if (OWN && pr.sector === 'military' && !pr.pensionSkipped) { const ob = el('div', 're42-owner'); ob.append(el('b', '', 'للمالك فقط'));
         const oa = (a, b) => { const row = el('div', 're42-kv'); row.append(el('span', '', a), el('b', '', b)); ob.append(row); };
         oa('الخدمة المحتسبة الآن / عند التقاعد', pr.serviceNow + ' / ' + pr.serviceAtRet + ' شهر' + (pr.serviceCalendar === 'hijri' ? ' (هجري)' : '')); if (pr.excl) oa('مدة غير محتسبة (م6)', durTxt(pr.excl)); oa('سن التقاعد للرتبة', yearsTxt(pr.retireAge)); oa('الأساسي الحالي', fmt(pr.basicCurrent) + ' ريال');
@@ -630,7 +631,7 @@
       if (FF() && R.results.length) btn(act, S.feeOk ? 'أتعاب المتابعة معروضة في البطاقات' : (T.follow_cta || 'خدمة متابعة إجراءات التمويل'), () => { if (S.feeOk) return; // r51: shown only after consent
           const s2 = sheet('خدمة متابعة إجراءات التمويل', 're42-pick'); applyTheme(s2.ov, cfg.theme); s2.body.append(el('p', 're42-note', (cfg.follow_fee || {}).terms || 'أتعاب متابعة إجراءات تمويلك لدى الجهة التمويلية، بند مستقل لا يُخصم من التمويل أو الدعم.'));
           btn(s2.body, 'أوافق على الشروط وأعرض الأتعاب', () => { s2.ov.remove(); S.feeOk = true; results(false); }, 're42-go wide'); });
-      btn(act, 'تقليل المدة', () => { if (FIX) return toast(fixMsg()); if (termOn()) return durationCard(); toast(tpl(T.term_reduce_unavailable || 'نعتذر منك يا {name}، تقليل المدة غير متاح حاليًا ضمن اشتراكك', S.data)); });
+      if (!FIX) btn(act, 'تقليل المدة', () => { if (FIX) return toast(fixMsg()); if (termOn()) return durationCard(); toast(tpl(T.term_reduce_unavailable || 'نعتذر منك يا {name}، تقليل المدة غير متاح حاليًا ضمن اشتراكك', S.data)); });
       resEl.append(act, el('p', 're42-disc', T.disclaimer || '')); scroll();
     }
     // r48: reduce amount / installment (no new usage: results(false) is not metered)
@@ -680,9 +681,9 @@
       g.append(kv('إجمالي الأرباح', fmt(b.profit) + ' ريال'), kv('المدة', b.months + ' شهرًا (' + durTxt(b.months) + ')'), kv('الرسوم الإدارية', FE.fee > 0 ? fmt2(FE.total) + ' ريال' + (FE.vat > 0 ? ' شاملة الضريبة' : '') : (FE.mode === 'exempt' ? 'معفاة' : 'لا توجد')), kv('إجمالي السداد', fmt(b.totalDue) + ' ريال'));
       if (S.feeOk && FF()) g.append(kv('أتعاب متابعة الإجراءات (بند مستقل)', fmt2(followFee(b)) + ' ريال'));
       det.append(g);
-      const dt = el('details', 're42-more-d'); dt.append(el('summary', '', 'تفاصيل الاستقطاع والأقساط')); dt.append(ptableEl(b));
-      if (FE.fee > 0) dt.append(kv('الرسوم قبل الضريبة', fmt2(FE.fee) + ' ريال'), kv('ضريبة القيمة المضافة (' + FE.vatPct + '%)', fmt2(FE.vat) + ' ريال'));
-      const ch = el('div', 're42-chips'); (PROD === 'transfer' ? chipsT(b) : chipsFor(b, S.data, cfg)).forEach(t => ch.append(el('span', '', t))); dt.append(ch); det.append(dt);
+      const dt = el('details', 're42-more-d'); dt.append(el('summary', '', 'تفاصيل الاستقطاع والأقساط')); if (OWN) dt.append(ptableEl(b)); // r58: deduction table + fee split for the owner only
+      if (FE.fee > 0 && OWN) dt.append(kv('الرسوم قبل الضريبة', fmt2(FE.fee) + ' ريال'), kv('ضريبة القيمة المضافة (' + FE.vatPct + '%)', fmt2(FE.vat) + ' ريال'));
+      const ch = el('div', 're42-chips'); (PROD === 'transfer' ? chipsT(b) : chipsFor(b, S.data, cfg)).forEach(t => ch.append(el('span', '', t))); if (OWN) { dt.append(ch); det.append(dt); } else det.append(ch);
       const nt = []; if (b.termCut) nt.push('مدة هذا البنك أقصر حسب حدوده'); if (b.amountCapped) nt.push('المبلغ محدود بالحد الأعلى لدى البنك'); if (b.reduced) nt.push(b.reduced === 'amount' ? 'المبلغ مخفّض حسب طلبك بنفس المدة والنسبة' : 'القسط مخفّض حسب طلبك بنفس المدة والنسبة');
       if (nt.length) det.append(el('p', 're42-muted', nt.join(' — ')));
       if (b.offer) c.append(el('div', 're42-applied', 'مطبّق: ' + b.offer.title));
@@ -796,7 +797,7 @@
       const R = S.last; try { imgSheet(await drawResult({ R, data: S.data, months: S.months, extend: S.extend, plan: S.plan, cfg, T, trial, why: R && !R.results.length ? whyNone(R) : '', scn: S.scn, product: PROD, trScn: S.trScn })); } catch (e) { toast('تعذر إنشاء الصورة', true); }
     }
     // start
-    bot(T.greeting || 'أهلًا بك'); next();
+    if (!(Q.name && Q.name.enabled !== false)) bot(T.greeting || 'أهلًا بك'); next(); // r58: with a name question the chat starts with the introduction
     W.F99RE42._bot = { S, cfg, results, durationCard, compute, PROD, pickBank, bankText };
     return sh;
   }
