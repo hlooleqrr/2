@@ -329,14 +329,16 @@
     if (!(N >= 12)) return Object.assign(res, { reason: 'TERM' });
     { const FT = num(opt.fixedTerm); if (FT > 0 && N < FT) { const gc = termCap(pr, cfg, opt.extend, null); // r55: fixed package term — never shortened automatically
       return Object.assign(res, { reason: gc < FT ? (pr.monthsToMaxAge < FT ? 'AGE' : 'TERM') : (num(bank.max_term) > 0 && num(bank.max_term) < FT ? 'BANK_TERM' : 'BANK_AGE') }); } }
-    const mx = matrixRow(bank, inp, cfg, plan, N, pr); if (mx && mx.blocked) return Object.assign(res, { reason: mx.blocked });
-    const pk = mx ? { rate: num(mx.row.rate), source: 'matrix' } : pickRate(bank, inp, cfg, plan, !!opt.trial); if (mx) res.matrixRow = mx.row.id || null; let rate = pk.rate; res.rateSource = pk.source || null;
+    const CU = opt.custom && num(opt.custom.rate) > 0 ? opt.custom : null; // r65: client-entered rate — this calculation only, never stored in the bank rates
+    const mx = CU ? null : matrixRow(bank, inp, cfg, plan, N, pr); if (mx && mx.blocked) return Object.assign(res, { reason: mx.blocked });
+    const pk = CU ? { rate: num(CU.rate), source: 'client' } : mx ? { rate: num(mx.row.rate), source: 'matrix' } : pickRate(bank, inp, cfg, plan, !!opt.trial); if (mx) res.matrixRow = mx.row.id || null; let rate = pk.rate; res.rateSource = pk.source || null;
     let offer = null;
     if (opt.offerId) { offer = (bank.offers || []).find(o => o.id === opt.offerId) || null; if (!offerMatches(offer, inp, plan, N, opt.entity)) return Object.assign(res, { reason: 'OFFER_NOT_ELIGIBLE' }); rate = num(offer.rate); res.rateSource = 'offer'; }
-    if (!mx && !offer && num(opt.rateTerm) > 0 && N !== num(opt.rateTerm) && res.rateSource !== 'owner_sim') return Object.assign(res, { reason: 'NO_TERM_RATE' }); // r55: a 240-month rate is never reused for another term
+    if (!mx && !offer && num(opt.rateTerm) > 0 && N !== num(opt.rateTerm) && res.rateSource !== 'owner_sim' && res.rateSource !== 'client') return Object.assign(res, { reason: 'NO_TERM_RATE' }); // r55: a 240-month rate is never reused for another term
     if (!(rate > 0)) return Object.assign(res, { reason: pk.reason || 'NO_RATE' });
     const rows = schedule(pr, inp, cfg, N, bank, !!opt.trial); let pays;
-    if ((cfg.dti_policy || {}).consumer_over_exclude !== false && consumerOverAt(rows, cfg)) return Object.assign(res, { reason: 'CONSUMER_OVER' }); // r51
+    { const co = consumerOverAt(rows, cfg); if (co && (cfg.dti_policy || {}).consumer_over_exclude !== false && !opt.consumerWarn) return Object.assign(res, { reason: 'CONSUMER_OVER' }); // r51
+      if (co) res.consumerOver = co; } // r65: warning only for the mortgage package (not a general rejection rule)
     const SA = supportAmounts(inp, cfg); const ms = SA.monthly;
     const msMonths = SA.monthlyMonths;
     const sup = m => (ms > 0 && (msMonths <= 0 || m <= msMonths)) ? ms : 0;
@@ -377,7 +379,7 @@
   function compare(inp, cfg, opt) {
     opt = opt || {}; const pr = profile(inp, cfg, opt.now); pr.birth = inp.birth;
     const plan = opt.plan || cfg.default_plan || 'fixed';
-    const all = (cfg.banks || []).map(b => quoteBank(b, inp, cfg, pr, { plan: (opt.plans || {})[b.id] || plan, months: opt.months, extend: opt.extend, trial: !!opt.trial, offerId: (opt.offers || {})[b.id], entity: opt.entity, cut: opt.cut, fixedTerm: opt.fixedTerm, rateTerm: opt.rateTerm }));
+    const all = (cfg.banks || []).map(b => quoteBank(b, inp, cfg, pr, { plan: (opt.plans || {})[b.id] || plan, months: opt.months, extend: opt.extend, trial: !!opt.trial, offerId: (opt.offers || {})[b.id], entity: opt.entity, cut: opt.cut, fixedTerm: opt.fixedTerm, rateTerm: opt.rateTerm, custom: opt.custom, consumerWarn: !!opt.consumerWarn }));
     const ok = rank(all.filter(x => x.eligible), cfg); const top = Math.max(1, num(cfg.top_n, 3));
     return { profile: pr, plan, months: opt.months, extend: !!opt.extend, capacity: capInfo(pr, inp, cfg, opt.months, !!opt.extend, !!opt.trial), results: ok, top: ok.slice(0, top), rest: ok.slice(top), excluded: all.filter(x => !x.eligible).map(x => ({ id: x.id, name: x.name, reason: x.reason, zeroFrom: x.zeroFrom, zeroTo: x.zeroTo, zeroPost: x.zeroPost })), etizaz: etizazPlan(inp, cfg), support: supportAmounts(inp, cfg) };
   }
