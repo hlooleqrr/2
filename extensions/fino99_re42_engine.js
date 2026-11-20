@@ -48,6 +48,8 @@
   }
   // whole months from a to b (fractions dropped); negative when b < a
   function monthsBetween(a, b) { let m = (b.y - a.y) * 12 + (b.m - a.m); if (b.d < a.d) m -= 1; return m; }
+  // r63: owner order — Hijri is mandatory for every time computation (Umm al-Qura); Gregorian is kept for display only
+  const CAL = 'hijri'; const mbH = (a, b) => monthsBetween(toHijri(a), toHijri(b));
   function riyadhToday(now) { const t = (now == null ? Date.now() : now) + 3 * 3600000; const g = fromUTC(t); return g; }
   // ---------- config helpers ----------
   const sectorOf = (cfg, k) => (cfg.sectors || []).find(s => s.key === k) || null;
@@ -116,7 +118,7 @@
     const L = cfg.limits || {}; const sector = inp.sector; const sc = sectorOf(cfg, sector) || {};
     const notes = []; const out = { today, sector, notes };
     if (!validG(inp.birth)) throw Error('BIRTH_INVALID');
-    const ageMonths = monthsBetween(inp.birth, today); if (ageMonths < 18 * 12 || ageMonths > 90 * 12) throw Error('AGE_OUT_OF_RANGE');
+    const ageMonths = mbH(inp.birth, today); if (ageMonths < 18 * 12 || ageMonths > 90 * 12) throw Error('AGE_OUT_OF_RANGE');
     out.ageMonths = ageMonths;
     const net = num(inp.net); if (!(net > 0)) throw Error('NET_REQUIRED');
     out.pre = net; out.post = net; out.R = 0; out.retireDate = null; out.pension = null; out.extendAllowed = false;
@@ -124,14 +126,14 @@
       const M = cfg.military || {}; const rk = rankOf(cfg, inp.rank); if (!rk) throw Error('RANK_REQUIRED');
       const age = inp.pilot && rk.group === 'officer' && num(rk.pilot_age) > 0 ? num(rk.pilot_age) : num(rk.age);
       if (!(age > 0)) throw Error('RANK_AGE_MISSING');
-      const rd = addYears(inp.birth, age, M.calendar || 'hijri'); out.retireDate = rd; out.retireAge = age;
-      out.R = Math.max(0, monthsBetween(today, rd));
+      const rd = addYears(inp.birth, age, CAL); out.retireDate = rd; out.retireAge = age;
+      out.R = Math.max(0, mbH(today, rd));
       // r51: appointment date + basic are asked only when the financing reaches retirement; without them no pension / extension is modelled
       if (inp.appoint == null && inp.basic == null) { out.pensionSkipped = true; if (out.R === 0) notes.push('PAST_RETIREMENT_AGE'); } else {
       if (!validG(inp.appoint) || cmp(inp.appoint, today) > 0 || cmp(inp.appoint, inp.birth) <= 0) throw Error('APPOINT_INVALID');
       const basic = num(inp.basic); if (!(basic > 0)) throw Error('BASIC_REQUIRED');
       // r44: counted service (م4/أ، م6): full months only, minus non-counted periods; counted directly appointment -> retirement date
-      const svcCal = M.service_calendar === 'hijri' ? 'hijri' : 'gregorian'; out.serviceCalendar = svcCal;
+      const svcCal = CAL; out.serviceCalendar = svcCal;
       const mb = (a, b) => svcCal === 'hijri' ? monthsBetween(toHijri(a), toHijri(b)) : monthsBetween(a, b);
       const excl = Math.max(0, Math.floor(num(inp.excludedMonths, 0))); const svcRaw = Math.max(0, mb(inp.appoint, today));
       if (excl > svcRaw) throw Error('EXCL_INVALID');
@@ -150,15 +152,15 @@
     } else if (sector === 'retired') {
       out.R = 0; out.post = net; out.extendAllowed = false;
     } else {
-      const age = num(sc.retire_age, 60); const rd = addYears(inp.birth, age, sc.calendar || 'gregorian');
-      out.retireDate = rd; out.retireAge = age; out.R = Math.max(0, monthsBetween(today, rd));
+      const age = num(sc.retire_age, 60); const rd = addYears(inp.birth, age, CAL);
+      out.retireDate = rd; out.retireAge = age; out.R = Math.max(0, mbH(today, rd));
       // civil post-retirement income is not modelled (no military formula for civilians): extension only if owner enabled it AND client gave expected pension
       out.extendAllowed = sc.extend === true && out.R > 0 && num(inp.civilPension) > 0;
       if (out.extendAllowed) out.post = num(inp.civilPension);
     }
     const maxAge = num(L.max_age_end, 70);
-    const ageEnd = addYears(inp.birth, maxAge, L.age_calendar_end || 'gregorian');
-    out.monthsToMaxAge = Math.max(0, monthsBetween(today, ageEnd));
+    const ageEnd = addYears(inp.birth, maxAge, CAL);
+    out.monthsToMaxAge = Math.max(0, mbH(today, ageEnd));
     return out;
   }
   // r48b: rank salary scale. Preferred: owner-managed «سلم الرواتب العسكرية» (M.salary_scale, explicit basic per grade); legacy: first/step on the rank.
@@ -195,7 +197,7 @@
     const L = cfg.limits || {}; let cap = Math.min(num(L.max_term, 300), pr.monthsToMaxAge);
     if (bank) {
       if (num(bank.max_term) > 0) cap = Math.min(cap, num(bank.max_term));
-      if (num(bank.max_age_end) > 0 && pr.birth) { const e = addYears(pr.birth, num(bank.max_age_end), (cfg.limits || {}).age_calendar_end || 'gregorian'); cap = Math.min(cap, Math.max(0, monthsBetween(pr.today, e))); }
+      if (num(bank.max_age_end) > 0 && pr.birth) { const e = addYears(pr.birth, num(bank.max_age_end), CAL); cap = Math.min(cap, Math.max(0, mbH(pr.today, e))); }
     }
     if (pr.sector !== 'retired' && pr.R > 0 && !(extend && pr.extendAllowed)) cap = Math.min(cap, pr.R);
     if (pr.sector !== 'retired' && pr.R === 0 && pr.sector !== 'military') cap = 0; // civil already past retirement age: not modelled
@@ -262,7 +264,7 @@
     for (const r of cand) {
       if (num(r.min_salary) > 0 && pr.pre < num(r.min_salary)) { why = why || 'MIN_SALARY'; continue; }
       if (num(r.max_salary) > 0 && pr.pre > num(r.max_salary)) { why = why || 'MAX_SALARY'; continue; }
-      if (num(r.max_age_end) > 0 && pr.birth && monthsBetween(pr.today, addYears(pr.birth, num(r.max_age_end), 'gregorian')) < N) { why = why || 'AGE'; continue; }
+      if (num(r.max_age_end) > 0 && pr.birth && mbH(pr.today, addYears(pr.birth, num(r.max_age_end), CAL)) < N) { why = why || 'AGE'; continue; }
       return { row: r };
     }
     return { blocked: why || 'NO_RATE' };
@@ -296,11 +298,9 @@
     } return out;
   }
   // ---------- pricing ----------
-  function pv(pays, apr, method) {
-    const N = pays.length; let s = 0;
-    if (method === 'flat') { for (const p of pays) s += p; return s / (1 + (apr / 100) * N / 12); }
-    const i = apr / 100 / 12; if (i <= 0) { for (const p of pays) s += p; return s; }
-    let f = 1; for (let m = 0; m < N; m++) { f /= (1 + i); s += pays[m] * f; } return s;
+  // r63: owner-approved Flat formula (mandatory; annuity removed): principal = Σ instalments of all stages / (1 + annual rate/100 × months/12)
+  function pv(pays, apr) {
+    const N = pays.length; let s = 0; for (const p of pays) s += p; return s / (1 + (num(apr) / 100) * N / 12);
   }
   function supportKey(inp) { if (!inp.supported) return 'none'; if (inp.supportType === 'etizaz') return 'etizaz'; return inp.supportType === 'monthly' ? 'monthly' : 'upfront'; }
   function hasPersonal(inp) { return (inp.obligations || []).some(o => o.type === 'personal' && num(o.amount) > 0 && num(o.months) > 0); }
@@ -344,7 +344,7 @@
     else { pays = rows.map(r => r.cap); const ar = avgRule(pays, cfg); pays = ar.pays; if (ar.adjusted) res.avgAdjusted = true; } // r49: step + 13/هـ
     if (!pays.length || pays.every(p => p <= 0)) return Object.assign(res, { reason: 'NO_CAPACITY' });
     { const z = []; pays.forEach((p, k) => { if (!(p > 0.005)) z.push(k + 1); }); if (z.length) return Object.assign(res, { reason: 'ZERO_STAGE', zeroFrom: z[0], zeroTo: z[z.length - 1], zeroPost: !!rows[z[0] - 1].post }); }
-    const method = bank.method === 'flat' ? 'flat' : 'annuity';
+    const method = 'flat'; // r63: mandatory owner formula for every bank
     const supX = opt.ms ? (m => (m <= num(opt.ms.months) ? num(opt.ms.amount) : 0)) : sup; // r54: transfer — simulated remaining monthly support (owner engine)
     let bankPays = pays.map((p, k) => p + supX(k + 1));
     let P = pv(bankPays, rate, method);

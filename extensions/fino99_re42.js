@@ -957,13 +957,13 @@
         }); };
         draw();
         const add = el('div', 're42-actions'); btn(add, 'إضافة بنك أو جهة تمويل', () => { const id = prompt('معرّف قصير بالإنجليزية (مثل SNB أو NEWBANK):'); if (!id) return; const nm = prompt('اسم الجهة:'); if (!nm) return;
-          Wc.banks.push({ id: id.trim().toUpperCase().slice(0, 40), name: nm.trim().slice(0, 80), test: false, active: true, included: true, salary: true, approved: false, method: 'annuity', product: '', source: '', effective_date: '', rates: {}, fees: {}, offers: [], sectors: [], properties: [] }); mark(); draw(); });
-        btn(add, 'إضافة بنك اختبار', () => { const n = Wc.banks.filter(b => b.test).length + 1; Wc.banks.push({ id: 'TEST' + n + '_' + Date.now().toString(36).slice(-3).toUpperCase(), name: 'بنك اختبار (' + n + ')', test: true, active: true, included: true, salary: false, approved: false, method: 'annuity', rates: { step: { none: 4, upfront: 4 }, fixed: { none: 4.25, upfront: 4.25 } }, fees: {}, offers: [] }); mark(); draw(); });
+          Wc.banks.push({ id: id.trim().toUpperCase().slice(0, 40), name: nm.trim().slice(0, 80), test: false, active: true, included: true, salary: true, approved: false, method: 'flat', product: '', source: '', effective_date: '', rates: {}, fees: {}, offers: [], sectors: [], properties: [] }); mark(); draw(); });
+        btn(add, 'إضافة بنك اختبار', () => { const n = Wc.banks.filter(b => b.test).length + 1; Wc.banks.push({ id: 'TEST' + n + '_' + Date.now().toString(36).slice(-3).toUpperCase(), name: 'بنك اختبار (' + n + ')', test: true, active: true, included: true, salary: false, approved: false, method: 'flat', rates: { step: { none: 4, upfront: 4 }, fixed: { none: 4.25, upfront: 4.25 } }, fees: {}, offers: [] }); mark(); draw(); });
         P.append(add);
         function editBank(b) {
           const s2 = sheet('إعدادات ' + b.name, 're42-center re42-sub'); const Pb = s2.body; b.rates = b.rates || {}; b.fees = b.fees || {}; b.offers = b.offers || [];
           field(Pb, 'اسم الجهة', b, 'name', 'text'); if (!b.test) { field(Pb, 'المنتج العقاري', b, 'product', 'text'); field(Pb, 'مصدر النسبة (رابط أو مستند)', b, 'source', 'text'); field(Pb, 'تاريخ السريان', b, 'effective_date', 'text'); field(Pb, 'معتمد من المالك للظهور للعملاء', b, 'approved', 'bool'); }
-          field(Pb, 'طريقة التسعير', b, 'method', 'select', { options: [['annuity', 'قسط متناقص — APR'], ['flat', 'هامش ربح ثابت سنوي']] });
+          field(Pb, 'طريقة التسعير', b, 'method', 'select', { options: [['flat', 'هامش ربح ثابت سنوي — معادلة المالك المعتمدة (إلزامي)']] });
           Pb.append(el('h4', '', 'النسب حسب نوع القسط والدعم (%)')); const g = el('table', 're42-rates'); const hr = el('tr'); hr.append(el('th', '', '')); [['none', 'غير مدعوم'], ['upfront', 'دعم مقدم'], ['monthly', 'دعم شهري'], ['etizaz', 'اعتزاز']].forEach(([, l]) => hr.append(el('th', '', l))); g.append(hr);
           [['step', 'القسط المتزايد'], ['fixed', 'القسط الثابت']].forEach(([pk, pl]) => { const tr = el('tr'); tr.append(el('th', '', pl)); b.rates[pk] = b.rates[pk] || {};
             ['none', 'upfront', 'monthly', 'etizaz'].forEach(sk => { const td = el('td'); const i = el('input'); i.inputMode = 'decimal'; i.value = b.rates[pk][sk] == null ? '' : b.rates[pk][sk]; i.oninput = () => { const v = Number(digits(i.value)); if (i.value.trim() === '') delete b.rates[pk][sk]; else if (Number.isFinite(v)) b.rates[pk][sk] = v; mark(); }; td.append(i); tr.append(td); }); g.append(tr); });
@@ -985,7 +985,7 @@
       if (k === 'limits') {
         const L = Wc.limits = Wc.limits || {}; P.append(el('h4', '', 'حدود المدة والعمر'));
         field(P, 'مدة التمويل القصوى (شهر)', L, 'max_term', 'num'); field(P, 'أقل مدة (شهر)', L, 'min_term', 'num'); field(P, 'المدة الافتراضية في بطاقة المدة (شهر)', L, 'default_term', 'num'); field(P, 'عمر نهاية التمويل', L, 'max_age_end', 'num');
-        field(P, 'تقويم عمر نهاية التمويل', L, 'age_calendar_end', 'select', { options: [['gregorian', 'ميلادي'], ['hijri', 'هجري']] });
+        field(P, 'تقويم عمر نهاية التمويل', L, 'age_calendar_end', 'select', { options: [['hijri', 'هجري (إلزامي)']] });
         P.append(el('h4', '', 'الترشيح')); field(P, 'معيار الترتيب', Wc, 'ranking', 'select', { options: [['amount', 'أعلى مبلغ تمويل'], ['installment', 'أقل قسط'], ['profit', 'أقل أرباح']] }); field(P, 'عدد البنوك المرشحة', Wc, 'top_n', 'num');
         const Rd = Wc.reduce = Wc.reduce || {}; P.append(el('h4', '', 'خيارات التقليل للعميل'));
         field(P, 'تقليل مبلغ التمويل', Rd, 'amount', 'bool', { def: true }); field(P, 'تقليل القسط (بتخفيض المبلغ بنفس المدة والنسبة)', Rd, 'installment', 'bool', { def: true }); field(P, 'تقليل المدة (فعّله عند اعتماد نسب المدد الأخرى)', Rd, 'term', 'bool', { def: false });
@@ -1021,12 +1021,12 @@
       }
       if (k === 'sectors') {
         P.append(el('h4', '', 'القطاعات')); list(P, Wc.sectors = Wc.sectors || [], [{ k: 'label', label: 'الاسم الظاهر', type: 'text' }, { k: 'enabled', label: 'مفعّل', type: 'bool', def: true }, { k: 'retire_age', label: 'سن التقاعد (مدني)', type: 'num' },
-          { k: 'calendar', label: 'تقويم التقاعد', type: 'select', options: [['gregorian', 'ميلادي'], ['hijri', 'هجري']] }, { k: 'extend', label: 'يسمح بالتمويل بعد التقاعد', type: 'bool' }], { remove: false });
+          { k: 'calendar', label: 'تقويم التقاعد', type: 'select', options: [['hijri', 'هجري (إلزامي)']] }, { k: 'extend', label: 'يسمح بالتمويل بعد التقاعد', type: 'bool' }], { remove: false });
         P.append(el('p', 're42-muted', 'العسكري يحسب تقاعده من الرتبة (تبويب الرتب). المتقاعد يحسب على المعاش حتى عمر نهاية التمويل.'));
         P.append(el('h4', '', 'الجهات (وزارات وجهات عمل)')); list(P, Wc.entities = Wc.entities || [], [{ k: 'name', label: 'اسم الجهة', type: 'text' }, { k: 'sector', label: 'القطاع', type: 'select', options: SECT() }], { add: () => ({ name: '', sector: 'gov' }), addLabel: 'إضافة جهة' });
       }
       if (k === 'ranks') {
-        const M = Wc.military = Wc.military || {}; field(P, 'تقويم سن التقاعد العسكري', M, 'calendar', 'select', { options: [['hijri', 'هجري'], ['gregorian', 'ميلادي']] }); field(P, 'قاسم المعاش بالأشهر (35 سنة = 420)', M, 'pension_divisor_months', 'num'); field(P, 'تقويم عدّ أشهر الخدمة', M, 'service_calendar', 'select', { options: [['gregorian', 'ميلادي'], ['hijri', 'هجري']] });
+        const M = Wc.military = Wc.military || {}; field(P, 'تقويم سن التقاعد العسكري', M, 'calendar', 'select', { options: [['hijri', 'هجري (إلزامي)']] }); field(P, 'قاسم المعاش بالأشهر (35 سنة = 420)', M, 'pension_divisor_months', 'num'); field(P, 'تقويم عدّ أشهر الخدمة', M, 'service_calendar', 'select', { options: [['hijri', 'هجري (إلزامي)']] });
         field(P, 'المعاش لا يتجاوز الراتب الأساسي', M, 'cap_at_basic', 'bool', { def: true }); field(P, 'التمويل بعد التقاعد مفعّل افتراضيًا للعسكري', M, 'extend_default', 'bool', { def: true });
         field(P, 'المعاش على الأساسي المتوقع عند التقاعد (علاوة سنوية كل 1 محرم حتى آخر درجة، دون ترقيات) — يعمل فقط للرتبة التي أُدخل سلمها ومصدره', M, 'expected_basic', 'bool', { def: true });
         P.append(el('p', 're42-muted', 'المصدر: نظام التقاعد العسكري — المادة 8 (جزء من 35) والمادة 11 (سن الإحالة حسب الرتبة).'));
