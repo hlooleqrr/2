@@ -354,8 +354,10 @@
     function dateIn(k, onOk) {
       clearDock(); bot(qText(k)); const wrap = el('div', 're42-date'); const src0 = S.data[k + '_src']; let cal = src0 ? src0.cal : (S.calPref || (isMil() ? 'hijri' : 'gregorian'));
       const tabs = el('div', 're42-seg'); const tG = btn(tabs, 'ميلادي', () => setCal('gregorian')); const tH = btn(tabs, 'هجري', () => setCal('hijri'));
-      const row = el('div', 're42-drow'); const mk = ph => { const i = el('input'); i.type = 'text'; i.inputMode = 'numeric'; i.placeholder = ph; i.maxLength = 4; row.append(i); return i; };
-      const dd = mk('يوم'), mm = mk('شهر'), yy = mk('سنة'); const conv = el('div', 're42-conv'); const err = el('div', 're42-err');
+      const row = el('div', 're42-drow'); const mk = (ph, n) => { const i = el('input'); i.type = 'text'; i.inputMode = 'numeric'; i.placeholder = ph; i.maxLength = n; row.append(i); return i; };
+      const dd = mk('يوم', MG ? 2 : 4), mm = mk('شهر', MG ? 2 : 4), yy = mk('سنة', 4);
+      const adv = (a, b2, hi) => a.addEventListener('input', ev => { if (ev && ev.inputType && ev.inputType.indexOf('delete') === 0) return; const v = digits(a.value).replace(/\D/g, ''); if (v.length >= 2 || (v.length === 1 && Number(v) > hi)) { try { b2.focus(); } catch (x) {} } }); if (MG) { adv(dd, mm, 3); adv(mm, yy, 1); } /* r83 (mortgage only): day → month → year automatically */
+      const conv = el('div', 're42-conv'); const err = el('div', 're42-err');
       const ok = btn(null, 'اعتماد التاريخ', () => { if (ok.disabled) return; const g = read(); if (!g) { err.textContent = 'تحقق من اليوم والشهر والسنة'; return; } ok.disabled = true; const h = E().toHijri(g); S.calPref = cal; S.data[k + '_src'] = { cal, d: parseInt(digits(dd.value), 10), m: parseInt(digits(mm.value), 10), y: parseInt(digits(yy.value), 10) }; me(cal === 'hijri' ? gStr(h) + 'هـ (يوافق ' + gStr(g) + 'م)' : gStr(g) + 'م (يوافق ' + gStr(h) + 'هـ)'); onOk(g); }, 're42-go wide');
       wrap.append(tabs, row, conv, err, ok); dock.append(wrap);
       function read() {
@@ -773,12 +775,14 @@
       }
       const act = el('div', 're42-actions'); // r55: no merged multi-bank share/image unless the owner enables «مشاركة مقارنة جميع البنوك»
       if (!MG || !R.results.length) { btn(act, 'مشاركة عبر واتساب', share, 're42-wa'); btn(act, 'صورة النتيجة', image); } else if (cfg.share_compare === true) { btn(act, 'مشاركة مقارنة جميع جهات التمويل', () => shareTxt(compareTxt()), 're42-wa'); btn(act, 'صورة مقارنة جهات التمويل', image); }
-      if (!FIX) btn(act, 'تعديل المدة', () => durationCard()); if (MG) btn(act, 'تعديل البيانات', () => editMenu(false, true)); // r59: «تعديل المدة» hidden while the term is locked; r65: «تعديل البيانات» restored (it was swallowed by the r59 comment)
-      if (R.results.length && PROD !== 'transfer') { if (cutOn('amount')) btn(act, 'تقليل مبلغ التمويل', () => cutForm('amount', R)); if (cutOn('installment')) btn(act, 'تقليل القسط', () => cutForm('installment', R)); }
+      if (MG) { S.foSlot = el('div', 're83-slot'); resEl.append(S.foSlot); const pr = el('div', 're83-main'); btn(pr, 'تعديل البيانات', () => editMenu(false, true)); if (R.results.length && cutOn('installment')) btn(pr, 'تقليل القسط', () => cutForm('installment', R));
+        btn(pr, 'احسب من جديد', () => whoFor(false)); if (FOon() && R.results.length) btn(pr, 'متابعة إجراءات التمويل', () => foStart(false), 're73-cta'); resEl.append(pr); } // r83: clear main choices after the full result
+      if (!FIX) btn(act, 'تعديل المدة', () => durationCard()); // r59: «تعديل المدة» hidden while the term is locked; r65: «تعديل البيانات» restored (it was swallowed by the r59 comment)
+      if (R.results.length && PROD !== 'transfer') { if (cutOn('amount')) btn(act, 'تقليل مبلغ التمويل', () => cutForm('amount', R)); if (cutOn('installment') && !MG) btn(act, 'تقليل القسط', () => cutForm('installment', R)); }
       if (FF() && R.results.length) btn(act, S.feeOk ? 'أتعاب المتابعة معروضة في البطاقات' : (T.follow_cta || 'خدمة متابعة إجراءات التمويل'), () => { if (S.feeOk) return; // r51: shown only after consent
           const s2 = sheet('خدمة متابعة إجراءات التمويل', 're42-pick'); applyTheme(s2.ov, cfg.theme); s2.body.append(el('p', 're42-note', (cfg.follow_fee || {}).terms || 'أتعاب متابعة إجراءات تمويلك لدى الجهة التمويلية، بند مستقل لا يُخصم من التمويل أو الدعم.'));
           btn(s2.body, 'أوافق على الشروط وأعرض الأتعاب', () => { s2.ov.remove(); S.feeOk = true; results(false); }, 're42-go wide'); });
-      if (FOon() && R.results.length) btn(act, 'أرغب بالمتابعة', () => foStart(false), 're73-cta'); // r73
+      if (FOon() && R.results.length && !MG) btn(act, 'أرغب بالمتابعة', () => foStart(false), 're73-cta'); // r73 (r83: MG → «متابعة إجراءات التمويل» above)
       if (!FIX) btn(act, 'تقليل المدة', () => { if (FIX) return toast(fixMsg()); if (termOn()) return durationCard(); toast(tpl(T.term_reduce_unavailable || 'نعتذر منك يا {name}، تقليل المدة غير متاح حاليًا ضمن اشتراكك', S.data)); });
       resEl.append(act); r65After(R); resEl.append(discEl()); scroll();
       if (MG && fresh && (opt.mode !== 'client' || S.foNew)) foAfter(R); // r73
@@ -794,8 +798,8 @@
         if (r && r.ok && r.data && r.data.r65) { S.q65 = r.data.r65; q65Draw(); } } catch (x) {} }
     function q65Draw() { const q = S.q65; if (!q || !Q65) return; const rm = Number(q.ref_max) || 0, cm = Number(q.custom_max) || 0;
       const rl = Math.max(0, rm - (Number(q.ref_used) || 0)), cl = Math.max(0, cm - (Number(q.custom_used) || 0)); Q65.innerHTML = ''; Q65.hidden = false;
-      Q65.append(el('span', 're65-qi' + (rl ? '' : ' done'), 'بالنسب المرجعية: المتبقي ' + rl + ' من ' + rm));
-      if (q.custom_enabled !== false && cm > 0) Q65.append(el('span', 're65-qi' + (cl ? '' : ' done'), 'بنسبتك الخاصة: المتبقي ' + cl + ' من ' + cm));
+      Q65.append(el('span', 're65-qi' + (rl ? '' : ' done'), 'مرات الاحتساب بالنسب المرجعية: المتبقي ' + rl + ' من ' + rm));
+      if (q.custom_enabled !== false && cm > 0) Q65.append(el('span', 're65-qi' + (cl ? '' : ' done'), 'مرات الاحتساب بإدخال النسبة بنفسك: المتبقي ' + cl + ' من ' + cm));
       const used = (Number(q.ref_used) || 0) + (Number(q.custom_used) || 0), ra = Number(q.renew_after) || 0;
       if (foLeft() === 0 && /^https:\/\//.test(q.renewal_url || '')) { const rw = el('div', 're65-renew'); /* r76: renewal only at zero balance after the last real use, and only with the owner link */ rw.append(el('span', '', tpl(T.r65_renew_text || 'قربت حسباتك تخلص يا {name}، تقدر تجدد باقتك وتكمل حسباتك.', S.data) + (q.renewal_price ? ' سعر التجديد: ' + q.renewal_price + ' ريال.' : '')));
         if (/^https:\/\//.test(q.renewal_url || '')) btn(rw, 'تجديد الباقة', () => window.open(q.renewal_url, '_blank', 'noopener'), 're42-mini'); Q65.append(rw); } }
@@ -805,7 +809,7 @@
       const C2 = Object.assign({}, cfg, { limits: Object.assign({}, cfg.limits || {}, { max_term: mx }),
         banks: c.bank === '__client' ? [customBank(c)] : (cfg.banks || []).filter(b => b.id === c.bank) });
       return E().compare(inpScn(), C2, Object.assign(cmpOpt(), { plan: c.plan, months: c.months, extend: true, offers: {}, plans: {}, fixedTerm: undefined, rateTerm: undefined, custom: { rate: c.rate } })); }
-    function customHead() { const c = S.custom; resEl.append(el('p', 're65-cnote', T.r65_custom_note || 'النسبة مدخلة من العميل وليست عرضًا موثقًا أو ترشيحًا من FINO99'),
+    function customHead() { const c = S.custom; resEl.append(el('p', 're65-cnote', 'نسبة الربح أدخلها العميل بنفسه، وليست من النسب المرجعية المعتمدة لدى FINO99.'), // r83
       el('p', 're42-meta', 'البنك: ' + c.bankName + ' — النسبة المدخلة: ' + c.rate + '% — ' + (c.plan === 'step' ? 'القسط المتغير' : 'القسط الثابت'))); }
     function customStart() { clearDock(); const P = {};
       const banks = (cfg.banks || []).filter(b => b && b.active !== false && b.included !== false && (trial || opt.mode === 'owner' || b.test !== true));
@@ -921,7 +925,9 @@
         const le = await liveEntry(); const e = le.e; if (!e || typeof finoRpc !== 'function') return null; const dev = e.deviceId || (typeof finoCentralDeviceId === 'function' ? finoCentralDeviceId() : '');
         const r = await finoRpc('f99r75_follow_offer', { p_entry_token: e.entryToken, p_device_id: dev, p_action: act, p_info: info || {} }, 12000); const t = r && r.ok && r.data; if (!t || t.ok === false || !t.issued) return null; S.foSt = t; S.foOfs = Date.parse(t.now) - Date.now(); return t; } catch (x) { return null; } }
     function foAfter(R) { r73css(); S.foN = (S.foN || 0) + 1; const left = foLeft(), last = left === 0; // shown after the first and the final counted calculation only
-      if (FOon() && R.results.length && !S.foOff && !S.foSent && (S.foN === 1 || last)) setTimeout(() => foOffer(last), 450); else if (last) rnGate(); }
+      if (FOon() && R.results.length && !S.foOff && !S.foSent && (S.foN === 1 || last)) foInline(); if (last) rnGate(); } // r83: never a popup over the result
+    function foInline() { const F = FOc(), slot = S.foSlot; if (!slot || !slot.isConnected) return; foSync('issue').then(t => { if (!slot.isConnected || !t) return; if (!foOk()) { S.foOff = true; return; }
+      const c = el('div', 're83-foc'); c.append(el('b', 're83-fot', tpl(F.title, S.data)), el('p', 're83-fos', String(F.sub || '').replace(/\{disc\}/g, p2(F.disc))), el('p', 're73-ex', 'ينتهي العرض: ' + foDt(t.expires_at)), el('p', 're83-foh', 'اضغط «متابعة إجراءات التمويل» واختر جهة التمويل.')); slot.innerHTML = ''; slot.append(c); }); }
     function rnGate() { const q = S.q65; if (S.rnAsked || !q || foLeft() !== 0 || !/^https:\/\//.test(q.renewal_url || '')) return; clearDock(); btn(dock, 'تم، قرأت النتيجة', () => { clearDock(); renewAsk(); }, 're42-go wide'); } // r79: the renewal offer only after the client has read the last result
     function foOffer(last) { const F = FOc(); const s2 = sheet('خصم أتعاب المتابعة', 're42-pick re73-fo'); applyTheme(s2.ov, cfg.theme); const x = s2.head.querySelector('.re42-x'); if (x) x.onclick = () => { s2.ov.remove(); foNo(last); };
       const sp = el('div', 're73-spin'); sp.append(el('i', 're73-ring'), el('p', '', F.checking)); s2.body.append(sp);
@@ -931,7 +937,8 @@
     function foStart(last) { r73css(); const L = (S.last && S.last.results) || []; if (!L.length) return toast('لا توجد نتيجة محسوبة للمتابعة', true); if (L.length === 1) return foReview(L[0], 0, last, false);
       const s2 = sheet('اختر جهة التمويل للمتابعة', 're42-pick re73-pk'); applyTheme(s2.ov, cfg.theme); const x = s2.head.querySelector('.re42-x'); if (x) x.onclick = () => { s2.ov.remove(); if (last) renewAsk(); };
       s2.body.append(el('p', 're42-note', 'هذه جهات التمويل المحتسبة فعليًا في حسبتك. اختر الجهة التي ترغب بالمتابعة لديها:'));
-      L.forEach((b, i) => btn(s2.body, b.name + ' — ' + fmt(b.amount + upOf(b)) + ' ريال — ' + pct(b.rate) + ' ' + PLN(b.plan), () => { s2.ov.remove(); foReview(b, i, last, true); }, 're42-go wide alt')); }
+      L.forEach((b, i) => { const s0 = b.stages[0] || {}; const c = btn(s2.body, '', () => { s2.ov.remove(); foReview(b, i, last, true); }, 're83-bc'); const h = el('span', 're83-bch'); h.append(logoBox(b), el('b', '', b.name)); c.append(h); // r83: one card per bank
+        [['نسبة الربح', pct(b.rate) + ' — ' + PLN(b.plan)], [upOf(b) ? 'إجمالي التمويل مع الدعم' : 'مبلغ التمويل', fmt(b.amount + upOf(b)) + ' ريال'], [b.plan === 'fixed' || b.stages.length < 2 ? 'القسط الشهري' : 'القسط المتغير — يبدأ من', fmt2(s0.raw != null ? s0.raw : (s0.amount != null ? s0.amount : b.firstInstallment)) + ' ريال']].forEach(([a, v]) => { const r = el('span', 're83-bcr'); r.append(el('span', '', a), el('b', '', v)); c.append(r); }); c.append(el('span', 're83-bcg', 'اختيار هذه الجهة للمتابعة')); }); }
     function foReview(b, i, last, many) { const F = FOc(); const s2 = sheet('طلب المتابعة — ' + b.name, 're42-pick re73-rv'); applyTheme(s2.ov, cfg.theme); const x = s2.head.querySelector('.re42-x'); if (x) x.onclick = () => { s2.ov.remove(); if (last) renewAsk(); };
       const sp = el('div', 're73-spin'); sp.append(el('i', 're73-ring'), el('p', '', 'جارٍ التحقق من صلاحية عرض الخصم…')); s2.body.append(sp);
       foSync('issue').then(t => { sp.remove(); if (!t) { s2.body.append(el('p', 're42-note', 'تعذر التحقق من صلاحية عرض الخصم الآن، ولم يُرسل أي طلب. تأكد من الاتصال وحاول مرة ثانية.')); btn(s2.body, 'إعادة المحاولة', () => { s2.ov.remove(); foReview(b, i, last, many); }, 're42-go wide'); return; }
@@ -946,8 +953,10 @@
     function foMsg(b, i, f) { const F = FOc(), d = S.data, nm = first(d) || (d.name || ''); const L = [String(F.msg_intro || FO_DEF.msg_intro).replace(/\{name\}/g, nm).replace(/\{bank\}/g, b.name), '']; L.push('تفاصيل حسبتي المبدئية كاملة:', ''); const ff = {}; R66_CC.forEach(k => { ff[k] = k !== 'name'; }); r66rows(d, cfg, S.last && S.last.profile, ff).forEach(([a, v]) => L.push(a + ': ' + v));
       const cs = r66closed(d); L.push('الالتزامات:'); ((d.obligations || []).length ? d.obligations.map((o, k) => r66obl(o, cs.has(k))) : ['لا توجد التزامات']).forEach(t => L.push('• ' + t));
       let bt = bankText(b, i); [T.disclaimer || '', 'https://www.fino99.com'].forEach(z => { if (z) bt = bt.split('\n' + z).join(''); }); bt = bt.split('\n').filter(l => !/^أتعاب متابعة الإجراءات \(بند مستقل\)/.test(l)).join('\n'); L.push(bt, '');
+      if (b.rateSource === 'client') L.push('• نسبة الربح في هذه الحسبة أدخلتها بنفسي، وليست من النسب المرجعية المعتمدة لدى منصة FINO99.', ''); // r83
+      { const EZ = S.last && S.last.etizaz; if (EZ && b.etz) L.push('تفاصيل قرض اعتزاز الحسن (تقديري):', '• مبلغ قرض اعتزاز: ' + fmt(EZ.amount) + ' ريال.', '• قسط اعتزاز الشهري: ' + fmt2(EZ.inst) + ' ريال' + (Math.abs(EZ.last - EZ.inst) >= 0.005 ? ' (القسط الأخير ' + fmt2(EZ.last) + ' ريال)' : '') + '.', '• مدة سداد اعتزاز: ' + EZ.months + ' شهرًا (' + durTxt(EZ.months) + ').', '• بداية ونهاية سداد اعتزاز: الشهر ' + Math.max(1, EZ.firstPay) + ' – ' + EZ.lastPay + '.', '• ' + '*قسط اعتزاز تقديري، ويخضع المبلغ ومدة السداد للاعتماد النهائي وفق شروط المبادرة وجهة التمويل.', ''); } // r83
       const FB = 'إجمالي مبلغ التمويل المحتسب عليه الأتعاب، شاملًا الدعم المقدم إن وجد ولم يكن محتسبًا ضمن التمويل: ' + fmt(f.base) + ' ريال.'; // r75: fee details once only
-      L.push('تفاصيل أتعاب المتابعة:', '', ...(f.G ? [FB, 'أتعاب المتابعة قبل الخصم (' + p2(f.P) + '%): ' + fmt2(f.orig) + ' ريال.', 'الخصم الممنوح لي (' + p2(f.Z) + ' نقطة مئوية): ' + fmt2(f.disc) + ' ريال.', 'إجمالي أتعاب المتابعة بعد الخصم (' + p2(f.A) + '%): ' + fmt2(f.after) + ' ريال.'] : [FB, 'أتعاب المتابعة (' + p2(f.P) + '%): ' + fmt2(f.after) + ' ريال.']).map(t => t ? '• ' + t : t), '');
+      L.push('تفاصيل أتعاب المتابعة:', '', ...(f.G ? [FB, 'أتعاب المتابعة قبل الخصم (' + p2(f.P) + '%): ' + fmt2(f.orig) + ' ريال.', 'الخصم الممنوح لي (' + p2(f.Z) + ' نقطة مئوية): ' + fmt2(f.disc) + ' ريال.', 'إجمالي أتعاب المتابعة بعد الخصم (' + p2(f.A) + '%): ' + fmt2(f.after) + ' ريال.'].concat(S.foSt && S.foSt.expires_at ? ['تاريخ ووقت انتهاء عرض الخصم: ' + foDt(S.foSt.expires_at) + '.'] : []) : [FB, 'أتعاب المتابعة (' + p2(f.P) + '%): ' + fmt2(f.after) + ' ريال.']).map(t => t ? '• ' + t : t), '');
       L.push(String(F.msg_ack || FO_DEF.msg_ack).replace(/\{pct\}/g, p2(f.P)).replace(/\{disc\}/g, p2(f.Z)).replace(/\{after_pct\}/g, p2(f.A)).replace(/\{amount\}/g, fmt2(f.after))); return L.join('\n'); }
     function renewAsk() { if (S.rnAsked) return; const q = S.q65; if (!q || foLeft() !== 0 || !/^https:\/\//.test(q.renewal_url || '')) return; S.rnAsked = true; r73css(); // only at zero balance and only when the package supports renewal (owner renewal link)
       const s2 = sheet('تجديد الباقة', 're42-pick re73-rn'); applyTheme(s2.ov, cfg.theme); s2.body.append(el('p', '', tpl('انتهت حسبات باقتك يا {name}. تقدر تجدد باقتك وتكمل حسباتك.', S.data) + (q.renewal_price ? ' سعر التجديد: ' + q.renewal_price + ' ريال.' : '')));
@@ -1010,7 +1019,7 @@
       btn(s2.body, 'عرض صورة النتيجة', () => { s2.ov.remove(); bankImage(b, i); }, 're42-go wide alt'); }
     function ptableEl(b) { // r50: period | mortgage instalment | other obligations | Etizaz | total deduction | income (before/after retirement)
       const t = b.table || []; const ez = t.some(r => r.ez > 0), post = t.some(r => r.post); const w = el('div', 're42-tw'); w.append(el('small', '', 'تفاصيل الأقساط'));
-      const tb = el('table', 're42-pt'); const hr = el('tr'); ['الفترة (شهر)', 'القسط العقاري', 'التزامات أخرى'].concat(ez ? ['اعتزاز'] : []).concat(['إجمالي الاستقطاع', post ? 'الدخل (قبل/بعد التقاعد)' : 'الدخل']).forEach(x => hr.append(el('th', '', x))); tb.append(hr);
+      if (ez) w.append(el('small', 're83-etzn', '*قسط اعتزاز تقديري، ويخضع المبلغ ومدة السداد للاعتماد النهائي وفق شروط المبادرة وجهة التمويل.')); const tb = el('table', 're42-pt'); const hr = el('tr'); ['الفترة (شهر)', 'القسط العقاري', 'التزامات أخرى'].concat(ez ? ['اعتزاز'] : []).concat(['إجمالي الاستقطاع', post ? 'الدخل (قبل/بعد التقاعد)' : 'الدخل']).forEach(x => hr.append(el('th', '', x))); tb.append(hr);
       const rows = t.length > 8 ? t.slice(0, 7).concat([t[t.length - 1]]) : t;
       rows.forEach((r, k) => { if (t.length > 8 && k === 7) { const sk = el('tr', 'gap'); const td = el('td', '', '…'); td.colSpan = ez ? 6 : 5; sk.append(td); tb.append(sk); }
         const tr = el('tr', r.post ? 'post' : ''); const per = el('td', '', r.from === r.to ? String(r.from) : r.from + '–' + r.to); if (r.post) per.append(el('em', '', 'بعد التقاعد'));
@@ -1019,7 +1028,7 @@
     }
     function etzBox(R) { // r50: Etizaz qard hasan — its own line, never mixed with housing support or the bank principal
       const ep = R.etizaz, b0 = R.results[0], ez = b0 && b0.etz; const w = el('div', 're42-etz'); w.append(el('b', '', 'قرض اعتزاز الحسن ' + fmt(ep.amount) + ' ريال'));
-      w.append(kv('القسط الشهري', fmt2(ep.inst) + ' ريال' + (Math.abs(ep.last - ep.inst) >= 0.005 ? ' (الأخير ' + fmt2(ep.last) + ')' : '')), kv('فترة السماح', monthsTxt(ep.grace)), kv('مدة السداد', ep.months + ' شهرًا (' + durTxt(ep.months) + ')'),
+      w.append(kv('القسط الشهري', fmt2(ep.inst) + ' ريال' + (Math.abs(ep.last - ep.inst) >= 0.005 ? ' (الأخير ' + fmt2(ep.last) + ')' : '')), el('small', 're83-etzn', '*قسط اعتزاز تقديري، ويخضع المبلغ ومدة السداد للاعتماد النهائي وفق شروط المبادرة وجهة التمويل.'), kv('فترة السماح', monthsTxt(ep.grace)), kv('مدة السداد', ep.months + ' شهرًا (' + durTxt(ep.months) + ')'),
         kv('بداية ونهاية السداد', 'الشهر ' + Math.max(1, ep.firstPay) + ' – ' + ep.lastPay + (ez && ez.beyond ? ' (يمتد بعد نهاية التمويل)' : '')));
       if (ez && OWN) { if (ez.capBefore != null) w.append(kv('قدرتك الشهرية قبل بدء قسط اعتزاز', fmt2(ez.capBefore) + ' ريال')); if (ez.capDuring != null) w.append(kv('قدرتك أثناء سداد اعتزاز', fmt2(ez.capDuring) + ' ريال')); if (ez.capAfter != null) w.append(kv('قدرتك بعد انتهاء اعتزاز', fmt2(ez.capAfter) + ' ريال')); }
       if (OWN && R.support && R.support.combineBlocked && R.support.combineBlocked.length) w.append(el('p', 're42-muted', 'لم نجمع اعتزاز مع ' + R.support.combineBlocked.map(x => x === 'upfront' ? 'الدعم المقدم' : 'الدعم الشهري').join(' و') + ' لعدم اعتماد سياسة الجمع.'));
@@ -1070,6 +1079,7 @@
     if (!(Q.name && Q.name.enabled !== false)) { bot(T.greeting || 'أهلًا بك'); next(); } else nameCard();
     function nameCard() {
       const NK = (() => { try { const e = ENT0 || (typeof finoCentralRestoreEntry === 'function' ? finoCentralRestoreEntry() : null); return e && e.entryToken ? 'f99re59n:' + PROD + ':' + String(e.entryToken).slice(-16) : ''; } catch (x) { return ''; } })();
+      { let sv0 = ''; try { sv0 = (NK && W.sessionStorage.getItem(NK)) || ''; } catch (x) {} if (MG && sv0.length >= 2) { S.data.name = sv0; bot(greetWord() + ' يا ' + first(S.data) + '، حياك الله.'); return whoFor(true); } } // r83: a saved name is never asked again
       const cd = el('section', 're59-name'); cd.append(el('div', 're59-eye', 'FINO99 • البداية'), el('h2', '', 'نتعرف عليك، وش اسمك الكريم؟'));
       const inn = el('input'); inn.type = 'text'; inn.placeholder = 'اسمك الكريم'; inn.maxLength = 40; inn.autocomplete = 'given-name'; inn.setAttribute('aria-label', 'اسم العميل'); inn.dir = 'rtl';
       try { const sv = NK && W.sessionStorage.getItem(NK); if (sv) inn.value = sv; } catch (x) {}
@@ -1079,7 +1089,15 @@
       inn.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); go(); } });
       cd.append(inn, er); btn(cd, 'متابعة', go, 're42-go wide'); log.hidden = true; sh.body.prepend(cd); setTimeout(() => { try { inn.focus(); } catch (x) {} }, 60);
     }
-    W.F99RE42._bot = { S, cfg, results, durationCard, compute, PROD, pickBank, bankText };
+    // r83: «احسب من جديد» — for yourself (saved data, editable) or for someone else (only their name, then the same questions); nothing is metered here
+    function whoFor(open) {
+      choice('#تحسب لنفسك أو لشخص آخر؟', [{ label: 'لنفسي', value: 'me' }, { label: 'لشخص آخر', value: 'other' }], v => { S.custom = null; S.cut = null; S.offers = {}; S.plans = {}; S.entity = null; S.history = []; S.showRest = false;
+        if (v === 'other') return textIn('#وش اسم الشخص اللي تبي تحسب له؟', 'text', s0 => { const n = String(s0 || '').replace(/[<>`]/g, '').replace(/\s+/g, ' ').trim().slice(0, 40); if (n.length < 2) return 'اكتب اسمه للمتابعة.';
+          if (S.who !== 'other') S.selfData = JSON.parse(JSON.stringify(S.data)); S.who = 'other'; S.data = { obligations: [], name: n }; S.months = null; S.extend = null; S.scn = 'now'; if (resEl) { resEl.remove(); resEl = null; } me(n); bot('حياك الله، بنحسب الحين لـ ' + n + '.'); next(); }, 'اسمه الكريم');
+        if (S.who === 'other' && S.selfData) { S.data = JSON.parse(JSON.stringify(S.selfData)); S.months = null; S.extend = null; S.scn = 'now'; } S.who = 'me';
+        if (open || !order.some(k => k !== 'name' && visible(k) && answered(k))) return next();
+        clearDock(); bot(tpl('بياناتك محفوظة يا {name}، تقدر تحسب عليها مباشرة أو تعدّل أي بيان.', S.data)); const w = el('div', 're42-choices'); btn(w, 'احسب ببياناتي المحفوظة', () => { clearDock(); next(); }, 're42-chip'); btn(w, 'تعديل البيانات', () => editMenu(false, true), 're42-chip'); dock.append(w); scroll(); }); }
+    W.F99RE42._bot = { S, cfg, results, durationCard, compute, PROD, pickBank, bankText, whoFor, foMsg, foStart };
     return sh;
   }
 

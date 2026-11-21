@@ -315,3 +315,26 @@ html.re42-lock{overflow:hidden}
 /* r66: client details card */
 .re66-cli .re66-h{display:block;margin:10px 0 4px;color:#34506b}
 .re66-cli .re42-st{line-height:1.6}
+/* r83: clearer question/answer on iPhone; while the keyboard is open the package bar, counters and notice step aside so the question and the chat stay visible above the answer box */
+.re42-ov.re42-bot:not(.re54-tr) .re42-msg{font-size:17px;line-height:1.75}
+.re42-ov.re42-bot:not(.re54-tr) .re42-msg.bot{color:#0b2545;font-weight:600;border:1px solid #c5d3e4;border-inline-start:4px solid var(--nv,#073b67);box-shadow:0 1px 3px rgba(11,37,69,.08)}
+.re42-ov.re42-bot:not(.re54-tr) .re42-msg.bot.warn{border-color:#fecaca;border-inline-start-color:#b91c1c;color:var(--bad)}
+.re42-ov.re42-bot:not(.re54-tr) .re42-msg.me{font-weight:700;font-size:16.5px}
+.re42-ov.re42-bot:not(.re54-tr) .re42-msg.re54-txt{font-size:15px;font-weight:500}
+.re42-ov.re42-bot:not(.re54-tr) .re42-input input,.re42-ov.re42-bot:not(.re54-tr) .re42-drow input{font-size:17px;color:#0b2545;border-color:#b9c8da}
+.re42-ov.re42-bot:not(.re54-tr) .re42-dock .re42-chip{font-size:16px;min-height:46px}
+.re42-bot.kb:not(.re54-tr) .re59-st,.re42-bot.kb:not(.re54-tr) .re65-q,.re42-bot.kb:not(.re54-tr) .f99n78{display:none}
+.re42-bot.kb:not(.re54-tr) .re42-hint{font-size:11.5px;line-height:1.5}
+.re83-main{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.re83-main .re42-btn{min-height:50px;font-size:15.5px;font-weight:800;border-radius:12px;background:#eaf2f9;color:#073b67;border:1.5px solid rgba(7,59,103,.25)}
+.re83-main .re73-cta{grid-column:1/-1;background:#047857;color:#fff;border-color:#047857}
+.re83-foc{margin-top:12px;border:1.5px solid #a7f3d0;background:#f0fdf4;border-radius:14px;padding:10px 12px;text-align:center}
+.re83-fot{display:block;font-size:18px;color:#0f1f3d}
+.re83-fos{font-weight:800;color:#047857;margin:4px 0;font-size:15.5px}
+.re83-foh{margin:4px 0 0;font-size:13px;color:#334155}
+.re83-bc{display:flex;flex-direction:column;align-items:stretch;gap:6px;width:100%;text-align:start;padding:12px;border:1.5px solid #cfe0ef;border-radius:14px;background:#fff;margin:0 0 10px;color:#0f1f3d}
+.re83-bch{display:flex;align-items:center;gap:10px;font-size:16.5px}
+.re83-bcr{display:flex;justify-content:space-between;gap:8px;font-size:14px;color:#334155}
+.re83-bcr b{color:#073b67}
+.re83-bcg{text-align:center;background:#073b67;color:#fff;border-radius:10px;padding:8px;font-weight:800;font-size:14.5px}
+.re83-etzn{display:block;font-size:11.5px;line-height:1.6;color:#64748b;margin:0 0 6px}
