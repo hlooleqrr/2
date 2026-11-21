@@ -61,17 +61,18 @@
     const box = el('section', 'f64-code-entry r79-disc'); const fields = el('div', 'f64-client-fields'); fields.hidden = true;
     const input = el('input'); input.autocomplete = 'off'; input.autocapitalize = 'characters'; input.spellcheck = false; input.setAttribute('dir', 'ltr'); input.maxLength = 40; input.placeholder = 'ألصق كود الخصم هنا';
     const status = el('p', 'f64-client-status'); status.setAttribute('role', 'status');
-    btn(box, 'هل لديك كود خصم؟', () => { fields.hidden = !fields.hidden; if (!fields.hidden) input.focus(); }, 'f64-toggle');
+    const tg = btn(box, 'هل لديك كود خصم؟', () => { fields.hidden = !fields.hidden; if (!fields.hidden) input.focus(); }, 'f64-toggle');
+    let preOn = false; const preOff = () => { if (preOn) { preOn = false; tg.style.display = ''; fields.hidden = false; } }; // r80: code already applied earlier → no 2nd «هل لديك كود خصم؟»; shown again only if it is rejected now
     box.append(fields); fields.append(el('p', 'f64-hint', 'هذه الخانة لكود الخصم، وليست لتفعيل الباقة'), input, status);
     const out = el('div', 'r79-cp'); const u = String((P.product || {}).url || ''); const okUrl = /^https:\/\/[^\s]+$/.test(u);
     const reset = () => { out.replaceChildren(); if (link) link.hidden = false; };
     const apply = btn(fields, 'تأكيد الكود', async () => {
       const k = String(input.value || '').replace(/\s+/g, '').toUpperCase(); input.value = k; reset();
-      if (!/^[A-Z0-9_-]{3,40}$/.test(k)) { status.textContent = CBAD; return; }
+      if (!/^[A-Z0-9_-]{3,40}$/.test(k)) { preOff(); status.textContent = CBAD; return; }
       apply.disabled = true; status.textContent = 'جاري التحقق من الكود...'; let q = null;
       try { const r = await W.finoRpc('f99v55_stacked_coupon_preview', { p_package_key: P.key, p_code: k }, 12000); q = r && r.ok ? r.data : null; } catch (e) {} apply.disabled = false;
       if (!box.isConnected) return;
-      if (!q || q.ok !== true || !(Number(q.final_preview) >= 0)) { status.textContent = CPN[q && q.reason] || 'تعذر التحقق من الكود، حاول مرة أخرى.'; return; }
+      if (!q || q.ok !== true || !(Number(q.final_preview) >= 0)) { preOff(); status.textContent = CPN[q && q.reason] || 'تعذر التحقق من الكود، حاول مرة أخرى.'; return; }
       status.textContent = 'تم احتساب خصم الكود على السعر المعروض.';
       const pr = el('div', 'f64-new-price'); pr.append(el('strong', '', 'السعر بعد خصم الكود: ' + fmt2(q.final_preview) + ' ريال')); out.append(pr);
       if (!okUrl) { out.append(el('p', 'f99v10-msg', NOPAY)); return; }
@@ -88,7 +89,7 @@
     input.addEventListener('input', () => { try { const s = W.F99V64Test && W.F99V64Test.customerState; if (s) s.delete(P.key); } catch (e) {} // edited/cleared → the tile code no longer applies (else f64 intercepts «إتمام الشراء» with the old code)
       if (out.childNodes.length) { reset(); status.textContent = ''; } });
     box.append(out); host.append(box);
-    const pre = tileCpn(P); if (pre) { input.value = pre; fields.hidden = false; apply.click(); } // the code already confirmed on the store tile
+    const pre = tileCpn(P); if (pre) { input.value = pre; preOn = true; tg.style.display = 'none'; fields.hidden = true; apply.click(); } // the code already confirmed on the store tile (kept, not re-asked)
   }
   // r69: «هل لديك كود؟» = the package ACTIVATION code (not a discount code), inline inside this page, same shape/position as the store tile box
   // (above «اشتر الآن»). It uses the existing central login (#password + window.login) — entering a code or opening the chat consumes no calculation.
