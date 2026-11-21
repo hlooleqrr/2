@@ -73,8 +73,8 @@
       products: {enabled: s.products?.enabled !== false},
       transfer: {enabled: s.transfer?.enabled !== false},
       timeline: {enabled: s.timeline?.enabled !== false},
-      note: txt(s.note, 600, 'كل الأرقام تقديرية مبنية على نسب البنوك المسجلة في المركزية وسياسات يحددها المالك، والمرجع النهائي عرض البنك الرسمي.') ||
-        'كل الأرقام تقديرية مبنية على نسب البنوك المسجلة في المركزية وسياسات يحددها المالك، والمرجع النهائي عرض البنك الرسمي.',
+      note: txt(s.note, 600, 'كل الأرقام تقديرية مبنية على نسب جهات التمويل المسجلة في المركزية وسياسات يحددها المالك، والمرجع النهائي عرض البنك الرسمي.') ||
+        'كل الأرقام تقديرية مبنية على نسب جهات التمويل المسجلة في المركزية وسياسات يحددها المالك، والمرجع النهائي عرض البنك الرسمي.',
       banks
     };
   }
@@ -242,7 +242,7 @@
 
     function renderRanking(host, detail, adv) {
       const results = detail.res?.results || [];
-      const pick = el('label', 'f99ma-field'); pick.append(el('span', '', 'رتّب البنوك حسب'));
+      const pick = el('label', 'f99ma-field'); pick.append(el('span', '', 'رتّب جهات التمويل حسب'));
       const sel = el('select'); for (const [k, v] of Object.entries(CRITERIA)) { const o = el('option', '', v); o.value = k; sel.append(o); }
       pick.append(sel); host.append(pick);
       const out = el('div', 'f99ma-out'); out.setAttribute('aria-live', 'polite'); host.append(out);
@@ -250,7 +250,7 @@
       const draw = () => {
         const R = rank(results, sel.value, adv.ranking.weights);
         out.replaceChildren();
-        if (!R.sameAmount && (sel.value === 'cost')) out.append(el('p', 'f99ma-note', 'المبالغ تختلف بين البنوك (لم تحدد مبلغًا مطلوبًا)، لذلك قارنا التكلفة لكل ريال تمويل.'));
+        if (!R.sameAmount && (sel.value === 'cost')) out.append(el('p', 'f99ma-note', 'المبالغ تختلف بين جهات التمويل (لم تحدد مبلغًا مطلوبًا)، لذلك قارنا التكلفة لكل ريال تمويل.'));
         if (!R.items.length) out.append(el('p', 'f99ma-warn', 'لا يوجد بنك مؤهل لهذا السيناريو.'));
         R.items.forEach((it, i) => {
           const r = it.r, row = el('div', 'f99ma-rank' + (i === 0 ? ' best' : ''));
@@ -267,7 +267,7 @@
           out.append(row);
         });
         if (R.excluded.length) {
-          const ex = el('details', 'f99ma-ex'); ex.append(el('summary', '', 'بنوك مستبعدة وسبب الاستبعاد (' + R.excluded.length + ')'));
+          const ex = el('details', 'f99ma-ex'); ex.append(el('summary', '', 'جهات تمويل مستبعدة وسبب الاستبعاد (' + R.excluded.length + ')'));
           R.excluded.forEach(x => ex.append(el('p', '', x.bank + ': ' + x.reason))); out.append(ex);
         }
       };
@@ -329,7 +329,7 @@
         out.replaceChildren(el('p', 'f99ma-note', 'جاري الحساب...')); go.disabled = true;
         try {
           const banks = Array.isArray(detail.banks) ? detail.banks : [];
-          if (!banks.length) throw Error('أعد تشغيل الحسبة أولًا لتحديد البنوك');
+          if (!banks.length) throw Error('أعد تشغيل الحسبة أولًا لتحديد جهات التمويل');
           const input = {balance: bal.value, settlementFees: fees.value, currentInstallment: cur.value, remainingMonths: rem.value, newMonths: nm.value || rem.value};
           const T = transfer(core(), banks, detail.o, detail.cfg, input, adv);
           if (detail.client) await meter(detail, {months: T.newMonths, supported: false, requestedFinance: T.request, bankKeys: banks.map(b => b.key)});
@@ -349,7 +349,7 @@
             out.append(row);
           });
           const bad = T.results.filter(r => r.error);
-          if (bad.length) { const ex = el('details', 'f99ma-ex'); ex.append(el('summary', '', 'بنوك لا تناسب النقل (' + bad.length + ')')); bad.forEach(x => ex.append(el('p', '', x.bank + ': ' + x.error))); out.append(ex); }
+          if (bad.length) { const ex = el('details', 'f99ma-ex'); ex.append(el('summary', '', 'جهات تمويل لا تناسب النقل (' + bad.length + ')')); bad.forEach(x => ex.append(el('p', '', x.bank + ': ' + x.error))); out.append(ex); }
         } catch (e) { out.replaceChildren(el('p', 'f99ma-warn', e.message)); }
         finally { go.disabled = false; }
       };
@@ -390,7 +390,7 @@
       if (!adv.enabled) card.append(el('p', 'f99ma-owner', 'معاينة للمالك فقط: مخفية عن العملاء حتى تفعّلها من «منتجات العقاري المتقدمة».'));
       card.append(el('p', 'f99ma-note', adv.note));
       const names = [];
-      if (adv.ranking.enabled || owner) names.push(['rank', 'ترشيح أفضل البنوك']);
+      if (adv.ranking.enabled || owner) names.push(['rank', 'ترشيح أفضل جهات التمويل']);
       if (adv.products.enabled || owner) names.push(['products', 'بناء ذاتي / على الخارطة']);
       if (adv.transfer.enabled || owner) names.push(['transfer', 'نقل التمويل العقاري']);
       if (adv.timeline.enabled || owner) names.push(['timeline', 'التقاعد والدعم']);

@@ -160,7 +160,7 @@
     c.append(big); return c;
   }
   function result(res, review) {
-    const rows = (res.rows || []), av = rows.filter(r => r.available), nm = res.name || '';
+    const rows = (res.rows || []), av = rows.filter(r => r.available), nm = res.name || ''; const mark = ui.body.lastElementChild; // r78: start of this result
     if (rows.length > 1) {
       const w = rows.find(r => r.key === 'with') || rows[0], wo = rows.find(r => r.key === 'without') || rows[1];
       const o1 = w.available ? w.overage : null; msg(o1 > 0 ? tpl(T.over_1, { name: nm, amount: fmt(o1) }) : (av.some(r => r.overage > 0) ? tpl(T.two_mixed || DEF.two_mixed, { name: nm }) : tpl(T.no_over, { name: nm })));
@@ -168,7 +168,12 @@
     } else { const x = rows[0]; msg(x.overage > 0 ? tpl(T.over_1, { name: nm, amount: fmt(x.overage) }) : tpl(T.no_over, { name: nm })); ui.body.append(card(x, '', res)); }
     if (av.some(r => r.overage > 0)) msg(tpl(T.over_2, { name: nm }));
     if (av.some(r => r.basis === 't1_general')) msg(T.note_t1 || DEF.note_t1, 'small');
-    msg(T.note, 'small'); down(); if (!review) after();
+    msg(T.note, 'small'); down(); if (review) return;
+    if (S.remaining > 0) return after();
+    // r78: last check — the full result first (scrolled to its start); the new-code offer only after the client has read it
+    const top = mark ? mark.nextElementSibling : ui.body.firstElementChild;
+    requestAnimationFrame(() => requestAnimationFrame(() => { if (!ui || !top) return; ui.body.scrollTop += top.getBoundingClientRect().top - ui.body.getBoundingClientRect().top - 8; }));
+    clear(); const row = el('div', 'r67-row'); btn(row, 'تم، قرأت النتيجة', () => endCard(), 'pri'); ui.dock.append(row);
   }
   function after() {
     clear(); const row = el('div', 'r67-row');

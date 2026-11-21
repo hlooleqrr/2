@@ -55,7 +55,7 @@
     let a = null; try { const r = await W.finoRpc('f99v55_coupon_availability', { p_package_key: P.key }, 12000); a = r && r.ok ? r.data : null; } catch (e) {}
     if (!a || a.available !== true || !host.isConnected) return;
     const w = el('div', 'r65-disc'); const f = el('div', 'r65-disc-f'); f.hidden = true;
-    const i = el('input'); i.placeholder = 'ألصق كود الخصم هنا'; i.maxLength = 40; i.autocapitalize = 'characters'; i.setAttribute('dir', 'ltr'); f.append(el('p', 'r65-note', 'كود الخصم، وليس كود تفعيل الباقة'), i);
+    const i = el('input'); i.placeholder = 'ألصق كود الخصم هنا'; i.maxLength = 40; i.autocapitalize = 'characters'; i.setAttribute('dir', 'ltr'); f.append(el('p', 'r65-note', 'هذه الخانة لكود الخصم، وليست لتفعيل الباقة'), i); // r78
     btn(w, 'هل لديك كود خصم؟', () => { f.hidden = !f.hidden; if (!f.hidden) i.focus(); }, 'alt'); w.append(f);
     const out = el('div', 'r65-disc-o');
     const ap = btn(f, 'تطبيق الكود وعرض السعر الجديد', async () => {
@@ -103,31 +103,36 @@
     const b = m.querySelector('.f99v6-tile [data-f40-key="' + (PUB && PUB.key ? PUB.key : MKEY) + '"]'); const t = b && b.closest('.f99v6-tile'); if (!t) return;
     const d = t.querySelector('.f64-code-entry .f64-toggle'); if (d && d.textContent !== 'هل لديك كود خصم؟') { d.textContent = 'هل لديك كود خصم؟'; const x = t.querySelector('.f64-code-entry input'); if (x) x.placeholder = 'ألصق كود الخصم هنا'; }
     if (!t.querySelector('.r65-act')) act(t, t.querySelector('.f64-code-entry') || b); }
+  // r78: red notice (shared builder in fino99_re42.js) — from the first page of the mortgage calculation
+  const note78 = (host, P) => { try { if (typeof W.F99R78Notice === 'function') W.F99R78Notice(host, null, P && P.rates_dates); } catch (e) {} };
+  // r78: store «اشتر الآن» → the first eligibility question directly (no intermediate page repeating image/price/buttons)
   function page(P) {
+    const body = shell(NM(P), store); note78(body, P);
+    const so = SOLD(P.key); if (so) { soldNote(body, so); act(body); return; }
+    elig(P, body);
+  }
+  function summary(P, host) { // r78: package details on the purchase page (texts/limits unchanged)
     const pr = P.product || {}, pk = P.package || {};
-    const body = shell(NM(P)); pbtn(body, 'العودة إلى المتجر', store, 'f99v6-text');
-    if (pr.image) { const im = el('img', 'r65-img'); im.src = pr.image; im.alt = NM(P); im.decoding = 'async'; body.append(im); }
-    const pz = el('div', 'f99v6-summary');
+    const pz = el('div', 'f99v6-summary'); pz.append(el('h3', 'r65-name', NM(P)));
     if (pr.price != null && pr.price !== '') pz.append(el('strong', '', fmt2(pr.price) + ' ريال'));
     if (Number(pr.old_price) > Number(pr.price)) pz.append(el('s', '', fmt2(pr.old_price) + ' ريال'));
-    body.append(pz);
+    host.append(pz);
     const hrs = Number(pk.hours) || 24, qr = Number(pk.quota_ref) || 3, qc = pk.custom_enabled === false ? 0 : (Number(pk.quota_custom) || 0);
     const ul = el('ul', 'r65-list');
     ul.append(el('li', '', 'الصلاحية: ' + (hrs === 24 ? 'يوم واحد (24 ساعة)' : hrs + ' ساعة') + ' من أول تفعيل'));
     ul.append(el('li', '', qr + ' حسبات بالنسب المرجعية المعلنة'));
     if (qc) ul.append(el('li', '', 'قارن حتى ' + qc + ' نسب تمويلية تدخلها بنفسك'));
-    pz.append(el('p', 'r65-sub', T(P, 'r65_landing_sub', 'حسبة مبدئية لتمويلك العقاري مع مقارنة البنوك.')), ul);
-    const low = el('div', 'r65-low'); body.append(low);
-    act(low); const so = SOLD(P.key); if (so) { soldNote(low, so); return; }
-    pbtn(low, 'اشتر الآن', () => { low.remove(); elig(P, body); }).dataset.r65Buy = '1';
+    ul.append(el('li', '', 'المنتج المدعوم: شراء وحدة سكنية جاهزة من السوق فقط'));
+    ul.append(el('li', '', 'المدة المدعومة: ' + (Number(P.term) || 240) + ' شهرًا فقط'));
+    pz.append(el('p', 'r65-sub', T(P, 'r65_landing_sub', 'حسبة مبدئية لتمويلك العقاري مع مقارنة جهات التمويل.')), ul);
   }
   // ---------- eligibility (no salary or financing data) inside the same page, «اختصر مشاويرك» flow style (الخطوة n من N + اختيار + السابق/التالي)
-  // order: وحدة جاهزة ← سكني ← سعودي ← القطاع ← الميلاد ← r72: مدة 240 شهرًا (last, before payment); texts/show/allowed sectors editable by the owner. No RPC, no use deducted.
+  // r78 order: سعودي ← سكني ← القطاع ← وحدة جاهزة ← مدة 240 شهرًا ← الميلاد (existing age/term check); texts/show/allowed sectors editable by the owner. No RPC, no use deducted.
   function elig(P, body) {
     const st = {}; const fl = el('section', 'f99v10-flow'); body.append(fl);
     const EL = (P.package && P.package.elig) || {}; const on = k => !(EL[k] && EL[k].show === false); const SE = EL.sector || {};
     const allowed = Array.isArray(SE.allowed) ? SE.allowed : ['gov', 'semi', 'military', 'retired'];
-    const S = ['ready', 'sakani', 'saudi', 'sector'].filter(on).concat(['birth']).concat(on('term') ? ['term'] : []); const N = S.length;
+    const S = ['saudi', 'sakani', 'sector', 'ready'].filter(on).concat(on('term') ? ['term'] : []).concat(['birth']); const N = S.length;
     const top = () => { try { fl.scrollIntoView({ block: 'start' }); } catch (e) {} };
     const frame = (i, t) => { fl.replaceChildren(); const h = el('div', 'f99v10-flowhead'); h.append(el('span', '', 'الخطوة ' + (i + 1) + ' من ' + N), el('strong', '', t)); fl.append(h); };
     const note = (t, k) => { const n = el('p', 'f99v10-msg', t || ''); n.dataset.kind = k || 'error'; fl.append(n); return n; };
@@ -141,7 +146,7 @@
       ready: i => yn(i, 'ready', T(P, 'r65_q_ready', 'هل تمويلك العقاري لشراء وحدة سكنية جاهزة من السوق؟'), T(P, 'r65_no_ready', 'نعتذر منك، هذه الباقة مخصصة لحساب تمويل شراء الوحدات السكنية الجاهزة من السوق فقط، ولا تشمل الرهن العقاري أو البناء الذاتي أو البيع على الخارطة.'), 'نعم، وحدة جاهزة من السوق', 'لا'),
       sakani: i => yn(i, 'sakani', T(P, 'r65_q_sakani', 'هل أنت مدعوم من سكني؟'), T(P, 'r65_no_sakani', 'نعتذر منك، هذه الباقة متاحة حاليًا للمستفيدين المدعومين من سكني فقط.')),
       saudi: i => yn(i, 'saudi', T(P, 'r65_q_saudi', 'هل أنت سعودي؟'), T(P, 'r65_not_saudi', 'نعتذر منك، هذه الباقة متاحة حاليًا للمواطنين السعوديين فقط.')),
-      sector: i => { const L = (P.sectors || []).filter(s => allowed.indexOf(s.key) >= 0 || SE.show_na !== false);
+      sector: i => { const L = (P.sectors || []).filter(s => allowed.indexOf(s.key) >= 0 || SE.show_na === true); // r78: supported sectors only
         sel(i, T(P, 'r65_q_sector', 'ما قطاع عملك؟'), [['', 'حدد القطاع']].concat(L.map(s => [s.key, s.label])), st.sector && st.sector.key, v => { const s = L.find(x => x.key === v); if (!s || allowed.indexOf(v) < 0) { stop(i, T(P, 'r65_sector_na', 'نعتذر منك، هذا القطاع غير متاح حاليًا في هذه الباقة.')); return; } st.sector = s; step(i + 1); }); },
       birth: i => { frame(i, 'تاريخ الميلاد'); const s = st.sector; const n = s.key ? T(P, 'r65_note_' + s.key, '') : '';
         if (s.label) fl.append(el('p', 'r65-meta', 'القطاع: ' + s.label)); if (n) fl.append(el('p', 'r65-warn', n));
@@ -155,7 +160,7 @@
           if (!g) { er.textContent = 'اكتب تاريخًا صحيحًا (اليوم / الشهر / السنة).'; return; }
           st.cal = cal; st.birth = g; result(i); }); top(); },
       // r72: mandatory last question before payment — the package calculates 240 months only (term/formulas unchanged); «لا» = apology and no payment step.
-      term: i => yn(i, 'term', T(P, 'r65_q_term', 'هل تعلم أن هذه الباقة تحسب التمويل العقاري لمدة 20 سنة (240 شهرًا) فقط؟'), T(P, 'r65_no_term', 'نعتذر منك، هذه الباقة مخصصة لحساب التمويل العقاري لمدة 20 سنة (240 شهرًا) فقط، ولا تدعم حاليًا حساب مدد تمويل أخرى.'), 'نعم، أعلم', 'لا، ما كنت أعلم')
+      term: i => yn(i, 'term', T(P, 'r65_q_term', 'هل تعلم أن هذه الباقة تدعم مدة تمويل 240 شهرًا (20 سنة) فقط؟'), T(P, 'r65_no_term', 'نعتذر منك، هذه الباقة مخصصة لحساب التمويل العقاري لمدة 20 سنة (240 شهرًا) فقط، ولا تدعم حاليًا حساب مدد تمويل أخرى.'), 'نعم، أعلم', 'لا، لا أعلم')
     };
     const step = i => { if (i >= N) { checkout(P, st.okMsg); return; } Q[S[i]](i); };
     const result = i => { const e = E(); const s = st.sector; const L = P.limits || {}; const term = Number(P.term) || 240;
@@ -166,14 +171,14 @@
       const meta = (s.label ? 'القطاع: ' + s.label + ' — ' : '') + 'العمر التقريبي: ' + Math.floor(age / 12) + ' سنة هجرية. ';
       if (age < 18 * 12) { stop(i, meta + 'العمر أقل من الحد المطلوب للتمويل.'); return; }
       if (avail < term) { stop(i, meta + 'حسب عمرك وقطاعك، المدة المتاحة مبدئيًا ' + Math.max(0, Math.floor(avail)) + ' شهرًا، وهي أقل من ' + term + ' شهرًا المعتمدة حاليًا في هذه الباقة؛ لذلك قد لا تناسبك الباقة الآن.'); return; }
-      st.okMsg = 'مبدئيًا: عمرك وقطاعك يسمحان بالتمويل حتى ' + term + ' شهرًا' + (s.extend === true && ret && age + term > ret * 12 ? ' مع التمويل بعد التقاعد حسب سياسة البنك.' : '.');
+      st.okMsg = 'مبدئيًا: عمرك وقطاعك يسمحان بالتمويل حتى ' + term + ' شهرًا' + (s.extend === true && ret && age + term > ret * 12 ? ' مع التمويل بعد التقاعد حسب سياسة جهة التمويل.' : '.');
       step(i + 1); };
     if (!on('sector')) st.sector = { key: '', label: '', extend: true, retire_age: null };
     step(0);
   }
   // r72: purchase step after eligibility (same shape as the store checkout page): instructions, discount code (payment only), the saved payment link, activation code.
   function checkout(P, okMsg) {
-    const b = shell('إتمام شراء ' + NM(P), () => page(P));
+    const b = shell('إتمام شراء ' + NM(P), () => page(P)); note78(b, P); summary(P, b); // r78: short purchase page (name, price, struck price, details)
     if (okMsg) b.append(el('p', 'r65-ok', okMsg)); b.append(el('p', 'r65-note', 'هذا فحص مبدئي للعمر والمدة فقط، والحسبة الكاملة بعد التفعيل.'));
     const so = SOLD(P.key); if (so) { soldNote(b, so); act(b); return; }
     let C = {}; try { C = (W.FINO99ReadStorefront && W.FINO99ReadStorefront()) || {}; } catch (e) {}
@@ -181,9 +186,8 @@
     const g = el('section', 'f26-checkout-guide'); g.append(el('h3', '', 'بعد إتمام الشراء')); const s = el('div', 'f27-instructions'); tx.split(/\n/).map(x => x.trim()).filter(Boolean).forEach(l => s.append(el('p', '', l))); g.append(s); b.append(g);
     const dh = el('div'); b.append(dh); disc(P, dh);
     const u = String((P.product || {}).url || '');
-    if (/^https:\/\/[^\s]+$/.test(u)) { const a = el('a', 'f99v6-primary', 'إتمام الدفع'); a.href = u; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.dataset.checkout = 'link'; b.append(a); }
+    if (/^https:\/\/[^\s]+$/.test(u)) { const a = el('a', 'f99v6-primary', 'إتمام الشراء'); a.href = u; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.dataset.checkout = 'link'; b.append(a); }
     else b.append(el('p', 'f99v10-msg', NOPAY));
-    act(b);
   }
   async function open() {
     let b0 = null; if (!(PUB && Date.now() - PUBAT < 60000)) { b0 = shell(NM(PUB)); b0.append(el('p', 'r65-note', 'جاري التحميل…')); }
@@ -196,9 +200,9 @@
     const P = PUB || null; if (t.dataset.f40Key !== (P && P.key ? P.key : MKEY)) return; if (P && !(P.product && P.product.enabled === true)) return;
     ev.preventDefault(); ev.stopPropagation(); if (ev.stopImmediatePropagation) ev.stopImmediatePropagation(); open();
   }, true);
-  W.F99R65 = { open, eligibility: async () => { const P = await pub(); if (P) { page(P); const g = D.querySelector('#r65-ov [data-r65-buy]'); if (g) g.click(); } } };
+  W.F99R65 = { open, eligibility: async () => { const P = await pub(); if (P) page(P); } };
   function css68() { // r68: the package page must sit above the store window (#f99s-modal z 2147483100), otherwise it opens behind it and «اشتر الآن» looks unresponsive
-     if (D.getElementById('r65-css68')) return; const s = el('style'); s.id = 'r65-css68'; s.textContent = '#r65-ov .r65-img{display:block;width:auto;max-width:100%;height:auto;max-height:none;object-fit:contain;margin:0 auto 12px;border-radius:12px}#r65-ov .r65-sub{margin:8px 0 4px;font-size:14px;color:inherit}#r65-ov .r65-list{margin:0;padding-inline-start:18px;font-size:14px;line-height:1.8}#r65-ov .r65-low{display:grid;gap:10px;margin-top:12px}#r65-ov a.f99v6-primary,#r65-ov .r65-low>.f99v6-primary{display:block;width:100%;box-sizing:border-box;text-align:center;text-decoration:none;margin-top:10px}#r65-ov .r65-ok,#r65-ov .r65-note{margin:8px 0}#r65-ov .r65-date{margin:4px 0 6px}#r65-ov.r65-ov{z-index:2147483200}.r65-disc,.r65-disc-f,.r65-disc-o{display:flex;flex-direction:column;gap:8px}.r65-disc-f[hidden],.r65-btn[hidden]{display:none}.r65-disc input{font-size:16px;padding:10px;border:1px solid #cfd8e3;border-radius:10px;text-align:center;letter-spacing:1px}:is(#r65-ov,#f99s-modal) .r65-act,:is(#r65-ov,#f99s-modal) .r65-act-f{display:grid;gap:7px;direction:rtl}:is(#r65-ov,#f99s-modal) .r65-act{padding:8px 0 10px;margin-top:7px}:is(#r65-ov,#f99s-modal) .r65-act *{box-sizing:border-box}:is(#r65-ov,#f99s-modal) .r65-act-f[hidden]{display:none!important}:is(#r65-ov,#f99s-modal) .r65-act .r65-btn{appearance:none;width:100%;border:1px solid #c2d7e3;border-radius:11px;background:#f3f8fb;color:#185375;min-height:44px;padding:10px 13px;font-family:inherit;font-weight:850;cursor:pointer}:is(#r65-ov,#f99s-modal) .r65-act .r65-btn.r65-tog{border:1px dashed #9bbdcf;background:#f7fbfd;color:#245b77}:is(#r65-ov,#f99s-modal) .r65-act .r65-btn.r65-cbtn{background:#14658b;color:#fff;border-color:#14658b}:is(#r65-ov,#f99s-modal) .r65-act .r65-btn:disabled{opacity:.55;cursor:wait}:is(#r65-ov,#f99s-modal) .r65-act input{width:100%;padding:9px;border:1px solid #afcad8;border-radius:10px;font-size:16px;direction:ltr;text-align:left}:is(#r65-ov,#f99s-modal) .r65-act-s{margin:0;font-size:12px;line-height:1.7;color:#285e77}:is(#r65-ov,#f99s-modal) .r65-act-s:empty{display:none}:is(#r65-ov,#f99s-modal) .r65-act-s.r65-err{color:#b42318}#r65-ov .r65-soldout{display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:12px;border-radius:12px;border:1px solid #e7c3c3;background:#fff4f4;color:#9b1c1c;font-weight:900;text-align:center;line-height:1.6;cursor:default;-webkit-user-select:none;user-select:none}.r65-code{font:800 20px/1.4 ui-monospace,Menlo,monospace;text-align:center;border:2px dashed #0a5187;border-radius:12px;padding:10px;color:#0a5187;-webkit-user-select:all;user-select:all}#f99s-modal .r65-act input{padding:9px 6px;text-align:center}#f99s-modal .r65-act input::placeholder{font-size:12px}#r65-ov .r65-img{max-height:210px;width:auto;margin:0 auto 10px}#r65-ov .f99v6-summary>strong{display:inline-block}#r65-ov .f99v6-summary>s{display:inline-block;margin-inline-start:10px}#r65-ov .r65-low{margin-top:8px;gap:8px}#r65-ov .f99v10-flow{margin-top:10px}#r65-ov .f99v10-flowhead strong{font-size:19px;line-height:1.5}#r65-ov .f99v10-field select{width:100%;max-width:100%;box-sizing:border-box}#r65-ov .f99v10-actions{display:flex;flex-wrap:wrap;gap:8px}#r65-ov .f99v10-actions>button{flex:1 1 0;min-width:0}'; (D.head || D.documentElement).append(s); }
+     if (D.getElementById('r65-css68')) return; const s = el('style'); s.id = 'r65-css68'; s.textContent = '#r65-ov .r65-img{display:block;width:auto;max-width:100%;height:auto;max-height:none;object-fit:contain;margin:0 auto 12px;border-radius:12px}#r65-ov .r65-sub{margin:8px 0 4px;font-size:14px;color:inherit}#r65-ov .r65-list{margin:0;padding-inline-start:18px;font-size:14px;line-height:1.8}#r65-ov .r65-low{display:grid;gap:10px;margin-top:12px}#r65-ov a.f99v6-primary,#r65-ov .r65-low>.f99v6-primary{display:block;width:100%;box-sizing:border-box;text-align:center;text-decoration:none;margin-top:10px}#r65-ov .r65-ok,#r65-ov .r65-note{margin:8px 0}#r65-ov .r65-date{margin:4px 0 6px}#r65-ov.r65-ov{z-index:2147483200}.r65-disc,.r65-disc-f,.r65-disc-o{display:flex;flex-direction:column;gap:8px}.r65-disc-f[hidden],.r65-btn[hidden]{display:none}.r65-disc input{font-size:16px;padding:10px;border:1px solid #cfd8e3;border-radius:10px;text-align:center;letter-spacing:1px}:is(#r65-ov,#f99s-modal) .r65-act,:is(#r65-ov,#f99s-modal) .r65-act-f{display:grid;gap:7px;direction:rtl}:is(#r65-ov,#f99s-modal) .r65-act{padding:8px 0 10px;margin-top:7px}:is(#r65-ov,#f99s-modal) .r65-act *{box-sizing:border-box}:is(#r65-ov,#f99s-modal) .r65-act-f[hidden]{display:none!important}:is(#r65-ov,#f99s-modal) .r65-act .r65-btn{appearance:none;width:100%;border:1px solid #c2d7e3;border-radius:11px;background:#f3f8fb;color:#185375;min-height:44px;padding:10px 13px;font-family:inherit;font-weight:850;cursor:pointer}:is(#r65-ov,#f99s-modal) .r65-act .r65-btn.r65-tog{border:1px dashed #9bbdcf;background:#f7fbfd;color:#245b77}:is(#r65-ov,#f99s-modal) .r65-act .r65-btn.r65-cbtn{background:#14658b;color:#fff;border-color:#14658b}:is(#r65-ov,#f99s-modal) .r65-act .r65-btn:disabled{opacity:.55;cursor:wait}:is(#r65-ov,#f99s-modal) .r65-act input{width:100%;padding:9px;border:1px solid #afcad8;border-radius:10px;font-size:16px;direction:ltr;text-align:left}:is(#r65-ov,#f99s-modal) .r65-act-s{margin:0;font-size:12px;line-height:1.7;color:#285e77}:is(#r65-ov,#f99s-modal) .r65-act-s:empty{display:none}:is(#r65-ov,#f99s-modal) .r65-act-s.r65-err{color:#b42318}#r65-ov .r65-soldout{display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:12px;border-radius:12px;border:1px solid #e7c3c3;background:#fff4f4;color:#9b1c1c;font-weight:900;text-align:center;line-height:1.6;cursor:default;-webkit-user-select:none;user-select:none}.r65-code{font:800 20px/1.4 ui-monospace,Menlo,monospace;text-align:center;border:2px dashed #0a5187;border-radius:12px;padding:10px;color:#0a5187;-webkit-user-select:all;user-select:all}#f99s-modal .r65-act input{padding:9px 6px;text-align:center}#f99s-modal .r65-act input::placeholder{font-size:12px}#r65-ov .r65-img{max-height:210px;width:auto;margin:0 auto 10px}#r65-ov .f99v6-summary>strong{display:inline-block}#r65-ov .f99v6-summary>s{display:inline-block;margin-inline-start:10px}#r65-ov .r65-low{margin-top:8px;gap:8px}#r65-ov .f99v10-flow{margin-top:10px}#r65-ov .f99v10-flowhead strong{font-size:19px;line-height:1.5}#r65-ov .f99v10-field select{width:100%;max-width:100%;box-sizing:border-box}#r65-ov .f99v10-actions{display:flex;flex-wrap:wrap;gap:8px}#r65-ov .f99v10-actions>button{flex:1 1 0;min-width:0}#r65-ov .r65-name{margin:0 0 6px;font-size:17px;line-height:1.5}'; (D.head || D.documentElement).append(s); }
   const go = () => { css68(); try { new MutationObserver(() => { if (!TQ) TQ = requestAnimationFrame(tile); }).observe(D.documentElement, { childList: true, subtree: true }); } catch (e) {} try { if (new URLSearchParams(W.location.search).get('p') === 'mortgage') setTimeout(open, 400); } catch (e) {} pub(); };
   if (D.readyState === 'loading') D.addEventListener('DOMContentLoaded', go); else go();
 })();
