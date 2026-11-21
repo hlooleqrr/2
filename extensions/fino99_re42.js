@@ -126,6 +126,8 @@
     if (b.etz) out.push(['قرض اعتزاز الحسن (دفعة مقدمة)', fmt(b.etz.amount) + ' ريال']);
     if (b.propertyValueR > b.amountR) out.push(['قيمة الشراء التقديرية (التمويل + ' + [sa.upfrontCounted && sa.upfront > 0 ? 'الدعم' : '', b.etz ? 'اعتزاز' : ''].filter(Boolean).join(' + ') + ')', fmt(b.propertyValueR) + ' ريال']);
     return out; }
+  const wa85 = c => { const F = Object.assign({}, FO_DEF, (c && c.follow_offer) || {}); const n0 = v => { let n = digits(v).replace(/\D/g, ''); if (/^05\d{8}$/.test(n)) n = '966' + n.slice(1); else if (/^5\d{8}$/.test(n)) n = '966' + n; else if (/^00966/.test(n)) n = n.slice(2); return /^9665\d{8}$/.test(n) ? n : ''; };
+    return n0(F.wa) || n0(((c && c.contact) || {}).whatsapp); }; // r85: official business WhatsApp saved in the platform settings (same source as the follow-up WhatsApp message)
   async function drawResult(X) {
     const R = X.R, T = X.T || {}, cfg = X.cfg || {}, d = X.data || {}; const DZ = Object.assign({}, DESIGN_DEF, cfg.card_design || {}, X.design || {});
     const list = X.only || (R ? R.results.slice(0, 3) : []); const RK0 = X.rank || 0, TRX = X.product === 'transfer'; const WD = 1080, M = 36, IN = 30, CW = WD - 2 * M - 2 * IN, XR = WD - M - IN, XL = M + IN;
@@ -136,8 +138,8 @@
           const tt = cur ? cur + ' ' + wd : wd; if (cur && mc.measureText(tt).width > lim) { out.push(cur); cur = wd; } else cur = tt; }); if (cur) out.push(cur); });
       return out; };
     const ops = []; let y = 0; const LH = sz => Math.round(sz * 1.5); const gap = h => { y += h; };
-    const text = (t, sz, wt, col) => { wrapT(t, sz, wt).forEach(l => { y += LH(sz); ops.push({ k: 't', t: l, sz, wt: wt || 400, col: col || '#0b2545', x: XR, y: y - Math.round(sz * .42) }); }); };
-    const pairs = (arr, sz) => { const half = CW / 2 - 14; for (let k = 0; k < arr.length; k += 2) { const a = arr[k], b = arr[k + 1];
+    const text = (t, sz, wt, col) => { if (!TRX) { if (sz < 30) sz = Math.round(sz * 1.2); if (col === '#587182') col = '#2f4a63'; } /* r85: clearer image text (mortgage) */ wrapT(t, sz, wt).forEach(l => { y += LH(sz); ops.push({ k: 't', t: l, sz, wt: wt || 400, col: col || '#0b2545', x: XR, y: y - Math.round(sz * .42) }); }); };
+    const pairs = (arr, sz) => { if (!TRX && sz < 30) sz = Math.round(sz * 1.2); /* r85 */ const half = CW / 2 - 14; for (let k = 0; k < arr.length; k += 2) { const a = arr[k], b = arr[k + 1];
         const la = wrapT(a[0] + ': ' + a[1], sz, 400, half), lb = b ? wrapT(b[0] + ': ' + b[1], sz, 400, half) : []; const n = Math.max(la.length, lb.length);
         for (let j = 0; j < n; j++) { y += LH(sz); const yy = y - Math.round(sz * .42); if (la[j]) ops.push({ k: 't', t: la[j], sz, wt: 400, col: '#223', x: XR, y: yy }); if (lb[j]) ops.push({ k: 't', t: lb[j], sz, wt: 400, col: '#223', x: XR - CW / 2 - 14, y: yy }); } gap(4); } };
     const card = (bg, bd, fn) => { const y0 = y; gap(20); fn(); gap(22); ops.push({ k: 'c', y0, y1: y, bg, bd }); gap(16); };
@@ -174,12 +176,15 @@
     if (list.length) list.forEach((b, i) => card('#ffffff', i === 0 ? '#9cc0dc' : '#dbe6ef', () => { // r51: one line per value, instalments by period once
         text((X.custom ? 'حسبة بنسبة مدخلة من العميل' : (ORDN[i + RK0] || 'الترشيح ' + (i + RK0 + 1))) + (DZ.salary_bank && d.salary_bank === b.id ? ' — بنك نزول راتبك' : ''), 23, 800, '#0a5187');
         text((DZ.bank_name ? b.name : 'جهة تمويلية ' + (i + 1)) + (b.test ? ' (اختبار)' : '') + (DZ.rates ? ' — ' + pct(b.rate) : ''), 34, 900, '#073b67');
-        const sa = b.sup || {}; const up = sa.upfrontCounted && sa.upfront > 0 ? sa.upfront : 0; const ez = b.etz ? b.etz.amount : 0; const a = []; const UPT = !TRX && up > 0; // r55: total = bank financing + eligible upfront support
+        const sa = b.sup || {}; const up = sa.upfrontCounted && sa.upfront > 0 ? sa.upfront : 0; const ez = b.etz ? b.etz.amount : 0; const a = []; const UPT = !TRX && up > 0; const T85 = !TRX && (up > 0 || ez > 0); // r55: total = bank financing + eligible upfront support (r85: mortgage image = same as the card)
+        if (T85) { text('إجمالي المبلغ المتاح لشراء العقار', 23, 800, '#587182'); text(fmt(b.propertyValueR) + ' ريال', 56, 900, '#0a5187'); /* r85 */
+          text('مبلغ التمويل العقاري من جهة التمويل: ' + fmt(b.amount) + ' ريال', 23, 700, '#073b67'); if (ez) text('+ قرض اعتزاز الحسن: ' + fmt(ez) + ' ريال', 23, 700, '#073b67'); if (up) text('+ الدعم السكني المقدم: ' + fmt(up) + ' ريال', 23, 700, '#073b67'); gap(8); } else {
         text(TRX ? 'مبلغ التمويل اللازم للتحويل' : (UPT ? 'إجمالي التمويل المتاح مع الدعم' : 'مبلغ التمويل العقاري من البنك'), 23, 700, '#587182'); text(fmt(b.amount + (UPT ? up : 0)) + ' ريال', 56, 900, '#0a5187');
         if (UPT) a.push(['تمويل البنك', fmt(b.amount) + ' ريال']);
         if (up) a.push(['الدعم السكني المقدم', fmt(up) + ' ريال']); if (ez) a.push(['قرض اعتزاز الحسن', fmt(ez) + ' ريال']); if (TRX ? (up || ez) : ez) a.push(['إجمالي القيمة المتاحة للشراء', fmt(b.propertyValueR) + ' ريال']);
+        }
         const SL = []; b.stages.slice(0, 6).forEach(st => { if (!TRX) SL.push(stLbl65(st) + ': ' + fmt2(st.raw != null ? st.raw : st.amount) + ' ريال'); else a.push([(st.from === st.to ? 'قسط الشهر ' + st.from : 'القسط ' + st.from + '–' + st.to) + (st.post ? ' (تقاعد)' : ''), fmt2(st.raw != null ? st.raw : st.amount) + ' ريال']); }); // r65: full stage lines
-        const FE = b.fees || {}; if (!TRX && !UPT) a.push(['أصل التمويل البنكي', fmt(b.amount) + ' ريال']); a.push(['إجمالي الأرباح', fmt(b.profit) + ' ريال'], ['الرسوم الإدارية', FE.fee > 0 ? fmt2(FE.total) + ' ريال' : (FE.mode === 'exempt' ? 'معفاة' : 'لا توجد')], ['المدة', b.months + ' شهرًا']);
+        const FE = b.fees || {}; if (!TRX && !UPT && !T85) a.push(['أصل التمويل البنكي', fmt(b.amount) + ' ريال']); a.push(['إجمالي الأرباح', fmt(b.profit) + ' ريال'], ['الرسوم الإدارية', FE.fee > 0 ? fmt2(FE.total) + ' ريال' : (FE.mode === 'exempt' ? 'معفاة' : 'لا توجد')], ['المدة', b.months + ' شهرًا']);
         if (!TRX) a.push(['إجمالي السداد', fmt(b.totalDue) + ' ريال']); if (X.follow && X.follow.id === b.id) a.push(['أتعاب متابعة الإجراءات (بند مستقل)', fmt2(X.follow.fee) + ' ريال']); // r65
         const TX = b.transfer; if (TX) { const TC = cfg.transfer || {}; // r54
           if (TX.oldInst > 0) a.push(['قسطك الحالي', fmt2(TX.oldInst) + ' ريال']); if (TX.saving != null && TX.saving > 0.5) a.push(['الفرق الشهري التقديري', fmt2(TX.saving) + ' ريال']);
@@ -194,6 +199,7 @@
       const CT = cfg.contact || {}; if (!TRX && CT.enabled === true) { const wa = String(CT.whatsapp || '').replace(/\D/g, ''); const ln = [];
         if (wa.length >= 9) ln.push('واتساب: +' + wa); if (/^https:\/\//.test(CT.snap_url || '')) ln.push('سناب شات: ' + CT.snap_url.replace(/^https:\/\//, ''));
         if (ln.length) { gap(6); text(CT.text || T.r65_contact_text || 'للاستفسار وبدء الإجراءات', 22, 800, '#0a5187'); text(ln.join(' — '), 21, 400, '#0a5187'); } } }
+    { const wa = wa85(cfg), CT = cfg.contact || {}; if (!TRX && wa && !(CT.enabled === true && String(CT.whatsapp || '').replace(/\D/g, '').length >= 9)) { gap(10); text('واتساب الأعمال الرسمي: 0' + wa.slice(3), 24, 800, '#047857'); } } /* r85 */
     gap(20); const panel1 = y;
     const QR = DZ.qr ? await loadQR() : null; const foot = QR ? 210 : 86; gap(foot); const H = Math.ceil(y);
     const logo = await loadImg(W.F99_APP_ICON || './icon-192.png');
@@ -256,17 +262,25 @@
     const stDraw = d => { if (!d || d.ok !== true) return; const mx = Number(d.max_calculations) || 0, du = Number(d.duration_minutes) || 0, left = Math.max(0, Number(d.calculations_remaining) || 0); if (!mx && !du) return;
       const DA = typeof W.F99DurationAr === 'function' ? W.F99DurationAr : (m => m + ' دقيقة'), CA = typeof W.F99CalcCountAr === 'function' ? W.F99CalcCountAr : (n => n + ' حسبات'); if (!STAT.has(d)) STAT.set(d, Date.now());
       let ms = null; if (d.expires_at) { const st = Date.parse(d.server_time || '') || STAT.get(d); ms = Date.parse(d.expires_at) - (st + (Date.now() - STAT.get(d))); }
+      if (MG) { S.st85 = { mx, left, ms }; return draw85(); } /* r85 */
       const ratio = Math.max(0, Math.min(1, mx ? left / mx : 1, ms != null && du ? Math.max(0, ms) / (du * 60000) : 1)); ST.innerHTML = ''; ST.hidden = false;
       ST.append(el('span', 're59-st-t', (du ? 'صلاحية الباقة: ' + DA(du) : '') + (du && mx ? ' | ' : '') + (mx ? 'عدد الحسبات: ' + CA(mx) : '')));
       const bar = el('span', 're59-st-m'); const fi = el('i'); fi.style.width = Math.round(ratio * 100) + '%'; bar.append(fi); ST.append(bar);
       if (mx) ST.append(el('span', 're59-st-l', left <= 0 ? 'انتهت الحسبات: 0 من ' + mx : 'المتبقي: ' + CA(left) + ' من ' + mx));
       if (ms != null && ms > 0) { const t = Math.floor(ms / 60000), h = Math.floor(t / 60), m = t % 60; ST.append(el('span', 're59-st-l', 'الوقت المتبقي: ' + (h ? h + ' ساعة' + (m ? ' و' : '') : '') + (m || !h ? m + ' دقيقة' : ''))); }
       ST.dataset.level = (mx && left <= 0) || (ms != null && ms <= 0) ? 'danger' : ratio < .34 ? 'warning' : 'normal'; };
+    const draw85 = () => { const z = S.st85 || {}, q = S.q65; let mx = Number(z.mx) || 0, left = Math.max(0, Number(z.left) || 0), sub = ''; /* r85: one indicator (total + remaining) and each path briefly; it moves only with a new counted result */
+      if (q) { const rm = Number(q.ref_max) || 0, cm = Number(q.custom_max) || 0, cOn = q.custom_enabled !== false && customOn() && cm > 0, rl = Math.max(0, rm - (Number(q.ref_used) || 0)), cl = cOn ? Math.max(0, cm - (Number(q.custom_used) || 0)) : 0;
+        if (rm + (cOn ? cm : 0) > 0) { mx = rm + (cOn ? cm : 0); left = rl + cl; sub = 'بالنسب المرجعية: ' + rl + ' من ' + rm + (cOn ? ' • بإدخال النسبة: ' + cl + ' من ' + cm : ''); } }
+      if (!mx) return; let tl = ''; if (z.ms != null && z.ms > 0) { const t = Math.floor(z.ms / 60000), h = Math.floor(t / 60), m = t % 60; tl = ' • الوقت المتبقي: ' + (h ? h + ' ساعة' + (m ? ' و' : '') : '') + (m || !h ? m + ' دقيقة' : ''); }
+      ST.innerHTML = ''; ST.hidden = false; ST.classList.add('re85-st'); ST.append(el('span', 're59-st-t', (left <= 0 ? 'انتهت حسبات باقتك: 0 من ' + mx : 'المتبقي ' + left + ' من ' + mx + ' حسبات') + tl));
+      const bar = el('span', 're59-st-m'); const fi = el('i'); fi.style.width = Math.round(Math.max(0, Math.min(1, left / mx)) * 100) + '%'; bar.append(fi); ST.append(bar); if (sub) ST.append(el('span', 're59-st-l re85-sub', sub));
+      ST.dataset.level = left <= 0 || (z.ms != null && z.ms <= 0) ? 'danger' : left / mx < .34 ? 'warning' : 'normal'; };
     const stRefresh = () => { if (opt.mode !== 'client') return; try { const p = typeof W.F99V22RefreshStatus === 'function' ? W.F99V22RefreshStatus() : null; Promise.resolve(p).then(d => stDraw(d || W.F99V22LatestStatus)).catch(() => {}); } catch (e) {} };
     stRefresh(); { const iv = setInterval(() => { if (!sh.ov.isConnected) return clearInterval(iv); stDraw(W.F99V22LatestStatus); }, 30000); }
     if (trial) sh.head.append(el('span', 're42-trial', 'وضع التجربة'));
-    const Q65 = el('div', 're65-q'); Q65.hidden = true; ST.after(Q65); setTimeout(() => q65Fetch(), 60); // r65: reference / client-rate counters shown separately
-    if (MG) notice78(sh.box, sh.body, (cfg.banks || []).filter(b => b && !b.test && b.approved !== false && b.active !== false && b.included !== false)); // r78: red notice outside the scrolling chat (never covers questions/results/buttons)
+    const Q65 = el('div', 're65-q'); Q65.hidden = true; ST.after(Q65); S.q65P = new Promise(z => setTimeout(() => Promise.resolve(q65Fetch()).then(z, z), 60)); /* r85 */ // r65: reference / client-rate counters shown separately
+    if (MG) { const n85 = notice78(sh.box, sh.body, (cfg.banks || []).filter(b => b && !b.test && b.approved !== false && b.active !== false && b.included !== false)); if (n85) n85.classList.add('f99n85'); } /* r85: short neutral line, same content */ // r78: red notice outside the scrolling chat (never covers questions/results/buttons)
     if (opt.preview) sh.head.append(el('span', 're42-trial alt', opt.preview));
     applyTheme(sh.ov, cfg.theme); // r51
     const OWN = (opt.mode === 'owner' && !opt.preview) || trial; // r51: technical details for the owner only (not in the client preview)
@@ -317,7 +331,7 @@
       try { const L = cfg.limits || {}; const p = E().profile(Object.assign(inp(), { appoint: null, basic: null, net: d.net || 1 }), cfg); const want = Math.min(Number(S.months || L.default_term || 240), Number(L.max_term || 300)); return p.R < Math.max(want, Number(L.default_term || 240)); } catch (e) { return true; } }
     // r51: SAMA 15/ب — current non-real-estate obligations above consumer_pct% (income below the second band)
     const r66x = () => { const R6 = cfg.r66 || {}, C = R6.car || {}, K = R6.card || {}; const p = Number(K.pct); /* r66: car hidden unless the owner enables it; credit card shown unless the owner hides it */
-      return { carOn: C.enabled === true, fm: Math.max(1, Math.floor(Number(C.final_months) || 24)), carWarn: C.warn || R66_CAR_WARN, carColor: C.color || '#b42318', cardOn: K.enabled !== false, pct: p > 0 && p <= 100 ? p : 5, cardWarn: K.warn || R66_CARD_WARN, cardColor: K.color || '', scn: R6.default_scn === 'closed' ? 'closed' : 'now' }; };
+      return { carOn: MG ? C.enabled !== false : C.enabled === true, /* r85: car lease shown in the mortgage calculator unless the owner hides it */ fm: Math.max(1, Math.floor(Number(C.final_months) || 24)), carWarn: C.warn || R66_CAR_WARN, carColor: C.color || '#b42318', cardOn: K.enabled !== false, pct: p > 0 && p <= 100 ? p : 5, cardWarn: K.warn || R66_CARD_WARN, cardColor: K.color || '', scn: R6.default_scn === 'closed' ? 'closed' : 'now' }; };
     const r66sc = () => ((S.data.obligations || []).some(o => o.dec === 'close') ? r66x().scn : 'now');
     function CL() { const d = S.data; const a = (d.close || []).slice(); (d.obligations || []).forEach((o, i) => { if (o.dec === 'close' && !a.some(c => c.i === i)) a.push({ i, entity: '', payoff: null, k: o.type }); }); return a; } /* r66: car/card closure chosen by the client = conditional scenario only (never treated as closed) */
     function clientBox(R) { const C6 = r66cc(cfg); if (!C6.screen) return null; const d = S.data; const dt = el('details', 're42-info re66-cli'); dt.append(el('summary', '', 'تفاصيل العميل')); /* r66: folded on screen, full on the image */
@@ -329,6 +343,7 @@
       if (E().dtiTier(net, DP) >= 3) return null; const ob = d.obligations.reduce((t, o) => t + (Number(o.months) > 0 ? Number(o.amount) || 0 : 0), 0); return ob > net * cp / 100 + 1e-9 ? { ob, net, cp } : null; }
     function next() {
       for (const k of order) if (visible(k) && !answered(k)) return ask(k);
+      if (MG && !S.custom) { const B = bal85(); if (B && !B.rl) return B.cl > 0 ? customStart() : out85(); } /* r85: no reference calculation without reference balance */
       return durationCard();
     }
     const DEFQ = { close_q: 'هل عندك عقود تمويل تنوي إقفالها بالكامل قبل الحصول على التمويل العقاري؟', close_n: 'كم عقدًا تنوي إقفاله يا {name}؟', etizaz: 'هل أنت مستفيد من مبادرة اعتزاز السكنية؟', grade: 'كم رقم درجتك الحالية في رتبتك حسب سلم الرواتب؟ (نحتاجها لتقدير راتبك الأساسي عند التقاعد)', tr_bank: 'وش البنك الحالي لتمويلك العقاري يا {name}؟', tr_payoff: 'كم مبلغ السداد المبكر لتمويلك العقاري الحالي؟ (حسب خطاب المخالصة من بنكك)', tr_inst: 'كم قسطك العقاري الشهري الحالي؟', tr_left: 'كم شهر متبقي على تمويلك العقاري الحالي؟',
@@ -441,10 +456,11 @@
       });
     }
     function obligations() {
-      const d = S.data; const X6 = r66x(); const TYPES = [['personal', 'تمويل شخصي'], ['company', 'التزام شركة تمويل']].concat(X6.carOn ? [['car', 'تمويل سيارة']] : [], X6.cardOn ? [['card', 'بطاقة ائتمانية']] : [], [['other', 'التزام شهري آخر']]); /* r66 */
-      clearDock(); bot(d.obligations.length ? 'تبي تضيف التزامًا آخر؟' : qText('obligations'));
+      const d = S.data; const X6 = r66x(); const TYPES = MG ? [['personal', 'تمويل شخصي']].concat(X6.carOn ? [['car', 'تمويل تأجيري (سيارة)']] : [], [['company', 'التزام شركة تمويل']], X6.cardOn ? [['card', 'بطاقة ائتمانية']] : [], [['other', 'التزام شهري آخر']]) /* r85 */ : [['personal', 'تمويل شخصي'], ['company', 'التزام شركة تمويل']].concat(X6.carOn ? [['car', 'تمويل سيارة']] : [], X6.cardOn ? [['card', 'بطاقة ائتمانية']] : [], [['other', 'التزام شهري آخر']]); /* r66 */
+      if (MG && d.obligations.length && !S.obMore) return choice('#' + tpl('عندك التزام ثاني يا {name}؟', d), [{ label: 'نعم', value: true }, { label: 'لا', value: false }], v => { if (v) { S.obMore = true; return obligations(); } d.obl_done = true; next(); }); /* r85: after each obligation; the same type can be added again */
+      S.obMore = false; clearDock(); bot(d.obligations.length ? (MG ? 'وش نوع الالتزام؟' : 'تبي تضيف التزامًا آخر؟') : qText('obligations'));
       const w = el('div', 're42-choices');
-      let used = false; const born = Date.now(); TYPES.forEach(([t, l]) => btn(w, l, () => { if (used || Date.now() - born < 400) return; used = true; me(l); addOne(t, l); }, 're42-chip'));
+      let used = false; const born = Date.now(); TYPES.forEach(([t, l]) => btn(w, l, () => { if (used || Date.now() - born < 400) return; used = true; me(l); addOne(t, l); }, 're42-chip' + (MG && t === 'personal' ? ' re85-p1' : '')));
       btn(w, d.obligations.length ? 'انتهيت من الالتزامات' : 'ما عندي التزامات', () => { if (used || Date.now() - born < 400) return; used = true; me(d.obligations.length ? 'انتهيت' : 'ما عندي التزامات'); d.obl_done = true; next(); }, 're42-chip end');
       dock.append(w); scroll();
       function askPO(o) { textIn('tr_po', 'money', v => { const a = money(v); if (!(a > 0 && a <= 5000000)) return 'أدخل المبلغ بالريال'; o.payoff = a; me(fmt(a) + ' ريال'); obligations(); }, 'مبلغ السداد المبكر بالريال', { label: 'ما أعرف', fn: () => { o.payoff = null; obligations(); } }); } // r54
@@ -668,8 +684,8 @@
       return { reason: 'NETWORK' };
     }
     function meterMsg(reason) {
-      if (reason === 'R65_REF_DONE') return 'انتهت حسباتك بالنسب المرجعية، ولم تُخصم أي حسبة.' + (custLeft() > 0 ? ' تقدر تكمل بالحسبة على نسبتك الخاصة.' : '') + renewTxt(); // r65
-      if (reason === 'R65_CUSTOM_DONE') return 'انتهت حسباتك بنسبتك الخاصة، ولم تُخصم أي حسبة.' + renewTxt();
+      if (reason === 'R65_REF_DONE') return 'انتهت حسباتك بالنسب المرجعية، ولم تُخصم أي حسبة.' + (custLeft() > 0 ? ' تقدر تكمل بالحسبة على نسبتك الخاصة.' : '') + (foLeft() === 0 ? renewTxt() : ''); // r65 (r85: renewal only at zero balance)
+      if (reason === 'R65_CUSTOM_DONE') return 'انتهت حسباتك بنسبتك الخاصة، ولم تُخصم أي حسبة.' + (foLeft() === 0 ? renewTxt() : '');
       if (reason === 'R65_CUSTOM_OFF') return 'الحسبة بالنسبة الخاصة غير متاحة حاليًا، ولم تُخصم أي حسبة.';
       if (reason === 'LAUNCH_FULL') return 'اكتمل عدد مستخدمي الإطلاق المحدود حاليًا، ولم تُخصم أي حسبة.';
       if (reason === 'NETWORK') return 'تعذر الاتصال بالخادم الآن، ولم تُخصم أي حسبة. بياناتك محفوظة؛ اضغط «اعتماد المدة» مرة ثانية بعد التأكد من الاتصال.';
@@ -723,7 +739,7 @@
       S.foNew = 0; if (fresh && !(await meter())) { const why = S.q65Reason; // r65
         if (MG && S.custom && (why === 'R65_CUSTOM_DONE' || why === 'R65_CUSTOM_OFF')) { S.custom = null; const w = el('div', 're42-choices'); btn(w, 'الرجوع للحسبة بالنسب المرجعية', () => results(true), 're42-chip'); dock.append(w); scroll(); }
         else if (MG && why === 'R65_REF_DONE' && !S.custom && customOn() && custLeft() > 0) { const w = el('div', 're42-choices'); btn(w, 'احسب بنسبة من عندك', () => customStart(), 're42-chip'); dock.append(w); scroll(); }
-        return; }
+        if (MG && foLeft() === 0) renewAsk(); /* r85 */ return; }
       let R; try { R = compute(); } catch (e) { bot(ERR[e.message] || 'تعذر الحساب: ' + e.message, 'warn'); return; }
       S.last = R; if (fresh) archivePut(R); clearDock(); if (resEl) resEl.remove(); resEl = el('div', 're42-card re42-res'); log.append(resEl);
       resEl.append(el('h3', '', tpl(T.results_title || 'نتائج التمويل العقاري لك يا {name}', S.data)));
@@ -779,17 +795,17 @@
       if (MG && R.results.length && S.data.supported) resEl.append(el('p', 're84-sn', '*احتساب الدعم السكني واعتزاز مبدئي، وقد تختلف إتاحتهما وشروطهما من جهة تمويل لأخرى. الاعتماد النهائي لدى جهة التمويل.')); /* r84 */
       const act = el('div', 're42-actions'); // r55: no merged multi-bank share/image unless the owner enables «مشاركة مقارنة جميع البنوك»
       if (!MG || !R.results.length) { btn(act, 'مشاركة عبر واتساب', share, 're42-wa'); btn(act, 'صورة النتيجة', image); } else if (cfg.share_compare === true) { btn(act, 'مشاركة مقارنة جميع جهات التمويل', () => shareTxt(compareTxt()), 're42-wa'); btn(act, 'صورة مقارنة جهات التمويل', image); }
-      if (MG) { S.foSlot = el('div', 're83-slot'); resEl.append(S.foSlot); const pr = el('div', 're83-main'); btn(pr, 'تعديل البيانات', () => foGate(() => editMenu(false, true))); if (R.results.length && cutOn('installment')) btn(pr, 'تقليل القسط', () => foGate(() => cutForm('installment', R)));
-        btn(pr, 'احسب من جديد', () => foGate(() => whoFor(false))); if (FOon() && R.results.length) btn(pr, 'متابعة إجراءات التمويل', () => { S.foGated = true; foStart(false); }, 're73-cta'); resEl.append(pr); } // r83: clear main choices after the full result
-      if (!FIX) btn(act, 'تعديل المدة', () => durationCard()); // r59: «تعديل المدة» hidden while the term is locked; r65: «تعديل البيانات» restored (it was swallowed by the r59 comment)
+      if (MG) { S.foSlot = el('div', 're83-slot'); resEl.append(S.foSlot); const pr = el('div', 're83-main'); btn(pr, 'تعديل البيانات', () => need85(S.custom ? 'custom' : 'ref', () => editMenu(false, true), S.custom ? () => { S.custom = null; editMenu(false, true); } : null)); /* r85 */ if (R.results.length && cutOn('installment')) btn(pr, 'تقليل القسط', () => cutForm('installment', R));
+        btn(pr, 'احسب من جديد', () => foGate(() => need85('ref', () => whoFor(false)))); if (FOon() && R.results.length) btn(pr, 'متابعة إجراءات التمويل', () => { S.foArm = false; foStart(false); }, 're73-cta'); resEl.append(pr); } // r83: clear main choices after the full result
+      if (!FIX) btn(act, 'تعديل المدة', () => (MG && !S.custom ? need85('ref', durationCard, customStart) : durationCard())); // r59: «تعديل المدة» hidden while the term is locked; r65: «تعديل البيانات» restored (it was swallowed by the r59 comment)
       if (R.results.length && PROD !== 'transfer') { if (cutOn('amount')) btn(act, 'تقليل مبلغ التمويل', () => cutForm('amount', R)); if (cutOn('installment') && !MG) btn(act, 'تقليل القسط', () => cutForm('installment', R)); }
       if (FF() && R.results.length) btn(act, S.feeOk ? 'أتعاب المتابعة معروضة في البطاقات' : (T.follow_cta || 'خدمة متابعة إجراءات التمويل'), () => { if (S.feeOk) return; // r51: shown only after consent
           const s2 = sheet('خدمة متابعة إجراءات التمويل', 're42-pick'); applyTheme(s2.ov, cfg.theme); s2.body.append(el('p', 're42-note', (cfg.follow_fee || {}).terms || 'أتعاب متابعة إجراءات تمويلك لدى الجهة التمويلية، بند مستقل لا يُخصم من التمويل أو الدعم.'));
           btn(s2.body, 'أوافق على الشروط وأعرض الأتعاب', () => { s2.ov.remove(); S.feeOk = true; results(false); }, 're42-go wide'); });
       if (FOon() && R.results.length && !MG) btn(act, 'أرغب بالمتابعة', () => foStart(false), 're73-cta'); // r73 (r83: MG → «متابعة إجراءات التمويل» above)
-      if (!FIX) btn(act, 'تقليل المدة', () => { if (FIX) return toast(fixMsg()); if (termOn()) return durationCard(); toast(tpl(T.term_reduce_unavailable || 'نعتذر منك يا {name}، تقليل المدة غير متاح حاليًا ضمن اشتراكك', S.data)); });
+      if (!FIX) btn(act, 'تقليل المدة', () => { if (FIX) return toast(fixMsg()); if (termOn()) return MG && !S.custom ? need85('ref', durationCard, customStart) : durationCard(); toast(tpl(T.term_reduce_unavailable || 'نعتذر منك يا {name}، تقليل المدة غير متاح حاليًا ضمن اشتراكك', S.data)); });
       resEl.append(act); r65After(R); resEl.append(discEl()); scroll();
-      if (MG && fresh && (opt.mode !== 'client' || S.foNew)) foAfter(R); // r73
+      if (MG && fresh && (opt.mode !== 'client' || S.foNew)) { S.foArm = true; foAfter(R); } // r73 (r85: a NEW counted result arms the follow offer once)
     }
     // ---------- r65: package quotas, client-rate calculation, contact, disclaimer ----------
     function MO() { return S.custom ? S.custom.months : S.months; }
@@ -800,13 +816,7 @@
       try { const le = await liveEntry(); if (!le.e) return; const e = le.e; const dev = e.deviceId || (typeof finoCentralDeviceId === 'function' ? finoCentralDeviceId() : '');
         const r = await finoRpc('f99r65_client_meter', { p_entry_token: e.entryToken, p_device_id: dev, p_request_id: null, p_kind: 'status' }, 12000);
         if (r && r.ok && r.data && r.data.r65) { S.q65 = r.data.r65; q65Draw(); } } catch (x) {} }
-    function q65Draw() { const q = S.q65; if (!q || !Q65) return; const rm = Number(q.ref_max) || 0, cm = Number(q.custom_max) || 0;
-      const rl = Math.max(0, rm - (Number(q.ref_used) || 0)), cl = Math.max(0, cm - (Number(q.custom_used) || 0)); Q65.innerHTML = ''; Q65.hidden = false;
-      Q65.append(el('span', 're65-qi' + (rl ? '' : ' done'), 'مرات الاحتساب بالنسب المرجعية: المتبقي ' + rl + ' من ' + rm));
-      if (q.custom_enabled !== false && cm > 0) Q65.append(el('span', 're65-qi' + (cl ? '' : ' done'), 'مرات الاحتساب بإدخال النسبة بنفسك: المتبقي ' + cl + ' من ' + cm));
-      const used = (Number(q.ref_used) || 0) + (Number(q.custom_used) || 0), ra = Number(q.renew_after) || 0;
-      if (foLeft() === 0 && /^https:\/\//.test(q.renewal_url || '')) { const rw = el('div', 're65-renew'); /* r76: renewal only at zero balance after the last real use, and only with the owner link */ rw.append(el('span', '', tpl(T.r65_renew_text || 'قربت حسباتك تخلص يا {name}، تقدر تجدد باقتك وتكمل حسباتك.', S.data) + (q.renewal_price ? ' سعر التجديد: ' + q.renewal_price + ' ريال.' : '')));
-        if (/^https:\/\//.test(q.renewal_url || '')) btn(rw, 'تجديد الباقة', () => window.open(q.renewal_url, '_blank', 'noopener'), 're42-mini'); Q65.append(rw); } }
+    function q65Draw() { if (!S.q65 || !Q65) return; Q65.innerHTML = ''; Q65.hidden = true; draw85(); } // r85: the path balances are one short line under the single indicator; no renewal box while any balance is left
     function customBank(c) { // «بنك آخر»: a neutral, client-named bank used only for this calculation (never saved)
       return { id: '__client', name: c.bankName, active: true, approved: true, included: true, test: false, plans: ['fixed', 'step'], rates: {}, logo: '' }; }
     function customCompare() { const c = S.custom, mx = Math.min(360, Number((cfg.package || {}).custom_max_term) || 360);
@@ -815,7 +825,7 @@
       return E().compare(inpScn(), C2, Object.assign(cmpOpt(), { plan: c.plan, months: c.months, extend: true, offers: {}, plans: {}, fixedTerm: undefined, rateTerm: undefined, custom: { rate: c.rate } })); }
     function customHead() { const c = S.custom; resEl.append(el('p', 're65-cnote', 'نسبة الربح أدخلها العميل بنفسه، وليست من النسب المرجعية المعتمدة لدى FINO99.'), // r83
       el('p', 're42-meta', 'البنك: ' + c.bankName + ' — النسبة المدخلة: ' + c.rate + '% — ' + (c.plan === 'step' ? 'القسط المتغير' : 'القسط الثابت'))); }
-    function customStart() { clearDock(); const P = {};
+    function customStart() { clearDock(); if (MG && resEl) { resEl.remove(); resEl = null; } /* r85: no old result behind the new questions */ const P = {};
       const banks = (cfg.banks || []).filter(b => b && b.active !== false && b.included !== false && (trial || opt.mode === 'owner' || b.test !== true));
       bot(tpl(T.r65_custom_cta || 'يا {name}، عندك عرض أو نسبة خاصة عطتك إياها إحدى جهات التمويل؟ احسب عليها بنفسك وقارنها بحسابتك.', S.data));
       const rate = () => textIn('r65_rate', 'money', v => { const n = Number(digits(String(v).replace(/[%٪\s]/g, ''))); if (!(Number.isFinite(n) && n > 0 && n <= 30)) return 'اكتب النسبة مثل 5.25 أو ٥٫٢٥٪'; P.rate = Math.round(n * 10000) / 10000; me(P.rate + '%'); plan(); }, 'مثال: 5.25');
@@ -837,10 +847,10 @@
     function discEl() { const t = T.disclaimer || '', k = 'حسبة مبدئية', p = el('p', 're42-disc'); const i = MG ? t.indexOf(k) : -1;
       if (i < 0) { p.textContent = t; return p; } p.append(document.createTextNode(t.slice(0, i)), el('b', '', k), document.createTextNode(t.slice(i + k.length))); return p; }
     function r65After(R) { if (!MG) return;
-      if (S.custom) { const w = el('div', 're42-actions re65-cact'); btn(w, 'تعديل النسبة', () => foGate(customStart), 're42-mini');
+      if (S.custom) { const w = el('div', 're42-actions re65-cact'); btn(w, 'تعديل النسبة', () => need85('custom', customStart), 're42-mini');
         btn(w, 'الرجوع للحسبة بالنسب المرجعية', () => { S.history.push(snapshot()); S.custom = null; S.offers = {}; S.plans = {}; S.cut = null; results(true); }, 're42-mini'); resEl.append(w); }
       else if (customOn() && (opt.mode !== 'client' || !S.q65 || custLeft() > 0)) { const cta = el('div', 're65-cta'); cta.append(el('p', '', tpl(T.r65_custom_cta || 'عندك نسبة ربح من إحدى جهات التمويل؟ أدخلها واحسب عليها بنفسك.', S.data)));
-        btn(cta, 'احسب بنسبة من عندك', () => foGate(customStart), 're42-go'); /* r84 */ resEl.append(cta); }
+        btn(cta, 'احسب بنسبة من عندك', () => need85('custom', customStart), 're42-go'); /* r84 */ resEl.append(cta); }
       const cb = contactBox(); if (cb) resEl.append(cb); }
     // r48: reduce amount / installment (no new usage: results(false) is not metered)
     function cutForm(type, R) {
@@ -872,16 +882,17 @@
       const c = el('div', 're42-bank' + (i === 0 ? ' top1' : '')); c.dataset.bank = b.id; c.tabIndex = 0; c.setAttribute('role', 'button'); // r54: tap → text / image
       c.addEventListener('click', ev => { if (ev.target.closest('button,a,summary,details,input,select')) return; if (MG) togDet(c); else pickBank(b, i); });
       c.addEventListener('keydown', ev => { if ((ev.key === 'Enter' || ev.key === ' ') && ev.target === c) { ev.preventDefault(); if (MG) togDet(c); else pickBank(b, i); } });
-      const rk = el('div', 're42-rk'); rk.append(el('span', 're42-rkl', S.custom ? 'حسبة بنسبتك الخاصة' : (ORD[i] || ('الترشيح ' + (i + 1))))); if (S.data.salary_bank && S.data.salary_bank === b.id) rk.append(el('span', 're42-tag salary', 'بنك نزول راتبك')); c.append(rk);
+      const rk = el('div', 're42-rk'); rk.append(el('span', 're42-rkl', S.custom ? 'حسبة بنسبة مدخلة من العميل' : (ORD[i] || ('الترشيح ' + (i + 1))))); if (S.data.salary_bank && S.data.salary_bank === b.id) rk.append(el('span', 're42-tag salary', 'بنك نزول راتبك')); c.append(rk);
       const h = el('div', 're42-bh'); h.append(logoBox(b)); const nm = el('div', 're42-bn'); nm.append(el('b', '', b.name));
-      const tg = el('div', 're42-tags'); if (!MG && b.rateSource === 'same_margin') tg.append(el('small', 're42-tag est', 'تقديري — المتزايد غير معتمد من البنك')); if (MG && b.rateSource !== 'owner_sim') tg.append(el('small', 're42-tag est', b.rateSource === 'client' ? 'نسبة مدخلة من العميل' : 'نسبة مرجعية مبدئية')); /* r65 */ /* r59 */ if (b.rateSource === 'owner_sim') tg.append(el('small', 're42-tag test', 'محاكاة داخلية للمالك')); if (b.test) tg.append(el('small', 're42-tag test', 'بنك اختبار')); if (tg.childNodes.length) nm.append(tg);
+      const tg = el('div', 're42-tags'); if (!MG && b.rateSource === 'same_margin') tg.append(el('small', 're42-tag est', 'تقديري — المتزايد غير معتمد من البنك')); if (MG && b.rateSource !== 'owner_sim') tg.append(el('small', 're42-tag est', b.rateSource === 'client' ? 'نسبة مدخلة من العميل — ليست نسبة معلنة من FINO99' : 'نسبة مرجعية مبدئية')); /* r65 */ /* r59 */ if (b.rateSource === 'owner_sim') tg.append(el('small', 're42-tag test', 'محاكاة داخلية للمالك')); if (b.test) tg.append(el('small', 're42-tag test', 'بنك اختبار')); if (tg.childNodes.length) nm.append(tg);
       const rt = el('div', 're42-rate'); rt.append(el('b', '', pct(b.rate)), el('small', '', b.method === 'flat' ? 'هامش ربح ثابت' : 'هامش الربح السنوي')); h.append(nm, rt); c.append(h);
       const tot84 = MG && (upOf(b) > 0 || !!(b.etz && b.etz.amount > 0)); /* r84 */ const amt = el('div', 're42-amt'); amt.append(el('small', '', PROD === 'transfer' ? 'مبلغ التمويل اللازم للتحويل' : (tot84 ? 'إجمالي المبلغ المتاح لشراء العقار' : (MG ? 'مبلغ التمويل العقاري من جهة التمويل' : (upOf(b) ? (T.total_with_support || 'إجمالي التمويل المتاح مع الدعم') : 'مبلغ التمويل العقاري من البنك')))), el('b', '', fmt(tot84 ? b.propertyValueR : b.amount + upOf(b)) + ' ريال')); c.append(amt); // r55
       { const tb = trBox(b); if (tb) c.append(tb); } // r54
       { const sv = sumRows(b); if (sv) c.append(sv); }
       const det = MG ? el('div', 're55-det') : c; if (MG) { det.hidden = true; const s0 = b.stages[0] || {}; const q = el('div', 're55-q'); // r55
         q.append(kv(b.plan === 'fixed' || b.stages.length < 2 ? 'القسط الشهري' : 'القسط المتغير — يبدأ من', fmt2(s0.raw != null ? s0.raw : (s0.amount != null ? s0.amount : b.firstInstallment)) + ' ريال')); c.append(q);
-        const ac = el('div', 're55-act'); btn(ac, 'عرض التفاصيل', () => togDet(c), 're42-mini re55-tg'); btn(ac, 'صورة النتيجة', () => bankImage(b, i), 're42-mini'); btn(ac, 'مشاركة', () => shareTxt(bankText(b, i)), 're42-mini re42-wa'); btn(ac, 'حفظ الصورة', () => saveImg(b, i), 're42-mini'); c.append(ac); }
+        const ac = el('div', 're55-act'); btn(ac, 'عرض التفاصيل', () => togDet(c), 're42-mini re55-tg'); btn(ac, 'صورة النتيجة', () => bankImage(b, i), 're42-mini'); btn(ac, 'مشاركة', () => shareTxt(bankText(b, i)), 're42-mini re42-wa'); btn(ac, 'حفظ الصورة', () => saveImg(b, i), 're42-mini'); c.append(ac);
+        { const wa = wa85(cfg); if (wa) { const a = el('a', 're85-wa', 'واتساب الأعمال الرسمي: 0' + wa.slice(3)); a.href = 'https://wa.me/' + wa; a.target = '_blank'; a.rel = 'noopener'; c.append(a); } } } /* r85 */
       const ins = el('div', 're42-ins'); ins.append(el('small', '', b.stages.length > 1 ? 'الأقساط حسب الفترات' : 'القسط الشهري'));
       const stl = b.stages.length > 7 ? b.stages.slice(0, 6).concat([b.stages[b.stages.length - 1]]) : b.stages;
       stl.forEach((st, k) => { if (b.stages.length > 7 && k === 6) ins.append(el('div', 're42-insr gap', '…')); const r = el('div', 're42-insr' + (st.post ? ' post' : ''));
@@ -933,15 +944,28 @@
       if (last) rnGate(); } // r84: the offer appears only when the client leaves the complete result (foGate)
     function foInline() { const F = FOc(), slot = S.foSlot; if (!slot || !slot.isConnected) return; foSync('issue').then(t => { if (!slot.isConnected || !t) return; if (!foOk()) { S.foOff = true; return; }
       const c = el('div', 're83-foc'); c.append(el('b', 're83-fot', tpl(F.title, S.data)), el('p', 're83-fos', String(F.sub || '').replace(/\{disc\}/g, p2(F.disc))), el('p', 're73-ex', 'ينتهي العرض: ' + foDt(t.expires_at)), el('p', 're83-foh', 'اضغط «متابعة إجراءات التمويل» واختر جهة التمويل.')); slot.innerHTML = ''; slot.append(c); }); }
-    function foGate(fn, last) { const go = () => { try { fn(); } catch (e) {} }; /* r84: «نبحث لك عن خصم…» → «مبروك» card → «أرغب بالمتابعة» (banks) / «لا، شكرًا» (the chosen action); once per session */
-      if (!MG || !FOon() || S.foOff || S.foSent || S.foGated || !(S.last && S.last.results && S.last.results.length)) return go();
-      const GK = TKT() ? 'f99r84g:' + TKT() : ''; try { if (GK && W.sessionStorage.getItem(GK)) { S.foGated = true; return go(); } } catch (x) {} S.foGated = true; try { if (GK) W.sessionStorage.setItem(GK, '1'); } catch (x) {}
-      r73css(); const F = FOc(); const s2 = sheet('خصم أتعاب المتابعة', 're42-pick re73-fo re84-fo'); applyTheme(s2.ov, cfg.theme); let fin = false; const close = f => { if (fin) return; fin = true; s2.ov.remove(); f(); };
+    // r85: balance check BEFORE a new calculation — the client never fills data for a path without balance
+    function bal85() { const q = S.q65; if (!MG || opt.mode !== 'client' || !q) return null; const rm = Number(q.ref_max) || 0, cm = Number(q.custom_max) || 0, cOn = q.custom_enabled !== false && customOn() && cm > 0;
+      return { rl: Math.max(0, rm - (Number(q.ref_used) || 0)), cl: cOn ? Math.max(0, cm - (Number(q.custom_used) || 0)) : 0 }; }
+    const CA85 = n => (typeof W.F99CalcCountAr === 'function' ? W.F99CalcCountAr(n) : n + ' حسبات');
+    async function need85(kind, fn, alt) { const go = f => { try { f(); } catch (e) {} };
+      if (!MG || opt.mode !== 'client') return go(fn); if (!S.q65 && S.q65P) { try { await Promise.race([S.q65P, new Promise(z => setTimeout(z, 6000))]); } catch (x) {} }
+      const B = bal85(); if (!B || (kind === 'custom' ? B.cl : B.rl) > 0) return go(fn); if (!B.rl && !B.cl) return out85();
+      clearDock(); const w = el('div', 're42-choices');
+      if (kind === 'custom') { bot(tpl('يا {name}، انتهت حسباتك بإدخال النسبة بنفسك، وباقي لك ' + CA85(B.rl) + ' بالنسب المرجعية.', S.data)); if (alt) btn(w, 'احسب بالنسب المرجعية', () => { clearDock(); go(alt); }, 're42-chip'); }
+      else { bot(tpl('يا {name}، انتهت حسباتك بالنسب المرجعية، وباقي لك ' + CA85(B.cl) + ' بإدخال النسبة بنفسك.', S.data)); btn(w, 'احسب بنسبة من عندك', () => { clearDock(); go(alt || fn); }, 're42-chip'); }
+      if (w.childNodes.length) dock.append(w); scroll(); }
+    function out85() { clearDock(); bot(tpl('يا {name}، انتهت حسبات باقتك.' + (resEl && resEl.isConnected ? ' آخر نتيجة لك ظاهرة فوق، وتقدر تراجعها وتحفظ صورتها وتشاركها بدون خصم.' : ''), S.data));
+      const q = S.q65 || {}; if (S.rnAsked || rnSeen85()) { if (/^https:\/\//.test(q.renewal_url || '')) { const w = el('div', 're42-choices'); btn(w, 'جدد باقتك', () => window.open(q.renewal_url, '_blank', 'noopener'), 're42-chip'); dock.append(w); } scroll(); return; } scroll(); renewAsk(); }
+    function rnSeen85() { try { return !!(TKT() && W.sessionStorage.getItem('f99r85rn:' + TKT())); } catch (x) { return false; } }
+    function foGate(fn, last) { const go = () => { try { fn(); } catch (e) {} }; /* r85: only on «احسب من جديد» / exit, once per NEW complete result (armed by the counted result); centered card */
+      if (!MG || !FOon() || S.foOff || S.foSent || !S.foArm || !(S.last && S.last.results && S.last.results.length)) return go(); S.foArm = false;
+      r73css(); const F = FOc(); const s2 = sheet('خصم أتعاب المتابعة', 're42-pick re73-fo re84-fo re85-c'); applyTheme(s2.ov, cfg.theme); let fin = false; const close = f => { if (fin) return; fin = true; s2.ov.remove(); f(); };
       const x = s2.head.querySelector('.re42-x'); if (x) x.onclick = () => close(go); const sp = el('div', 're73-spin'); sp.append(el('i', 're73-ring'), el('p', '', 'نبحث لك عن خصم على أتعاب المتابعة…')); s2.body.append(sp);
       Promise.all([foSync('issue'), new Promise(z => setTimeout(z, 1200))]).then(([t]) => { if (fin) return; if (!t || !foOk()) { if (t) S.foOff = true; return close(go); } sp.remove(); const c = el('div', 're73-card');
         c.append(el('h3', '', tpl('مبروك يا {name} 🎉', S.data)), el('p', 're73-big', String(F.sub || '').replace(/\{disc\}/g, p2(F.disc))), el('p', 're73-ex', 'ينتهي العرض: ' + foDt(t.expires_at)));
-        btn(c, 'أرغب بالمتابعة', () => close(() => foStart(!!last)), 're42-go wide'); btn(c, 'لا، شكرًا', () => close(go), 're42-go wide alt'); s2.body.append(c); }); }
-    function rnGate() { const q = S.q65; if (S.rnAsked || !q || foLeft() !== 0 || !/^https:\/\//.test(q.renewal_url || '')) return; clearDock(); btn(dock, 'تم، قرأت النتيجة', () => { clearDock(); foGate(renewAsk, true); }, 're42-go wide'); } // r79: the renewal offer only after the client has read the last result
+        btn(c, 'أرغب بالمتابعة', () => close(() => foStart(!!last)), 're42-go wide'); btn(c, 'ليس الآن', () => close(go), 're42-go wide alt'); s2.body.append(c); }); }
+    function rnGate() { const q = S.q65; if (S.rnAsked || rnSeen85() || !q || foLeft() !== 0 || !/^https:\/\//.test(q.renewal_url || '')) return; clearDock(); btn(dock, 'تم، قرأت النتيجة', () => { clearDock(); renewAsk(); }, 're42-go wide'); /* r85 */ } // r79: the renewal offer only after the client has read the last result
     function foOffer(last) { const F = FOc(); const s2 = sheet('خصم أتعاب المتابعة', 're42-pick re73-fo'); applyTheme(s2.ov, cfg.theme); const x = s2.head.querySelector('.re42-x'); if (x) x.onclick = () => { s2.ov.remove(); foNo(last); };
       const sp = el('div', 're73-spin'); sp.append(el('i', 're73-ring'), el('p', '', F.checking)); s2.body.append(sp);
       Promise.all([foSync('issue'), new Promise(z => setTimeout(z, 1100))]).then(([t]) => { if (!t || !foOk()) { s2.ov.remove(); if (t) S.foOff = true; if (last) rnGate(); return; } /* r79: no offer shown → renewal only after «تم، قرأت النتيجة» */ sp.remove(); const c = el('div', 're73-card'); c.append(el('h3', '', tpl(F.title, S.data)), el('p', 're73-big', String(F.sub || '').replace(/\{disc\}/g, p2(F.disc))), el('p', '', F.body), el('p', 're73-slo', F.slogan), el('p', 're73-vl', String(F.valid || FO_DEF.valid).replace(/\{after_pct\}/g, p2(r2(Number(t.pct) - Number(t.disc))))), el('p', 're73-ex', 'ينتهي العرض: ' + foDt(t.expires_at)));
@@ -971,9 +995,10 @@
       const FB = 'إجمالي مبلغ التمويل المحتسب عليه الأتعاب، شاملًا الدعم المقدم إن وجد ولم يكن محتسبًا ضمن التمويل: ' + fmt(f.base) + ' ريال.'; // r75: fee details once only
       L.push('تفاصيل أتعاب المتابعة:', '', ...(f.G ? [FB, 'أتعاب المتابعة قبل الخصم (' + p2(f.P) + '%): ' + fmt2(f.orig) + ' ريال.', 'الخصم الممنوح لي (' + p2(f.Z) + ' نقطة مئوية): ' + fmt2(f.disc) + ' ريال.', 'إجمالي أتعاب المتابعة بعد الخصم (' + p2(f.A) + '%): ' + fmt2(f.after) + ' ريال.'].concat(S.foSt && S.foSt.expires_at ? ['تاريخ ووقت انتهاء عرض الخصم: ' + foDt(S.foSt.expires_at) + '.'] : []) : [FB, 'أتعاب المتابعة (' + p2(f.P) + '%): ' + fmt2(f.after) + ' ريال.']).map(t => t ? '• ' + t : t), '');
       L.push(String(F.msg_ack || FO_DEF.msg_ack).replace(/\{pct\}/g, p2(f.P)).replace(/\{disc\}/g, p2(f.Z)).replace(/\{after_pct\}/g, p2(f.A)).replace(/\{amount\}/g, fmt2(f.after))); return L.join('\n'); }
-    function renewAsk() { if (S.rnAsked) return; const q = S.q65; if (!q || foLeft() !== 0 || !/^https:\/\//.test(q.renewal_url || '')) return; S.rnAsked = true; r73css(); // only at zero balance and only when the package supports renewal (owner renewal link)
-      const s2 = sheet('تجديد الباقة', 're42-pick re73-rn'); applyTheme(s2.ov, cfg.theme); s2.body.append(el('p', '', tpl('انتهت حسبات باقتك يا {name}. تقدر تجدد باقتك وتكمل حسباتك.', S.data) + (q.renewal_price ? ' سعر التجديد: ' + q.renewal_price + ' ريال.' : '')));
-      btn(s2.body, 'جدد باقتك', () => window.open(q.renewal_url, '_blank', 'noopener'), 're42-go wide'); btn(s2.body, 'ليس الآن', () => { s2.ov.remove(); rateSheet(); }, 're42-go wide alt'); }
+    function renewAsk() { if (S.rnAsked || rnSeen85()) return; const q = S.q65; if (!q || foLeft() !== 0 || !/^https:\/\//.test(q.renewal_url || '')) return; S.rnAsked = true; r73css(); // r85: only at zero balance (owner renewal link); centered; «ليس الآن» = not again in this session
+      const s2 = sheet('تجديد الباقة', 're42-pick re73-rn re85-c'); applyTheme(s2.ov, cfg.theme); const no = () => { try { if (TKT()) W.sessionStorage.setItem('f99r85rn:' + TKT(), '1'); } catch (x) {} s2.ov.remove(); }; const x = s2.head.querySelector('.re42-x'); if (x) x.onclick = no;
+      const c = el('div', 're73-card re85-rn'); c.append(el('p', 're85-rnt', tpl('يا {name}، خلصت حسبات باقتك! 🎉', S.data)), el('p', '', 'تقدر تجدد باقتك' + (q.renewal_price ? ' بـ' + q.renewal_price + ' ريال' : '') + ' وتكمل على نفس بياناتك، بدون ما تبدأ من الصفر.'));
+      btn(c, 'جدد باقتك', () => window.open(q.renewal_url, '_blank', 'noopener'), 're42-go wide'); btn(c, 'ليس الآن', no, 're42-go wide alt'); s2.body.append(c); }
     function exitAsk() { r73css(); const s2 = sheet('قبل الخروج', 're42-pick re73-ex'); applyTheme(s2.ov, cfg.theme); s2.body.append(el('p', '', 'تبي تراجع حسبتك قبل تطلع؟ إذا خرجت، بتبدأ حسبة جديدة عند رجوعك.'));
       btn(s2.body, 'مراجعة الحسبة', () => { s2.ov.remove(); try { if (resEl) resEl.scrollIntoView({ block: 'start' }); } catch (e) {} }, 're42-go wide'); btn(s2.body, 'متابعة الخروج', () => { s2.ov.remove(); rateSheet(); }, 're42-go wide alt'); }
     function rateSheet() { r73css(); const s2 = sheet('تقييم التجربة', 're42-pick re73-rt'); applyTheme(s2.ov, cfg.theme); s2.body.append(el('p', '', 'كيف كانت تجربتك مع الحسبة؟ قيّمنا ⭐')); let n = 0; const sr = el('div', 're73-stars'); const ms = el('p', 're73-ok'); ms.hidden = true;
@@ -1001,7 +1026,7 @@
     // r54: per-bank text / image (same values as the card)
     const stLine = s => (MG ? stLbl65(s) : (s.from === s.to ? 'الشهر ' + s.from : 'الأشهر ' + s.from + '–' + s.to) + (s.post ? ' (بعد التقاعد)' : '')) + ': ' + fmt2(s.raw != null ? s.raw : s.amount) + ' ريال';
     function bankText(b, i) {
-      const L = [(S.custom ? 'حسبة بنسبتك الخاصة' : (ORD[i] || 'الترشيح ' + (i + 1))) + ': ' + b.name, 'الاسم: ' + (S.data.name || ''), (MG && S.data.sector === 'military' && S.data.mil_entity ? 'القطاع والجهة: عسكري — ' + S.data.mil_entity : ''), (upOf(b) ? 'إجمالي التمويل المتاح مع الدعم: ' + fmt(b.amount + upOf(b)) + ' ريال\nتمويل البنك: ' + fmt(b.amount) + ' ريال' : (PROD === 'transfer' ? 'مبلغ التمويل اللازم للتحويل: ' : 'مبلغ التمويل العقاري من البنك: ') + fmt(b.amount) + ' ريال'), 'هامش الربح: ' + pct(b.rate) + ' — ' + PLN(b.plan) + (b.rateSource === 'client' ? ' (' + (T.r65_custom_note || 'النسبة مدخلة من العميل وليست عرضًا موثقًا أو ترشيحًا من FINO99') + ')' : ''), 'المدة: ' + b.months + ' شهرًا (' + durTxt(b.months) + ')'];
+      const L = [(S.custom ? 'حسبة بنسبة مدخلة من العميل' : (ORD[i] || 'الترشيح ' + (i + 1))) + ': ' + b.name, 'الاسم: ' + (S.data.name || ''), (MG && S.data.sector === 'military' && S.data.mil_entity ? 'القطاع والجهة: عسكري — ' + S.data.mil_entity : ''), (upOf(b) ? 'إجمالي التمويل المتاح مع الدعم: ' + fmt(b.amount + upOf(b)) + ' ريال\nتمويل البنك: ' + fmt(b.amount) + ' ريال' : (PROD === 'transfer' ? 'مبلغ التمويل اللازم للتحويل: ' : 'مبلغ التمويل العقاري من البنك: ') + fmt(b.amount) + ' ريال'), 'هامش الربح: ' + pct(b.rate) + ' — ' + PLN(b.plan) + (b.rateSource === 'client' ? ' (' + (T.r65_custom_note || 'النسبة مدخلة من العميل وليست عرضًا موثقًا أو ترشيحًا من FINO99') + ')' : ''), 'المدة: ' + b.months + ' شهرًا (' + durTxt(b.months) + ')'];
       const sa = b.sup || {}; if (S.data.supported && sa.upfrontCounted && sa.upfront > 0) L.push('الدعم السكني المقدم: ' + fmt(sa.upfront) + ' ريال'); if (b.etz) L.push('قرض اعتزاز الحسن: ' + fmt(b.etz.amount) + ' ريال'); if (b.propertyValueR > b.amountR && (!MG || b.etz)) L.push('إجمالي القيمة المتاحة للشراء: ' + fmt(b.propertyValueR) + ' ريال');
       L.push('الأقساط حسب الفترات:'); b.stages.slice(0, 8).forEach(s => L.push('• ' + stLine(s)));
       const FE = b.fees || {}; L.push('إجمالي الأرباح: ' + fmt(b.profit) + ' ريال', 'الرسوم الإدارية: ' + (FE.fee > 0 ? fmt2(FE.total) + ' ريال' : (FE.mode === 'exempt' ? 'معفاة' : 'لا توجد')), 'إجمالي السداد: ' + fmt(b.totalDue) + ' ريال');
@@ -1089,21 +1114,22 @@
     }
     // start
     // r59: the introduction is a separate card shown before any chat message (like «اختصر مشاويرك»); the full compound name is kept as typed
-    if (!(Q.name && Q.name.enabled !== false)) { bot(T.greeting || 'أهلًا بك'); next(); } else nameCard();
+    if (!(Q.name && Q.name.enabled !== false)) { bot(T.greeting || 'أهلًا بك'); need85('ref', next); } else nameCard(); /* r85 */
     function nameCard() {
       const NK = (() => { try { const e = ENT0 || (typeof finoCentralRestoreEntry === 'function' ? finoCentralRestoreEntry() : null); return e && e.entryToken ? 'f99re59n:' + PROD + ':' + String(e.entryToken).slice(-16) : ''; } catch (x) { return ''; } })();
-      { let sv0 = ''; try { sv0 = (NK && ((MG && W.localStorage.getItem(NK)) || W.sessionStorage.getItem(NK))) || ''; } catch (x) {} if (MG && sv0.length >= 2) { S.data.name = sv0; bot(greetWord() + ' يا ' + first(S.data) + '، حياك الله.'); return whoFor(true); } } // r83: a saved name is never asked again
+      { let sv0 = ''; try { sv0 = (NK && ((MG && W.localStorage.getItem(NK)) || W.sessionStorage.getItem(NK))) || ''; } catch (x) {} if (MG && sv0.length >= 2) { S.data.name = sv0; bot(greetWord() + ' يا ' + first(S.data) + '، حياك الله.'); return need85('ref', () => whoFor(true)); } } /* r85 */ // r83: a saved name is never asked again
       const cd = el('section', 're59-name'); cd.append(el('div', 're59-eye', 'FINO99 • البداية'), el('h2', '', 'نتعرف عليك، وش اسمك الكريم؟'));
       const inn = el('input'); inn.type = 'text'; inn.placeholder = 'اسمك الكريم'; inn.maxLength = 40; inn.autocomplete = 'given-name'; inn.setAttribute('aria-label', 'اسم العميل'); inn.dir = 'rtl';
       try { const sv = NK && W.sessionStorage.getItem(NK); if (sv) inn.value = sv; } catch (x) {}
       const er = el('div', 're59-err'); er.setAttribute('role', 'status'); let done = false;
       const go = () => { if (done) return; const v = String(inn.value || '').replace(/[<>`]/g, '').replace(/\s+/g, ' ').trim().slice(0, 40); if (v.length < 2) { er.textContent = 'اكتب اسمك الكريم للمتابعة.'; inn.focus(); return; }
-        done = true; S.data.name = v; try { if (NK) W.sessionStorage.setItem(NK, v); } catch (x) {} try { if (NK && MG) W.localStorage.setItem(NK, v); } catch (x) {} /* r84 */ cd.remove(); log.hidden = false; bot(greetWord() + ' يا ' + first(S.data) + '، حياك الله.'); next(); };
+        done = true; S.data.name = v; try { if (NK) W.sessionStorage.setItem(NK, v); } catch (x) {} try { if (NK && MG) W.localStorage.setItem(NK, v); } catch (x) {} /* r84 */ cd.remove(); log.hidden = false; bot(greetWord() + ' يا ' + first(S.data) + '، حياك الله.'); need85('ref', next); }; /* r85 */
       inn.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); go(); } });
       cd.append(inn, er); btn(cd, 'متابعة', go, 're42-go wide'); log.hidden = true; sh.body.prepend(cd); setTimeout(() => { try { inn.focus(); } catch (x) {} }, 60);
     }
     // r83: «احسب من جديد» — for yourself (saved data, editable) or for someone else (only their name, then the same questions); nothing is metered here
     function whoFor(open) {
+      if (MG && !open && resEl) { resEl.remove(); resEl = null; } /* r85: no old result behind the new question */
       choice('#تحسب لنفسك أو لشخص آخر؟', [{ label: 'لنفسي', value: 'me' }, { label: 'لشخص آخر', value: 'other' }], v => { if (resEl) { resEl.remove(); resEl = null; } /* r84 */ S.custom = null; S.cut = null; S.offers = {}; S.plans = {}; S.entity = null; S.history = []; S.showRest = false;
         if (v === 'other') return textIn('#وش اسم الشخص اللي تبي تحسب له؟', 'text', s0 => { const n = String(s0 || '').replace(/[<>`]/g, '').replace(/\s+/g, ' ').trim().slice(0, 40); if (n.length < 2) return 'اكتب اسمه للمتابعة.';
           if (S.who !== 'other') S.selfData = JSON.parse(JSON.stringify(S.data)); S.who = 'other'; S.data = { obligations: [], name: n }; S.months = null; S.extend = null; S.scn = 'now'; if (resEl) { resEl.remove(); resEl = null; } me(n); bot('حياك الله، بنحسب الحين لـ ' + n + '.'); next(); }, 'اسمه الكريم');
@@ -1225,7 +1251,7 @@
       const R6 = Wc.r66 = Wc.r66 || {}; const C = R6.car = R6.car || {}, K = R6.card = R6.card || {}, CC = R6.client = R6.client || {}; CC.fields = CC.fields || {};
       if (C.warn == null) C.warn = R66_CAR_WARN; if (K.warn == null) K.warn = R66_CARD_WARN;
       P.append(el('h4', '', 'تمويل سيارة'));
-      field(P, 'إظهار «تمويل سيارة» للعملاء (مخفي افتراضيًا)', C, 'enabled', 'bool', { def: false });
+      field(P, 'إظهار «تمويل سيارة» للعملاء (يظهر افتراضيًا في الحاسبة العقارية باسم «تمويل تأجيري (سيارة)»، ومخفي افتراضيًا في التحويل)', C, 'enabled', 'bool', { def: true }); /* r85 */
       field(P, 'توزيع الدفعة الأخيرة على عدد أشهر (افتراض مبدئي — الافتراضي 24)', C, 'final_months', 'num');
       field(P, 'نص تنبيه الدفعة الأخيرة ({name} = اسم العميل)', C, 'warn', 'textarea'); field(P, 'لون التنبيه (مثل #b42318)', C, 'color', 'text');
       P.append(el('h4', '', 'بطاقة ائتمانية'));

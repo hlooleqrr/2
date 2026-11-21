@@ -349,3 +349,23 @@ html.re42-lock{overflow:hidden}
 .re42-bot.kb:not(.re54-tr) .re59-name{margin:6px 2px;padding:12px 14px}
 .re84-sn{font-size:12px;line-height:1.6;color:#475569;margin:2px 4px 10px}
 .re84-fo .re73-card h3{font-size:20px}
+/* r85: one balance indicator + short path line, short neutral notice, centered offer/renewal cards, clearer result card, WhatsApp line */
+.re42-bot:not(.re54-tr) .re85-sub{flex-basis:100%;font-size:11px;font-weight:600}
+.re42-bot:not(.re54-tr) .f99n78.f99n85{display:block;background:#f6f8fb;color:#34506b;border:1px solid #e2e8f0;border-inline-start:3px solid #9fb6cc;font-size:11px;line-height:1.5;padding:3px 9px;margin:2px 10px 3px}
+.re42-bot:not(.re54-tr) .f99n85 .f99n78-w{display:inline;white-space:normal}
+.re42-bot:not(.re54-tr) .f99n85 .f99n78-t{display:inline;font-weight:700}
+.re42-bot:not(.re54-tr) .f99n85 .f99n78-s{display:inline;margin-inline-start:4px;font-size:10.5px;font-weight:600;color:#5b6b85}
+.re42-ov.re85-c{align-items:center;padding:16px;box-sizing:border-box}
+.re42-ov.re85-c .re42-sheet{height:auto;max-height:86vh;max-height:86dvh;max-width:380px;border-radius:20px;box-shadow:0 18px 50px rgba(0,0,0,.32)}
+.re85-rn .re85-rnt{font-size:19px;font-weight:900;color:#0f1f3d;margin:4px 0 2px}
+.re85-rn p{font-size:15.5px;line-height:1.8}
+.re42-bot:not(.re54-tr) .re42-dock .re42-chip.re85-p1{border-width:2px;border-color:var(--nv,#073b67);font-weight:900}
+.re85-wa{display:block;margin:8px 0 2px;text-align:center;font-size:13.5px;font-weight:800;color:#047857;text-decoration:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:6px 8px}
+.re42-bot:not(.re54-tr) .re42-bank .re42-bn b{font-size:17.5px}
+.re42-bot:not(.re54-tr) .re42-bank .re42-rkl{font-size:13px}
+.re42-bot:not(.re54-tr) .re42-bank .re42-rate b{font-size:22px}
+.re42-bot:not(.re54-tr) .re42-bank .re42-amt small{font-size:14px;color:#34506b}
+.re42-bot:not(.re54-tr) .re42-sum .re42-kv{font-size:14px}
+.re42-bot:not(.re54-tr) .re42-sum .re42-kv span{color:#34506b}
+.re42-bot:not(.re54-tr) .re55-q .re42-kv b{font-size:18px;color:var(--nv,#073b67)}
+.re42-bot:not(.re54-tr) .re42-tag.est{color:#7a4a00;font-weight:800}
