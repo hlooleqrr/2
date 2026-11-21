@@ -61,6 +61,10 @@
 .r67-li .r67-ed{font-size:12px;min-height:30px;padding:3px 10px;flex:0 0 auto;margin-inline-start:6px}
 .r67-big{margin-top:4px;text-align:center;border-radius:12px;padding:10px;background:#fff1f2;color:var(--bad);font-weight:800;font-size:15px}
 .r67-big strong{display:block;font-size:30px;line-height:1.3}
+.r67-end{text-align:center;gap:8px;padding:16px 14px;border:1.5px solid #f3c6cc;background:linear-gradient(180deg,#fff6f7,#fff);box-shadow:0 8px 22px rgba(15,31,61,.08)}
+.r67-end h4{font-size:18px;line-height:1.6;color:var(--k)} .r67-end p{margin:0;font-size:14.5px;line-height:1.75;color:var(--k)} .r67-end .r67-end-q{font-weight:800;color:var(--p)}
+.r67-end .r67-row{flex-direction:column;margin-top:6px} .r67-end .r67-btn{width:100%;box-sizing:border-box;min-height:50px;font-size:16px}
+.r67-li span{flex:0 1 auto;min-width:0} .r67-li b{min-width:0;white-space:normal;overflow-wrap:anywhere}
 .r67-big.ok{background:#ecfdf5;color:var(--ok)}
 .r67-sub{font-size:12px;color:var(--m)}
 .r67-own label{display:block;font-size:13px;font-weight:700;margin:8px 0 3px;color:#18465c}
@@ -97,22 +101,23 @@
   }
   const YN = [['نعم', true], ['لا', false]];
   // ---------- question chain ----------
-  function askName(next) { msg(T.ask_name); textIn('txt', v => { I.name = v; msg(tpl(riyadhAM() ? T.greet_am : T.greet_pm, { name: v })); next(); }, 'اسمك'); }
+  function askName(next) { msg(T.ask_name); textIn('txt', v => { I.name = v; if (S) S.name = v; msg(tpl(riyadhAM() ? T.greet_am : T.greet_pm, { name: v })); next(); }, 'اسمك'); }
   const askIncome = next => { msg(T.q_income); textIn('num', v => { I.income = v; next(); }); };
   const askInst = next => { msg(T.q_inst); textIn('num', v => { I.instalments = v; next(); }); };
   function askSupport(next) {
     msg(T.q_support); choices(YN, v => {
       I.has_support = v; delete I.support; delete I.counted; delete I.included; if (!v) return next();
-      msg(T.q_support_amount); textIn('num', a => { I.support = a; msg(T.q_support_counted);
-        choices([['نعم', 'yes'], ['لا', 'no'], ['ما أدري', 'unknown']], c => { I.counted = c; if (c === 'no') return next();
+      msg(T.q_support_amount); textIn('num', a => { I.support = a; msg(tpl(T.q_support_counted, { name: I.name }));
+        choices([['نعم، أضافوه', 'yes'], ['لا، ما أضافوه', 'no'], ['ما أدري', 'unknown']], c => { I.counted = c; if (c === 'no') return next();
           msg(tpl(T.q_included, { income: fmt(I.income) })); choices([['نعم، يشمله', 'yes'], ['لا، لا يشمله', 'no']], x => { I.included = x; next(); }); }); });
     });
   }
   const askLater = next => { msg(T.q_later); choices(YN, v => { I.later = v; next(); }); };
   function newCheck() {
-    if (!S) return; if (S.remaining <= 0) return exhausted(); I = {};
+    if (!S) return; if (S.remaining <= 0) return exhausted(); const nm = S.name || lastName(); I = {}; // r77: each check independent; the name is asked once per code
     if (S.used > 0 && S.remaining === 1) msg(T.start_3); else if (S.used === 1) msg(T.start_2);
-    askName(() => askIncome(() => askInst(() => askSupport(() => askLater(summary)))));
+    const rest = () => askIncome(() => askInst(() => askSupport(() => askLater(summary))));
+    if (nm) { I.name = nm; rest(); } else askName(rest);
   }
   const yn = v => v ? 'نعم' : 'لا';
   const cntTxt = { yes: 'نعم', no: 'لا', unknown: 'ما أدري' };
@@ -151,7 +156,7 @@
     const st = res.has_support ? (x.support_included ? ' (شامل الدعم السكني ' + fmt(x.support) + ' ريال)' : ' (بدون الدعم السكني)') : '';
     li('الدخل المستخدم في الفحص', fmt(x.income) + ' ريال' + st); li('أقساطك الشهرية الحالية', fmt(x.instalments) + ' ريال');
     li('الحد الحسابي الإرشادي لأقساطك', fmt(x.limit) + ' ريال'); li('نسبة استقطاعك المحسوبة', Number(x.ratio).toFixed(1).replace(/\.0$/, '') + '%');
-    const big = el('div', 'r67-big' + (x.overage > 0 ? '' : ' ok')); if (x.overage > 0) { big.append('مبلغ التجاوز الشهري', el('strong', '', fmt(x.overage) + ' ريال')); } else big.textContent = 'لا يظهر تجاوز حسابي';
+    const big = el('div', 'r67-big' + (x.overage > 0 ? '' : ' ok')); if (x.overage > 0) { big.append('مبلغ التجاوز الشهري المحسوب:', el('strong', '', fmt(x.overage) + ' ريال')); } else big.textContent = 'لا يظهر تجاوز حسابي';
     c.append(big); return c;
   }
   function result(res, review) {
@@ -159,16 +164,16 @@
     if (rows.length > 1) {
       const w = rows.find(r => r.key === 'with') || rows[0], wo = rows.find(r => r.key === 'without') || rows[1];
       const o1 = w.available ? w.overage : null; msg(o1 > 0 ? tpl(T.over_1, { name: nm, amount: fmt(o1) }) : (av.some(r => r.overage > 0) ? tpl(T.two_mixed || DEF.two_mixed, { name: nm }) : tpl(T.no_over, { name: nm })));
-      msg(T.two_intro || DEF.two_intro, 'small'); ui.body.append(card(w, 'إذا اعتمدت جهة التمويل الدعم السكني', res), card(wo, 'إذا لم تعتمده جهة التمويل', res));
+      msg(T.two_intro || DEF.two_intro, 'small'); ui.body.append(card(w, 'إذا أضافت جهة التمويل الدعم السكني على راتبك', res), card(wo, 'إذا ما أضافت جهة التمويل الدعم السكني على راتبك', res));
     } else { const x = rows[0]; msg(x.overage > 0 ? tpl(T.over_1, { name: nm, amount: fmt(x.overage) }) : tpl(T.no_over, { name: nm })); ui.body.append(card(x, '', res)); }
-    if (av.some(r => r.overage > 0)) msg(T.over_2);
+    if (av.some(r => r.overage > 0)) msg(tpl(T.over_2, { name: nm }));
     if (av.some(r => r.basis === 't1_general')) msg(T.note_t1 || DEF.note_t1, 'small');
     msg(T.note, 'small'); down(); if (!review) after();
   }
   function after() {
     clear(); const row = el('div', 'r67-row');
     if (S.remaining > 0) { btn(row, 'فحص جديد', () => { clear(); newCheck(); }, 'pri'); btn(row, 'تمام، خروج', exit); ui.dock.append(row); }
-    else { const last = S.results.length ? S.results[S.results.length - 1].result.name : ''; msg(tpl(T.exhausted, { name: last })); buyRow(S.buy); }
+    else endCard();
   }
   function buyRow(b, noReview) {
     clear(); const row = el('div', 'r67-row'); b = b || (S && S.buy) || {};
@@ -177,7 +182,13 @@
     btn(row, 'تمام، خروج', exit); ui.dock.append(row);
   }
   function review() { clear(); S.results.slice().sort((a, b) => a.seq - b.seq).forEach(x => { msg('الفحص ' + x.seq + ' — ' + (x.result.name || ''), 'small'); result(x.result, true); }); S.remaining > 0 ? after() : buyRow(S.buy, true); }
-  function exhausted() { const last = S && S.results.length ? S.results[S.results.length - 1].result.name : ''; msg(tpl(T.exhausted, { name: last })); buyRow(S && S.buy); }
+  function lastName() { return S && S.results && S.results.length ? S.results[S.results.length - 1].result.name || '' : ''; }
+  // r77: all checks used → marketing card inside the package window (below the last result). No renewal of the old code: a new code is bought.
+  function endCard() { clear(); if (!ui) return; const b = (S && S.buy) || {}, nm = (S && (S.name || lastName())) || '';
+    const c = el('div', 'r67-card r67-end'); c.append(el('h4', '', '🎉 تم الانتهاء من فحوصاتك' + (nm ? ' يا ' + nm : '') + '!'), el('p', '', 'خلصت فحوصات باقتك الثلاث.'), el('p', 'r67-end-q', 'تبي تفحص مرة ثانية؟'), el('p', '', 'اشتر كود جديد، وابدأ 3 فحوصات جديدة خلال 24 ساعة من أول تفعيل للكود، أيهما ينتهي أولًا.'));
+    const row = el('div', 'r67-row'); if (b.enabled !== false) { const a = el('a', 'r67-btn buy', 'اشتر كود جديد'); a.href = /^https:\/\//.test(b.url || '') ? b.url : 'https://salla.sa/HloolTamwilia/payment/p1508908354'; a.target = '_blank'; a.rel = 'noopener'; row.append(a); }
+    btn(row, 'تمام، خروج', exit); c.append(row); ui.body.append(c); down(); }
+  function exhausted() { endCard(); if (S && S.results && S.results.length) { const r = el('div', 'r67-row'); btn(r, 'نتائجي السابقة', review); ui.dock.append(r); } }
   function expired(b) { if (ui) ui.q.hidden = true; msg(T.expired || 'انتهت صلاحية كودك'); S = S || { results: [] }; S.results = []; buyRow(b || (S && S.buy), true); }
   function lost() { msg('انتهت جلسة الدخول. أدخل كودك مرة أخرى للمتابعة — نتائجك المحفوظة لا تضيع.', 'warn'); clear(); const row = el('div', 'r67-row'); btn(row, 'تمام، خروج', exit, 'pri'); ui.dock.append(row); }
   function exit() {
