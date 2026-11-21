@@ -71,13 +71,45 @@
 .r67-own textarea,.r67-own input[type=text],.r67-own input[type=number],.r67-own input[type=url],.r67-own select{width:100%;box-sizing:border-box;font:inherit;font-size:15px;padding:9px 10px;border:1px solid #b9cad5;border-radius:10px}
 .r67-own details{background:#fff;border:1px solid var(--l);border-radius:14px;padding:10px 12px}
 .r67-own summary{font-weight:800;cursor:pointer;color:var(--p)}
-.r67-own .r67-st{white-space:pre-wrap;font-size:13px;color:var(--m);line-height:1.7}`;
+.r67-own .r67-st{white-space:pre-wrap;font-size:13px;color:var(--m);line-height:1.7}
+/* r81: customer chat — larger readable text, question vs answer, clear choice buttons, result card, name popup */
+.r67-cl .r67-sheet{position:relative}
+.r67-cl .r67-head{position:relative;z-index:3;background:#fff}
+.r67-cl .r67-head b{font-size:17px;font-weight:800}
+.r67-cl .r67-body{gap:10px;padding:14px 14px 20px}
+.r67-cl .r67-msg{font-size:17px;line-height:1.8;font-weight:600;color:#0f1f3d;background:#fff;border:1px solid #d3dce8;box-shadow:0 1px 3px rgba(15,31,61,.07);max-width:90%;padding:12px 15px}
+.r67-cl .r67-msg.me{font-size:15.5px;font-weight:700;line-height:1.6;background:#0f5c7a;color:#fff;border:0;box-shadow:none;max-width:80%;padding:9px 15px}
+.r67-cl .r67-msg.warn{background:#fef2f2;border-color:#fca5a5;color:#9f1239}
+.r67-cl .r67-msg.small{font-size:14px;font-weight:500;line-height:1.75;color:#33425a;background:transparent;border:0;box-shadow:none;padding:2px 6px;max-width:100%}
+.r67-cl .r67-sub{font-size:13.5px;color:#33425a}
+.r67-cl .r67-dock{gap:10px;padding:12px 14px calc(12px + env(safe-area-inset-bottom))}
+.r67-cl .r67-dock .r67-row{gap:10px}
+.r67-cl .r67-dock .r67-btn{flex:1 1 0;min-width:0;font-size:16px;line-height:1.4;min-height:52px;padding:10px 12px;border-radius:14px;border:1.5px solid #0f5c7a;background:#fff;color:#0f5c7a}
+.r67-cl .r67-dock .r67-btn.pri{background:#0f5c7a;color:#fff}
+.r67-cl .r67-dock .r67-btn.buy{background:#b42335;border-color:#b42335;color:#fff}
+.r67-cl .r67-in{font-size:17px;min-height:52px;box-sizing:border-box;padding:12px 13px;border:1.5px solid #8fa7b8;border-radius:14px;color:#0f1f3d}
+.r67-cl .r67-card:not(.r67-end) h4{font-size:15.5px}
+.r67-cl .r67-li{font-size:15px} .r67-cl .r67-li span{color:#33425a} .r67-cl .r67-li b{color:#0f1f3d}
+.r67-cl .r67-res{align-self:stretch;background:#fff;border:1.5px solid #c9d7e5;border-radius:18px;box-shadow:0 8px 24px rgba(15,31,61,.09);overflow:hidden;display:flex;flex-direction:column;flex:0 0 auto}
+.r67-cl .r67-res-h{background:linear-gradient(135deg,#0f5c7a,#0f1f3d);color:#fff;font-size:17px;font-weight:800;padding:12px 16px}
+.r67-cl .r67-res-b{padding:13px 12px 14px;display:flex;flex-direction:column;gap:10px}
+.r67-cl .r67-res .r67-msg{max-width:100%;align-self:stretch;background:transparent;border:0;box-shadow:none;padding:0 3px}
+.r67-cl .r67-res .r67-msg.small{padding:0 3px}
+.r67-cl .r67-res .r67-card{background:#f7f9fc;border:1px solid #dfe6f0;padding:12px}
+.r67-cl .r67-big{font-size:15.5px;padding:12px;border:1.5px solid #fecdd3}
+.r67-cl .r67-big strong{font-size:32px}
+.r67-cl .r67-big.ok{border-color:#a7f3d0}
+.r67-pop{position:absolute;inset:0;z-index:2;background:rgba(10,20,40,.5);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
+.r67-pop-box{width:100%;max-width:360px;box-sizing:border-box;background:#fff;border-radius:22px;padding:24px 18px 18px;box-shadow:0 20px 50px rgba(0,0,0,.3);display:flex;flex-direction:column;gap:12px;text-align:center}
+.r67-pop-box h3{margin:0 0 4px;font-size:22px;line-height:1.5;font-weight:800;color:#0f1f3d}
+.r67-pop-box .r67-in{width:100%;text-align:center;flex:0 0 auto}
+.r67-pop-box .r67-btn{width:100%;flex:0 0 auto;min-height:52px;font-size:17px;border-radius:14px}`;
     D.head.append(s);
   }
   function vv() { if (!ui) return; const v = W.visualViewport; const h = v ? v.height : W.innerHeight, t = v ? v.offsetTop : 0;
     ui.ov.style.setProperty('--r67h', h + 'px'); ui.ov.style.setProperty('--r67t', t + 'px'); ui.ov.classList.toggle('kb', h < W.innerHeight * 0.8); }
   function shell(title, onX) {
-    css(); close(); const ov = el('div', 'r67-ov'); const sh = el('div', 'r67-sheet'); const hd = el('div', 'r67-head');
+    css(); close(); const ov = el('div', 'r67-ov'); const sh = el('div', 'r67-sheet'); const hd = el('div', 'r67-head'); if (onX === exit) ov.classList.add('r67-cl');
     const q = el('span', 'r67-q'); q.hidden = true; const x = el('button', 'r67-x', '✕'); x.type = 'button'; x.setAttribute('aria-label', 'إغلاق'); x.onclick = onX;
     hd.append(el('b', '', title), q, x); const body = el('div', 'r67-body'); const dock = el('div', 'r67-dock'); sh.append(hd, body, dock); ov.append(sh); D.body.append(ov);
     ui = { ov, body, dock, q }; vv(); if (W.visualViewport) { W.visualViewport.addEventListener('resize', vv); W.visualViewport.addEventListener('scroll', vv); }
@@ -85,7 +117,8 @@
   }
   function close() { if (ui && ui.ov) ui.ov.remove(); if (W.visualViewport) { W.visualViewport.removeEventListener('resize', vv); W.visualViewport.removeEventListener('scroll', vv); } ui = null; }
   const down = () => { if (ui) requestAnimationFrame(() => { ui.body.scrollTop = ui.body.scrollHeight; }); };
-  const msg = (t, c) => { if (!ui) return null; const m = el('div', 'r67-msg' + (c ? ' ' + c : ''), t); ui.body.append(m); down(); return m; };
+  let tgt = null; // r81: while a result is built, its messages go inside the result card
+  const msg = (t, c) => { if (!ui) return null; const m = el('div', 'r67-msg' + (c ? ' ' + c : ''), t); (tgt || ui.body).append(m); down(); return m; };
   const clear = () => { if (ui) ui.dock.replaceChildren(); };
   const quota = () => { if (!ui || !S) return; ui.q.hidden = false; ui.q.textContent = 'المتبقي ' + S.remaining + ' من ' + S.max; };
   function choices(opts, cb) { clear(); const r = el('div', 'r67-row'); opts.forEach(([lab, val]) => btn(r, lab, () => { clear(); msg(lab, 'me'); cb(val); })); ui.dock.append(r); }
@@ -101,7 +134,16 @@
   }
   const YN = [['نعم', true], ['لا', false]];
   // ---------- question chain ----------
-  function askName(next) { msg(T.ask_name); textIn('txt', v => { I.name = v; if (S) S.name = v; msg(tpl(riyadhAM() ? T.greet_am : T.greet_pm, { name: v })); next(); }, 'اسمك'); }
+  // r81: the name is asked in a separate popup «خلنا نتعرف عليك» (first entry of the code only); one time-based greeting starts the chat
+  function intro(cb) {
+    if (!ui) return; clear(); const bg = el('div', 'r67-pop'), bx = el('div', 'r67-pop-box'), i = el('input', 'r67-in'), err = el('div', 'r67-sub');
+    i.type = 'text'; i.dir = 'rtl'; i.autocomplete = 'off'; i.maxLength = 40; i.placeholder = 'اسمك الكريم'; i.setAttribute('aria-label', 'الاسم'); if (I && I.name) i.value = I.name;
+    const go = () => { const v = cleanName(i.value); if (v.length < 2) { err.textContent = 'اكتب اسمك من فضلك.'; return; } bg.remove(); cb(v); };
+    i.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); go(); } };
+    bx.append(el('h3', '', 'خلنا نتعرف عليك'), i, err); btn(bx, 'متابعة', go, 'pri'); bg.append(bx); ui.body.parentNode.append(bg);
+    setTimeout(() => { try { i.focus({ preventScroll: true }); } catch (e) {} }, 60);
+  }
+  function askName(next, first) { intro(v => { I.name = v; if (S) S.name = v; if (first) msg(tpl(riyadhAM() ? T.greet_am : T.greet_pm, { name: v })); next(); }); }
   const askIncome = next => { msg(T.q_income); textIn('num', v => { I.income = v; next(); }); };
   const askInst = next => { msg(T.q_inst); textIn('num', v => { I.instalments = v; next(); }); };
   function askSupport(next) {
@@ -117,7 +159,7 @@
     if (!S) return; if (S.remaining <= 0) return exhausted(); const nm = S.name || lastName(); I = {}; // r77: each check independent; the name is asked once per code
     if (S.used > 0 && S.remaining === 1) msg(T.start_3); else if (S.used === 1) msg(T.start_2);
     const rest = () => askIncome(() => askInst(() => askSupport(() => askLater(summary))));
-    if (nm) { I.name = nm; rest(); } else askName(rest);
+    if (nm) { I.name = nm; rest(); } else askName(rest, true);
   }
   const yn = v => v ? 'نعم' : 'لا';
   const cntTxt = { yes: 'نعم', no: 'لا', unknown: 'ما أدري' };
@@ -161,14 +203,15 @@
   }
   function result(res, review) {
     const rows = (res.rows || []), av = rows.filter(r => r.available), nm = res.name || ''; const mark = ui.body.lastElementChild; // r78: start of this result
+    const RC = el('div', 'r67-res'), RB = el('div', 'r67-res-b'); RC.append(el('div', 'r67-res-h', 'نتيجة فحصك'), RB); ui.body.append(RC); tgt = RB; try { // r81: result card
     if (rows.length > 1) {
       const w = rows.find(r => r.key === 'with') || rows[0], wo = rows.find(r => r.key === 'without') || rows[1];
       const o1 = w.available ? w.overage : null; msg(o1 > 0 ? tpl(T.over_1, { name: nm, amount: fmt(o1) }) : (av.some(r => r.overage > 0) ? tpl(T.two_mixed || DEF.two_mixed, { name: nm }) : tpl(T.no_over, { name: nm })));
-      msg(T.two_intro || DEF.two_intro, 'small'); ui.body.append(card(w, 'إذا أضافت جهة التمويل الدعم السكني على راتبك', res), card(wo, 'إذا ما أضافت جهة التمويل الدعم السكني على راتبك', res));
-    } else { const x = rows[0]; msg(x.overage > 0 ? tpl(T.over_1, { name: nm, amount: fmt(x.overage) }) : tpl(T.no_over, { name: nm })); ui.body.append(card(x, '', res)); }
+      msg(T.two_intro || DEF.two_intro, 'small'); RB.append(card(w, 'إذا أضافت جهة التمويل الدعم السكني على راتبك', res), card(wo, 'إذا ما أضافت جهة التمويل الدعم السكني على راتبك', res));
+    } else { const x = rows[0]; msg(x.overage > 0 ? tpl(T.over_1, { name: nm, amount: fmt(x.overage) }) : tpl(T.no_over, { name: nm })); RB.append(card(x, '', res)); }
     if (av.some(r => r.overage > 0)) msg(tpl(T.over_2, { name: nm }));
     if (av.some(r => r.basis === 't1_general')) msg(T.note_t1 || DEF.note_t1, 'small');
-    msg(T.note, 'small'); down(); if (review) return;
+    msg(T.note, 'small'); } finally { tgt = null; } down(); if (review) return;
     if (S.remaining > 0) return after();
     // r78: last check — the full result first (scrolled to its start); the new-code offer only after the client has read it
     const top = mark ? mark.nextElementSibling : ui.body.firstElementChild;
