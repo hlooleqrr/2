@@ -47,7 +47,7 @@
     const ul = el('ul', 'r65-list');
     ul.append(el('li', '', 'الصلاحية: ' + (hrs === 24 ? 'يوم واحد (24 ساعة)' : hrs + ' ساعة') + ' من أول تفعيل'));
     ul.append(el('li', '', qr + ' حسبات بالنسب المرجعية المعلنة'));
-    if (qc) ul.append(el('li', '', qc + ' حسبات بنسبة أو عرض خاص من بنكك'));
+    if (qc) ul.append(el('li', '', qc + ' حسبات بنسبة أو عرض خاص من جهات التمويل'));
     body.append(el('p', 'r65-sub', T(P, 'r65_landing_sub', 'حسبة مبدئية لتمويلك العقاري مع مقارنة البنوك.')), ul);
     const row = el('div', 'r65-row'); btn(row, 'اشتر الآن', () => elig(P), 'go'); btn(row, 'لديك كود؟', haveCode, 'alt'); body.append(row);
   }
