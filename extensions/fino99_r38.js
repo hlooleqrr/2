@@ -121,8 +121,8 @@
     CATS2.forEach(([k, ic, t, sub]) => { const b = el('button', 'f38-row-btn'); b.type = 'button'; b.dataset.cat = k; b.append(el('span', 'f38-ic', ic), el('b', '', t), el('small', '', sub)); b.onclick = () => openCat(k); g.append(b); });
   }
   /* ================= STORE PACKAGES (r39) ================= */
-  const PST = {available: ['متاحة للشراء', 'f39-av'], coming_soon: ['ستطلق قريبًا', 'f39-cs'], stopped: ['موقوفة (مخفية)', 'f39-st'], archived: ['محذوفة (مؤرشفة)', 'f39-ar']};
-  const PREASON = {CONFIRM_NAME: 'اكتب اسم الباقة كما هو بالضبط لتأكيد الحذف.', PKG_HAS_BOOKINGS: 'لا يمكن حذف باقة لها مواعيد قادمة؛ أوقفها أولًا أو أنهِ الحجوزات.', PRODUCT_NOT_FOUND: 'الباقة غير موجودة في المتجر.', INVALID_STATE: 'حالة غير صحيحة.'};
+  const PST = {available: ['متاحة للشراء', 'f39-av'], coming_soon: ['ستطلق قريبًا', 'f39-cs'], stopped: ['موقوفة (مخفية)', 'f39-st'], archived: ['محذوفة (مؤرشفة)', 'f39-ar'], sold_out: ['نفدت أكواد هذه الباقة', 'f39-cs']};
+  const PREASON = {CONFIRM_NAME: 'اكتب اسم الباقة كما هو بالضبط لتأكيد الحذف.', PKG_HAS_BOOKINGS: 'لا يمكن حذف باقة لها مواعيد قادمة؛ أوقفها أولًا أو أنهِ الحجوزات.', PRODUCT_NOT_FOUND: 'الباقة غير موجودة في المتجر.', INVALID_STATE: 'حالة غير صحيحة.', SOLDOUT_NOT_FOR_SERVICE: 'حالة «نفدت الأكواد» لباقات الأكواد فقط، وليست لخدمات المواعيد.'};
   const pwhy = r => PREASON[r?.reason] || why(r);
   const ref = path => { let o = W; for (const k of String(path).split('.')) { o = o?.[k]; if (o == null) return null; } return typeof o === 'function' ? o : null; };
   const runExt = (path, ...args) => { const fn = ref(path); if (!fn) return false; closeSheet(); const ks = String(path).split('.'); const self = ks.slice(0, -1).reduce((o, k) => o?.[k], W) || W; try { void fn.apply(self, args); } catch (e) { console.warn(e); } return true; };
@@ -231,13 +231,18 @@
       btn(sct, 'استرجاع الباقة (تعود موقوفة)', async ev => { ev.target.disabled = true; const q = await adm('f99r39_owner_pkg', {p_action: 'restore', p_data: {key}}); if (q.ok) openPkg(key, 'تم الاسترجاع. الباقة الآن موقوفة؛ فعّلها عند الحاجة.'); else { ev.target.disabled = false; say(sct, pwhy(q), 'f38-err'); } }, 'f38-primary');
     } else {
       const seg = el('div', 'f38-seg'); sct.append(seg);
-      [['available', 'متاحة للشراء'], ['coming_soon', 'ستطلق قريبًا'], ['stopped', 'موقوفة']].forEach(([k, t]) => {
+      [['available', 'متاحة للشراء'], ['coming_soon', 'ستطلق قريبًا'], ['stopped', 'موقوفة']].concat(x.service ? [] : [['sold_out', 'نفدت أكواد هذه الباقة']]).forEach(([k, t]) => {
         const b = btn(seg, (x.state === k ? '✓ ' : '') + t, async ev => { if (x.state === k) return;
           if (!W.confirm('تغيير حالة «' + (x.name || key) + '» إلى «' + t + '»؟' + (x.service ? '\nالحجوزات القائمة وحقوق العملاء الحاليين لا تتأثر.' : ''))) return;
           seg.querySelectorAll('button').forEach(z => { z.disabled = true; }); const q = await adm('f99r39_owner_pkg', {p_action: 'state', p_data: {key, state: k}});
           if (q.ok) { try { W.F99V33RefreshStorefront?.(); W.F99Aqari35?.reload?.(); } catch (_) {} openPkg(key, 'تم: الباقة الآن «' + t + '».'); } else { seg.querySelectorAll('button').forEach(z => { z.disabled = false; }); say(sct, pwhy(q), 'f38-err'); } }, x.state === k ? 'f38-primary' : '');
         b.dataset.state = k; });
       say(sct, x.service ? 'الإيقاف أو «ستطلق قريبًا» يمنع الشراء الجديد فقط؛ الحجوزات القائمة وتعديلها والتعويض تبقى تعمل.' : '«ستطلق قريبًا» تُظهر الباقة دون شراء، و«موقوفة» تخفيها من المتجر. الأكواد المباعة تبقى صالحة.', 'f38-muted');
+      if (!x.service) { // r70: owner text of the «sold out» notice — saving it never changes the package state
+        const sf = field(sct, 'نص التنبيه عند «نفدت أكواد هذه الباقة»', '', {max: 180, wide: 1}); sf.value = x.sold_out_text || 'نفدت أكواد هذه الباقة'; const sm = el('p', 'f38-muted');
+        btn(sct, 'حفظ نص التنبيه', async ev => { ev.target.disabled = true; const q = await adm('f99r39_owner_pkg', {p_action: 'soldout_text', p_data: {key, text: sf.value}}); ev.target.disabled = false;
+          if (q.ok) { const n = (q.items || []).find(i => i.key === key) || {}; sf.value = n.sold_out_text || 'نفدت أكواد هذه الباقة'; sm.className = 'f38-ok'; sm.textContent = '✓ تم حفظ النص؛ حالة الباقة لم تتغير' + (n.state === 'sold_out' ? ' ويظهر الآن للعميل.' : '، ويظهر للعميل عند اختيار «نفدت أكواد هذه الباقة».'); try { W.F99V33RefreshStorefront?.(); } catch (_) {} } else { sm.className = 'f38-err'; sm.textContent = pwhy(q); } });
+        sct.append(sm); say(sct, '«نفدت أكواد هذه الباقة» تُبقي البطاقة ظاهرة بسعرها ووصفها وتستبدل زر الشراء بالتنبيه أعلاه دون فتح رابط الشراء. الأكواد المباعة تبقى صالحة.', 'f38-muted'); }
     }
     const lb = el('div', 'f38-sec'); lb.append(el('h4', '', 'نص زر الباقة')); body.append(lb);
     const lf = field(lb, 'نص زر الباقة', '', {max: 50, wide: 1}); lf.placeholder = 'اشتر الآن'; const lst = el('p', 'f38-muted'); lb.append(lst);

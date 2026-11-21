@@ -30,7 +30,7 @@
   D.addEventListener('click', e => { if (e.target && e.target.closest && e.target.closest('#f99l-enter')) grab(); }, true);
   D.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target && e.target.id === 'f99l-code') grab(); }, true);
   async function remember() { let c = typed; try { if (!c && typeof f99LastAttemptedCode === 'string') c = f99LastAttemptedCode; } catch (e) {} const k = await hC(c); if (!k) return; const a = known(); if (!a.includes(k)) { a.push(k); try { localStorage.setItem(KC, JSON.stringify(a.slice(-20))); } catch (e) {} } }
-  function storeBuy() { try { const p = ((W.FINO99ReadStorefront && W.FINO99ReadStorefront()) || {}).products || []; const x = p.find(y => y && y.key === 'pkg-r67-dbr-check'); return x ? { url: x.url, price: x.price, checks: Number(x.max_calculations) || 3, enabled: x.enabled !== false } : {}; } catch (e) { return {}; } }
+  function storeBuy() { try { const p = ((W.FINO99ReadStorefront && W.FINO99ReadStorefront()) || {}).products || []; const x = p.find(y => y && y.key === 'pkg-r67-dbr-check'); return x ? { url: x.url, price: x.price, checks: Number(x.max_calculations) || 3, enabled: x.enabled !== false && x.sold_out !== true } : {}; /* r70: no re-purchase link while «نفدت أكواد هذه الباقة» */ } catch (e) { return {}; } }
   let T = {}, S = null, ui = null, I = null, busy = false, E0 = null, endBusy = false;
 
   function css() {

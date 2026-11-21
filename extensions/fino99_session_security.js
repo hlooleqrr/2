@@ -28,8 +28,8 @@
     if (ev?.isTrusted !== true) return false;
     if (ev.type === 'keydown' && (ev.key !== 'Enter' || ev.repeat)) return false;
     if (!['click', 'keydown'].includes(ev.type)) return false;
-    const el = ev.target?.closest?.('#f99l-enter,#f99s12-receipt-login,#page1 .finium-entry-btn,#f99l-code,#password');
-    return !!el && (ev.type !== 'click' || !['f99l-code', 'password'].includes(el.id));
+    const el = ev.target?.closest?.('#f99l-enter,#f99s12-receipt-login,#page1 .finium-entry-btn,#f99l-code,#password,#r65-ov .r65-cbtn,#r65-code');
+    return !!el && (ev.type !== 'click' || !['f99l-code', 'password', 'r65-code'].includes(el.id));
   }
   function createLoginGate(crypto, now = Date.now) {
     let ticket = null, active = null;
