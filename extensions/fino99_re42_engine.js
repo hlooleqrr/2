@@ -281,7 +281,7 @@
     return { amount: ep.amount, grace: ep.grace, months: ep.months, inst: ep.inst, last: ep.last, offset: ep.offset, start: Math.max(1, ep.firstPay), end: ep.lastPay, beyond: ep.lastPay > N,
       capBefore: ep.firstPay > 1 ? cap(ep.firstPay - 1) : null, capDuring: cap(Math.max(1, ep.firstPay)), capAfter: ep.lastPay < N ? cap(ep.lastPay + 1) : null };
   }
-  function obligationsAt(obl, m) { let s = 0; for (const o of obl || []) if (m <= num(o.months)) s += num(o.amount); return s; }
+  function obligationsAt(obl, m) { let s = 0; for (const o of obl || []) { const n = num(o.months); if (m <= n) s += num(o.amount); else if (num(o.final) > 0) { const fm = Math.max(1, Math.floor(num(o.final_months) || 24)); if (m <= n + fm) s += num(o.final) / fm; } } return s; } /* r66: car final payment spread over fm months right after the last monthly instalment (no overlap, no gap) */
   function schedule(pr, inp, cfg, N, bank, trial) {
     const rows = new Array(N); const ep = etizazPlan(inp, cfg);
     for (let m = 1; m <= N; m++) {

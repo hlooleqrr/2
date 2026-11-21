@@ -312,3 +312,6 @@ html.re42-lock{overflow:hidden}
 .r65-err{margin:0;color:#b42335;font-size:13px;min-height:1em}
 .r65-date{display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:8px}
 .r65-date input{font-size:16px;padding:10px;border:1px solid #cfd8e3;border-radius:10px;text-align:center;min-width:0}
+/* r66: client details card */
+.re66-cli .re66-h{display:block;margin:10px 0 4px;color:#34506b}
+.re66-cli .re42-st{line-height:1.6}
