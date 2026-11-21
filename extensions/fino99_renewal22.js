@@ -101,6 +101,10 @@
   function bestOffer(ctx,id){const now=Date.parse(ctx.server_now);const list=(ctx.offers||[]).filter(o=>Number(o.available)>0&&safeURL(o.checkout_url)&&(!o.offer_expires_at||Date.parse(o.offer_expires_at)>now));
     if(id){const x=list.find(o=>o.id===id);if(x)return x;}
     return list.slice().sort((a,b)=>Number(a.price_sar)-Number(b.price_sar))[0]||null;}
+  /* r86: the mortgage package keeps its approved renewal (price + Salla link) in its own sale settings (f99r43_mortgage_sale → f99r65_public), not in the generic renewal-offers table. */
+  let mg86=null;async function mgRenewal(ctx){try{if(!mg86){const r=await w.finoRpc('f99r65_public',{},12000);if(r&&r.ok&&r.data&&r.data.ok)mg86=r.data;}const p=mg86;if(!p||!ctx||!p.key||p.key!==ctx.package_key)return null;const u=safeURL(p.renewal&&p.renewal.url),pr=Number(p.renewal&&p.renewal.price);return u&&pr>0?{id:'r86-mg',mg:true,price_sar:pr,checkout_url:u}:null;}catch(_){return null;}}
+  function mgName(){try{const v=new Set();for(let i=0;i<w.localStorage.length;i++){const k=w.localStorage.key(i)||'';if(/^f99re59n:/.test(k)&&!/^f99re59n:transfer:/.test(k)){const n=String(w.localStorage.getItem(k)||'').replace(/[<>`]/g,'').replace(/\s+/g,' ').trim().slice(0,40);if(n.length>=2)v.add(n);}}return v.size===1?[...v][0]:'';}catch(_){return '';}}
+  const mgSeen=code=>{try{return !!w.sessionStorage.getItem('f99r86rn:'+code);}catch(_){return false;}};
   function money2(v){return Number(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
   function overlayCard(ctx,code,options,c){d.getElementById('f99r26Renewal')?.remove();
     const wrap=el('div');wrap.id='f99r26Renewal';
@@ -110,15 +114,18 @@
     const badge=el('span',c.badge);Object.assign(badge.style,{display:'inline-block',background:c.accent,color:'#111',borderRadius:'999px',padding:'4px 14px',fontSize:'12px',fontWeight:'700'});
     const h=el('h3',c.title);Object.assign(h.style,{margin:'14px 0 8px',fontSize:'21px',lineHeight:'1.6',color:c.text,fontWeight:'800'});
     const body=el('p',c.body);Object.assign(body.style,{margin:'0 0 16px',fontSize:'14px',lineHeight:'1.9',opacity:'.88',color:c.text});
-    card.append(badge,h,body);
-    const o=bestOffer(ctx,c.offerId);
-    if(o){const price=el('div');Object.assign(price.style,{fontSize:'36px',fontWeight:'800',color:c.accent,lineHeight:'1.1'});
+    const o=bestOffer(ctx,c.offerId)||ctx.mg86||null,M86=!!(o&&o.mg);
+    if(M86){const nm=ctx.client_name||mgName()||t('client');h.textContent='🎁 عرض خاص لتجديد باقتك!';body.textContent=ctx.status==='expired'?c.body:'يا '+nm+'، استخدمت جميع حسابات باقتك.';const b2=el('p','جدّد باقتك بـ'+Number(o.price_sar).toLocaleString('en-US',{maximumFractionDigits:2})+' ريال وواصل حساباتك دون إعادة إدخال بياناتك.');Object.assign(b2.style,{margin:'-6px 0 18px',fontSize:'15px',lineHeight:'1.9',fontWeight:'700',color:c.text});card.append(h,body,b2);}
+    else card.append(badge,h,body);
+    if(o&&!M86){const price=el('div');Object.assign(price.style,{fontSize:'36px',fontWeight:'800',color:c.accent,lineHeight:'1.1'});
       price.textContent=money2(o.price_sar);const cur=el('small',' ريال');Object.assign(cur.style,{fontSize:'15px',color:c.text,fontWeight:'600',marginRight:'4px'});price.append(cur);card.append(price);
       const terms=el('p',t('terms',{minutes:o.duration_minutes,count:o.max_calculations,duration:(w.F99DurationAr?w.F99DurationAr(o.duration_minutes):o.duration_minutes),calcs:(w.F99CalcCountAr?w.F99CalcCountAr(o.max_calculations):o.max_calculations)}));Object.assign(terms.style,{fontSize:'13px',opacity:'.78',margin:'8px 0 18px',color:c.text});card.append(terms);}
-    else{const none=el('p',t('stock'));Object.assign(none.style,{fontSize:'14px',opacity:'.9',margin:'8px 0 18px'});card.append(none);}
+    else if(!o){const none=el('p',t('stock'));Object.assign(none.style,{fontSize:'14px',opacity:'.9',margin:'8px 0 18px'});card.append(none);}
     if(c.note){const n=el('p',c.note);Object.assign(n.style,{fontSize:'12px',opacity:'.7',margin:'-8px 0 14px'});card.append(n);}
     const say=m=>{let n=card.querySelector('[data-r26-msg]');if(!n){n=el('p');n.dataset.r26Msg='1';Object.assign(n.style,{fontSize:'13px',color:c.accent,margin:'10px 0 0'});card.append(n);}n.textContent=m;};
-    if(o){const buy=el('button',c.cta);buy.type='button';Object.assign(buy.style,{display:'block',width:'100%',background:c.accent,color:'#111',border:'0',borderRadius:'14px',padding:'15px',fontSize:'16px',fontWeight:'800',cursor:'pointer'});
+    if(M86){const buy=el('button','جدّد الآن');buy.type='button';Object.assign(buy.style,{display:'block',width:'100%',background:c.accent,color:'#111',border:'0',borderRadius:'14px',padding:'15px',fontSize:'16px',fontWeight:'800',cursor:'pointer'});
+      buy.onclick=()=>{const x=w.open(o.checkout_url,'_blank');if(x){try{x.opener=null;}catch(_){}}else w.location.href=o.checkout_url;};card.append(buy);} // r86: opened directly from the tap (iPhone blocks windows opened after a network wait)
+    else if(o){const buy=el('button',c.cta);buy.type='button';Object.assign(buy.style,{display:'block',width:'100%',background:c.accent,color:'#111',border:'0',borderRadius:'14px',padding:'15px',fontSize:'16px',fontWeight:'800',cursor:'pointer'});
       buy.onclick=async()=>{buy.disabled=true;try{const latest=await details(code);const lc=latest&&bestOffer(latest,c.offerId);
         // re-verify stock, price and the checkout link right before leaving; never open a stale or unavailable product.
         if(!latest||latest.status==='active'||!lc||lc.id!==o.id||Number(lc.price_sar)!==Number(o.price_sar)||safeURL(lc.checkout_url)!==safeURL(o.checkout_url)){say(t('changed'));return;}
@@ -126,7 +133,7 @@
       card.append(buy);}
     const later=el('button',c.later);later.type='button';
     Object.assign(later.style,{display:'block',width:'100%',background:'transparent',color:c.text,border:'1px solid rgba(255,255,255,.25)',borderRadius:'14px',padding:'12px',fontSize:'14px',marginTop:'10px',cursor:'pointer',opacity:'.85'});
-    later.onclick=()=>{wrap.remove();validUntil=0;current=null;serial++;if(typeof options.onLater==='function')return options.onLater();w.showPage?.('page1');};
+    later.onclick=()=>{if(M86){try{w.sessionStorage.setItem('f99r86rn:'+code,'1');}catch(_){}}wrap.remove();validUntil=0;current=null;serial++;if(typeof options.onLater==='function')return options.onLater();w.showPage?.('page1');};
     card.append(later);wrap.append(card);d.body.append(wrap);return true;}
 
   async function open(code,options={}){const id=++serial;let ctx;try{ctx=await details(code);}catch(_){}
@@ -139,6 +146,7 @@
     // r25: inside the exit sequence a disabled renewal shows no card (the sequence continues).
     if(options.exit===true&&modeFor(ctx)==='off')return false;
     const cc=cardCfg(ctx);
+    if(!bestOffer(ctx,cc.offerId)){const m=await mgRenewal(ctx);if(id!==serial)return false;if(m){ctx.mg86=m;if(options.exit===true&&mgSeen(normalized(code)))return false;}}
     // r26 §3/§4: exhausted or expired entry shows the card immediately, never the old conversation.
     if(cc.enabled&&(options.entry===true||options.exit===true||cc.placement==='overlay'))return overlayCard(ctx,normalized(code),options,cc);
     if(!active)host.replaceChildren();host.querySelector('.f99r22-renewal')?.remove();

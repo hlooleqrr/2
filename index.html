@@ -25503,6 +25503,11 @@ window.F99V57Smoke={normalize,questionContext,defaultKeys,decorateQuestions,getN
 #f58-install-tip .f41-share-button{background:#1a9e4b}
 #f58-install-tip .f41-share-button svg{width:13px;height:13px;flex:none}
 #f58-install-tip .f41-ic{font-size:12px;line-height:1}
+/* r86: bottom-right, slightly smaller, never over the code entry */
+#f58-install-tip{left:auto!important;right:calc(12px + env(safe-area-inset-right))!important;max-width:min(200px,54vw)!important;padding:8px 9px!important;gap:5px!important;font-size:10.5px!important;line-height:1.6!important}
+#f58-install-tip .f41-head img{width:16px;height:16px}
+#f58-install-tip .f41-row button{padding:5px 4px}
+#f58-install-tip.f86-off{visibility:hidden!important;pointer-events:none!important}
 .f41-toast{position:fixed;z-index:2147483601;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom));width:max-content;max-width:min(360px,92vw);background:#0f3d52;color:#fff;border-radius:12px;padding:10px 14px;font:700 13px/1.7 Cairo,system-ui,sans-serif;box-shadow:0 10px 28px #051c2840;direction:rtl;text-align:center}
 .f41-toast[hidden]{display:none!important}
 #f58-install-help .f41-hd{display:flex;align-items:center;gap:10px;margin-bottom:6px}
@@ -25613,9 +25618,11 @@ function installHelp(){let panel=$('#f58-install-help');if(panel)return;
  panel.append(card);panel.addEventListener('click',e=>{if(e.target===panel)panel.remove()});document.body.append(panel);
 }
 // r45: lift the compact bar above the footer/rights line only while that line is visible.
-function f45Lift(){const p=$('#f58-install-tip'),f=document.getElementById('f99l-footer');if(!p)return;let b='';if(f&&!p.hidden&&f.getClientRects().length){const r=f.getBoundingClientRect(),h=innerHeight;if(r.top<h&&r.bottom>0){const need=Math.round(h-r.top+8);if(need>16&&need<h*0.45)b=need+'px'}}if(p.style.bottom!==b)p.style.bottom=b}
+function f45Lift(){const p=$('#f58-install-tip'),f=document.getElementById('f99l-footer');if(!p)return;let b='';if(f&&!p.hidden&&f.getClientRects().length){const r=f.getBoundingClientRect(),h=innerHeight;if(r.top<h&&r.bottom>0){const need=Math.round(h-r.top+8);if(need>16&&need<h*0.45)b=need+'px'}}if(p.style.bottom!==b)p.style.bottom=b;f86Avoid(p)}
+// r86: never cover the code entry (input / «ابدأ»): sit just below it when there is room, otherwise step aside until the page moves; hidden while typing the code.
+function f86Avoid(p){let off=false;const k=document.getElementById('f99l-codes');if(!p.hidden&&k&&k.getClientRects().length){const a=k.getBoundingClientRect(),c=p.getBoundingClientRect();if(a.bottom>0&&a.top<innerHeight&&c.top<a.bottom+6&&c.bottom>a.top){const room=innerHeight-a.bottom-8,sb=parseFloat(getComputedStyle(p).bottom)||0;if(c.height<=room)p.style.bottom=Math.max(0,Math.min(sb,room-c.height))+'px';else off=true}}const ae=document.activeElement;if(ae&&ae.id==='f99l-code')off=true;if(p.classList.contains('f86-off')!==off)p.classList.toggle('f86-off',off)}
 let f45Raf=0;const f45Sched=()=>{if(!f45Raf)f45Raf=requestAnimationFrame(()=>{f45Raf=0;f45Lift()})};
-document.addEventListener('scroll',f45Sched,{capture:true,passive:true});addEventListener('resize',f45Sched,{passive:true});setInterval(f45Lift,1200);
+document.addEventListener('scroll',f45Sched,{capture:true,passive:true});addEventListener('resize',f45Sched,{passive:true});setInterval(f45Lift,1200);document.addEventListener('focusin',f45Sched);document.addEventListener('focusout',()=>setTimeout(f45Sched,60));
 function homeTip(){
  let p=$('#f58-install-tip');if(!p){p=E('aside');p.id='f58-install-tip';p.setAttribute('aria-label','FINO99 على جوالك');
   const head=E('div','','f41-head');const lg=E('img');lg.src=window.F99_APP_ICON||'./icon-192.png?v=r45a';lg.alt='FINO99';lg.width=26;lg.height=26;head.append(lg,E('strong','منصة FINO99 على جوالك'));p.append(head);
@@ -28884,7 +28891,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <link rel="stylesheet" href="./extensions/fino99_service_tools.css?v=20261115r18">
 <script src="./extensions/fino99_service_tools.js?v=20261116r22INTY"></script>
 <link rel="stylesheet" href="./extensions/fino99_renewal22.css?v=20261118r36a">
-<script src="./extensions/fino99_renewal22.js?v=20261118r36a"></script>
+<script src="./extensions/fino99_renewal22.js?v=20261122r86"></script>
 <!-- F99 owner desktop 13: owner-only, device-local visual approval; load after fee/service modules. -->
 <link rel="stylesheet" href="./extensions/fino99_owner_desktop.css?v=20261115r18">
 <script src="./extensions/fino99_owner_desktop.js?v=20261116r22B"></script>
