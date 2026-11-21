@@ -13345,7 +13345,7 @@ function finishIdentityAndEnter(){
     if(services.length===1 && ['guidance_mortgage','guidance_personal'].includes(only)){
       if(typeof window.F99O2OpenForEntry==='function')window.F99O2OpenForEntry();
       else {showPage('page1');alert('تعذر تحميل وحدة المواعيد؛ راجع إصدار الموقع.');}
-    }else if(services.length===1 && ['bot_buyout','bot_smart','bot_compare','bot_mortgage_quote','bot_contract','mortgage_quote','mortgage_compare','mortgage_buyout','bot_mortgage_buyout'].includes(only) && typeof window.F99V13RunService==='function'){
+    }else if(services.length===1 && ['bot_buyout','bot_smart','bot_compare','bot_mortgage_quote','bot_contract','mortgage_quote','mortgage_compare','mortgage_buyout','bot_mortgage_buyout','dbr_check'].includes(only) && typeof window.F99V13RunService==='function'){
       window.F99V13RunService(only);
     }else if(services.length>1 && typeof window.F99V6OpenServices==='function'){
       window.F99V6OpenServices(services);
@@ -18107,7 +18107,7 @@ window.F99DurationAr=publicDuration;window.F99CalcCountAr=k=>{k=Number(k);if(!Nu
     }
     select.onchange=proceed;buttons(index>0?index-1:null,proceed,'التالي');return;
    }
-   frame('البنوك المشمولة والشروط',all,all);
+   frame(p.summary_title||'البنوك المشمولة والشروط',all,all);
    if(banksRequired){
     const names=availableBanks(p);
     if(!names.length){note('نعتذر، هذه الباقة غير متاحة للشراء حاليًا.');buttons(index>0?index-1:null);return}
@@ -28930,6 +28930,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <script src="./extensions/fino99_re42_engine.js?v=20261121r66"></script>
 <script src="./extensions/fino99_re42.js?v=20261121r66"></script>
 <script src="./extensions/fino99_r65.js?v=20261120r65"></script>
+<script src="./extensions/fino99_r67.js?v=20261121r67"></script>
  <!-- R23 presentation-only enhancement: no calculator, inventory, or session modifications. -->
 </body>
 </html>
