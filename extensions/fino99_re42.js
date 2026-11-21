@@ -1077,8 +1077,8 @@
         ['r65_not_saudi', 'اعتذار غير السعودي'], ['r65_renew_text', 'نص عرض التجديد'], ['r65_landing_sub', 'وصف صفحة الباقة'], ['disclaimer', 'التنويه الإرشادي (تُبرز «حسبة مبدئية»)']].forEach(([k, l]) => field(P, l, TX, k, 'textarea'));
       { // r68: pre-purchase eligibility questions of this mortgage package only (texts, show/hide, allowed sectors) — saved with «حفظ»
         P.append(el('h4', '', 'أسئلة الأهلية قبل الشراء (هذه الباقة فقط)'));
-        const EG = K.elig = K.elig || {}; ['ready', 'sakani', 'saudi', 'sector'].forEach(k => { EG[k] = EG[k] || {}; });
-        const DF = { r65_q_ready: 'هل تمويلك العقاري لشراء وحدة سكنية جاهزة من السوق؟', r65_no_ready: 'نعتذر منك، هذه الباقة مخصصة لحساب تمويل شراء الوحدات السكنية الجاهزة من السوق فقط، ولا تشمل الرهن العقاري أو البناء الذاتي أو البيع على الخارطة.', r65_q_sakani: 'هل أنت مدعوم من سكني؟', r65_no_sakani: 'نعتذر منك، هذه الباقة متاحة حاليًا للمستفيدين المدعومين من سكني فقط.', r65_q_saudi: 'هل أنت سعودي؟', r65_q_sector: 'ما قطاع عملك؟', r65_sector_na: 'نعتذر منك، هذا القطاع غير متاح حاليًا في هذه الباقة.' };
+        const EG = K.elig = K.elig || {}; ['ready', 'sakani', 'saudi', 'sector', 'term'].forEach(k => { EG[k] = EG[k] || {}; });
+        const DF = { r65_q_ready: 'هل تمويلك العقاري لشراء وحدة سكنية جاهزة من السوق؟', r65_no_ready: 'نعتذر منك، هذه الباقة مخصصة لحساب تمويل شراء الوحدات السكنية الجاهزة من السوق فقط، ولا تشمل الرهن العقاري أو البناء الذاتي أو البيع على الخارطة.', r65_q_sakani: 'هل أنت مدعوم من سكني؟', r65_no_sakani: 'نعتذر منك، هذه الباقة متاحة حاليًا للمستفيدين المدعومين من سكني فقط.', r65_q_saudi: 'هل أنت سعودي؟', r65_q_sector: 'ما قطاع عملك؟', r65_sector_na: 'نعتذر منك، هذا القطاع غير متاح حاليًا في هذه الباقة.', r65_q_term: 'هل تعلم أن هذه الباقة تحسب التمويل العقاري لمدة 20 سنة (240 شهرًا) فقط؟', r65_no_term: 'نعتذر منك، هذه الباقة مخصصة لحساب التمويل العقاري لمدة 20 سنة (240 شهرًا) فقط، ولا تدعم حاليًا حساب مدد تمويل أخرى.' };
         Object.keys(DF).forEach(k => { if (TX[k] == null || TX[k] === '') TX[k] = DF[k]; });
         field(P, '1) إظهار سؤال «وحدة جاهزة من السوق» (لا = اعتذار وإيقاف)', EG.ready, 'show', 'bool', { def: true }); field(P, 'نص السؤال', TX, 'r65_q_ready', 'textarea', { rows: 2 }); field(P, 'نص الاعتذار', TX, 'r65_no_ready', 'textarea', { rows: 3 });
         field(P, '2) إظهار سؤال «مدعوم من سكني» (لا = اعتذار وإيقاف)', EG.sakani, 'show', 'bool', { def: true }); field(P, 'نص السؤال', TX, 'r65_q_sakani', 'textarea', { rows: 2 }); field(P, 'نص الاعتذار', TX, 'r65_no_sakani', 'textarea', { rows: 2 });
@@ -1087,6 +1087,7 @@
         if (!Array.isArray(EG.sector.allowed)) EG.sector.allowed = ['gov', 'semi', 'military', 'retired'];
         const g = el('div', 're42-multi'); g.append(el('span', '', 'القطاعات المتاحة للشراء')); SECT().forEach(([v, l]) => { const lb = el('label'); const cb = el('input'); cb.type = 'checkbox'; cb.checked = EG.sector.allowed.includes(v); cb.onchange = () => { EG.sector.allowed = cb.checked ? EG.sector.allowed.concat([v]) : EG.sector.allowed.filter(x => x !== v); mark(); }; lb.append(cb, el('span', '', l)); g.append(lb); }); P.append(g);
         field(P, 'إظهار القطاعات غير المتاحة مع اعتذار (إلغاء = إخفاؤها)', EG.sector, 'show_na', 'bool', { def: true }); field(P, 'اعتذار القطاع غير المتاح', TX, 'r65_sector_na', 'textarea', { rows: 2 });
+        field(P, '5) إظهار سؤال «مدة 240 شهرًا» قبل الدفع (لا = اعتذار وإيقاف)', EG.term, 'show', 'bool', { def: true }); field(P, 'نص السؤال', TX, 'r65_q_term', 'textarea', { rows: 2 }); field(P, 'نص الاعتذار', TX, 'r65_no_term', 'textarea', { rows: 3 });
       }
       P.append(el('h4', '', 'التواصل (اختياري — لا يُنشر حتى تفعّله)'));
       const C = Wc.contact = Wc.contact || {}; C.links = C.links || [];

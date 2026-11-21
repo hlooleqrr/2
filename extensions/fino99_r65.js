@@ -10,6 +10,7 @@
   const btn = (p, label, fn, c) => { const b = el('button', 'r65-btn' + (c ? ' ' + c : ''), label); b.type = 'button'; b.onclick = fn; p.append(b); return b; };
   const num = v => Number(String(v == null ? '' : v).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[^0-9.]/g, ''));
   const fmt = n => Number(n).toLocaleString('en-US', { maximumFractionDigits: 2 });
+  const fmt2 = n => Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const E = () => W.F99RE42Engine || null;
   async function pub() {
     if (PUB && Date.now() - PUBAT < 60000) return PUB;
@@ -18,23 +19,29 @@
     PUBQ = (async () => { try { const r = await W.finoRpc('f99r65_public', {}, 12000); if (r && r.ok && r.data && r.data.ok) { PUB = r.data; PUBAT = Date.now(); } } catch (e) {} PUBQ = null; return PUB; })();
     return PUBQ;
   }
-  function closeAll() { const o = D.getElementById('r65-ov'); if (o) o.remove(); }
-  function shell(title) {
-    closeAll(); const ov = el('div', 'r65-ov'); ov.id = 'r65-ov'; ov.setAttribute('dir', 'rtl');
-    const box = el('div', 'r65-box'); const hd = el('div', 'r65-hd'); hd.append(el('b', '', title || ''));
-    btn(hd, '×', closeAll, 'r65-x').setAttribute('aria-label', 'إغلاق');
-    const body = el('div', 'r65-body'); box.append(hd, body); ov.append(box);
-    ov.addEventListener('click', e => { if (e.target === ov) closeAll(); }); D.body.append(ov); return body;
+  // r72: the package page is a real page inside the store window (#f99s-modal), same structure/classes as «اختصر مشاويرك» detail page — no overlay over the store.
+  const NM = P => String(((P && P.product) || {}).name || '').trim() || 'حسبة فورية للتمويل العقاري';
+  const SM = () => D.getElementById('f99s-modal');
+  function closeAll() { const o = D.getElementById('r65-ov'); if (o && o.classList.contains('r65-ov')) o.remove(); const m = SM(); if (m && !m.hidden) { try { m.click(); } catch (e) {} if (!m.hidden) { m.hidden = true; m.replaceChildren(); } } }
+  const store = () => { if (typeof W.FINO99OpenStorefront === 'function') W.FINO99OpenStorefront(); else closeAll(); };
+  function shell(title, back) {
+    let m = SM(); if (!m && typeof W.FINO99OpenStorefront === 'function') { try { W.FINO99OpenStorefront(); } catch (e) {} m = SM(); }
+    if (!m) { m = el('div'); m.id = 'f99s-modal'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true'); D.body.append(m); }
+    m.replaceChildren(); const box = el('main', 'f99s-sheet'); const hd = el('header', 'f99v6-h'); const h = el('h2', '', title || ''); h.id = 'f99s-dialog-title'; hd.append(h);
+    const x = el('button', '', 'رجوع'); x.type = 'button'; x.onclick = back || closeAll; hd.append(x); box.append(hd);
+    const w = el('div'); w.id = 'r65-ov'; w.setAttribute('dir', 'rtl'); box.append(w); m.append(box); m.hidden = false; try { m.scrollTop = 0; box.scrollTop = 0; } catch (e) {} return w;
   }
+  const pbtn = (p, label, fn, c) => { const b = el('button', c || 'f99v6-primary', label); b.type = 'button'; b.onclick = fn; p.append(b); return b; };
+  const NOPAY = 'رابط الدفع لهذه الباقة غير متاح حاليًا، ولم يُفتح أي رابط. إذا كان لديك كود تفعيل فأدخله من «هل لديك كود؟».';
   // r70: package state «نفدت أكواد هذه الباقة» (saved by the owner in the store product) — no new purchase from this page; activation codes keep working.
   const SOLD = key => { try { const a = ((W.FINO99ReadStorefront && W.FINO99ReadStorefront()) || {}).products || []; const x = a.find(y => y && y.key === key); return x && x.sold_out === true && x.enabled === true && x.launch_status !== 'coming_soon' ? (String(x.sold_out_text || '').trim().slice(0, 180) || 'نفدت أكواد هذه الباقة') : ''; } catch (e) { return ''; } };
   const soldNote = (host, t) => { const d = el('div', 'r65-soldout', t); d.setAttribute('role', 'note'); d.setAttribute('aria-disabled', 'true'); host.append(d); };
   function T(P, k, d) { const t = (P && P.texts) || {}; return t[k] != null && t[k] !== '' ? t[k] : d; }
-  function buy(P) {
-    const so = SOLD(P.key); if (so) { const b = shell('حسبة التمويل العقاري'); act(b); soldNote(b, so); return; }
+  function buy(P, host) { // r72: opens the saved payment link only; without a link it says so in place (no page loop)
+    const so = SOLD(P.key); if (so) { if (host) soldNote(host, so); return; }
     const u = String((P.product || {}).url || '');
-    if (/^https:\/\//.test(u)) { W.open(u, '_blank', 'noopener'); return; }
-    const body = shell('اشتر الآن'); body.append(el('p', 'r65-note', 'الشراء سيتاح قريبًا.')); btn(body, 'رجوع', () => page(P), 'alt');
+    if (/^https:\/\/[^\s]+$/.test(u)) { W.open(u, '_blank', 'noopener'); return; }
+    if (host) host.append(el('p', 'f99v10-msg', NOPAY));
   }
   // r68: «لديك كود خصم؟» — same server mechanism as «اختصر مشاويرك» (f99v55_coupon_availability / f99v55_stacked_coupon_preview), mortgage key only.
   // A discount code is never used to activate anything inside FINO99; it is copied and pasted at the payment platform.
@@ -47,8 +54,8 @@
     let a = null; try { const r = await W.finoRpc('f99v55_coupon_availability', { p_package_key: P.key }, 12000); a = r && r.ok ? r.data : null; } catch (e) {}
     if (!a || a.available !== true || !host.isConnected) return;
     const w = el('div', 'r65-disc'); const f = el('div', 'r65-disc-f'); f.hidden = true;
-    const i = el('input'); i.placeholder = 'أدخل كود الخصم'; i.maxLength = 40; i.autocapitalize = 'characters'; i.setAttribute('dir', 'ltr'); f.append(i);
-    btn(w, 'لديك كود خصم؟', () => { f.hidden = !f.hidden; if (!f.hidden) i.focus(); }, 'alt'); w.append(f);
+    const i = el('input'); i.placeholder = 'ألصق كود الخصم هنا'; i.maxLength = 40; i.autocapitalize = 'characters'; i.setAttribute('dir', 'ltr'); f.append(el('p', 'r65-note', 'كود الخصم، وليس كود تفعيل الباقة'), i);
+    btn(w, 'هل لديك كود خصم؟', () => { f.hidden = !f.hidden; if (!f.hidden) i.focus(); }, 'alt'); w.append(f);
     const out = el('div', 'r65-disc-o');
     const ap = btn(f, 'تطبيق الكود وعرض السعر الجديد', async () => {
       const code = String(i.value || '').replace(/\s+/g, '').toUpperCase(); out.innerHTML = '';
@@ -61,7 +68,7 @@
       const cd = el('div', 'r65-code', code); cd.setAttribute('dir', 'ltr'); out.append(cd);
       const msg = el('p', ''); const row = el('div', 'r65-row');
       btn(row, 'نسخ الكود', async () => { const ok = await copyText(code); msg.className = ok ? 'r65-ok' : 'r65-warn'; msg.textContent = ok ? 'تم نسخ الرمز، الصقه في خانة كود الخصم عند إتمام الدفع.' : 'انسخ الرمز يدويًا: ' + code; pay.hidden = false; }, 'go');
-      const pay = btn(row, 'إكمال الدفع', () => buy(P), 'go'); pay.hidden = true; out.append(row, msg);
+      const pay = btn(row, 'إكمال الدفع', () => buy(P, out), 'go'); pay.hidden = true; out.append(row, msg);
     }, 'go');
     f.append(out); host.append(w);
   }
@@ -90,73 +97,90 @@
   }
   function page(P) {
     const pr = P.product || {}, pk = P.package || {};
-    const body = shell(pr.name || 'حسبة التمويل العقاري');
-    if (pr.image) { const im = el('img', 'r65-img'); im.src = pr.image; im.alt = pr.name || ''; body.append(im); }
-    const pz = el('div', 'r65-price');
-    if (Number(pr.old_price) > Number(pr.price)) pz.append(el('s', '', fmt(pr.old_price) + ' ريال'));
-    if (pr.price != null && pr.price !== '') pz.append(el('b', '', fmt(pr.price) + ' ريال'));
+    const body = shell(NM(P)); pbtn(body, 'العودة إلى المتجر', store, 'f99v6-text');
+    if (pr.image) { const im = el('img', 'r65-img'); im.src = pr.image; im.alt = NM(P); im.decoding = 'async'; body.append(im); }
+    const pz = el('div', 'f99v6-summary');
+    if (pr.price != null && pr.price !== '') pz.append(el('strong', '', fmt2(pr.price) + ' ريال'));
+    if (Number(pr.old_price) > Number(pr.price)) pz.append(el('s', '', fmt2(pr.old_price) + ' ريال'));
     body.append(pz);
     const hrs = Number(pk.hours) || 24, qr = Number(pk.quota_ref) || 3, qc = pk.custom_enabled === false ? 0 : (Number(pk.quota_custom) || 0);
     const ul = el('ul', 'r65-list');
     ul.append(el('li', '', 'الصلاحية: ' + (hrs === 24 ? 'يوم واحد (24 ساعة)' : hrs + ' ساعة') + ' من أول تفعيل'));
     ul.append(el('li', '', qr + ' حسبات بالنسب المرجعية المعلنة'));
     if (qc) ul.append(el('li', '', 'قارن حتى ' + qc + ' نسب تمويلية تدخلها بنفسك'));
-    body.append(el('p', 'r65-sub', T(P, 'r65_landing_sub', 'حسبة مبدئية لتمويلك العقاري مع مقارنة البنوك.')), ul);
-    act(body); const so = SOLD(P.key); if (so) { soldNote(body, so); return; } const row = el('div', 'r65-row'); btn(row, 'اشتر الآن', () => elig(P), 'go'); body.append(row);
+    pz.append(el('p', 'r65-sub', T(P, 'r65_landing_sub', 'حسبة مبدئية لتمويلك العقاري مع مقارنة البنوك.')), ul);
+    const low = el('div', 'r65-low'); body.append(low);
+    act(low); const so = SOLD(P.key); if (so) { soldNote(low, so); return; }
+    pbtn(low, 'اشتر الآن', () => { low.remove(); elig(P, body); }).dataset.r65Buy = '1';
   }
-  // ---------- eligibility (no salary or financing data) — r71 order: وحدة جاهزة ← سكني ← سعودي ← القطاع ← الميلاد; texts/show/allowed sectors editable by the owner ----------
-  function elig(P) {
-    const body = shell('فحص أهلية مبدئي'); const st = {};
+  // ---------- eligibility (no salary or financing data) inside the same page, «اختصر مشاويرك» flow style (الخطوة n من N + اختيار + السابق/التالي)
+  // order: وحدة جاهزة ← سكني ← سعودي ← القطاع ← الميلاد ← r72: مدة 240 شهرًا (last, before payment); texts/show/allowed sectors editable by the owner. No RPC, no use deducted.
+  function elig(P, body) {
+    const st = {}; const fl = el('section', 'f99v10-flow'); body.append(fl);
     const EL = (P.package && P.package.elig) || {}; const on = k => !(EL[k] && EL[k].show === false); const SE = EL.sector || {};
     const allowed = Array.isArray(SE.allowed) ? SE.allowed : ['gov', 'semi', 'military', 'retired'];
-    const stop = t => { body.innerHTML = ''; body.append(el('p', 'r65-note', t)); const r = el('div', 'r65-row'); btn(r, 'تعديل الإجابة', () => q0(), 'alt'); btn(r, 'إغلاق', closeAll, 'alt'); body.append(r); };
-    const yn = (q, yes, no, ly, ln) => { body.innerHTML = ''; body.append(el('p', 'r65-q', q)); const r = el('div', 'r65-row'); btn(r, ly || 'نعم', yes); btn(r, ln || 'لا', () => stop(no), 'alt'); body.append(r); };
-    // r71: first question — ready unit from the market only (no = apology, no move to the calculation); owner can edit/hide it.
-    const q0 = () => on('ready') ? yn(T(P, 'r65_q_ready', 'هل تمويلك العقاري لشراء وحدة سكنية جاهزة من السوق؟'), qS, T(P, 'r65_no_ready', 'نعتذر منك، هذه الباقة مخصصة لحساب تمويل شراء الوحدات السكنية الجاهزة من السوق فقط، ولا تشمل الرهن العقاري أو البناء الذاتي أو البيع على الخارطة.'), 'نعم، وحدة جاهزة من السوق', 'لا') : qS();
-    const qS = () => on('sakani') ? yn(T(P, 'r65_q_sakani', 'هل أنت مدعوم من سكني؟'), q1, T(P, 'r65_no_sakani', 'نعتذر منك، هذه الباقة متاحة حاليًا للمستفيدين المدعومين من سكني فقط.')) : q1();
-    const q1 = () => on('saudi') ? yn(T(P, 'r65_q_saudi', 'هل أنت سعودي؟'), q2, T(P, 'r65_not_saudi', 'نعتذر منك، هذه الباقة متاحة حاليًا للمواطنين السعوديين فقط.')) : q2();
-    const q2 = () => { if (!on('sector')) { st.sector = { key: '', label: '', extend: true, retire_age: null }; q3(); return; }
-      body.innerHTML = ''; body.append(el('p', 'r65-q', T(P, 'r65_q_sector', 'ما قطاع عملك؟'))); const g = el('div', 'r65-grid');
-      (P.sectors || []).forEach(s => { const ok = allowed.indexOf(s.key) >= 0; if (ok || SE.show_na !== false) btn(g, s.label, () => { if (!ok) { stop(T(P, 'r65_sector_na', 'نعتذر منك، هذا القطاع غير متاح حاليًا في هذه الباقة.')); return; } st.sector = s; q3(); }, 'alt'); });
-      body.append(g); };
-    const q3 = () => { body.innerHTML = ''; const s = st.sector; const n = s.key ? T(P, 'r65_note_' + s.key, '') : '';
-      if (s.label) body.append(el('p', 'r65-meta', 'القطاع: ' + s.label)); if (n) body.append(el('p', 'r65-warn', n));
-      body.append(el('p', 'r65-q', 'تاريخ الميلاد')); let cal = 'hijri';
-      const tg = el('div', 'r65-row'); const bh = btn(tg, 'هجري', () => setCal('hijri'), 'tg on'); const bg = btn(tg, 'ميلادي', () => setCal('greg'), 'tg'); body.append(tg);
-      const f = el('div', 'r65-date'); const mk = ph => { const i = el('input'); i.type = 'text'; i.inputMode = 'numeric'; i.placeholder = ph; i.maxLength = 4; f.append(i); return i; };
-      const dd = mk('اليوم'), mm = mk('الشهر'), yy = mk('السنة'); body.append(f); const er = el('p', 'r65-err'); body.append(er);
-      function setCal(c) { cal = c; bh.classList.toggle('on', c === 'hijri'); bg.classList.toggle('on', c === 'greg'); yy.placeholder = c === 'hijri' ? 'السنة مثل 1405' : 'السنة مثل 1985'; }
-      setCal('hijri');
-      btn(body, 'تحقق', () => { er.textContent = ''; const x = { y: num(yy.value), m: num(mm.value), d: num(dd.value) }; const e = E();
-        if (!e) { er.textContent = 'تعذر التحقق الآن، حاول مرة أخرى.'; return; }
-        let g = null; try { g = cal === 'hijri' ? (x.y >= 1300 && x.y <= 1450 && x.m >= 1 && x.m <= 12 && x.d >= 1 && x.d <= 30 ? e.fromHijri(x) : null) : (x.y >= 1900 && e.validG(x) ? x : null); } catch (z) { g = null; }
-        if (!g) { er.textContent = 'اكتب تاريخًا صحيحًا (اليوم / الشهر / السنة).'; return; }
-        st.birth = g; result(); }, 'go');
+    const S = ['ready', 'sakani', 'saudi', 'sector'].filter(on).concat(['birth']).concat(on('term') ? ['term'] : []); const N = S.length;
+    const top = () => { try { fl.scrollIntoView({ block: 'start' }); } catch (e) {} };
+    const frame = (i, t) => { fl.replaceChildren(); const h = el('div', 'f99v10-flowhead'); h.append(el('span', '', 'الخطوة ' + (i + 1) + ' من ' + N), el('strong', '', t)); fl.append(h); };
+    const note = (t, k) => { const n = el('p', 'f99v10-msg', t || ''); n.dataset.kind = k || 'error'; fl.append(n); return n; };
+    const acts = (i, fn, cap) => { const r = el('div', 'f99v10-actions'); if (i > 0) pbtn(r, 'السابق', () => step(i - 1), 'f99v6-text'); if (fn) pbtn(r, cap || 'التالي', fn); fl.append(r); };
+    const stop = (i, t) => { fl.replaceChildren(); const x = el('section', 'f99v13-rejection'); x.append(el('h3', '', 'نعتذر لك'), el('p', '', t)); fl.append(x); const r = el('div', 'f99v10-actions'); pbtn(r, 'تعديل الإجابة', () => step(i), 'f99v6-text'); pbtn(r, 'العودة إلى المتجر', store); fl.append(r); top(); };
+    const sel = (i, q, opts, val, pick) => { frame(i, q); const lb = el('label', 'f99v10-field', q); const s = D.createElement('select'); opts.forEach(([v, t]) => s.append(new Option(t, v))); s.value = val || ''; lb.append(s); fl.append(lb); const out = note('', 'info');
+      const go = () => { if (!s.value) { out.textContent = 'اختر إجابة للمتابعة.'; return; } pick(s.value); }; s.onchange = go; acts(i, go); top(); };
+    const yn = (i, k, q, no, ly, ln) => sel(i, q, [['', 'اختر الإجابة'], ['yes', ly || 'نعم'], ['no', ln || 'لا']], st[k], v => { st[k] = v; if (v === 'yes') step(i + 1); else stop(i, no); });
+    const Q = {
+      // r71: ready unit from the market only (no = apology, no move to the calculation)
+      ready: i => yn(i, 'ready', T(P, 'r65_q_ready', 'هل تمويلك العقاري لشراء وحدة سكنية جاهزة من السوق؟'), T(P, 'r65_no_ready', 'نعتذر منك، هذه الباقة مخصصة لحساب تمويل شراء الوحدات السكنية الجاهزة من السوق فقط، ولا تشمل الرهن العقاري أو البناء الذاتي أو البيع على الخارطة.'), 'نعم، وحدة جاهزة من السوق', 'لا'),
+      sakani: i => yn(i, 'sakani', T(P, 'r65_q_sakani', 'هل أنت مدعوم من سكني؟'), T(P, 'r65_no_sakani', 'نعتذر منك، هذه الباقة متاحة حاليًا للمستفيدين المدعومين من سكني فقط.')),
+      saudi: i => yn(i, 'saudi', T(P, 'r65_q_saudi', 'هل أنت سعودي؟'), T(P, 'r65_not_saudi', 'نعتذر منك، هذه الباقة متاحة حاليًا للمواطنين السعوديين فقط.')),
+      sector: i => { const L = (P.sectors || []).filter(s => allowed.indexOf(s.key) >= 0 || SE.show_na !== false);
+        sel(i, T(P, 'r65_q_sector', 'ما قطاع عملك؟'), [['', 'حدد القطاع']].concat(L.map(s => [s.key, s.label])), st.sector && st.sector.key, v => { const s = L.find(x => x.key === v); if (!s || allowed.indexOf(v) < 0) { stop(i, T(P, 'r65_sector_na', 'نعتذر منك، هذا القطاع غير متاح حاليًا في هذه الباقة.')); return; } st.sector = s; step(i + 1); }); },
+      birth: i => { frame(i, 'تاريخ الميلاد'); const s = st.sector; const n = s.key ? T(P, 'r65_note_' + s.key, '') : '';
+        if (s.label) fl.append(el('p', 'r65-meta', 'القطاع: ' + s.label)); if (n) fl.append(el('p', 'r65-warn', n));
+        const lb = el('label', 'f99v10-field', 'نوع التاريخ'); const cs = D.createElement('select'); [['hijri', 'هجري'], ['greg', 'ميلادي']].forEach(([v, t]) => cs.append(new Option(t, v))); cs.value = st.cal || 'hijri'; lb.append(cs); fl.append(lb);
+        const f = el('div', 'r65-date'); const mk = ph => { const x = el('input'); x.type = 'text'; x.inputMode = 'numeric'; x.placeholder = ph; x.maxLength = 4; f.append(x); return x; };
+        const dd = mk('اليوم'), mm = mk('الشهر'), yy = mk('السنة'); fl.append(f); const er = note('');
+        const setCal = () => { yy.placeholder = cs.value === 'hijri' ? 'السنة مثل 1405' : 'السنة مثل 1985'; }; cs.onchange = setCal; setCal();
+        acts(i, () => { er.textContent = ''; const x = { y: num(yy.value), m: num(mm.value), d: num(dd.value) }; const e = E(); const cal = cs.value;
+          if (!e) { er.textContent = 'تعذر التحقق الآن، حاول مرة أخرى.'; return; }
+          let g = null; try { g = cal === 'hijri' ? (x.y >= 1300 && x.y <= 1450 && x.m >= 1 && x.m <= 12 && x.d >= 1 && x.d <= 30 ? e.fromHijri(x) : null) : (x.y >= 1900 && e.validG(x) ? x : null); } catch (z) { g = null; }
+          if (!g) { er.textContent = 'اكتب تاريخًا صحيحًا (اليوم / الشهر / السنة).'; return; }
+          st.cal = cal; st.birth = g; result(i); }); top(); },
+      // r72: mandatory last question before payment — the package calculates 240 months only (term/formulas unchanged); «لا» = apology and no payment step.
+      term: i => yn(i, 'term', T(P, 'r65_q_term', 'هل تعلم أن هذه الباقة تحسب التمويل العقاري لمدة 20 سنة (240 شهرًا) فقط؟'), T(P, 'r65_no_term', 'نعتذر منك، هذه الباقة مخصصة لحساب التمويل العقاري لمدة 20 سنة (240 شهرًا) فقط، ولا تدعم حاليًا حساب مدد تمويل أخرى.'), 'نعم، أعلم', 'لا، ما كنت أعلم')
     };
-    const result = () => { body.innerHTML = ''; const e = E(); const s = st.sector; const L = P.limits || {}; const term = Number(P.term) || 240;
+    const step = i => { if (i >= N) { checkout(P, st.okMsg); return; } Q[S[i]](i); };
+    const result = i => { const e = E(); const s = st.sector; const L = P.limits || {}; const term = Number(P.term) || 240;
       let age = 0; try { age = e.monthsBetween(e.toHijri(st.birth), e.toHijri(e.riyadhToday())); } catch (z) { age = 0; } // Hijri months
       const maxAge = Math.max(Number(L.max_age_end) || 70, Number(P.bank_max_age) || 0);
       const toMax = maxAge * 12 - age; const ret = Number(s.retire_age) || 0;
       const avail = s.extend === true || !ret ? toMax : Math.min(toMax, ret * 12 - age);
-      const yrs = Math.floor(age / 12);
-      body.append(el('p', 'r65-meta', (s.label ? 'القطاع: ' + s.label + ' — ' : '') + 'العمر التقريبي: ' + yrs + ' سنة هجرية'));
-      if (age < 18 * 12) { body.append(el('p', 'r65-warn', 'العمر أقل من الحد المطلوب للتمويل.')); btn(body, 'تعديل البيانات', () => q0(), 'alt'); return; }
-      if (avail >= term) {
-        body.append(el('p', 'r65-ok', 'مبدئيًا: عمرك وقطاعك يسمحان بالتمويل حتى ' + term + ' شهرًا' + (s.extend === true && ret && age + term > ret * 12 ? ' مع التمويل بعد التقاعد حسب سياسة البنك.' : '.')));
-        body.append(el('p', 'r65-note', 'هذا فحص مبدئي للعمر والمدة فقط، والحسبة الكاملة بعد التفعيل.'));
-        act(body); const r = el('div', 'r65-row'); btn(r, 'اشتر الآن', () => buy(P), 'go'); body.append(r); disc(P, body);
-      } else {
-        const m = Math.max(0, Math.floor(avail));
-        body.append(el('p', 'r65-warn', 'حسب عمرك وقطاعك، المدة المتاحة مبدئيًا ' + m + ' شهرًا، وهي أقل من ' + term + ' شهرًا المعتمدة حاليًا في هذه الباقة؛ لذلك قد لا تناسبك الباقة الآن.'));
-        const r = el('div', 'r65-row'); btn(r, 'تعديل البيانات', () => q0(), 'alt'); btn(r, 'إغلاق', closeAll, 'alt'); body.append(r);
-      }
-    };
-    q0();
+      const meta = (s.label ? 'القطاع: ' + s.label + ' — ' : '') + 'العمر التقريبي: ' + Math.floor(age / 12) + ' سنة هجرية. ';
+      if (age < 18 * 12) { stop(i, meta + 'العمر أقل من الحد المطلوب للتمويل.'); return; }
+      if (avail < term) { stop(i, meta + 'حسب عمرك وقطاعك، المدة المتاحة مبدئيًا ' + Math.max(0, Math.floor(avail)) + ' شهرًا، وهي أقل من ' + term + ' شهرًا المعتمدة حاليًا في هذه الباقة؛ لذلك قد لا تناسبك الباقة الآن.'); return; }
+      st.okMsg = 'مبدئيًا: عمرك وقطاعك يسمحان بالتمويل حتى ' + term + ' شهرًا' + (s.extend === true && ret && age + term > ret * 12 ? ' مع التمويل بعد التقاعد حسب سياسة البنك.' : '.');
+      step(i + 1); };
+    if (!on('sector')) st.sector = { key: '', label: '', extend: true, retire_age: null };
+    step(0);
+  }
+  // r72: purchase step after eligibility (same shape as the store checkout page): instructions, discount code (payment only), the saved payment link, activation code.
+  function checkout(P, okMsg) {
+    const b = shell('إتمام شراء ' + NM(P), () => page(P));
+    if (okMsg) b.append(el('p', 'r65-ok', okMsg)); b.append(el('p', 'r65-note', 'هذا فحص مبدئي للعمر والمدة فقط، والحسبة الكاملة بعد التفعيل.'));
+    const so = SOLD(P.key); if (so) { soldNote(b, so); act(b); return; }
+    let C = {}; try { C = (W.FINO99ReadStorefront && W.FINO99ReadStorefront()) || {}; } catch (e) {}
+    const tx = String(C.checkout_instructions || '1. أكمل الدفع واستلم رمز التفعيل.\n2. انسخ الرمز وحده كما يظهر لك.\n3. ارجع إلى موقع FINO99 واختر «أدخل الكود» ثم اضغط «دخول».').slice(0, 1100);
+    const g = el('section', 'f26-checkout-guide'); g.append(el('h3', '', 'بعد إتمام الشراء')); const s = el('div', 'f27-instructions'); tx.split(/\n/).map(x => x.trim()).filter(Boolean).forEach(l => s.append(el('p', '', l))); g.append(s); b.append(g);
+    const dh = el('div'); b.append(dh); disc(P, dh);
+    const u = String((P.product || {}).url || '');
+    if (/^https:\/\/[^\s]+$/.test(u)) { const a = el('a', 'f99v6-primary', 'إتمام الدفع'); a.href = u; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.dataset.checkout = 'link'; b.append(a); }
+    else b.append(el('p', 'f99v10-msg', NOPAY));
+    act(b);
   }
   async function open() {
-    let b0 = null; if (!(PUB && Date.now() - PUBAT < 60000)) { b0 = shell('حسبة التمويل العقاري'); b0.append(el('p', 'r65-note', 'جاري التحميل…')); }
+    let b0 = null; if (!(PUB && Date.now() - PUBAT < 60000)) { b0 = shell(NM(PUB)); b0.append(el('p', 'r65-note', 'جاري التحميل…')); }
     const P = await pub(); if (b0 && !b0.isConnected) return;
-    if (!P) { const b = shell('حسبة التمويل العقاري'); b.append(el('p', 'r65-note', 'تعذر تحميل الباقة الآن، حاول مرة أخرى.')); return; } page(P);
+    if (!P) { const b = shell(NM(null)); b.append(el('p', 'r65-note', 'تعذر تحميل الباقة الآن، حاول مرة أخرى.')); return; } page(P);
   }
   // store button of this package → this page (capture phase; other packages untouched). r68: also before f99r65_public has loaded (known key), so the click never falls through to the generic store window.
   D.addEventListener('click', async ev => {
@@ -164,9 +188,9 @@
     const P = PUB || null; if (t.dataset.f40Key !== (P && P.key ? P.key : MKEY)) return; if (P && !(P.product && P.product.enabled === true)) return;
     ev.preventDefault(); ev.stopPropagation(); if (ev.stopImmediatePropagation) ev.stopImmediatePropagation(); open();
   }, true);
-  W.F99R65 = { open, eligibility: async () => { const P = await pub(); if (P) elig(P); } };
+  W.F99R65 = { open, eligibility: async () => { const P = await pub(); if (P) { page(P); const g = D.querySelector('#r65-ov [data-r65-buy]'); if (g) g.click(); } } };
   function css68() { // r68: the package page must sit above the store window (#f99s-modal z 2147483100), otherwise it opens behind it and «اشتر الآن» looks unresponsive
-     if (D.getElementById('r65-css68')) return; const s = el('style'); s.id = 'r65-css68'; s.textContent = '#r65-ov.r65-ov{z-index:2147483200}.r65-disc,.r65-disc-f,.r65-disc-o{display:flex;flex-direction:column;gap:8px}.r65-disc-f[hidden],.r65-btn[hidden]{display:none}.r65-disc input{font-size:16px;padding:10px;border:1px solid #cfd8e3;border-radius:10px;text-align:center;letter-spacing:1px}#r65-ov .r65-act,#r65-ov .r65-act-f{display:grid;gap:7px;direction:rtl}#r65-ov .r65-act{padding:8px 0 10px;margin-top:7px}#r65-ov .r65-act *{box-sizing:border-box}#r65-ov .r65-act-f[hidden]{display:none!important}#r65-ov .r65-act .r65-btn{appearance:none;width:100%;border:1px solid #c2d7e3;border-radius:11px;background:#f3f8fb;color:#185375;min-height:44px;padding:10px 13px;font-family:inherit;font-weight:850;cursor:pointer}#r65-ov .r65-act .r65-btn.r65-tog{border:1px dashed #9bbdcf;background:#f7fbfd;color:#245b77}#r65-ov .r65-act .r65-btn.r65-cbtn{background:#14658b;color:#fff;border-color:#14658b}#r65-ov .r65-act .r65-btn:disabled{opacity:.55;cursor:wait}#r65-ov .r65-act input{width:100%;padding:9px;border:1px solid #afcad8;border-radius:10px;font-size:16px;direction:ltr;text-align:left}#r65-ov .r65-act-s{margin:0;font-size:12px;line-height:1.7;color:#285e77}#r65-ov .r65-act-s:empty{display:none}#r65-ov .r65-act-s.r65-err{color:#b42318}#r65-ov .r65-soldout{display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:12px;border-radius:12px;border:1px solid #e7c3c3;background:#fff4f4;color:#9b1c1c;font-weight:900;text-align:center;line-height:1.6;cursor:default;-webkit-user-select:none;user-select:none}.r65-code{font:800 20px/1.4 ui-monospace,Menlo,monospace;text-align:center;border:2px dashed #0a5187;border-radius:12px;padding:10px;color:#0a5187;-webkit-user-select:all;user-select:all}'; (D.head || D.documentElement).append(s); }
+     if (D.getElementById('r65-css68')) return; const s = el('style'); s.id = 'r65-css68'; s.textContent = '#r65-ov .r65-img{display:block;width:auto;max-width:100%;height:auto;max-height:none;object-fit:contain;margin:0 auto 12px;border-radius:12px}#r65-ov .r65-sub{margin:8px 0 4px;font-size:14px;color:inherit}#r65-ov .r65-list{margin:0;padding-inline-start:18px;font-size:14px;line-height:1.8}#r65-ov .r65-low{display:grid;gap:10px;margin-top:12px}#r65-ov a.f99v6-primary,#r65-ov .r65-low>.f99v6-primary{display:block;width:100%;box-sizing:border-box;text-align:center;text-decoration:none;margin-top:10px}#r65-ov .r65-ok,#r65-ov .r65-note{margin:8px 0}#r65-ov .r65-date{margin:4px 0 6px}#r65-ov.r65-ov{z-index:2147483200}.r65-disc,.r65-disc-f,.r65-disc-o{display:flex;flex-direction:column;gap:8px}.r65-disc-f[hidden],.r65-btn[hidden]{display:none}.r65-disc input{font-size:16px;padding:10px;border:1px solid #cfd8e3;border-radius:10px;text-align:center;letter-spacing:1px}#r65-ov .r65-act,#r65-ov .r65-act-f{display:grid;gap:7px;direction:rtl}#r65-ov .r65-act{padding:8px 0 10px;margin-top:7px}#r65-ov .r65-act *{box-sizing:border-box}#r65-ov .r65-act-f[hidden]{display:none!important}#r65-ov .r65-act .r65-btn{appearance:none;width:100%;border:1px solid #c2d7e3;border-radius:11px;background:#f3f8fb;color:#185375;min-height:44px;padding:10px 13px;font-family:inherit;font-weight:850;cursor:pointer}#r65-ov .r65-act .r65-btn.r65-tog{border:1px dashed #9bbdcf;background:#f7fbfd;color:#245b77}#r65-ov .r65-act .r65-btn.r65-cbtn{background:#14658b;color:#fff;border-color:#14658b}#r65-ov .r65-act .r65-btn:disabled{opacity:.55;cursor:wait}#r65-ov .r65-act input{width:100%;padding:9px;border:1px solid #afcad8;border-radius:10px;font-size:16px;direction:ltr;text-align:left}#r65-ov .r65-act-s{margin:0;font-size:12px;line-height:1.7;color:#285e77}#r65-ov .r65-act-s:empty{display:none}#r65-ov .r65-act-s.r65-err{color:#b42318}#r65-ov .r65-soldout{display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:12px;border-radius:12px;border:1px solid #e7c3c3;background:#fff4f4;color:#9b1c1c;font-weight:900;text-align:center;line-height:1.6;cursor:default;-webkit-user-select:none;user-select:none}.r65-code{font:800 20px/1.4 ui-monospace,Menlo,monospace;text-align:center;border:2px dashed #0a5187;border-radius:12px;padding:10px;color:#0a5187;-webkit-user-select:all;user-select:all}'; (D.head || D.documentElement).append(s); }
   const go = () => { css68(); try { if (new URLSearchParams(W.location.search).get('p') === 'mortgage') setTimeout(open, 400); } catch (e) {} pub(); };
   if (D.readyState === 'loading') D.addEventListener('DOMContentLoaded', go); else go();
 })();
