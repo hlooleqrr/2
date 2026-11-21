@@ -771,7 +771,7 @@
       Q65.append(el('span', 're65-qi' + (rl ? '' : ' done'), 'بالنسب المرجعية: المتبقي ' + rl + ' من ' + rm));
       if (q.custom_enabled !== false && cm > 0) Q65.append(el('span', 're65-qi' + (cl ? '' : ' done'), 'بنسبتك الخاصة: المتبقي ' + cl + ' من ' + cm));
       const used = (Number(q.ref_used) || 0) + (Number(q.custom_used) || 0), ra = Number(q.renew_after) || 0;
-      if (ra > 0 && used >= ra) { const rw = el('div', 're65-renew'); rw.append(el('span', '', tpl(T.r65_renew_text || 'قربت حسباتك تخلص يا {name}، تقدر تجدد باقتك وتكمل حسباتك.', S.data) + (q.renewal_price ? ' سعر التجديد: ' + q.renewal_price + ' ريال.' : '')));
+      if (foLeft() === 0 && /^https:\/\//.test(q.renewal_url || '')) { const rw = el('div', 're65-renew'); /* r76: renewal only at zero balance after the last real use, and only with the owner link */ rw.append(el('span', '', tpl(T.r65_renew_text || 'قربت حسباتك تخلص يا {name}، تقدر تجدد باقتك وتكمل حسباتك.', S.data) + (q.renewal_price ? ' سعر التجديد: ' + q.renewal_price + ' ريال.' : '')));
         if (/^https:\/\//.test(q.renewal_url || '')) btn(rw, 'تجديد الباقة', () => window.open(q.renewal_url, '_blank', 'noopener'), 're42-mini'); Q65.append(rw); } }
     function customBank(c) { // «بنك آخر»: a neutral, client-named bank used only for this calculation (never saved)
       return { id: '__client', name: c.bankName, active: true, approved: true, included: true, test: false, plans: ['fixed', 'step'], rates: {}, logo: '' }; }

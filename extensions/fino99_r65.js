@@ -49,7 +49,8 @@
     try { if (W.navigator.clipboard && W.isSecureContext) { await W.navigator.clipboard.writeText(t); return true; } } catch (e) {}
     try { const a = el('textarea'); a.value = t; a.setAttribute('readonly', ''); a.style.cssText = 'position:fixed;top:0;left:0;opacity:0'; D.body.append(a); a.select(); a.setSelectionRange(0, t.length); const ok = D.execCommand('copy'); a.remove(); return !!ok; } catch (e) { return false; }
   }
-  const CPN = { INVALID_COUPON: 'أدخل كودًا صالحًا.', COUPON_NOT_ACTIVE_FOR_PACKAGE: 'الكود غير صالح لهذه الباقة.', COUPON_PAUSED_OR_OUTSIDE_WINDOW: 'الكود غير متاح حاليًا.', COUPON_LIMIT_OR_PAYMENT_NOT_READY: 'الكود غير متاح حاليًا.', COUPON_FIELD_DISABLED: 'الخصم غير متاح حاليًا لهذه الباقة.' };
+  const CBAD = 'كود الخصم غير صحيح، تأكد من الرمز وحاول مرة ثانية'; // r76
+  const CPN = { INVALID_COUPON: CBAD, COUPON_NOT_ACTIVE_FOR_PACKAGE: CBAD, COUPON_PAUSED_OR_OUTSIDE_WINDOW: 'الكود غير متاح حاليًا.', COUPON_LIMIT_OR_PAYMENT_NOT_READY: 'الكود غير متاح حاليًا.', COUPON_FIELD_DISABLED: 'الخصم غير متاح حاليًا لهذه الباقة.' };
   async function disc(P, host) {
     let a = null; try { const r = await W.finoRpc('f99v55_coupon_availability', { p_package_key: P.key }, 12000); a = r && r.ok ? r.data : null; } catch (e) {}
     if (!a || a.available !== true || !host.isConnected) return;
@@ -59,7 +60,7 @@
     const out = el('div', 'r65-disc-o');
     const ap = btn(f, 'تطبيق الكود وعرض السعر الجديد', async () => {
       const code = String(i.value || '').replace(/\s+/g, '').toUpperCase(); out.innerHTML = '';
-      if (!/^[A-Z0-9_-]{3,40}$/.test(code)) { out.append(el('p', 'r65-err', 'أدخل كودًا صالحًا.')); return; }
+      if (!/^[A-Z0-9_-]{3,40}$/.test(code)) { out.append(el('p', 'r65-err', CBAD)); return; }
       ap.disabled = true; let q = null;
       try { const r = await W.finoRpc('f99v55_stacked_coupon_preview', { p_package_key: P.key, p_code: code }, 12000); q = r && r.ok ? r.data : null; } catch (e) {} ap.disabled = false;
       if (!q || q.ok !== true) { out.append(el('p', 'r65-err', CPN[q && q.reason] || 'تعذر التحقق من الكود، حاول مرة أخرى.')); return; }
@@ -74,12 +75,12 @@
   }
   // r69: «هل لديك كود؟» = the package ACTIVATION code (not a discount code), inline inside this page, same shape/position as the store tile box
   // (above «اشتر الآن»). It uses the existing central login (#password + window.login) — entering a code or opening the chat consumes no calculation.
-  function act(host) {
+  function act(host, ref) { // r76: ref = place the box before it (store tile, above «اشتر الآن»); same single activation path
     const box = el('section', 'r65-act'); const f = el('div', 'r65-act-f'); f.hidden = true;
-    const i = el('input'); i.id = 'r65-code'; i.autocomplete = 'off'; i.autocapitalize = 'characters'; i.spellcheck = false; i.setAttribute('dir', 'ltr'); i.maxLength = 40; i.placeholder = 'الصق الكود هنا';
+    const i = el('input'); if (!ref) i.id = 'r65-code'; i.autocomplete = 'off'; i.autocapitalize = 'characters'; i.spellcheck = false; i.setAttribute('dir', 'ltr'); i.maxLength = 40; i.placeholder = 'ألصق كود التفعيل هنا';
     const st = el('p', 'r65-act-s'); st.setAttribute('role', 'status');
     btn(box, 'هل لديك كود؟', () => { f.hidden = !f.hidden; if (!f.hidden) i.focus(); }, 'r65-tog'); f.append(i, st); box.append(f);
-    const ok = btn(f, 'تأكيد الكود', async () => {
+    const ok = btn(f, 'تفعيل الكود', async () => {
       const raw = String(i.value || '').trim(); const x = typeof W.F99V8ExtractCode === 'function' ? W.F99V8ExtractCode(raw) : raw.toUpperCase();
       const s = /^[A-Z0-9-]{8,32}$/.test(x) ? x : ''; if (s) i.value = s;
       if (!s) { st.className = 'r65-act-s r65-err'; st.textContent = 'أدخل كودًا صحيحًا بدون كلمات إضافية.'; return; }
@@ -93,8 +94,15 @@
       st.textContent = ''; closeAll(); const m = D.getElementById('f99s-modal'); if (m && !m.hidden) { try { m.click(); } catch (e) {} }
     }, 'r65-cbtn');
     f.append(ok); i.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); ok.click(); } });
-    host.append(box); return box;
+    if (ref) ref.before(box); else host.append(box); return box;
   }
+  // r76: the same activation box on the mortgage store tile, above «اشتر الآن» (like «اختصر مشاويرك»). If the owner enables discount coupons for this
+  // package, the f64 discount box on this tile is labelled «هل لديك كود خصم؟» so activation and discount never mix. Other tiles untouched.
+  let TQ = 0;
+  function tile() { TQ = 0; const m = SM(); if (!m || m.hidden) return; if (PUB && !(PUB.product && PUB.product.enabled === true)) return;
+    const b = m.querySelector('.f99v6-tile [data-f40-key="' + (PUB && PUB.key ? PUB.key : MKEY) + '"]'); const t = b && b.closest('.f99v6-tile'); if (!t) return;
+    const d = t.querySelector('.f64-code-entry .f64-toggle'); if (d && d.textContent !== 'هل لديك كود خصم؟') { d.textContent = 'هل لديك كود خصم؟'; const x = t.querySelector('.f64-code-entry input'); if (x) x.placeholder = 'ألصق كود الخصم هنا'; }
+    if (!t.querySelector('.r65-act')) act(t, t.querySelector('.f64-code-entry') || b); }
   function page(P) {
     const pr = P.product || {}, pk = P.package || {};
     const body = shell(NM(P)); pbtn(body, 'العودة إلى المتجر', store, 'f99v6-text');
@@ -125,7 +133,7 @@
     const note = (t, k) => { const n = el('p', 'f99v10-msg', t || ''); n.dataset.kind = k || 'error'; fl.append(n); return n; };
     const acts = (i, fn, cap) => { const r = el('div', 'f99v10-actions'); if (i > 0) pbtn(r, 'السابق', () => step(i - 1), 'f99v6-text'); if (fn) pbtn(r, cap || 'التالي', fn); fl.append(r); };
     const stop = (i, t) => { fl.replaceChildren(); const x = el('section', 'f99v13-rejection'); x.append(el('h3', '', 'نعتذر لك'), el('p', '', t)); fl.append(x); const r = el('div', 'f99v10-actions'); pbtn(r, 'تعديل الإجابة', () => step(i), 'f99v6-text'); pbtn(r, 'العودة إلى المتجر', store); fl.append(r); top(); };
-    const sel = (i, q, opts, val, pick) => { frame(i, q); const lb = el('label', 'f99v10-field', q); const s = D.createElement('select'); opts.forEach(([v, t]) => s.append(new Option(t, v))); s.value = val || ''; lb.append(s); fl.append(lb); const out = note('', 'info');
+    const sel = (i, q, opts, val, pick) => { frame(i, q); const lb = el('label', 'f99v10-field'); const s = D.createElement('select'); s.setAttribute('aria-label', q); /* r76: question shown once (step head) */ opts.forEach(([v, t]) => s.append(new Option(t, v))); s.value = val || ''; lb.append(s); fl.append(lb); const out = note('', 'info');
       const go = () => { if (!s.value) { out.textContent = 'اختر إجابة للمتابعة.'; return; } pick(s.value); }; s.onchange = go; acts(i, go); top(); };
     const yn = (i, k, q, no, ly, ln) => sel(i, q, [['', 'اختر الإجابة'], ['yes', ly || 'نعم'], ['no', ln || 'لا']], st[k], v => { st[k] = v; if (v === 'yes') step(i + 1); else stop(i, no); });
     const Q = {
@@ -190,7 +198,7 @@
   }, true);
   W.F99R65 = { open, eligibility: async () => { const P = await pub(); if (P) { page(P); const g = D.querySelector('#r65-ov [data-r65-buy]'); if (g) g.click(); } } };
   function css68() { // r68: the package page must sit above the store window (#f99s-modal z 2147483100), otherwise it opens behind it and «اشتر الآن» looks unresponsive
-     if (D.getElementById('r65-css68')) return; const s = el('style'); s.id = 'r65-css68'; s.textContent = '#r65-ov .r65-img{display:block;width:auto;max-width:100%;height:auto;max-height:none;object-fit:contain;margin:0 auto 12px;border-radius:12px}#r65-ov .r65-sub{margin:8px 0 4px;font-size:14px;color:inherit}#r65-ov .r65-list{margin:0;padding-inline-start:18px;font-size:14px;line-height:1.8}#r65-ov .r65-low{display:grid;gap:10px;margin-top:12px}#r65-ov a.f99v6-primary,#r65-ov .r65-low>.f99v6-primary{display:block;width:100%;box-sizing:border-box;text-align:center;text-decoration:none;margin-top:10px}#r65-ov .r65-ok,#r65-ov .r65-note{margin:8px 0}#r65-ov .r65-date{margin:4px 0 6px}#r65-ov.r65-ov{z-index:2147483200}.r65-disc,.r65-disc-f,.r65-disc-o{display:flex;flex-direction:column;gap:8px}.r65-disc-f[hidden],.r65-btn[hidden]{display:none}.r65-disc input{font-size:16px;padding:10px;border:1px solid #cfd8e3;border-radius:10px;text-align:center;letter-spacing:1px}#r65-ov .r65-act,#r65-ov .r65-act-f{display:grid;gap:7px;direction:rtl}#r65-ov .r65-act{padding:8px 0 10px;margin-top:7px}#r65-ov .r65-act *{box-sizing:border-box}#r65-ov .r65-act-f[hidden]{display:none!important}#r65-ov .r65-act .r65-btn{appearance:none;width:100%;border:1px solid #c2d7e3;border-radius:11px;background:#f3f8fb;color:#185375;min-height:44px;padding:10px 13px;font-family:inherit;font-weight:850;cursor:pointer}#r65-ov .r65-act .r65-btn.r65-tog{border:1px dashed #9bbdcf;background:#f7fbfd;color:#245b77}#r65-ov .r65-act .r65-btn.r65-cbtn{background:#14658b;color:#fff;border-color:#14658b}#r65-ov .r65-act .r65-btn:disabled{opacity:.55;cursor:wait}#r65-ov .r65-act input{width:100%;padding:9px;border:1px solid #afcad8;border-radius:10px;font-size:16px;direction:ltr;text-align:left}#r65-ov .r65-act-s{margin:0;font-size:12px;line-height:1.7;color:#285e77}#r65-ov .r65-act-s:empty{display:none}#r65-ov .r65-act-s.r65-err{color:#b42318}#r65-ov .r65-soldout{display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:12px;border-radius:12px;border:1px solid #e7c3c3;background:#fff4f4;color:#9b1c1c;font-weight:900;text-align:center;line-height:1.6;cursor:default;-webkit-user-select:none;user-select:none}.r65-code{font:800 20px/1.4 ui-monospace,Menlo,monospace;text-align:center;border:2px dashed #0a5187;border-radius:12px;padding:10px;color:#0a5187;-webkit-user-select:all;user-select:all}'; (D.head || D.documentElement).append(s); }
-  const go = () => { css68(); try { if (new URLSearchParams(W.location.search).get('p') === 'mortgage') setTimeout(open, 400); } catch (e) {} pub(); };
+     if (D.getElementById('r65-css68')) return; const s = el('style'); s.id = 'r65-css68'; s.textContent = '#r65-ov .r65-img{display:block;width:auto;max-width:100%;height:auto;max-height:none;object-fit:contain;margin:0 auto 12px;border-radius:12px}#r65-ov .r65-sub{margin:8px 0 4px;font-size:14px;color:inherit}#r65-ov .r65-list{margin:0;padding-inline-start:18px;font-size:14px;line-height:1.8}#r65-ov .r65-low{display:grid;gap:10px;margin-top:12px}#r65-ov a.f99v6-primary,#r65-ov .r65-low>.f99v6-primary{display:block;width:100%;box-sizing:border-box;text-align:center;text-decoration:none;margin-top:10px}#r65-ov .r65-ok,#r65-ov .r65-note{margin:8px 0}#r65-ov .r65-date{margin:4px 0 6px}#r65-ov.r65-ov{z-index:2147483200}.r65-disc,.r65-disc-f,.r65-disc-o{display:flex;flex-direction:column;gap:8px}.r65-disc-f[hidden],.r65-btn[hidden]{display:none}.r65-disc input{font-size:16px;padding:10px;border:1px solid #cfd8e3;border-radius:10px;text-align:center;letter-spacing:1px}:is(#r65-ov,#f99s-modal) .r65-act,:is(#r65-ov,#f99s-modal) .r65-act-f{display:grid;gap:7px;direction:rtl}:is(#r65-ov,#f99s-modal) .r65-act{padding:8px 0 10px;margin-top:7px}:is(#r65-ov,#f99s-modal) .r65-act *{box-sizing:border-box}:is(#r65-ov,#f99s-modal) .r65-act-f[hidden]{display:none!important}:is(#r65-ov,#f99s-modal) .r65-act .r65-btn{appearance:none;width:100%;border:1px solid #c2d7e3;border-radius:11px;background:#f3f8fb;color:#185375;min-height:44px;padding:10px 13px;font-family:inherit;font-weight:850;cursor:pointer}:is(#r65-ov,#f99s-modal) .r65-act .r65-btn.r65-tog{border:1px dashed #9bbdcf;background:#f7fbfd;color:#245b77}:is(#r65-ov,#f99s-modal) .r65-act .r65-btn.r65-cbtn{background:#14658b;color:#fff;border-color:#14658b}:is(#r65-ov,#f99s-modal) .r65-act .r65-btn:disabled{opacity:.55;cursor:wait}:is(#r65-ov,#f99s-modal) .r65-act input{width:100%;padding:9px;border:1px solid #afcad8;border-radius:10px;font-size:16px;direction:ltr;text-align:left}:is(#r65-ov,#f99s-modal) .r65-act-s{margin:0;font-size:12px;line-height:1.7;color:#285e77}:is(#r65-ov,#f99s-modal) .r65-act-s:empty{display:none}:is(#r65-ov,#f99s-modal) .r65-act-s.r65-err{color:#b42318}#r65-ov .r65-soldout{display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:12px;border-radius:12px;border:1px solid #e7c3c3;background:#fff4f4;color:#9b1c1c;font-weight:900;text-align:center;line-height:1.6;cursor:default;-webkit-user-select:none;user-select:none}.r65-code{font:800 20px/1.4 ui-monospace,Menlo,monospace;text-align:center;border:2px dashed #0a5187;border-radius:12px;padding:10px;color:#0a5187;-webkit-user-select:all;user-select:all}#f99s-modal .r65-act input{padding:9px 6px;text-align:center}#f99s-modal .r65-act input::placeholder{font-size:12px}#r65-ov .r65-img{max-height:210px;width:auto;margin:0 auto 10px}#r65-ov .f99v6-summary>strong{display:inline-block}#r65-ov .f99v6-summary>s{display:inline-block;margin-inline-start:10px}#r65-ov .r65-low{margin-top:8px;gap:8px}#r65-ov .f99v10-flow{margin-top:10px}#r65-ov .f99v10-flowhead strong{font-size:19px;line-height:1.5}#r65-ov .f99v10-field select{width:100%;max-width:100%;box-sizing:border-box}#r65-ov .f99v10-actions{display:flex;flex-wrap:wrap;gap:8px}#r65-ov .f99v10-actions>button{flex:1 1 0;min-width:0}'; (D.head || D.documentElement).append(s); }
+  const go = () => { css68(); try { new MutationObserver(() => { if (!TQ) TQ = requestAnimationFrame(tile); }).observe(D.documentElement, { childList: true, subtree: true }); } catch (e) {} try { if (new URLSearchParams(W.location.search).get('p') === 'mortgage') setTimeout(open, 400); } catch (e) {} pub(); };
   if (D.readyState === 'loading') D.addEventListener('DOMContentLoaded', go); else go();
 })();
