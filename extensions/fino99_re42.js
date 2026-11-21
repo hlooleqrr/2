@@ -251,7 +251,7 @@
     const PLN = p => p === 'fixed' ? 'قسط ثابت' : (MG ? 'قسط متغير' : 'قسط متزايد'); const upOf = b => { const sa = b.sup || {}; return MG && sa.upfrontCounted && sa.upfront > 0 ? Number(sa.upfront) : 0; };
     D.querySelectorAll('.re42-ov.re42-bot').forEach(o => o.remove()); // r59: one chat only — a new chat never opens over an old one
     const sh = sheet(PROD === 'transfer' ? (TRC.title || 'تحويل المديونية العقارية') : 'احتساب التمويل العقاري فورًا', 're42-bot' + (PROD === 'transfer' ? ' re54-tr' : '')); const log = el('div', 're42-log'); const dock = el('div', 're42-dock'); sh.body.append(log); sh.box.append(dock); // r49: dock = footer above the keyboard
-    { const x0 = sh.head.querySelector('.re42-x'); if (x0 && MG && opt.mode === 'client') x0.onclick = () => (S.last && !S.exitOk ? exitAsk() : sh.ov.remove()); } // r73: review → rating → exit (only after a result)
+    { const x0 = sh.head.querySelector('.re42-x'); if (x0 && MG && opt.mode === 'client') x0.onclick = () => (S.last && !S.exitOk ? foGate(exitAsk) : sh.ov.remove()); } // r73: review → rating → exit (only after a result)
     const ST = el('div', 're59-st'); ST.hidden = true; sh.head.after(ST); const STAT = new WeakMap(); // r59: package bar (calculations / validity) on top of the chat
     const stDraw = d => { if (!d || d.ok !== true) return; const mx = Number(d.max_calculations) || 0, du = Number(d.duration_minutes) || 0, left = Math.max(0, Number(d.calculations_remaining) || 0); if (!mx && !du) return;
       const DA = typeof W.F99DurationAr === 'function' ? W.F99DurationAr : (m => m + ' دقيقة'), CA = typeof W.F99CalcCountAr === 'function' ? W.F99CalcCountAr : (n => n + ' حسبات'); if (!STAT.has(d)) STAT.set(d, Date.now());
@@ -275,15 +275,15 @@
     const scroll = () => { requestAnimationFrame(() => requestAnimationFrame(() => { const b = sh.body, t = log.lastElementChild; if (!t) return; const max = b.scrollHeight - b.clientHeight;
       const want = t.offsetHeight > b.clientHeight - 16 ? Math.min(t.offsetTop - 8, max) : max; if (Math.abs(b.scrollTop - want) < 2) return;
       try { b.scrollTo({ top: want, behavior: RM ? 'auto' : 'smooth' }); } catch (e) { b.scrollTop = want; } })); };
-    { const vv = W.visualViewport, ov = sh.ov; let lastH = 0;
+    { const vv = W.visualViewport, ov = sh.ov; let lastH = 0; const CO84 = !!(W.matchMedia && W.matchMedia('(pointer: coarse)').matches); /* r84: typing on a touch screen = keyboard open */ const typing84 = () => { const a = D.activeElement; return CO84 && !!a && ov.contains(a) && (a.tagName === 'TEXTAREA' || (a.tagName === 'INPUT' && !/^(button|checkbox|radio|submit|range|file|hidden)$/i.test(a.type || ''))); };
       const fit = ev => { if (!ov.isConnected) return cleanup(); const h = vv ? vv.height : W.innerHeight; ov.style.setProperty('--vvh', h + 'px'); ov.style.setProperty('--vvt', (vv ? vv.offsetTop : 0) + 'px');
-        ov.classList.toggle('kb', !!vv && (W.innerHeight - vv.height) > 120); if (Math.abs(h - lastH) > 40) { lastH = h; scroll(); } };
+        ov.classList.toggle('kb', (!!vv && (W.innerHeight - vv.height) > 120) || (MG && typing84())); if (Math.abs(h - lastH) > 40) { lastH = h; scroll(); } };
       const mo = new MutationObserver(() => { if (!ov.isConnected) cleanup(); });
       function cleanup() { if (vv) { vv.removeEventListener('resize', fit); vv.removeEventListener('scroll', fit); } W.removeEventListener('resize', fit); if (!D.querySelector('.re42-ov.re42-bot')) D.documentElement.classList.remove('re42-lock'); mo.disconnect(); }
       mo.observe(D.body, { childList: true }); if (vv) { vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); } W.addEventListener('resize', fit);
-      D.documentElement.classList.add('re42-lock'); fit(); dock.addEventListener('focusin', () => setTimeout(() => { lastH = 0; fit(); }, 320)); }
+      D.documentElement.classList.add('re42-lock'); fit(); dock.addEventListener('focusin', () => setTimeout(() => { lastH = 0; fit(); }, 320)); if (MG) { ov.addEventListener('focusin', ev => { if (typing84()) fit(); setTimeout(() => { lastH = 0; fit(); const nc = ev.target && ev.target.closest ? ev.target.closest('.re59-name') : null; if (nc) { try { nc.scrollIntoView({ block: 'start' }); } catch (e) {} } }, 350); }); ov.addEventListener('focusout', () => setTimeout(fit, 120)); } }
     const greetWord = () => { try { if (typeof W.F99SaudiGreetingWord === 'function') return W.F99SaudiGreetingWord(); } catch (e) {} let h = 0; try { h = Number(new Intl.DateTimeFormat('en-GB', { hour: '2-digit', hourCycle: 'h23', timeZone: 'Asia/Riyadh' }).format(new Date())) || 0; } catch (e) { h = new Date().getHours(); } return h < 12 ? 'صباح الخير' : 'مساء الخير'; }; // r58
-    const bot = (txt, cls) => { const b = el('div', 're42-msg bot' + (cls ? ' ' + cls : '')); if (txt) b.textContent = txt; log.append(b); scroll(); return b; };
+    const bot = (txt, cls) => { const b = el('div', 're42-msg bot' + (cls ? ' ' + cls : '')); if (txt) b.textContent = txt; log.append(b); if (MG) { const p = log.querySelector('.re84-cur'); if (p) p.classList.remove('re84-cur'); b.classList.add('re84-cur'); } scroll(); return b; };
     const me = txt => { const b = el('div', 're42-msg me', txt); log.append(b); scroll(); };
     const clearDock = () => { dock.innerHTML = ''; };
     const sectors = () => (cfg.sectors || []).filter(s => s.enabled !== false);
@@ -676,10 +676,13 @@
       let m = ''; try { m = typeof finoCentralReasonMessage === 'function' ? finoCentralReasonMessage(reason) : ''; } catch (x) {}
       return (m && m !== reason ? m : 'انتهت صلاحية الكود أو جلسته.') + ' لم تُخصم أي حسبة، وبياناتك محفوظة في المحادثة.';
     }
+    function TKT() { try { const e = ENT0 || (typeof finoCentralRestoreEntry === 'function' ? finoCentralRestoreEntry() : null); return e && e.entryToken ? PROD + ':' + String(e.entryToken).slice(-16) : ''; } catch (x) { return ''; } }
+    function hash84(t) { let h = 5381; for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return (h >>> 0).toString(36) + t.length.toString(36); }
     function meter() {
       S.q65Reason = ''; if (opt.mode !== 'client') return Promise.resolve(true); const kind = S.custom ? 'custom' : 'ref'; const sig = JSON.stringify([inp(), S.months, S.extend, S.custom || null]); /* r65 */ if (S.metered[sig]) return Promise.resolve(true);
       if (S.meterP[sig]) return S.meterP[sig];
-      const rid = typeof f99v7CreateRequestId === 'function' ? f99v7CreateRequestId() : (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random());
+      const RK = MG && TKT() ? 'f99r84m:' + TKT() : '', HK = hash84(sig) + ':' + ((S.q65 && S.q65.cycle != null) ? S.q65.cycle : 0); let MM = {}; try { MM = (RK && JSON.parse(W.localStorage.getItem(RK) || '{}')) || {}; } catch (x) { MM = {}; } /* r84 */
+      const rid = MM[HK] || (typeof f99v7CreateRequestId === 'function' ? f99v7CreateRequestId() : (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random()));
       const pr = (async () => {
         try {
           const le = await liveEntry(); if (!le.e) { bot(meterMsg(le.reason), 'warn'); return false; }
@@ -687,7 +690,7 @@
           for (let k = 0; k < 2; k++) { r = await finoRpc(PROD === 'transfer' ? 'f99r54_client_meter' : 'f99r65_client_meter', PROD === 'transfer' ? { p_entry_token: e.entryToken, p_device_id: dev, p_request_id: rid } : { p_entry_token: e.entryToken, p_device_id: dev, p_request_id: rid, p_kind: kind }, 15000); if (!(r && r.network)) break; }
           if (r && r.network) { bot(meterMsg('NETWORK'), 'warn'); return false; }
           if (!r || !r.ok || (r.data && r.data.ok === false)) { S.q65Reason = (r && r.data && r.data.reason) || ''; if (r && r.data && r.data.r65) { S.q65 = r.data.r65; q65Draw(); } bot(meterMsg((r && r.data && r.data.reason) || (r && (r.reason || r.error)) || 'REFUSED'), 'warn'); return false; }
-          S.metered[sig] = true; S.foNew = 1; if (r.data && r.data.r65) { S.q65 = r.data.r65; q65Draw(); } setTimeout(stRefresh, 1700); return true; // r59: refresh the bar after a counted calculation
+          S.metered[sig] = true; S.foNew = 1; try { if (RK) { MM[HK] = rid; const ks = Object.keys(MM); while (ks.length > 40) delete MM[ks.shift()]; W.localStorage.setItem(RK, JSON.stringify(MM)); } } catch (x) {} if (r.data && r.data.r65) { S.q65 = r.data.r65; q65Draw(); } setTimeout(stRefresh, 1700); return true; // r59: refresh the bar after a counted calculation
         } catch (x) { bot(meterMsg('NETWORK'), 'warn'); return false; } finally { delete S.meterP[sig]; }
       })(); S.meterP[sig] = pr; return pr;
     }
@@ -719,7 +722,7 @@
     async function results(fresh) {
       S.foNew = 0; if (fresh && !(await meter())) { const why = S.q65Reason; // r65
         if (MG && S.custom && (why === 'R65_CUSTOM_DONE' || why === 'R65_CUSTOM_OFF')) { S.custom = null; const w = el('div', 're42-choices'); btn(w, 'الرجوع للحسبة بالنسب المرجعية', () => results(true), 're42-chip'); dock.append(w); scroll(); }
-        else if (MG && why === 'R65_REF_DONE' && !S.custom && customOn() && custLeft() > 0) { const w = el('div', 're42-choices'); btn(w, 'احسب بنسبتك الخاصة', () => customStart(), 're42-chip'); dock.append(w); scroll(); }
+        else if (MG && why === 'R65_REF_DONE' && !S.custom && customOn() && custLeft() > 0) { const w = el('div', 're42-choices'); btn(w, 'احسب بنسبة من عندك', () => customStart(), 're42-chip'); dock.append(w); scroll(); }
         return; }
       let R; try { R = compute(); } catch (e) { bot(ERR[e.message] || 'تعذر الحساب: ' + e.message, 'warn'); return; }
       S.last = R; if (fresh) archivePut(R); clearDock(); if (resEl) resEl.remove(); resEl = el('div', 're42-card re42-res'); log.append(resEl);
@@ -773,10 +776,11 @@
         btn(resEl, (S.showRest ? 'إخفاء' : 'عرض') + ' بقية جهات التمويل المشمولة (' + R.rest.length + ')', ev => { S.showRest = !S.showRest; more.hidden = !S.showRest; ev.target.textContent = (S.showRest ? 'إخفاء' : 'عرض') + ' بقية جهات التمويل المشمولة (' + R.rest.length + ')'; }, 're42-link');
         resEl.append(more);
       }
+      if (MG && R.results.length && S.data.supported) resEl.append(el('p', 're84-sn', '*احتساب الدعم السكني واعتزاز مبدئي، وقد تختلف إتاحتهما وشروطهما من جهة تمويل لأخرى. الاعتماد النهائي لدى جهة التمويل.')); /* r84 */
       const act = el('div', 're42-actions'); // r55: no merged multi-bank share/image unless the owner enables «مشاركة مقارنة جميع البنوك»
       if (!MG || !R.results.length) { btn(act, 'مشاركة عبر واتساب', share, 're42-wa'); btn(act, 'صورة النتيجة', image); } else if (cfg.share_compare === true) { btn(act, 'مشاركة مقارنة جميع جهات التمويل', () => shareTxt(compareTxt()), 're42-wa'); btn(act, 'صورة مقارنة جهات التمويل', image); }
-      if (MG) { S.foSlot = el('div', 're83-slot'); resEl.append(S.foSlot); const pr = el('div', 're83-main'); btn(pr, 'تعديل البيانات', () => editMenu(false, true)); if (R.results.length && cutOn('installment')) btn(pr, 'تقليل القسط', () => cutForm('installment', R));
-        btn(pr, 'احسب من جديد', () => whoFor(false)); if (FOon() && R.results.length) btn(pr, 'متابعة إجراءات التمويل', () => foStart(false), 're73-cta'); resEl.append(pr); } // r83: clear main choices after the full result
+      if (MG) { S.foSlot = el('div', 're83-slot'); resEl.append(S.foSlot); const pr = el('div', 're83-main'); btn(pr, 'تعديل البيانات', () => foGate(() => editMenu(false, true))); if (R.results.length && cutOn('installment')) btn(pr, 'تقليل القسط', () => foGate(() => cutForm('installment', R)));
+        btn(pr, 'احسب من جديد', () => foGate(() => whoFor(false))); if (FOon() && R.results.length) btn(pr, 'متابعة إجراءات التمويل', () => { S.foGated = true; foStart(false); }, 're73-cta'); resEl.append(pr); } // r83: clear main choices after the full result
       if (!FIX) btn(act, 'تعديل المدة', () => durationCard()); // r59: «تعديل المدة» hidden while the term is locked; r65: «تعديل البيانات» restored (it was swallowed by the r59 comment)
       if (R.results.length && PROD !== 'transfer') { if (cutOn('amount')) btn(act, 'تقليل مبلغ التمويل', () => cutForm('amount', R)); if (cutOn('installment') && !MG) btn(act, 'تقليل القسط', () => cutForm('installment', R)); }
       if (FF() && R.results.length) btn(act, S.feeOk ? 'أتعاب المتابعة معروضة في البطاقات' : (T.follow_cta || 'خدمة متابعة إجراءات التمويل'), () => { if (S.feeOk) return; // r51: shown only after consent
@@ -833,10 +837,10 @@
     function discEl() { const t = T.disclaimer || '', k = 'حسبة مبدئية', p = el('p', 're42-disc'); const i = MG ? t.indexOf(k) : -1;
       if (i < 0) { p.textContent = t; return p; } p.append(document.createTextNode(t.slice(0, i)), el('b', '', k), document.createTextNode(t.slice(i + k.length))); return p; }
     function r65After(R) { if (!MG) return;
-      if (S.custom) { const w = el('div', 're42-actions re65-cact'); btn(w, 'تعديل النسبة', () => customStart(), 're42-mini');
+      if (S.custom) { const w = el('div', 're42-actions re65-cact'); btn(w, 'تعديل النسبة', () => foGate(customStart), 're42-mini');
         btn(w, 'الرجوع للحسبة بالنسب المرجعية', () => { S.history.push(snapshot()); S.custom = null; S.offers = {}; S.plans = {}; S.cut = null; results(true); }, 're42-mini'); resEl.append(w); }
-      else if (customOn() && (opt.mode !== 'client' || !S.q65 || custLeft() > 0)) { const cta = el('div', 're65-cta'); cta.append(el('p', '', tpl(T.r65_custom_cta || 'يا {name}، عندك عرض أو نسبة خاصة عطتك إياها إحدى جهات التمويل؟ احسب عليها بنفسك وقارنها بحسابتك.', S.data)));
-        btn(cta, 'احسب بنسبتك الخاصة', () => customStart(), 're42-go'); resEl.append(cta); }
+      else if (customOn() && (opt.mode !== 'client' || !S.q65 || custLeft() > 0)) { const cta = el('div', 're65-cta'); cta.append(el('p', '', tpl(T.r65_custom_cta || 'عندك نسبة ربح من إحدى جهات التمويل؟ أدخلها واحسب عليها بنفسك.', S.data)));
+        btn(cta, 'احسب بنسبة من عندك', () => foGate(customStart), 're42-go'); /* r84 */ resEl.append(cta); }
       const cb = contactBox(); if (cb) resEl.append(cb); }
     // r48: reduce amount / installment (no new usage: results(false) is not metered)
     function cutForm(type, R) {
@@ -858,6 +862,7 @@
       return F.mode === 'fixed' ? Math.max(0, Number(F.fixed) || 0) : Math.round(base * Math.max(0, Number(F.pct == null || F.pct === '' ? 2.5 : F.pct))) / 100; }
     function sumRows(b) { const sa = b.sup || {}; const up = sa.upfrontCounted && sa.upfront > 0 ? sa.upfront : 0; const ez = b.etz ? b.etz.amount : 0; const blocked = S.data.supported && sa.key === 'upfront' && sa.upfront > 0 && !sa.upfrontCounted;
       if (!up && !ez && !blocked) return null; const w = el('div', 're42-sum');
+      if (MG) { w.append(kv('مبلغ التمويل العقاري من جهة التمويل', fmt(b.amount) + ' ريال')); if (ez) w.append(kv('+ قرض اعتزاز الحسن', fmt(ez) + ' ريال')); if (up) w.append(kv('+ الدعم السكني المقدم', fmt(up) + ' ريال')); else if (blocked) w.append(kv('الدعم السكني المقدم', 'غير مجموع مع اعتزاز')); if (up || ez) { const t = el('div', 're42-kv re42-tot'); t.append(el('span', '', '= إجمالي المبلغ المتاح لشراء العقار'), el('b', '', fmt(b.propertyValueR) + ' ريال')); w.append(t); } return w; } /* r84 */
       if (up || ez) w.append(kv(MG && up ? 'تمويل البنك' : 'مبلغ التمويل العقاري من البنك', fmt(b.amount) + ' ريال'));
       if (up) w.append(kv(MG ? 'الدعم السكني المقدم' : '+ الدعم السكني المقدم', fmt(up) + ' ريال')); else if (blocked) w.append(kv('الدعم السكني المقدم', 'غير مجموع مع اعتزاز'));
       if (ez) w.append(kv('+ قرض اعتزاز الحسن', fmt(ez) + ' ريال'));
@@ -871,7 +876,7 @@
       const h = el('div', 're42-bh'); h.append(logoBox(b)); const nm = el('div', 're42-bn'); nm.append(el('b', '', b.name));
       const tg = el('div', 're42-tags'); if (!MG && b.rateSource === 'same_margin') tg.append(el('small', 're42-tag est', 'تقديري — المتزايد غير معتمد من البنك')); if (MG && b.rateSource !== 'owner_sim') tg.append(el('small', 're42-tag est', b.rateSource === 'client' ? 'نسبة مدخلة من العميل' : 'نسبة مرجعية مبدئية')); /* r65 */ /* r59 */ if (b.rateSource === 'owner_sim') tg.append(el('small', 're42-tag test', 'محاكاة داخلية للمالك')); if (b.test) tg.append(el('small', 're42-tag test', 'بنك اختبار')); if (tg.childNodes.length) nm.append(tg);
       const rt = el('div', 're42-rate'); rt.append(el('b', '', pct(b.rate)), el('small', '', b.method === 'flat' ? 'هامش ربح ثابت' : 'هامش الربح السنوي')); h.append(nm, rt); c.append(h);
-      const amt = el('div', 're42-amt'); amt.append(el('small', '', PROD === 'transfer' ? 'مبلغ التمويل اللازم للتحويل' : (upOf(b) ? (T.total_with_support || 'إجمالي التمويل المتاح مع الدعم') : 'مبلغ التمويل العقاري من البنك')), el('b', '', fmt(b.amount + upOf(b)) + ' ريال')); c.append(amt); // r55
+      const tot84 = MG && (upOf(b) > 0 || !!(b.etz && b.etz.amount > 0)); /* r84 */ const amt = el('div', 're42-amt'); amt.append(el('small', '', PROD === 'transfer' ? 'مبلغ التمويل اللازم للتحويل' : (tot84 ? 'إجمالي المبلغ المتاح لشراء العقار' : (MG ? 'مبلغ التمويل العقاري من جهة التمويل' : (upOf(b) ? (T.total_with_support || 'إجمالي التمويل المتاح مع الدعم') : 'مبلغ التمويل العقاري من البنك')))), el('b', '', fmt(tot84 ? b.propertyValueR : b.amount + upOf(b)) + ' ريال')); c.append(amt); // r55
       { const tb = trBox(b); if (tb) c.append(tb); } // r54
       { const sv = sumRows(b); if (sv) c.append(sv); }
       const det = MG ? el('div', 're55-det') : c; if (MG) { det.hidden = true; const s0 = b.stages[0] || {}; const q = el('div', 're55-q'); // r55
@@ -925,10 +930,18 @@
         const le = await liveEntry(); const e = le.e; if (!e || typeof finoRpc !== 'function') return null; const dev = e.deviceId || (typeof finoCentralDeviceId === 'function' ? finoCentralDeviceId() : '');
         const r = await finoRpc('f99r75_follow_offer', { p_entry_token: e.entryToken, p_device_id: dev, p_action: act, p_info: info || {} }, 12000); const t = r && r.ok && r.data; if (!t || t.ok === false || !t.issued) return null; S.foSt = t; S.foOfs = Date.parse(t.now) - Date.now(); return t; } catch (x) { return null; } }
     function foAfter(R) { r73css(); S.foN = (S.foN || 0) + 1; const left = foLeft(), last = left === 0; // shown after the first and the final counted calculation only
-      if (FOon() && R.results.length && !S.foOff && !S.foSent && (S.foN === 1 || last)) foInline(); if (last) rnGate(); } // r83: never a popup over the result
+      if (last) rnGate(); } // r84: the offer appears only when the client leaves the complete result (foGate)
     function foInline() { const F = FOc(), slot = S.foSlot; if (!slot || !slot.isConnected) return; foSync('issue').then(t => { if (!slot.isConnected || !t) return; if (!foOk()) { S.foOff = true; return; }
       const c = el('div', 're83-foc'); c.append(el('b', 're83-fot', tpl(F.title, S.data)), el('p', 're83-fos', String(F.sub || '').replace(/\{disc\}/g, p2(F.disc))), el('p', 're73-ex', 'ينتهي العرض: ' + foDt(t.expires_at)), el('p', 're83-foh', 'اضغط «متابعة إجراءات التمويل» واختر جهة التمويل.')); slot.innerHTML = ''; slot.append(c); }); }
-    function rnGate() { const q = S.q65; if (S.rnAsked || !q || foLeft() !== 0 || !/^https:\/\//.test(q.renewal_url || '')) return; clearDock(); btn(dock, 'تم، قرأت النتيجة', () => { clearDock(); renewAsk(); }, 're42-go wide'); } // r79: the renewal offer only after the client has read the last result
+    function foGate(fn, last) { const go = () => { try { fn(); } catch (e) {} }; /* r84: «نبحث لك عن خصم…» → «مبروك» card → «أرغب بالمتابعة» (banks) / «لا، شكرًا» (the chosen action); once per session */
+      if (!MG || !FOon() || S.foOff || S.foSent || S.foGated || !(S.last && S.last.results && S.last.results.length)) return go();
+      const GK = TKT() ? 'f99r84g:' + TKT() : ''; try { if (GK && W.sessionStorage.getItem(GK)) { S.foGated = true; return go(); } } catch (x) {} S.foGated = true; try { if (GK) W.sessionStorage.setItem(GK, '1'); } catch (x) {}
+      r73css(); const F = FOc(); const s2 = sheet('خصم أتعاب المتابعة', 're42-pick re73-fo re84-fo'); applyTheme(s2.ov, cfg.theme); let fin = false; const close = f => { if (fin) return; fin = true; s2.ov.remove(); f(); };
+      const x = s2.head.querySelector('.re42-x'); if (x) x.onclick = () => close(go); const sp = el('div', 're73-spin'); sp.append(el('i', 're73-ring'), el('p', '', 'نبحث لك عن خصم على أتعاب المتابعة…')); s2.body.append(sp);
+      Promise.all([foSync('issue'), new Promise(z => setTimeout(z, 1200))]).then(([t]) => { if (fin) return; if (!t || !foOk()) { if (t) S.foOff = true; return close(go); } sp.remove(); const c = el('div', 're73-card');
+        c.append(el('h3', '', tpl('مبروك يا {name} 🎉', S.data)), el('p', 're73-big', String(F.sub || '').replace(/\{disc\}/g, p2(F.disc))), el('p', 're73-ex', 'ينتهي العرض: ' + foDt(t.expires_at)));
+        btn(c, 'أرغب بالمتابعة', () => close(() => foStart(!!last)), 're42-go wide'); btn(c, 'لا، شكرًا', () => close(go), 're42-go wide alt'); s2.body.append(c); }); }
+    function rnGate() { const q = S.q65; if (S.rnAsked || !q || foLeft() !== 0 || !/^https:\/\//.test(q.renewal_url || '')) return; clearDock(); btn(dock, 'تم، قرأت النتيجة', () => { clearDock(); foGate(renewAsk, true); }, 're42-go wide'); } // r79: the renewal offer only after the client has read the last result
     function foOffer(last) { const F = FOc(); const s2 = sheet('خصم أتعاب المتابعة', 're42-pick re73-fo'); applyTheme(s2.ov, cfg.theme); const x = s2.head.querySelector('.re42-x'); if (x) x.onclick = () => { s2.ov.remove(); foNo(last); };
       const sp = el('div', 're73-spin'); sp.append(el('i', 're73-ring'), el('p', '', F.checking)); s2.body.append(sp);
       Promise.all([foSync('issue'), new Promise(z => setTimeout(z, 1100))]).then(([t]) => { if (!t || !foOk()) { s2.ov.remove(); if (t) S.foOff = true; if (last) rnGate(); return; } /* r79: no offer shown → renewal only after «تم، قرأت النتيجة» */ sp.remove(); const c = el('div', 're73-card'); c.append(el('h3', '', tpl(F.title, S.data)), el('p', 're73-big', String(F.sub || '').replace(/\{disc\}/g, p2(F.disc))), el('p', '', F.body), el('p', 're73-slo', F.slogan), el('p', 're73-vl', String(F.valid || FO_DEF.valid).replace(/\{after_pct\}/g, p2(r2(Number(t.pct) - Number(t.disc))))), el('p', 're73-ex', 'ينتهي العرض: ' + foDt(t.expires_at)));
@@ -1055,7 +1068,7 @@
       order.filter(visible).forEach(k => btn(w, LBL[k] || k, () => {
         if (k === 'obligations' || k === 'closing') { if (k === 'obligations') { S.data.obligations = []; S.data.obl_done = false; } S.data.close = null; S.data.close_done = false; S.scn = 'now'; } else if (k === 'support') { S.data.supported = null; S.data.supportType = null; S.data.etizaz = null; } else if (k === 'tr_sup') { S.data.tr_sup_done = false; S.data.tr_keep = false; } else if (k === 'phone') { S.data.phone_done = false; } else S.data[k] = null;
         if (k === 'sector' || k === 'mil_entity') S.data.etizaz = null; // r51: Etizaz is re-asked only if still eligible
-        if (k === 'appoint') S.data.excl_months = null; if (k === 'sector') { S.extend = null; } S.months = null; S.offers = {}; S.plans = {}; S.history = []; S.cut = null; ask(k);
+        if (k === 'appoint') S.data.excl_months = null; if (k === 'sector') { S.extend = null; } S.months = null; S.offers = {}; S.plans = {}; S.history = []; S.cut = null; if (MG && resEl) { resEl.remove(); resEl = null; } /* r84 */ ask(k);
       }, 're42-chip'));
       dock.append(w); scroll();
     }
@@ -1079,19 +1092,19 @@
     if (!(Q.name && Q.name.enabled !== false)) { bot(T.greeting || 'أهلًا بك'); next(); } else nameCard();
     function nameCard() {
       const NK = (() => { try { const e = ENT0 || (typeof finoCentralRestoreEntry === 'function' ? finoCentralRestoreEntry() : null); return e && e.entryToken ? 'f99re59n:' + PROD + ':' + String(e.entryToken).slice(-16) : ''; } catch (x) { return ''; } })();
-      { let sv0 = ''; try { sv0 = (NK && W.sessionStorage.getItem(NK)) || ''; } catch (x) {} if (MG && sv0.length >= 2) { S.data.name = sv0; bot(greetWord() + ' يا ' + first(S.data) + '، حياك الله.'); return whoFor(true); } } // r83: a saved name is never asked again
+      { let sv0 = ''; try { sv0 = (NK && ((MG && W.localStorage.getItem(NK)) || W.sessionStorage.getItem(NK))) || ''; } catch (x) {} if (MG && sv0.length >= 2) { S.data.name = sv0; bot(greetWord() + ' يا ' + first(S.data) + '، حياك الله.'); return whoFor(true); } } // r83: a saved name is never asked again
       const cd = el('section', 're59-name'); cd.append(el('div', 're59-eye', 'FINO99 • البداية'), el('h2', '', 'نتعرف عليك، وش اسمك الكريم؟'));
       const inn = el('input'); inn.type = 'text'; inn.placeholder = 'اسمك الكريم'; inn.maxLength = 40; inn.autocomplete = 'given-name'; inn.setAttribute('aria-label', 'اسم العميل'); inn.dir = 'rtl';
       try { const sv = NK && W.sessionStorage.getItem(NK); if (sv) inn.value = sv; } catch (x) {}
       const er = el('div', 're59-err'); er.setAttribute('role', 'status'); let done = false;
       const go = () => { if (done) return; const v = String(inn.value || '').replace(/[<>`]/g, '').replace(/\s+/g, ' ').trim().slice(0, 40); if (v.length < 2) { er.textContent = 'اكتب اسمك الكريم للمتابعة.'; inn.focus(); return; }
-        done = true; S.data.name = v; try { if (NK) W.sessionStorage.setItem(NK, v); } catch (x) {} cd.remove(); log.hidden = false; bot(greetWord() + ' يا ' + first(S.data) + '، حياك الله.'); next(); };
+        done = true; S.data.name = v; try { if (NK) W.sessionStorage.setItem(NK, v); } catch (x) {} try { if (NK && MG) W.localStorage.setItem(NK, v); } catch (x) {} /* r84 */ cd.remove(); log.hidden = false; bot(greetWord() + ' يا ' + first(S.data) + '، حياك الله.'); next(); };
       inn.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); go(); } });
       cd.append(inn, er); btn(cd, 'متابعة', go, 're42-go wide'); log.hidden = true; sh.body.prepend(cd); setTimeout(() => { try { inn.focus(); } catch (x) {} }, 60);
     }
     // r83: «احسب من جديد» — for yourself (saved data, editable) or for someone else (only their name, then the same questions); nothing is metered here
     function whoFor(open) {
-      choice('#تحسب لنفسك أو لشخص آخر؟', [{ label: 'لنفسي', value: 'me' }, { label: 'لشخص آخر', value: 'other' }], v => { S.custom = null; S.cut = null; S.offers = {}; S.plans = {}; S.entity = null; S.history = []; S.showRest = false;
+      choice('#تحسب لنفسك أو لشخص آخر؟', [{ label: 'لنفسي', value: 'me' }, { label: 'لشخص آخر', value: 'other' }], v => { if (resEl) { resEl.remove(); resEl = null; } /* r84 */ S.custom = null; S.cut = null; S.offers = {}; S.plans = {}; S.entity = null; S.history = []; S.showRest = false;
         if (v === 'other') return textIn('#وش اسم الشخص اللي تبي تحسب له؟', 'text', s0 => { const n = String(s0 || '').replace(/[<>`]/g, '').replace(/\s+/g, ' ').trim().slice(0, 40); if (n.length < 2) return 'اكتب اسمه للمتابعة.';
           if (S.who !== 'other') S.selfData = JSON.parse(JSON.stringify(S.data)); S.who = 'other'; S.data = { obligations: [], name: n }; S.months = null; S.extend = null; S.scn = 'now'; if (resEl) { resEl.remove(); resEl = null; } me(n); bot('حياك الله، بنحسب الحين لـ ' + n + '.'); next(); }, 'اسمه الكريم');
         if (S.who === 'other' && S.selfData) { S.data = JSON.parse(JSON.stringify(S.selfData)); S.months = null; S.extend = null; S.scn = 'now'; } S.who = 'me';
@@ -1370,7 +1383,7 @@
           { add: () => ({ id: 'mx' + Date.now().toString(36), bank: (BK[0] || [''])[0], sector: 'any', entity: '', property: 'ready', support: 'upfront', plan: 'fixed', term_min: 240, term_max: 240, active: false }), addLabel: 'إضافة صف للمصفوفة' });
         P.append(el('h4', '', 'نطاق كل مصرف')); P.append(el('p', 're42-muted', 'فارغ = بدون قيد. القيود تستبعد البنك من الحالات غير المشمولة ولا تغيّر نسبه.'));
         (Wc.banks || []).filter(b => !b.test).forEach(b => { const bx = el('div', 're42-row'); bx.append(el('b', '', b.name)); P.append(bx);
-          list(bx, [b], [{ k: 'properties', label: 'المنتجات المفعّلة', type: 'multi', options: (Wc.properties || []).map(p => [p.key, p.label]) }, { k: 'supports', label: 'الدعم', type: 'multi', options: SUP.filter(x => x[0] !== 'any' && x[0] !== 'etizaz') }, { k: 'entities', label: 'جهات العمل (فارغ = الكل)', type: 'csv' }, { k: 'min_salary', label: 'أقل راتب', type: 'num' }], { remove: false, reorder: false }); });
+          list(bx, [b], [{ k: 'properties', label: 'المنتجات المفعّلة', type: 'multi', options: (Wc.properties || []).map(p => [p.key, p.label]) }, { k: 'supports', label: 'الدعم', type: 'multi', options: SUP.filter(x => x[0] !== 'any' && x[0] !== 'etizaz') }, { k: 'sup_etizaz', label: 'يدعم اعتزاز', type: 'bool', def: true }, { k: 'sup_upfront', label: 'يدعم الدعم السكني المقدم', type: 'bool', def: true }, { k: 'sup_monthly', label: 'يدعم الدعم السكني الشهري', type: 'bool', def: true }, { k: 'entities', label: 'جهات العمل (فارغ = الكل)', type: 'csv' }, { k: 'min_salary', label: 'أقل راتب', type: 'num' }], { remove: false, reorder: false }); });
         P.append(el('h4', '', 'خيارات الدعم السكني')); P.append(el('p', 're42-muted', 'الدعم المقدم مفعّل. الدعم الشهري موجود ومعطّل للعملاء (يتطلب أيضًا تفعيله في «الدعم والعقارات»). الدعم العيني والبرامج الأخرى خيارات مستقبلية لا تظهر للعميل حتى تُعتمد نسبها وشروطها.'));
         list(P, Wc.support_options = Wc.support_options || [], [{ k: 'label', label: 'الخيار', type: 'text' }, { k: 'enabled', label: 'مفعّل للعملاء', type: 'bool' }, { k: 'note', label: 'ملاحظة', type: 'text' }], { remove: false, reorder: false });
         const MX = Wc.support_matrix = Wc.support_matrix || {}; P.append(el('h4', '', 'مرجع مصفوفة الدعم (غير مفعّل افتراضيًا)')); P.append(el('p', 're42-muted', MX.source || ''));

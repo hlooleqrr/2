@@ -322,9 +322,9 @@
     if (Array.isArray(bank.sectors) && bank.sectors.length && !bank.sectors.includes(inp.sector)) return Object.assign(res, { reason: 'SECTOR' });
     if (Array.isArray(bank.properties) && bank.properties.length && !bank.properties.includes(inp.property)) return Object.assign(res, { reason: 'PROPERTY' });
     if (num(bank.min_salary) > 0 && pr.pre < num(bank.min_salary)) return Object.assign(res, { reason: 'MIN_SALARY' });
-    if (Array.isArray(bank.supports) && bank.supports.length && !bank.supports.includes(supportKey(inp))) return Object.assign(res, { reason: 'SUPPORT' });
+    if (Array.isArray(bank.supports) && bank.supports.length && !bank.supports.includes(supportKey(inp))) return Object.assign(res, { reason: 'SUPPORT' }); { const sk4 = supportKey(inp); if ((sk4 === 'upfront' && bank.sup_upfront === false) || (sk4 === 'monthly' && bank.sup_monthly === false)) return Object.assign(res, { reason: 'SUPPORT' }); } // r84: owner per-bank switches (default on)
     if (Array.isArray(bank.entities) && bank.entities.length && !bank.entities.includes(inp.entity)) return Object.assign(res, { reason: 'ENTITY' });
-    { const ep0 = etizazPlan(inp, cfg), Z = cfg.etizaz || {}; if (ep0 && ((Array.isArray(Z.banks) && Z.banks.length && !Z.banks.includes(bank.id)) || (Array.isArray(Z.properties) && Z.properties.length && !Z.properties.includes(inp.property)))) return Object.assign(res, { reason: 'ETIZAZ_BANK' }); }
+    { const ep0 = etizazPlan(inp, cfg), Z = cfg.etizaz || {}; if (ep0 && (bank.sup_etizaz === false || (Array.isArray(Z.banks) && Z.banks.length && !Z.banks.includes(bank.id)) || (Array.isArray(Z.properties) && Z.properties.length && !Z.properties.includes(inp.property)))) return Object.assign(res, { reason: 'ETIZAZ_BANK' }); }
     const N = Math.min(opt.months, termCap(pr, cfg, opt.extend, bank)); res.months = N; res.termCut = N < opt.months;
     if (!(N >= 12)) return Object.assign(res, { reason: 'TERM' });
     { const FT = num(opt.fixedTerm); if (FT > 0 && N < FT) { const gc = termCap(pr, cfg, opt.extend, null); // r55: fixed package term — never shortened automatically
