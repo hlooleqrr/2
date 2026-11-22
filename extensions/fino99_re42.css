@@ -412,3 +412,14 @@ html.re42-lock{overflow:hidden}
 .re87-bx.tot small{font-size:14.5px;color:#065f46;font-weight:800}
 .re87-bx.tot b{color:#047857;font-size:24px}
 .re87-exp{margin:0;text-align:center;font-size:14px;font-weight:800;color:#8a5a00;background:#fff8e6;border:1px dashed #f0d9a6;border-radius:10px;padding:8px 10px}
+
+/* r88: follow-up amount line, discount row, green Etizaz box, clearer key amounts (mortgage only) */
+.re87-bx.one{flex-direction:row;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:4px 10px;padding:12px 14px}
+.re87-bx.one small{font-size:14px;color:#13315c;font-weight:800}
+.re87-bx.one b{font-size:21px}
+.re87-r.dv{background:#fff8eb}
+.re87-r.dv span{color:#8a5a00;font-weight:800}
+.re87-r.dv b{color:#b45309;font-size:18px}
+.re42-etz.re88-g{border:1.5px solid #86d3a8;background:#f0fbf5}
+.re42-etz.re88-g>b{color:#0f6b3d;font-size:17px}
+.re42-bot:not(.re54-tr) .re55-q .re42-kv b{font-size:19px}

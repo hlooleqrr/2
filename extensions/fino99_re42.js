@@ -171,7 +171,7 @@
     if (TRX) { const ob = (cfg.banks || []).find(b => b.id === d.tr_bank); info.push(['البنك الحالي', ob ? ob.name : 'جهة أخرى']); if (d.tr_left) info.push(['المتبقي على العقد', monthsTxt(d.tr_left)]); }
     text(tpl(T.duration_title || 'مدة التمويل لك يا {name}', DZ.name ? d : {}).replace(/\s+يا\s*$/, ''), 38, 700); text(X.months + ' شهرًا — ' + durTxt(X.months) + (X.extend ? ' — تمتد بعد التقاعد' : ''), 28, 400, '#334');
     text(X.plan === 'fixed' ? 'نوع القسط: ثابت' : (TRX ? 'نوع القسط: متزايد' + (list.some(b => b.rateSource === 'same_margin') ? ' (تقديري على هامش الثابت — غير معتمد من جهات التمويل)' : '') : 'نوع القسط: متغير'), 26, 400, '#334'); // r55
-    if (X.scn === 'closed') text('حسبة مشروطة بإقفال العقود المحددة بالكامل قبل التمويل', 22, 700, '#8a5a00');
+    if (X.scn === 'closed') { const n8 = (d.close || []).map(c => String((d.obligations[c.i] || {}).label || '')).filter(Boolean); text(!TRX ? (n8.length > 1 ? 'مشروطة بسداد العميل لهذه التمويلات: ' : 'مشروطة بسداد العميل لهذا التمويل: ') + n8.join('، ') : 'حسبة مشروطة بإقفال العقود المحددة بالكامل قبل التمويل', 22, 700, '#8a5a00'); } /* r88 */
     if (TRX && X.trScn === 'buy') text('سيناريو: تحويل العقاري مع شراء التمويل الشخصي (تمويل مستقل)', 22, 700, '#8a5a00');
     if (TRX && d.tr_keep) text('الدعم الشهري تقديري، واستمراره مشروط بموافقة الجهات المختصة', 22, 700, '#8a5a00'); gap(10);
     const OBL6 = TRX && CCI && C6.f.obligations ? ((d.obligations || []).length ? d.obligations.map((o, i) => r66obl(o, r66closed(d).has(i))) : ['لا توجد التزامات']) : []; const b6 = list[0]; const ST6 = TRX && CCI && C6.f.stages && b6 && b6.stages ? b6.stages.map(st => stLbl65(st) + ': ' + fmt2(st.raw != null ? st.raw : st.amount) + ' ريال') : [];
@@ -182,7 +182,10 @@
         else kvr(lb, fmt87(o.amount) + ' ريال — متبقي ' + monthsTxt(Number(o.months)), 22); if (Number(o.final) > 0) kvr('الدفعة الأخيرة — ' + String(o.label || ''), fmt(o.final) + ' ريال', 22, { bg: '#fbf7ee' }); }); });
     if (X.custom) card('#fff8e6', '#f0d9a6', () => { text(T.r65_custom_note || 'النسبة مدخلة من العميل وليست عرضًا موثقًا أو ترشيحًا من FINO99', 24, 800, '#8a5a00'); // r65: source of the client rate on the image
       text('مصدر النسبة: العميل — ' + X.custom.bankName + ' — ' + X.custom.rate + '% — ' + (X.custom.plan === 'step' ? 'القسط المتغير' : 'القسط الثابت'), 22, 400, '#5a4a20'); });
-    if (R && R.etizaz) { const ep = R.etizaz; card('#f3f8ff', '#c9dcf3', () => { text('قرض اعتزاز الحسن ' + fmt(ep.amount) + ' ريال', 30, 800, '#13315c');
+    if (R && R.etizaz && !TRX) { const ep = R.etizaz, g8 = { lc: '#24543a', vc: '#0f6b3d' }; card('#eefaf3', '#5fbf8a', () => { text('قرض اعتزاز الحسن', 26, 800, '#0f6b3d'); gap(4); /* r88 */
+      kvr('مبلغ قرض اعتزاز', fmt(ep.amount) + ' ريال', 22, g8); kvr('القسط الشهري', fmt2(ep.inst) + ' ريال', 22, g8); kvr('بداية السداد', 'من الشهر ' + Math.max(1, ep.firstPay), 22, g8);
+      kvr('فترة السداد', 'من الشهر ' + Math.max(1, ep.firstPay) + ' إلى ' + ep.lastPay + ' (' + ep.months + ' شهرًا)', 22, g8); if (ep.grace > 0) kvr('فترة السماح', monthsTxt(ep.grace), 22, g8); }); }
+    else if (R && R.etizaz) { const ep = R.etizaz; card('#f3f8ff', '#c9dcf3', () => { text('قرض اعتزاز الحسن ' + fmt(ep.amount) + ' ريال', 30, 800, '#13315c');
         pairs([['القسط الشهري', fmt2(ep.inst) + ' ريال'], ['فترة السماح', monthsTxt(ep.grace)], ['السداد', 'الشهر ' + Math.max(1, ep.firstPay) + ' – ' + ep.lastPay], ['مدة السداد', ep.months + ' شهرًا']], 23); }); }
     const ORDN = ['الترشيح الأول', 'الترشيح الثاني', 'الترشيح الثالث'];
     const bank87 = (b, i) => { const sa = b.sup || {}; const up = sa.upfrontCounted && sa.upfront > 0 ? sa.upfront : 0; const ez = b.etz ? b.etz.amount : 0; const nm = (DZ.bank_name ? b.name : 'جهة تمويلية ' + (i + 1)) + (b.test ? ' (اختبار)' : ''); /* r87 */
@@ -237,7 +240,7 @@
       x.textAlign = 'right'; const fy = panel1 + 20;
       if (QR) { try { const q = QR(0, 'M'); q.addData('https://www.fino99.com'); q.make(); const n = q.getModuleCount(), cs = Math.floor(160 / n), qs = cs * n, qx = M + 6, qy = fy + 10; x.fillStyle = '#ffffff'; x.fillRect(qx - 8, qy - 8, qs + 16, qs + 16); x.fillStyle = '#0b2545';
           for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) x.fillRect(qx + c * cs, qy + r * cs, cs, cs); } catch (e) {} }
-      if (WA87) { x.fillStyle = '#047857'; x.font = '800 30px ' + font; x.fillText('واتساب: ' + WA87, WD - M - 10, fy + (QR ? 52 : 42)); } const o87 = WA87 ? (QR ? 16 : 44) : 0; /* r87 */
+      if (WA87) { x.fillStyle = '#047857'; x.font = '800 30px ' + font; x.fillText(WA87, WD - M - 10, fy + (QR ? 52 : 42)); } const o87 = WA87 ? (QR ? 16 : 44) : 0; /* r87 */
       if (DZ.contact) { x.fillStyle = '#0b2545'; x.font = '700 32px ' + font; x.fillText('www.fino99.com', WD - M - 10, fy + (QR ? 84 : 46) + o87); x.font = '400 22px ' + font; x.fillStyle = '#556'; x.fillText('FINO99 | للحلول التمويلية الذكية', WD - M - 10, fy + (QR ? 122 : 76) + o87); }
       return cv; };
     let cv = paint(logo), url; try { url = cv.toDataURL('image/png'); } catch (e) { cv = paint(null); url = cv.toDataURL('image/png'); }
@@ -650,8 +653,8 @@
         rows.filter(r => r.m >= a && r.m <= b2).forEach(r => { const left = r.limit - r.ob; const ln = el('div', 're59-mr' + (left <= 0 ? ' bad' : '')); ln.dataset.m = r.m;
           [String(r.m) + (r.post ? ' (معاش)' : ''), fmt2(r.income), fmt2(r.ob), fmt2(r.limit) + (OWN ? ' (' + r.rate + '%)' : ''), left > 0 ? fmt2(left) : 'عجز ' + fmt2(-left)].forEach(t => ln.append(el('span', '', t))); dt.append(ln); });
         dt.append(el('p', 're42-muted', 'الدخل قبل التقاعد = راتبك الصافي، وبعده = المعاش التقديري. الالتزامات محسوبة حتى نهاية مدتها اللي أدخلتها. ما نفترض فترة سماح ولا قسطًا عقاريًا صفريًا في أي شهر.')); w.append(dt); }
-      if (d.obligations.length) { w.append(el('p', 're42-muted', 'تقدر تراجع التزاماتك وتصحح مدتها، أو تشوف حسبة افتراضية منفصلة لو سددت التزامًا مبكرًا (لا تعني أنه سُدد فعلًا).'));
-        const ac = el('div', 're42-actions re59-na'); btn(ac, 'مراجعة الالتزامات', reviewObl, 're42-go'); btn(ac, 'احسب لو سددت التزامًا مبكرًا', payoffSim); w.append(ac); }
+      if (d.obligations.length) { w.append(el('p', 're42-muted', 'حدد من التزاماتك المسجلة الالتزام اللي تقدر تسدده، ونعيد لك الترشيح على افتراض سداده — بدون حذفه من بياناتك وبدون إعادة إدخال التزاماتك. النتيجة مشروطة بسداده فعلًا.'));
+        const ac = el('div', 're42-actions re59-na'); btn(ac, 'حدد الالتزام اللي تقدر تسدده', payoffSim, 're42-go'); btn(ac, 'مراجعة الالتزامات', reviewObl); w.append(ac); } /* r88 */
       return w; }
     function reviewObl() { const d = S.data; const L = d.obligations; clearDock(); // r59: correct one obligation (months / amount / remove) and recalculate
       bot('التزاماتك المسجلة:\n' + L.map((o, i) => (i + 1) + ') ' + o.label + ' — ' + fmt(o.amount) + ' ريال شهريًا — ' + (o.type === 'card' ? 'مستمر' : 'متبقي ' + monthsTxt(o.months))).join('\n'));
@@ -663,9 +666,9 @@
           if (t === 'm') return textIn('#كم شهر متبقي فعليًا على «' + o.label + '»؟', 'int', x => { const m = parseInt(digits(x), 10); if (!(m >= 1 && m <= 600)) return 'أدخل عدد الأشهر (1 إلى 600)'; me(monthsTxt(m)); o.months = m; done(); }, 'عدد الأشهر المتبقية');
           textIn('#كم القسط الشهري الصحيح لـ«' + o.label + '»؟', 'money', x => { const a = money(x); if (!(a > 0 && a <= 500000)) return 'أدخل قيمة القسط الشهري'; me(fmt(a) + ' ريال'); o.amount = a; done(); }, 'قيمة القسط الشهري بالريال'); }); }); }
     function payoffSim() { const d = S.data; clearDock(); // r59: hypothetical early payoff → separate conditional scenario (same calculation, no extra count)
-      bot('اختر الالتزام اللي تبي نحسب لو سددته مبكرًا. هذي حسبة افتراضية منفصلة، ولا تعني أنه سُدد فعلًا. تقدر تختار أكثر من التزام.');
+      bot('هذي التزاماتك المسجلة. حدد الالتزام أو الالتزامات اللي تقدر تسددها، ونعيد الترشيح على افتراض سدادها. ما نحذفها من بياناتك، والنتيجة مشروطة بسدادها فعلًا وليست موافقة نهائية.'); /* r88 */
       const w = el('div', 're42-choices grid re55-multi'); const sel = new Set(); let fin = false; const born = Date.now();
-      const ok = btn(null, 'احسب السيناريو', () => { if (fin || !sel.size) return; fin = true; w.querySelectorAll('button').forEach(z => { z.disabled = true; }); ok.disabled = true; me([...sel].map(i => d.obligations[i].label).join('، '));
+      const ok = btn(null, 'أعد احتساب الترشيح', () => { if (fin || !sel.size) return; fin = true; w.querySelectorAll('button').forEach(z => { z.disabled = true; }); ok.disabled = true; me([...sel].map(i => d.obligations[i].label).join('، '));
         d.close = [...sel].map(i => ({ i, entity: '', payoff: 0 })); d.close_done = true; S.history.push(snapshot()); S.scn = 'closed'; S.offers = {}; S.plans = {}; S.cut = null; results(false); }, 're42-go wide'); ok.disabled = true;
       d.obligations.forEach((o, k) => { const b = btn(w, '', () => { if (fin || Date.now() - born < 400) return; if (sel.has(k)) sel.delete(k); else sel.add(k); b.classList.toggle('on', sel.has(k)); b.setAttribute('aria-pressed', sel.has(k) ? 'true' : 'false'); ok.disabled = !sel.size; }, 're42-chip'); b.setAttribute('aria-pressed', 'false'); b.append(el('span', '', (k + 1) + ') ' + o.label + ' — ' + fmt(o.amount) + ' ريال — ' + (o.type === 'card' ? 'مستمر' : monthsTxt(o.months)))); });
       const back = btn(null, 'رجوع', () => { if (fin) return; fin = true; clearDock(); results(false); }, 're42-skip'); dock.append(w, ok, back); scroll(); }
@@ -781,8 +784,9 @@
         if (S.data.tr_keep) { resEl.append(el('p', 're42-note', T.tr_sup_note || 'الدعم الشهري المعروض تقديري، واستمراره بعد النقل مشروط بموافقة الجهات المختصة والبنك الجديد، وليس ضمانًا أو اعتمادًا من الصندوق.'));
           if (OWN) resEl.append(el('p', 're42-trialnote', 'للمالك: محرك الدعم المتبقي محاكاة داخلية غير معتمدة رسميًا' + ((TRC.support_remain || {}).client_enabled === true ? '' : ' — معطّل للعملاء') + '.')); }
         if (R.results.some(b => b.rateSource === 'mortgage' || b.rateSource === 'mortgage_est')) resEl.append(el('p', 're42-muted', T.tr_rate_note || 'لا توجد نسب تحويل خاصة معتمدة بعد؛ استخدمنا نسبة التمويل العقاري المعتمدة لكل بنك، وقد تختلف نسبة التحويل الفعلية.')); }
-      if (CL().length) { const sg = el('div', 're42-seg re42-scn'); [['now', 'الوضع الحالي'], ['closed', 'بعد الإقفال (مشروط)']].forEach(([k, l]) => { const b = btn(sg, l, () => { if (S.scn === k) return; S.history.push(snapshot()); S.scn = k; S.offers = {}; S.plans = {}; S.cut = null; results(false); }); b.classList.toggle('on', S.scn === k); }); resEl.append(sg); // r51
+      if (CL().length) { const sg = el('div', 're42-seg re42-scn'); [['now', 'الوضع الحالي'], ['closed', MG ? 'بعد السداد (مشروط)' : 'بعد الإقفال (مشروط)']].forEach(([k, l]) => { const b = btn(sg, l, () => { if (S.scn === k) return; S.history.push(snapshot()); S.scn = k; S.offers = {}; S.plans = {}; S.cut = null; results(false); }); b.classList.toggle('on', S.scn === k); }); resEl.append(sg); // r51
         if (S.scn === 'closed') { const C = CL(); const po = C.reduce((t, c) => t + (Number(c.payoff) || 0), 0);
+          if (MG) { const n8 = C.map(c => ((S.data.obligations[c.i] || {}).label || '') + (c.entity ? ' — ' + c.entity : '')); resEl.append(el('p', 're42-cond', (C.length > 1 ? 'مشروطة بسداد العميل لهذه التمويلات: ' : 'مشروطة بسداد العميل لهذا التمويل: ') + n8.join('، ') + '. ليست موافقة نهائية، ولا يُعتبر مسددًا حتى يتم سداده فعلًا.' + (po > 0 ? ' مبلغ السداد المبكر المتوقع: ' + fmt(po) + ' ريال، تسدده قبل التمويل وليس جزءًا منه.' : ''))); } else /* r88 */
           resEl.append(el('p', 're42-cond', 'حسبة مشروطة بإقفال ' + (C.length === 1 ? 'العقد المحدد' : C.length + ' عقود') + ' بالكامل قبل التمويل العقاري (' + C.map(c => ((S.data.obligations[c.i] || {}).label || '') + (c.entity ? ' — ' + c.entity : '')).join('، ') + '). لا تُعتبر مقفلة حتى يتم الإقفال فعليًا' + (C.some(c => c.k) ? '، والنتيجة مشروطة بإثبات الإغلاق' : '') + '.' + (po > 0 ? ' مبلغ السداد المبكر المتوقع: ' + fmt(po) + ' ريال، تسدده قبل التمويل وليس جزءًا منه.' : ''))); } }
       if (MG && CL().length) { const db = diffBox(); if (db) resEl.append(db); } // r55
       if (MG && S.scn !== 'closed') { const oi = overInfo(); if (oi) { const lim = oi.net * oi.cp / 100; const dt = el('details', 're42-info re55-over'); dt.append(el('summary', '', 'تفاصيل الالتزامات المرتفعة'));
@@ -896,7 +900,7 @@
       return F.mode === 'fixed' ? Math.max(0, Number(F.fixed) || 0) : Math.round(base * Math.max(0, Number(F.pct == null || F.pct === '' ? 2.5 : F.pct))) / 100; }
     function sumRows(b) { const sa = b.sup || {}; const up = sa.upfrontCounted && sa.upfront > 0 ? sa.upfront : 0; const ez = b.etz ? b.etz.amount : 0; const blocked = S.data.supported && sa.key === 'upfront' && sa.upfront > 0 && !sa.upfrontCounted;
       if (!up && !ez && !blocked) return null; const w = el('div', 're42-sum');
-      if (MG) { w.append(kv('مبلغ التمويل العقاري من جهة التمويل', fmt(b.amount) + ' ريال')); if (ez) w.append(kv('+ قرض اعتزاز الحسن', fmt(ez) + ' ريال')); if (up) w.append(kv('+ الدعم السكني المقدم', fmt(up) + ' ريال')); else if (blocked) w.append(kv('الدعم السكني المقدم', 'غير مجموع مع اعتزاز')); if (up || ez) { const t = el('div', 're42-kv re42-tot'); t.append(el('span', '', '= إجمالي المبلغ المتاح لشراء العقار'), el('b', '', fmt(b.propertyValueR) + ' ريال')); w.append(t); } return w; } /* r84 */
+      if (MG) { w.append(kv('مبلغ التمويل العقاري من جهة التمويل', fmt(b.amount) + ' ريال')); if (ez) w.append(kv('+ قرض اعتزاز الحسن', fmt(ez) + ' ريال')); if (up) w.append(kv('+ الدعم السكني المقدم', fmt(up) + ' ريال')); else if (blocked) w.append(kv('الدعم السكني المقدم', 'غير مجموع مع اعتزاز')); return w; } /* r84 (r88: total shown once, in the card header) */
       if (up || ez) w.append(kv(MG && up ? 'تمويل البنك' : 'مبلغ التمويل العقاري من البنك', fmt(b.amount) + ' ريال'));
       if (up) w.append(kv(MG ? 'الدعم السكني المقدم' : '+ الدعم السكني المقدم', fmt(up) + ' ريال')); else if (blocked) w.append(kv('الدعم السكني المقدم', 'غير مجموع مع اعتزاز'));
       if (ez) w.append(kv('+ قرض اعتزاز الحسن', fmt(ez) + ' ريال'));
@@ -1011,11 +1015,10 @@
       const f = foFee(b, Object.assign({}, t, { granted: foOk() })); s2.body.append(el('p', 're42-note', f.G ? 'راجع أرقام حسبتك قبل التأكيد. الخصم على أتعاب المتابعة فقط، ولا يغيّر نسبة أرباح جهة التمويل.' : 'انتهت مدة عرض خصم المتابعة في ' + foDt(t.expires_at) + '، وتُحتسب أتعاب المتابعة بالنسبة الأصلية ' + p2(f.P) + '%.')); const g = el('div', 're87-fo');
       { const bx = (a, v, c) => { const z = el('div', 're87-bx' + (c ? ' ' + c : '')); z.append(el('small', '', a), el('b', '', v)); return z; }; /* r87: same values, clearer financial layout */
         const bk = el('div', 're87-bk'); bk.append(el('small', '', 'جهة التمويل'), el('b', '', b.name), el('span', '', PLN(b.plan) + ' — هامش الربح ' + pct(b.rate))); g.append(bk);
-        const two = el('div', 're87-2'); two.append(bx('مبلغ التمويل', fmt(f.amt) + ' ريال'), bx('إجمالي أساس احتساب الأتعاب', fmt(f.base) + ' ريال', 'base')); g.append(two);
-        g.append(el('p', 're87-up', 'الدعم المقدم المضاف إلى أساس الأتعاب: ' + (f.up ? fmt(f.up) + ' ريال' : 'لا يوجد')));
+        g.append(bx('مبلغ التمويل شامل الدعم المقدم إن وجد', fmt(f.base) + ' ريال', 'base one')); /* r88: one line (same base) */
         const rows = el('div', 're87-rows'); const rw = (a, v, c) => { const r = el('div', 're87-r' + (c ? ' ' + c : '')); r.append(el('span', '', a), el('b', '', v)); rows.append(r); };
-        rw('نسبة أتعاب المتابعة الأصلية', p2(f.P) + '%'); if (f.G) { rw('الأتعاب قبل الخصم', fmt2(f.orig) + ' ريال'); rw('الخصم الممنوح لك', p2(f.Z) + ' نقطة مئوية', 'dz'); rw('نسبة أتعاب المتابعة بعد الخصم', p2(f.A) + '%', 'ap'); } g.append(rows);
-        if (f.G) g.append(bx('قيمة الخصم', fmt2(f.disc) + ' ريال', 'disc')); g.append(bx(f.G ? 'إجمالي أتعاب المتابعة بعد الخصم' : 'إجمالي أتعاب المتابعة', fmt2(f.after) + ' ريال', 'tot'));
+        rw('نسبة أتعاب المتابعة الأصلية', p2(f.P) + '%'); if (f.G) { rw('الأتعاب قبل الخصم', fmt2(f.orig) + ' ريال'); rw('الخصم الممنوح لك', p2(f.Z) + ' نقطة مئوية', 'dz'); rw('قيمة الخصم', fmt2(f.disc) + ' ريال', 'dv'); rw('نسبة أتعاب المتابعة بعد الخصم', p2(f.A) + '%', 'ap'); } g.append(rows); /* r88: order */
+        g.append(bx(f.G ? 'إجمالي أتعاب المتابعة بعد الخصم' : 'إجمالي أتعاب المتابعة', fmt2(f.after) + ' ريال', 'tot'));
         if (f.G && !t.accepted) g.append(el('p', 're87-exp', 'ينتهي عرض الخصم: ' + foDt(t.expires_at))); }
       s2.body.append(g); if (F.tax_note) s2.body.append(el('p', 're42-note', F.tax_note));
       const ok = el('p', 're73-ok'); ok.hidden = true; ok.textContent = 'تم تجهيز رسالتك كاملة في واتساب. أرسلها لإكمال طلب المتابعة.';
@@ -1100,7 +1103,7 @@
       w.append(tb); return w;
     }
     function etzBox(R) { // r50: Etizaz qard hasan — its own line, never mixed with housing support or the bank principal
-      const ep = R.etizaz, b0 = R.results[0], ez = b0 && b0.etz; const w = el('div', 're42-etz'); w.append(el('b', '', 'قرض اعتزاز الحسن ' + fmt(ep.amount) + ' ريال'));
+      const ep = R.etizaz, b0 = R.results[0], ez = b0 && b0.etz; const w = el('div', 're42-etz' + (MG ? ' re88-g' : '')); w.append(el('b', '', 'قرض اعتزاز الحسن ' + fmt(ep.amount) + ' ريال'));
       w.append(kv('القسط الشهري', fmt2(ep.inst) + ' ريال' + (Math.abs(ep.last - ep.inst) >= 0.005 ? ' (الأخير ' + fmt2(ep.last) + ')' : '')), el('small', 're83-etzn', '*قسط اعتزاز تقديري، ويخضع المبلغ ومدة السداد للاعتماد النهائي وفق شروط المبادرة وجهة التمويل.'), kv('فترة السماح', monthsTxt(ep.grace)), kv('مدة السداد', ep.months + ' شهرًا (' + durTxt(ep.months) + ')'),
         kv('بداية ونهاية السداد', 'الشهر ' + Math.max(1, ep.firstPay) + ' – ' + ep.lastPay + (ez && ez.beyond ? ' (يمتد بعد نهاية التمويل)' : '')));
       if (ez && OWN) { if (ez.capBefore != null) w.append(kv('قدرتك الشهرية قبل بدء قسط اعتزاز', fmt2(ez.capBefore) + ' ريال')); if (ez.capDuring != null) w.append(kv('قدرتك أثناء سداد اعتزاز', fmt2(ez.capDuring) + ' ريال')); if (ez.capAfter != null) w.append(kv('قدرتك بعد انتهاء اعتزاز', fmt2(ez.capAfter) + ' ريال')); }
@@ -1152,13 +1155,13 @@
     if (!(Q.name && Q.name.enabled !== false)) { bot(T.greeting || 'أهلًا بك'); need85('ref', next); } else nameCard(); /* r85 */
     function nameCard() {
       const NK = (() => { try { const e = ENT0 || (typeof finoCentralRestoreEntry === 'function' ? finoCentralRestoreEntry() : null); return e && e.entryToken ? 'f99re59n:' + PROD + ':' + String(e.entryToken).slice(-16) : ''; } catch (x) { return ''; } })();
-      { let sv0 = ''; try { sv0 = (NK && ((MG && W.localStorage.getItem(NK)) || W.sessionStorage.getItem(NK))) || ''; } catch (x) {} if (MG && sv0.length >= 2) { S.data.name = sv0; bot(greetWord() + ' يا ' + first(S.data) + '، حياك الله.'); return need85('ref', () => whoFor(true)); } } /* r85 */ // r83: a saved name is never asked again
+      { let sv0 = ''; try { sv0 = (NK && ((MG && W.localStorage.getItem(NK)) || W.sessionStorage.getItem(NK))) || (MG && W.sessionStorage.getItem('f99re59n:last:' + PROD)) || ''; /* r88 */ } catch (x) {} if (MG && sv0.length >= 2) { S.data.name = sv0; bot(greetWord() + ' يا ' + first(S.data) + '، حياك الله.'); return need85('ref', () => whoFor(true)); } } /* r85 */ // r83: a saved name is never asked again
       const cd = el('section', 're59-name'); cd.append(el('div', 're59-eye', 'FINO99 • البداية'), el('h2', '', 'نتعرف عليك، وش اسمك الكريم؟'));
       const inn = el('input'); inn.type = 'text'; inn.placeholder = 'اسمك الكريم'; inn.maxLength = 40; inn.autocomplete = 'given-name'; inn.setAttribute('aria-label', 'اسم العميل'); inn.dir = 'rtl';
       try { const sv = NK && W.sessionStorage.getItem(NK); if (sv) inn.value = sv; } catch (x) {}
       const er = el('div', 're59-err'); er.setAttribute('role', 'status'); let done = false;
       const go = () => { if (done) return; const v = String(inn.value || '').replace(/[<>`]/g, '').replace(/\s+/g, ' ').trim().slice(0, 40); if (v.length < 2) { er.textContent = 'اكتب اسمك الكريم للمتابعة.'; inn.focus(); return; }
-        done = true; S.data.name = v; try { if (NK) W.sessionStorage.setItem(NK, v); } catch (x) {} try { if (NK && MG) W.localStorage.setItem(NK, v); } catch (x) {} /* r84 */ cd.remove(); log.hidden = false; bot(greetWord() + ' يا ' + first(S.data) + '، حياك الله.'); need85('ref', next); }; /* r85 */
+        done = true; S.data.name = v; try { if (NK) W.sessionStorage.setItem(NK, v); } catch (x) {} try { if (NK && MG) W.localStorage.setItem(NK, v); } catch (x) {} try { if (MG) W.sessionStorage.setItem('f99re59n:last:' + PROD, v); } catch (x) {} /* r84, r88 */ cd.remove(); log.hidden = false; bot(greetWord() + ' يا ' + first(S.data) + '، حياك الله.'); need85('ref', next); }; /* r85 */
       inn.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); go(); } });
       cd.append(inn, er); btn(cd, 'متابعة', go, 're42-go wide'); log.hidden = true; sh.body.prepend(cd); setTimeout(() => { try { inn.focus(); } catch (x) {} }, 60);
     }
