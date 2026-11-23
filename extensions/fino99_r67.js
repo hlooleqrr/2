@@ -234,7 +234,7 @@
   // r77: all checks used → marketing card inside the package window (below the last result). No renewal of the old code: a new code is bought.
   function endCard() { clear(); if (!ui) return; const b = (S && S.buy) || {}, nm = (S && (S.name || lastName())) || '';
     const c = el('div', 'r67-card r67-end'); c.append(el('h4', '', '🎉 تم الانتهاء من فحوصاتك' + (nm ? ' يا ' + nm : '') + '!'), el('p', '', 'خلصت فحوصات باقتك الثلاث.'), el('p', 'r67-end-q', 'تبي تفحص مرة ثانية؟'), el('p', '', 'اشتر كود جديد، وابدأ 3 فحوصات جديدة خلال 24 ساعة من أول تفعيل للكود، أيهما ينتهي أولًا.'));
-    const row = el('div', 'r67-row'); if (b.enabled !== false) { const a = el('a', 'r67-btn buy', 'اشتر كود جديد'); a.href = /^https:\/\//.test(b.url || '') ? b.url : 'https://salla.sa/HloolTamwilia/payment/p1508908354'; a.target = '_blank'; a.rel = 'noopener'; row.append(a); }
+    const row = el('div', 'r67-row'); if (b.enabled !== false) { const a = el('a', 'r67-btn buy', 'اشتر كود جديد'); a.href = /^https:\/\//.test(b.url || '') ? b.url : 'https://salla.sa/HloolTamwilia/payment/p1918382860'; a.target = '_blank'; a.rel = 'noopener'; row.append(a); }
     btn(row, 'تمام، خروج', exit); c.append(row); ui.body.append(c); down(); }
   function exhausted() { endCard(); if (S && S.results && S.results.length) { const r = el('div', 'r67-row'); btn(r, 'نتائجي السابقة', review); ui.dock.append(r); } }
   function expired(b) { if (ui) ui.q.hidden = true; msg(T.expired || 'انتهت صلاحية كودك'); S = S || { results: [] }; S.results = []; buyRow(b || (S && S.buy), true); }
