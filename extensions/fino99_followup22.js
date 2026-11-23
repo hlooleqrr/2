@@ -28,6 +28,11 @@
   // r39: the approved marketing card — congratulation first, then the offer; texts editable by the owner.
   define('congrats', 'عنوان التهنئة في بطاقة العرض', '🎉 مبروك يا {client}!', ['client']);
   define('congrats_lead', 'نص التهنئة (عند خلو نص العرض المعتمد)', 'حصلت على عرض خاص لمتابعة إجراءات تمويلك لدى الجهات التمويلية.');
+  // r96: the approved marketing layout (owner-editable labels; amounts always come from the server quote).
+  define('congrats_sub', 'سطر التهنئة تحت العنوان', 'عندك عرض خاص على أتعاب المتابعة');
+  define('before_label', 'عنوان الأتعاب قبل الخصم', 'قبل الخصم');
+  define('after_label', 'عنوان الأتعاب بعد الخصم', 'بعد الخصم');
+  define('send_retry', 'تعذر تجهيز رسالة المتابعة', 'تعذر تجهيز رسالة المتابعة الآن. اضغط «أرغب بذلك» مرة ثانية.', [], consentCategory);
   define('offer_days', 'مدة العرض', 'مدة العرض: {days} أيام من تاريخ ووقت إصدار هذه الحسبة', ['days']);
   define('offer_ends', 'تاريخ انتهاء العرض', 'ينتهي العرض: {expiry} (بتوقيت الرياض)', ['expiry']);
   define('offer_expired', 'انتهاء مدة العرض', 'انتهت مدة هذا العرض لهذه الحسبة.', [], consentCategory);
@@ -109,11 +114,11 @@
   // r34 §3: the fee card is a front dialog (never a faded line at the bottom); the invitation sits under the result.
   function slot(cls = 'f49-card f49-completion-request', mode = 'front') {
     clear(); host = el('section', undefined, cls); host.dataset.f99Followup22 = '1';
-    if (mode === 'front') { front = el('div', undefined, 'f34-front'); front.id = 'f34FeeFront'; host.setAttribute('role', 'dialog'); host.setAttribute('aria-modal', 'true'); host.tabIndex = -1; front.append(host); (chat() || document.body).append(front); setTimeout(() => { try { host?.focus({ preventScroll: true }); } catch (_) {} }, 0); }
+    if (mode === 'front') { front = el('div', undefined, 'f34-front'); front.id = 'f34FeeFront'; host.setAttribute('role', 'dialog'); host.setAttribute('aria-modal', 'true'); host.tabIndex = -1; front.append(host); document.body.append(front); /* r96: page level, above the chat layer and the install tip */ setTimeout(() => { try { host?.focus({ preventScroll: true }); } catch (_) {} }, 0); }
     else { host.id = 'f41-offer'; const menus = chat()?.querySelectorAll('.f25-menu'); const m = menus && menus[menus.length - 1]; if (m) m.before(host); else chat()?.append(host); }
     return host;
   }
-  function status(text) { if (!host) return; let p = host.querySelector('[data-f22-status]'); if (!p) { p = el('p'); p.dataset.f22Status = '1'; p.setAttribute('role', 'status'); host.append(p); } p.textContent = text; }
+  function status(text) { if (!host) return; let p = host.querySelector('[data-f22-status]'); if (!p) { p = el('p'); p.dataset.f22Status = '1'; p.setAttribute('role', 'status'); const a = host.querySelector('.f39-actions'); if (a) a.after(p); else host.append(p); } p.textContent = text; }
   async function rpc(fn, args) { const r = await w.finoRpc(fn, args, 20000); if (!r?.ok || r.data?.ok !== true) throw Error(r?.data?.reason || 'FOLLOWUP_UNAVAILABLE'); return r.data; }
   function args() { const e = entry(); if (!e?.entryToken || !e.deviceId) throw Error('ENTRY_REQUIRED'); return { p_entry_token: e.entryToken, p_device_id: e.deviceId }; }
   async function allowed() {
@@ -141,26 +146,49 @@
   function offerEnd(q) { const end = issuedAt() + OFFER_DAYS * 86400000, server = q?.valid_until ? Date.parse(q.valid_until) : NaN; return Number.isFinite(server) ? Math.min(server, end) : end; }
   const fmtDate = t => new Intl.DateTimeFormat('ar-SA', { timeZone: 'Asia/Riyadh', dateStyle: 'medium', timeStyle: 'short' }).format(new Date(t));
   function expiry(q) { return fmtDate(offerEnd(q)); }
+  // r96: the offer data of the approved result is prepared silently (same existing server checks: bank intent,
+  // eligibility, entry-bound quote). Nothing is shown while preparing; if it is not available the window is
+  // simply not shown and the customer's chosen action continues (no «جاري تجهيز…» / «ما قدرت…» in this window).
+  let prep = null, inflight = null, gateIsExit = false;
+  const PREP_TTL = 15 * 60000;
+  function fetchOffer(i) {
+    const r = rows()[i]; if (!active() || !r) return Promise.resolve(null);
+    const id = session(), sig = snapshot(r);
+    if (prep && prep.sig === sig && prep.id === id && prep.index === i && !prep.failed && (!prep.data || Date.now() - prep.at < PREP_TTL)) return prep.promise;
+    const me = { sig, id, index: i, at: Date.now(), data: null, failed: false };
+    me.promise = (async () => {
+      try {
+        const want = await bank().api.want({ finance_type: 'personal', bank_id: r.key });
+        bank().assertIdentity(id);
+        if (want?.ok !== true || !await allowed()) return null;
+        const q = await quote(r), raw = await w.finoRpc('f99v25_public_completion_offers', {}, 20000);
+        bank().assertIdentity(id);
+        bank().requireBinding(q.bank_followup, { finance_type: 'personal', bank_id: r.key });
+        if (q.bank_followup.intent_id !== want.bank_followup.intent_id || sig !== snapshot(rows()[i])) return null;
+        const n = Number(q.new_price); if (!Number.isFinite(n) || n < 0) return null;
+        me.data = { q, offer: raw?.data?.data?.packages?.[packageKey()] || {} }; me.at = Date.now(); return me.data;
+      } catch (_) { return null; }
+      finally { if (!me.data) me.failed = true; }
+    })();
+    prep = me; return me.promise;
+  }
+  const within = (p, ms) => Promise.race([p, new Promise(z => setTimeout(() => z(null), ms))]);
+  // opts.then = the customer's chosen action, continued after the window is closed; opts.exit = exit path.
   async function invitation(i = selected(), opts = {}) {
     if (!active() || postponed.has(session())) return false;
-    if (!opts.front && host?.isConnected && displayed === snapshot(rows()[i])) return true;
-    if (host?.isConnected) clear();
-    const id = session();
-    try {
-      if (!await allowed()) return false;
-      bank().assertIdentity(id); if (!active() || postponed.has(id)) return false;
-      const direct = !!rows()[i];
-      const h = slot(direct ? 'f49-card f49-completion-request f39-fee' : 'f41-offer f34-invite', direct || opts.front ? 'front' : 'inline');
-      displayed = snapshot(rows()[i]);
-      if (!rows()[i]) {
-        h.append(el('p', T('pick'))); const a = el('div', undefined, 'f49-actions'); h.append(a);
-        rows().forEach((r, n) => button(a, T('pick_result', { entity: r.name, installment: fmt(r.installment) }), () => { clear(); invitation(n); }));
-        button(a, T('postpone'), cancel); return true;
-      }
-      // r39: the approved card itself is shown first (owner order), with «أرغب بذلك» and «ليس الآن».
-      h.append(el('p', T('loading'), 'f39-loading')); const a = el('div', undefined, 'f39-actions'); h.append(a); button(a, T('postpone'), cancel).className = 'f39-later';
-      responded.add(calcKey()); issuedAt(); await openCard(Number(i)); return true;
-    } catch (_) { return false; }
+    if (host?.isConnected || front?.isConnected) return true; // r96: one window only, never duplicated
+    if (inflight) return inflight;
+    if (!rows()[i]) i = 0; i = Number(i); if (!rows()[i]) return false;
+    inflight = (async () => {
+      try {
+        const d = await within(fetchOffer(i), 8000);
+        if (!d || !active() || postponed.has(session()) || host?.isConnected || !rows()[i]) return false;
+        if (typeof opts.then === 'function') gateNext = opts.then;
+        gateIsExit = opts.exit === true;
+        render(rows()[i], d.q, d.offer, i, session()); responded.add(calcKey()); return true;
+      } catch (_) { return false; }
+    })();
+    try { return await inflight; } finally { inflight = null; }
   }
   function others(h, i) {
     if (!h) return; const a = el('div', undefined, 'f49-actions'); h.append(a);
@@ -172,7 +200,8 @@
   function cancel() {
     const wasActive = active(); responded.add(calcKey()); clear(); bank()?.clearPreviews();
     if (typeof w.__F99R25FollowupDone === 'function') { if (session()) postponed.add(session()); gateNext = null; return w.__F99R25FollowupDone(); }
-    if (wasActive && typeof w.portalAssistant === 'function') w.portalAssistant('<div class="portal-note">' + escH(T('continue', { client: who() })) + '</div>');
+    const exit = gateIsExit; gateIsExit = false;
+    if (wasActive && !exit && typeof w.portalAssistant === 'function') w.portalAssistant('<div class="portal-note">' + escH(T('continue', { client: who() })) + '</div>');
     const g = gateNext; gateNext = null; if (typeof g === 'function') return g();
   }
   function addText(parent, key, vars, tag = 'p', cls) { if (shown(key)) parent.append(el(tag, T(key, vars), cls)); }
@@ -190,33 +219,35 @@
     const discounted = q.discount_active === true && Number.isFinite(old) && old > current;
     pending = { index, key: r.key, quote: q, snapshot: snapshot(r), session: id, offer };
     displayed = pending.snapshot;
-    const [head, lead] = congrats(offer);
+    // r96 layout: congratulation → struck «before» fee → big «after» fee → saving + approved % → 5 days → 2 buttons.
+    const [head] = congrats(offer);
+    h.classList.add('f96-fee'); h.setAttribute('aria-label', T('congrats_sub'));
     const hero = el('div', undefined, 'f39-hero'); h.append(hero);
-    hero.append(el('div', head, 'f39-congrats'), el('p', lead, 'f39-lead'));
+    hero.append(el('div', head, 'f39-congrats'), el('p', T('congrats_sub'), 'f39-lead'));
     if (shown('entity')) hero.append(el('p', 'الجهة المرشحة: ' + r.name, 'f39-entity'));
     const box = el('div', undefined, 'f39-price'); hero.append(box);
-    if (discounted && shown('previous')) { const was = el('p', undefined, 'f39-was'); was.append(document.createTextNode('السعر السابق: '), el('s', fmt(old) + ' ريال')); box.append(was); }
-    box.append(el('small', discounted ? 'أتعاب المتابعة بعد الخصم' : 'أتعاب المتابعة', 'f39-label'), el('div', fmt(current) + ' ريال', 'f39-now'));
+    if (discounted && shown('previous')) { const was = el('div', undefined, 'f39-was'); was.append(el('small', T('before_label'), 'f96-cap'), el('s', fmt(old) + ' ريال', 'f96-old')); box.append(was); }
+    box.append(el('small', discounted ? T('after_label') : 'أتعاب المتابعة', 'f39-label'), el('div', fmt(current) + ' ريال', 'f39-now'));
     if (discounted) {
       // r25: the saving shown is exactly the difference between the two approved prices.
       const saving = Math.round((old - current) * 100) / 100;
       if (q.discount_amount != null && Math.abs(Number(q.discount_amount) - saving) > 0.005) console.warn('FINO99 fee: discount_amount differs from price difference');
-      const parts = []; if (shown('saving')) parts.push(T('saving', { amount: fmt(saving) }));
-      if (shown('discount') && q.discount_percent != null && Number.isFinite(Number(q.discount_percent))) parts.push(T('discount', { percent: fmt(q.discount_percent) }));
-      if (parts.length) box.append(el('div', parts.join(' • '), 'f39-save'));
+      const chips = el('div', undefined, 'f96-chips');
+      if (shown('saving')) chips.append(el('span', T('saving', { amount: fmt(saving) }), 'f39-save'));
+      if (shown('discount') && q.discount_percent != null && Number.isFinite(Number(q.discount_percent))) chips.append(el('span', T('discount', { percent: fmt(q.discount_percent) }), 'f96-pct'));
+      if (chips.childNodes.length) box.append(chips);
     }
     const end = offerEnd(q), expired = Date.now() >= end, tm = el('div', undefined, 'f39-time'); h.append(tm);
     tm.append(el('b', '⏳ ' + T('offer_days', { days: OFFER_DAYS })), el('small', expired ? T('offer_expired') : T('offer_ends', { expiry: fmtDate(end) })));
     const actions = el('div', undefined, 'f39-actions'); h.append(actions);
     const yes = button(actions, T('consent'), send); yes.className = 'f39-yes'; yes.disabled = expired;
-    if (rows().length > 1) button(actions, T('other_bank'), () => pickOther(index)).className = 'f39-alt';
-    button(actions, T('postpone'), cancel).className = 'f39-later';
+    // r96: «ليس الآن» closes the window only, then the chosen action continues (no request, no charge).
+    const later = button(actions, T('postpone'), () => { if (later.dataset.f96Done) return; later.dataset.f96Done = '1'; cancel(); }); later.className = 'f39-later';
     const legal = el('div', undefined, 'f39-legal'); h.append(legal);
     const terms = legalText(offer?.terms || offer?.validTerms || offer?.disclaimer) || 'الحسبة مبدئية، والنتيجة النهائية وشروطها لدى الجهة التمويلية.';
     addText(legal, 'terms', { terms }, 'p');
     if (offer?.show_documents && offer.documents?.length) addText(legal, 'terms', { terms: offer.documents.join('\n') }, 'pre');
     addText(legal, 'service_note', {}, 'p', 'f34-service');
-    if (prev && (Number(prev.new_price) !== current || Number(prev.old_price) !== old)) status(T('updated'));
     try { h.scrollTop = 0; } catch (_) {}
   }
   // r34 §4: only the entities the calculator actually recommended; a new quote, no new calculation or charge.
@@ -227,21 +258,12 @@
     rows().forEach((r, n) => { if (n !== Number(i)) button(a, T('pick_result', { entity: r.name, installment: fmt(r.installment) }), () => { busy = false; openCard(n, prev); }); });
     a.querySelector('button')?.focus({ preventScroll: true });
   }
-  async function openCard(i, prev) {
-    if (!active() || !rows()[i]) return;
-    if (!host?.isConnected) slot(); // dedicated front slot for status/apology, never a result card
-    const id = session(), r = rows()[i], generation = epoch, sig = snapshot(r);
-    try {
-      const want = await bank().api.want({ finance_type: 'personal', bank_id: r.key });
-      if (generation !== epoch) return; bank().assertIdentity(id);
-      if (want?.reason === 'BANK_FOLLOWUP_PAUSED') { bank().showApology(host); others(host, i); busy = false; return; }
-      if (want?.ok !== true || !await allowed()) throw Error('FOLLOWUP_UNAVAILABLE');
-      const q = await quote(r), raw = await w.finoRpc('f99v25_public_completion_offers', {}, 20000);
-      if (generation !== epoch) return; bank().assertIdentity(id);
-      bank().requireBinding(q.bank_followup, { finance_type: 'personal', bank_id: r.key });
-      if (q.bank_followup.intent_id !== want.bank_followup.intent_id || sig !== snapshot(rows()[i])) throw Error('RESULT_CHANGED');
-      render(rows()[i], q, raw?.data?.data?.packages?.[packageKey()] || {}, i, id, prev);
-    } catch (_) { if (generation === epoch) { busy = false; status(T('unavailable')); } }
+  // r96: opens the card only from prepared data; never a loading/failure card.
+  async function openCard(i) {
+    i = Number(i); if (!active() || !rows()[i]) return false;
+    const d = await within(fetchOffer(i), 8000);
+    if (!d || !active() || !rows()[i]) return false;
+    busy = false; render(rows()[i], d.q, d.offer, i, session()); return true;
   }
   function message(r, q) {
     // Call the ORIGINAL full-detail builder only after the actual consent button.
@@ -256,7 +278,7 @@
   }
   async function send() {
     const p = pending; if (!p || busy || !active()) return;
-    busy = true; const generation = epoch;
+    busy = true; const generation = epoch, yesBtn = host?.querySelector('.f39-yes'); if (yesBtn) yesBtn.disabled = true;
     const r = rows()[p.index];
     try {
       bank().assertIdentity(p.session);
@@ -278,9 +300,9 @@
       if (!/^9665\d{8}$/.test(q.whatsapp) || (q.valid_until && Date.now() >= Date.parse(q.valid_until))) throw Error('QUOTE_INVALID');
       const msg = message(rows()[p.index], q);
       w.open('https://wa.me/' + q.whatsapp + '?text=' + encodeURIComponent(msg), '_blank', 'noopener,noreferrer');
-      status(T('prepared'));
-    } catch (e) { if (generation === epoch) { if (bank().paused(e)) { pending = null; bank().showApology(host); others(host, p.index); } else status(T('unavailable')); } }
-    finally { if (generation === epoch) busy = false; }
+      status(T('prepared')); const lt = host?.querySelector('.f39-later'); if (lt) lt.textContent = T('close');
+    } catch (e) { if (generation === epoch) { if (bank().paused(e)) { pending = null; bank().showApology(host); others(host, p.index); } else status(T('send_retry')); } }
+    finally { if (generation === epoch) { busy = false; const b = host?.querySelector('.f39-yes'); if (b && pending) b.disabled = Date.now() >= offerEnd(pending.quote); } }
   }
   const originalOwner = w.F99V41CompletionOwner;
   if (typeof originalOwner === 'function') w.F99V41CompletionOwner = async function (...args) {
@@ -294,20 +316,26 @@
   // r34 §3/§8: automatic invitation under each eligible result (once per calculation), and before a new
   // calculation the due offer is shown first. Owner control: «توقيت ظهور الأتعاب» + show_completion + texts.
   const featureOn = () => w.F99V38FeatureAllowed?.('show_completion') === true;
+  // r96: never shown automatically over a result (first, middle or last). After a result we only stamp the
+  // issue time (5-day window) and prepare the offer data silently; the window appears on «حسبة جديدة» or exit.
   function autoInvite() {
     installGate(); if (!active() || !rows().length || !featureOn() || host?.isConnected || front?.isConnected) return;
-    if (!chat()?.querySelector('.f25-menu')) return; const k = calcKey(); if (!k || invitedKey === k || responded.has(k)) return;
-    invitedKey = k; issuedAt(); setTimeout(() => { if (calcKey() === k && active() && !host?.isConnected && !front?.isConnected) void invitation(selected()); }, 1400);
+    if (!chat()?.querySelector('.f25-menu')) return; const k = calcKey(); if (!k || invitedKey === k) return;
+    invitedKey = k; issuedAt(); setTimeout(() => { if (calcKey() === k && active()) void fetchOffer(rows()[selected()] ? selected() : 0); }, 1400);
   }
+  let gateWait = null;
   function installGate() {
     if (gateInstalled || typeof w.F99V82RequestNewCalculation !== 'function') return; gateInstalled = true;
     const original = w.F99V82RequestNewCalculation;
     w.F99V82RequestNewCalculation = function (...a) {
       const self = this, go = () => { calcSeq++; return original.apply(self, a); }, k = calcKey();
+      if (gateWait) return gateWait; // r96: a repeated tap while the offer opens does not start twice
       if (!gateNext && active() && rows().length && featureOn() && k && !responded.has(k)) {
         gateNext = go;
-        return invitation(selected(), { front: true }).then(ok => { if (!ok && gateNext === go) { gateNext = null; return go(); } return ok; },
-          () => { if (gateNext === go) { gateNext = null; return go(); } });
+        gateIsExit = false;
+        gateWait = invitation(selected(), { front: true }).then(ok => { if (!ok && gateNext === go) { gateNext = null; return go(); } return ok; },
+          () => { if (gateNext === go) { gateNext = null; return go(); } }).finally(() => { gateWait = null; });
+        return gateWait;
       }
       return go();
     };
@@ -345,6 +373,35 @@
       + '#f34FeeFront .f39-fee .f34-others{margin:12px 16px 0}#f34FeeFront .f39-fee .f49-actions{display:flex;flex-direction:column;gap:8px}'
       + '@media (max-width:440px){#f34FeeFront{padding:6px}#f34FeeFront>section.f39-fee{max-height:calc(100vh - 12px);max-height:calc(100dvh - 12px);border-radius:18px}#f34FeeFront .f39-hero{padding:12px 12px 10px;border-radius:17px 17px 0 0}#f34FeeFront .f39-congrats{font-size:20px;line-height:1.35}#f34FeeFront .f39-lead{margin-top:3px;font-size:14px;line-height:1.55}#f34FeeFront .f39-entity{margin-top:4px;font-size:13px;line-height:1.5}#f34FeeFront .f39-price{margin-top:8px;padding:7px 10px 8px;border-radius:14px}#f34FeeFront .f39-was{margin:0;font-size:13px;line-height:1.5}#f34FeeFront .f39-label{font-size:12.5px;line-height:1.5}#f34FeeFront .f39-now{font-size:30px;line-height:1.2}#f34FeeFront .f39-save{margin-top:5px;padding:3px 10px;font-size:13px;line-height:1.5}#f34FeeFront .f39-time{margin:8px 12px 0;padding:6px 10px;gap:0;border-radius:12px}#f34FeeFront .f39-time b{font-size:13.5px;line-height:1.5}#f34FeeFront .f39-time small{font-size:12px;line-height:1.5}#f34FeeFront .f39-actions{gap:6px;margin:8px 12px 0}#f34FeeFront .f39-actions button{min-height:44px;font-size:14.5px;border-radius:12px}#f34FeeFront .f39-yes{font-size:17px!important;min-height:48px!important}#f34FeeFront .f39-legal{margin:8px 12px 0;padding:6px 2px 8px}#f34FeeFront .f39-legal p,#f34FeeFront .f39-legal pre{margin:2px 0;font-size:12px;line-height:1.55}#f34FeeFront .f39-fee [data-f22-status]{margin:0 12px 10px}#f34FeeFront .f39-fee .f34-others{margin:8px 12px 0}}'; // r57: phone-only sizing of the fee card (no text/colour/order change)
     document.head.append(st);
+    // r96: approved marketing layout of the fee window only (FINO99 navy/gold identity; no page redesign).
+    const s96 = el('style'); s96.id = 'f96-fee-window-css';
+    s96.textContent = '#f34FeeFront{z-index:2147483600;padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));overflow:hidden;overscroll-behavior:contain}'
+      + '#f34FeeFront>section.f96-fee{box-sizing:border-box;width:100%;max-width:420px;max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain}'
+      + '#f34FeeFront .f96-fee *{box-sizing:border-box;max-width:100%;overflow-wrap:anywhere}'
+      + '#f34FeeFront .f96-fee .f39-hero{padding:18px 16px 16px}'
+      + '#f34FeeFront .f96-fee .f39-congrats{font-size:clamp(20px,5.8vw,26px);line-height:1.4}'
+      + '#f34FeeFront .f96-fee .f39-lead{margin:4px auto 0;font-size:clamp(15px,4.3vw,17px);line-height:1.6;color:#fff;font-weight:800}'
+      + '#f34FeeFront .f96-fee .f39-entity{margin:4px auto 0;font-size:13px;line-height:1.5}'
+      + '#f34FeeFront .f96-fee .f39-price{margin:12px auto 0;padding:12px 10px;max-width:340px}'
+      + '#f34FeeFront .f96-fee .f39-was{display:flex;align-items:baseline;justify-content:center;gap:8px;flex-wrap:wrap;margin:0 0 4px}'
+      + '#f34FeeFront .f96-cap{font-size:13px;color:#c9d9ea;font-weight:700}'
+      + '#f34FeeFront .f96-fee s.f96-old{font-size:clamp(18px,5.2vw,22px);font-weight:800;color:#ffc9c9;text-decoration:line-through;text-decoration-color:#ff5c5c;text-decoration-thickness:3px;white-space:nowrap;overflow-wrap:normal}'
+      + '#f34FeeFront .f96-fee .f39-label{font-size:13px;color:#f6d77a;font-weight:800}'
+      + '#f34FeeFront .f96-fee .f39-now{font-size:clamp(34px,10.5vw,46px);color:#fff;white-space:nowrap;overflow-wrap:normal;line-height:1.2;text-shadow:0 2px 12px rgba(246,215,122,.3)}'
+      + '#f34FeeFront .f96-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:8px}'
+      + '#f34FeeFront .f96-chips .f39-save{margin:0;padding:5px 12px;font-size:14px;line-height:1.5}'
+      + '#f34FeeFront .f96-pct{display:inline-block;background:#f6d77a;color:#3a2a00;border-radius:999px;padding:5px 12px;font-size:14px;font-weight:900;line-height:1.5}'
+      + '#f34FeeFront .f96-fee .f39-time{margin:12px 14px 0;padding:9px 10px;gap:2px}'
+      + '#f34FeeFront .f96-fee .f39-time b{font-size:14px;line-height:1.6}#f34FeeFront .f96-fee .f39-time small{font-size:12.5px;line-height:1.6}'
+      + '#f34FeeFront .f96-fee .f39-actions{margin:12px 14px 0;gap:8px}'
+      + '#f34FeeFront .f96-fee .f39-yes{min-height:54px!important;font-size:18px!important}'
+      + '#f34FeeFront .f96-fee .f39-later{min-height:44px;background:transparent;border:1px solid #dbe4ec;color:#40576b}'
+      + '#f34FeeFront .f96-fee [data-f22-status]{margin:8px 14px 0;font-size:13px;line-height:1.6;color:#06603a;font-weight:800;text-align:center}'
+      + '#f34FeeFront .f96-fee .f39-legal{margin:10px 14px 0;padding:8px 2px 12px}'
+      + '#f34FeeFront .f96-fee .f39-legal p,#f34FeeFront .f96-fee .f39-legal pre{font-size:11.5px;line-height:1.6;margin:2px 0}'
+      + '@media (max-width:440px){#f34FeeFront>section.f96-fee{border-radius:18px}#f34FeeFront .f96-fee .f39-hero{padding:14px 12px 12px}#f34FeeFront .f96-fee .f39-price{margin-top:10px;padding:10px 8px}#f34FeeFront .f96-fee .f39-time{margin:10px 12px 0;padding:7px 9px}#f34FeeFront .f96-fee .f39-actions{margin:10px 12px 0;gap:7px}#f34FeeFront .f96-fee .f39-yes{min-height:50px!important;font-size:17px!important}#f34FeeFront .f96-fee .f39-legal{margin:8px 12px 0;padding:6px 2px 10px}#f34FeeFront .f96-fee [data-f22-status]{margin:8px 12px 0}}'
+      + '@media (max-height:620px){#f34FeeFront .f96-fee .f39-hero{padding:10px 12px 10px}#f34FeeFront .f96-fee .f39-congrats{font-size:19px}#f34FeeFront .f96-fee .f39-now{font-size:32px}#f34FeeFront .f96-fee .f39-price{margin-top:8px;padding:8px}#f34FeeFront .f96-fee .f39-time{margin-top:8px}#f34FeeFront .f96-fee .f39-actions{margin-top:8px}#f34FeeFront .f96-fee .f39-yes{min-height:46px!important}#f34FeeFront .f96-fee .f39-later{min-height:40px}}';
+    document.head.append(s96);
   })();
   // r34 §5 owner editor: «تسعيرة أتعاب المتابعة» inside each bank's settings. Server validates and resolves.
   const feeReason = { NOT_SET: 'لا توجد تسعيرة خاصة لهذا البنك؛ تُعتمد تسعيرة الأتعاب العامة للباقة.', DISABLED: 'التسعيرة الخاصة معطلة؛ تُعتمد تسعيرة الأتعاب العامة للباقة.',

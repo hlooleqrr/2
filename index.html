@@ -23299,9 +23299,9 @@ async function f80FeeAllowed(){
   return Number(r.data.max_calculations)>0&&Number(r.data.calculations_remaining)===0;
  }catch{return false}
 }
-async function offerPicker(source){const st=await status(true);if(!capOfferReady(st)||!results().length||!(await f80FeeAllowed()))return false;
+async function offerPicker(source,then){const st=await status(true);if(!capOfferReady(st)||!results().length||!(await f80FeeAllowed()))return false;
  lastTrigger=source;
- if(window.F99Followup22)return window.F99Followup22.invitation();
+ if(window.F99Followup22)return window.F99Followup22.invitation(undefined,typeof then==='function'?{then,exit:source==='exit'}:{});
  say(`<div class="f41-offer"><b>يا ${esc(who())}، عندك عرض لمتابعة إجراءات تمويلك</b><p>تقدر تشوف أتعاب المتابعة والخصم الساري على الجهة اللي اخترتها بعد الانتهاء من مراجعة الحسبة.</p>${choices([['تفاصيل عرض المتابعة','F99V82OpenOffer()'],['ليس الآن','F99V41LeaveOrStay()'],...(source==='exit'?[['الخروج الآن','F99V41LeaveNow()']]:[])])}<small>العرض اختياري، والحسبة مبدئية وتخضع لشروط الجهة الممولة.</small></div>`);
  return true;
 }
@@ -23318,7 +23318,7 @@ window.F99V41LeaveOrStay=()=>{lastTrigger='';info('على راحتك يا '+who(
 const previousBack=window.FINOPortalBack;
 window.F99V41LeaveNow=()=>{lastTrigger='';if(typeof previousBack==='function')previousBack()};
 if(typeof previousBack==='function')window.FINOPortalBack=async function(...args){if(!active()||busy)return previousBack.apply(this,args);
- busy=true;try{const shown=await offerPicker('exit');if(!shown)return previousBack.apply(this,args);return}
+ busy=true;try{const shown=await offerPicker('exit',()=>previousBack.apply(this,args));if(!shown)return previousBack.apply(this,args);return}
  catch{return previousBack.apply(this,args)}finally{busy=false}};
 const previousRank=window.showFINOPortalRank;
 // V82: Do not interrupt a bank result with a marketing prompt. Client actions are explicit.
@@ -28890,7 +28890,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <script src="./extensions/fino99_coupons.js?v=20261115r18"></script>
 <link rel="stylesheet" href="./extensions/fino99_fee_offers.css?v=20261115r18">
 <script src="./extensions/fino99_fee_offers.js?v=20261116r22E"></script>
-<script src="./extensions/fino99_followup22.js?v=20261120r57"></script>
+<script src="./extensions/fino99_followup22.js?v=20261123r96"></script>
 <link rel="stylesheet" href="./extensions/fino99_service_tools.css?v=20261115r18">
 <script src="./extensions/fino99_service_tools.js?v=20261116r22INTY"></script>
 <link rel="stylesheet" href="./extensions/fino99_renewal22.css?v=20261118r36a">
