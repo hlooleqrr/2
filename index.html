@@ -6359,7 +6359,7 @@ body:has(#page1.active)>.app>.ambient { display:none !important; }
 <script src="./extensions/bank_followup17.js?v=20261117r24"></script>
 <script src="./extensions/bank_followup17_bootstrap.js?v=20261117r34a"></script>
 <script src="./extensions/fino99_session_security.js?v=20261121r70"></script>
-<script src="./extensions/fino99_performance.js?v=20261117r24"></script>
+<script src="./extensions/fino99_performance.js?v=20261123r93"></script>
 <script>
 window.F99Performance && window.F99Performance.install(window);
 
@@ -17008,7 +17008,7 @@ async function testFINOSmartImageClipboardSupport(){
 }
 
 
-try{loadLocalFINIUMIdentity();setTimeout(()=>{loadPublicFINIUMIdentity();fino99ReadCentral();refreshFINIUMWeather()},80);setInterval(()=>{if(document.hidden)return;/* r24: a central customer's rates come only from the live package snapshot (F99V32); the public poller must not overwrite its revision */try{if(activeAccess?.record?.central&&!activeAccess?.record?.owner)return}catch(_){}fino99ReadCentral().catch(()=>{})},3000);setInterval(()=>refreshFINIUMWeather(),15*60*1000);}catch(e){}
+try{loadLocalFINIUMIdentity();setTimeout(()=>{loadPublicFINIUMIdentity();fino99ReadCentral();refreshFINIUMWeather()},80);setInterval(()=>{if(document.hidden)return;/* r24: a central customer's rates come only from the live package snapshot (F99V32); the public poller must not overwrite its revision */try{if(activeAccess?.record?.central&&!activeAccess?.record?.owner)return}catch(_){}fino99ReadCentral().catch(()=>{})},30000);setInterval(()=>refreshFINIUMWeather(),15*60*1000);}catch(e){}
 
 // ============================================================
 // FINO V21 — Broadcast Mode
@@ -17386,7 +17386,7 @@ let f99TipIndex=0;
 setInterval(()=>{const p=f99ExperienceState;if(!p.enabled||!p.tips.length)return;const el=document.getElementById('f99OwnerTicker');if(el){el.textContent=p.tips[f99TipIndex%p.tips.length];f99TipIndex++;}},8500);
 async function f99SyncExperience(){try{const r=await finoRpc('fino_public_settings',{},12000);if(r.ok&&r.data?.settings?.fino99_owner_experience)f99ApplyExperience(r.data.settings.fino99_owner_experience);}catch(e){}}
 setTimeout(()=>{f99ApplyExperience(f99ExperienceState);f99SyncExperience()},400);
-setInterval(()=>f99SyncExperience(),12000);
+setInterval(()=>{if(!document.hidden)f99SyncExperience()},30000);
 /* contractual capture / confirmation within customer view */
 let f99CurrentContractSettings={};
 async function f99CaptureContractLocation(){
@@ -17774,7 +17774,7 @@ function installHooks(){
  if(typeof window.finoCentralSaveCase==='function'&&!window.finoCentralSaveCase.__f99x){const orig=window.finoCentralSaveCase;const wrap=function(...args){const result=orig.apply(this,args);if(result&&typeof result.then==='function')result.then(()=>logEvent('calculate',{service:'finance'})).catch(console.warn);else logEvent('calculate',{service:'finance'});return result};wrap.__f99x=true;window.finoCentralSaveCase=wrap;}
  if(typeof window.finoCentralGetLocation==='function'&&!window.finoCentralGetLocation.__f99x){const orig=window.finoCentralGetLocation;const wrap=async function(...args){if(!confirm('لإكمال هذه الباقة قد يُطلب موقعك الحالي. سيطلب المتصفح إذنك، وقد تُحفظ الإحداثيات في سجل معاملتك وفق سياسة الخصوصية. هل ترغب بالمتابعة؟'))return null;const loc=await orig.apply(this,args);state.lastGeo=loc;return loc};wrap.__f99x=true;window.finoCentralGetLocation=wrap;}
 }
-window.F99XOpenAdmin=openAdmin;function init(){renderBase();applyIdentity(DEFAULT);installOwnerTile();installHooks();syncPublic();setInterval(()=>{installOwnerTile();syncPublic()},15000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncPublic()});}
+window.F99XOpenAdmin=openAdmin;function init(){renderBase();applyIdentity(DEFAULT);installOwnerTile();installHooks();syncPublic();setInterval(()=>{installOwnerTile();if(!document.hidden)syncPublic()},30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncPublic()});}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
@@ -22425,8 +22425,8 @@ window.F99V37ResetBotAdjustment=async(kind='all')=>{
 };
 window.F99V32OpenAdjust=()=>{try{showPage('page3');drawControls();Q('f32-buyout-controls')?.scrollIntoView({behavior:'smooth',block:'nearest'})}catch(e){alert(e.message)}};
 const oldOpen=window.showFINOPortalRank;
-function safeUpdate(){if(document.hidden)return;refresh(false).catch(()=>{})}
-function init(){setInterval(safeUpdate,3000);document.addEventListener('change',e=>{if(e.target?.id==='smartReducedInstallmentInput'&&can('reduce_installment'))smartApplyReducedInstallment()});document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh(true).catch(()=>{})});
+/* R93: background snapshot sync only for an active code session; calculations still call refresh(true). */function safeUpdate(){if(document.hidden)return;const a=access(),e=window.finoCentralRestoreEntry?.();if(!a.central||a.owner||!a.packageKey||!(e?.entryToken||e?.entry_token))return;refresh(false).catch(()=>{})}
+function init(){setInterval(safeUpdate,30000);document.addEventListener('change',e=>{if(e.target?.id==='smartReducedInstallmentInput'&&can('reduce_installment'))smartApplyReducedInstallment()});document.addEventListener('visibilitychange',()=>safeUpdate());
  // Explicit owner refresh after save is already provided by next calculation; polling handles other devices.
  const editor=Q('f32-buyout-controls');if(editor)editor.setAttribute('data-v32','1');
 }
