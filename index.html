@@ -8961,7 +8961,8 @@ async function finoCentralAdminLogin(password){
 async function finoCentralAdminDashboard(force=false){
   if(!finoCentralAdminToken)return {ok:false,reason:'NO_ADMIN_TOKEN'};
   if(finoCentralDashboardCache&&!force)return {ok:true,data:finoCentralDashboardCache};
-  const r=await finoRpc('fino_admin_dashboard',{p_token:finoCentralAdminToken});
+  // R95: the full owner dashboard carries the whole code inventory; allow it to finish.
+  const r=await finoRpc('fino_admin_dashboard',{p_token:finoCentralAdminToken},30000);
   if(!r.ok||r.data?.ok===false){
     if(r.data?.reason==='ADMIN_SESSION_INVALID'){
       finoCentralAdminToken='';
@@ -13562,7 +13563,9 @@ if(record.owner){
         finoAdminUnlocked=true;
         clientName='';pendingAccessAfterLogin=null;
         // Do not announce success unless the real central admin session works.
-        const dashboardCheck=await finoCentralAdminDashboard(true);
+        // R95: confirm the issued owner session centrally with a light owner-only read
+        // (same require_admin check). The heavy dashboard loads inside the owner panels.
+        const dashboardCheck=await finoRpc('f99v55_owner_nav_read',{p_token:finoCentralAdminToken},8000);
         if(!dashboardCheck.ok||dashboardCheck.data?.ok===false){
           activeAccess=null;finoPortal.adminUnlocked=false;finoAdminUnlocked=false;
           finoCentralAdminToken=null;finoSafeSessionRemove(FINO_CENTRAL_ADMIN_TOKEN_KEY);
@@ -18582,7 +18585,7 @@ function init(){const page=$('page1');if(!page||$('f99l-root'))return;
  $('f99l-code-link').onclick=()=>showCode();$('f99l-enter').onclick=submitCode;
  $('f99l-code').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();submitCode()}});
  $('f99l-code').addEventListener('paste',e=>{const raw=e.clipboardData?.getData('text/plain')||'';const extracted=typeof window.F99V8ExtractCode==='function'?window.F99V8ExtractCode(raw):raw.trim().toUpperCase();if(/^[A-Z0-9-]{8,32}$/.test(extracted)&&extracted!==raw.toUpperCase().trim()){e.preventDefault();e.currentTarget.value=extracted;e.currentTarget.dispatchEvent(new Event('input',{bubbles:true}))}});
- const original=$('loginError');if(original){new MutationObserver(()=>{if(original.style.display==='block')$('f99l-error').textContent=/المركزية|SQL|V2[0-9]|وظيف|rpc|PGRST/i.test(original.textContent||'')?'تعذر الدخول مؤقتًا. حاول لاحقًا.':(original.textContent||'تعذر الدخول');}).observe(original,{attributes:true,childList:true,characterData:true,subtree:true})}
+ const original=$('loginError');if(original){new MutationObserver(()=>{if(original.classList.contains('f99v18-status')){$('f99l-error').textContent='';return}if(original.style.display==='block')$('f99l-error').textContent=/المركزية|SQL|V2[0-9]|وظيف|rpc|PGRST/i.test(original.textContent||'')?'تعذر الدخول مؤقتًا. حاول لاحقًا.':(original.textContent||'تعذر الدخول');}).observe(original,{attributes:true,childList:true,characterData:true,subtree:true})}
  applyConfig(state);window.F99V26ApplyPublicLanding?.(window.FINO99ReadStorefront?.()||{});clock();setInterval(clock,1000);
  if(new URLSearchParams(location.search).get('access')==='1'||location.hash==='#code')showCode();
 }
@@ -28936,7 +28939,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <script src="./extensions/fino99_package_options22.js?v=20261117r34a"></script>
 <!-- r38: owner desk, appointments board, contracts & payments, client contract gate (additive). -->
 <link rel="stylesheet" href="./extensions/fino99_r38.css?v=r52a">
-<script src="./extensions/fino99_r38.js?v=20261121r70"></script>
+<script src="./extensions/fino99_r38.js?v=20261123r95"></script>
 <link rel="stylesheet" href="./extensions/fino99_r52k.css?v=r52a">
 <script src="./extensions/fino99_r52k.js?v=r53c" defer></script>
 <link rel="stylesheet" href="./extensions/fino99_re42.css?v=20261122r88">

@@ -808,6 +808,10 @@
       const raw = String(input.value || '').trim(); if (raw.length < 4 || raw.length > 120) return;
       ev.preventDefault(); ev.stopImmediatePropagation(); if (busy) return; busy = true;
       const err = D.getElementById('f99l-error');
+      // R95: show progress immediately on «ابدأ»; restored before handing over to the code login.
+      const go = D.getElementById('f99l-enter'), label = go ? go.textContent : '';
+      const unbusy = () => { if (go && go.getAttribute('aria-busy') === 'r95') { go.removeAttribute('aria-busy'); go.textContent = label; } };
+      if (go && !go.hasAttribute('aria-busy')) { go.setAttribute('aria-busy', 'r95'); go.innerHTML = '<span class="f99v18-spin" aria-hidden="true"></span>جاري الدخول…'; }
       void (async () => {
         try {
           // r39: one box for packages and contracts. The server matches the contract key exactly; package codes are never contract keys.
@@ -819,8 +823,8 @@
           }
           if (!r.ok && r.msg && r.msg.t && r.reason !== 'K_CODE_INVALID' && err) { err.textContent = r.msg.t; err.style.display = 'block'; return; }
           if (FK.test(raw.replace(/\s+/g, '')) && W.F99KContracts?.partyEnter) { const ok = await W.F99KContracts.partyEnter(raw.toUpperCase().replace(/\s+/g, ''), err); if (ok && err) { err.textContent = ''; err.style.display = 'none'; } return; }
-          pass = true; try { D.getElementById('f99l-enter')?.click(); } finally { pass = false; }
-        } finally { busy = false; }
+          unbusy(); pass = true; try { D.getElementById('f99l-enter')?.click(); } finally { pass = false; }
+        } finally { busy = false; unbusy(); }
       })();
     };
     W.addEventListener('click', ev => { if (ev.target?.closest?.('#f99l-enter')) handle(ev); }, true);
